@@ -1,7 +1,7 @@
-import { stringToTemplate, stringToFragment } from "../../utils/element_utils";
 import { CharacterElement } from "./element";
 import { ListItem } from "./list";
 import { Featurable } from "../character";
+import { objectify, json } from "../../utils/json_utils";
 
 export enum FeatureType {
     attributeBonus = "attribute_bonus",
@@ -41,21 +41,14 @@ export abstract class Feature<T extends Featurable> extends CharacterElement<T> 
             return false
         }
     }
-    loadXML(element: string | Element) {
-        element = stringToTemplate(element);
-        this.amount = parseFloat(element.querySelector(":scope > amount")?.textContent ?? "0");
-        this.leveled = element.querySelector(":scope > amount")?.getAttribute("per_level") === "yes";
-        this.limitation = element.querySelector(":scope > attribute")?.getAttribute("limitation") ?? false;
+    toJSON() {
+
     }
-    toXML() {
-        return document.createElement("test");
-    }
-    loadJSON(object: any) {
+    loadJSON(object: string | json) {
+        object = objectify(object);
+        super.loadJSON(object);
         this.amount = object.amount;
         this.leveled = object?.per_level ?? false;
         this.limitation = object?.limitation ?? false;
-    }
-    toJSON() {
-
     }
 }

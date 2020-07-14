@@ -6,7 +6,6 @@ import { Trait } from "../trait";
 
 export abstract class Serializer {
     static dataTypes: Set<{ new(): Serializer }> = new Set()
-    data: any
 
     constructor() {
         
@@ -23,4 +22,3 @@ export function registerDataType(type: { new(): Serializer }) {
     Serializer.dataTypes.add(type);
     return this
 }
-

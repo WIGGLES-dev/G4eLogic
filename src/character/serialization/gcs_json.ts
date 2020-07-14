@@ -1,5 +1,9 @@
-import { registerDataType } from "./serializer";
-import { Serializer } from "v8";
+import { registerDataType, Serializer } from "./serializer";
+import { Skill } from "../../character/skill";
+import { Technique } from "../../character/technique";
+import { Spell } from "../../character/spell";
+import { Item } from "../../character/equipment";
+import { Trait } from "../../character/trait";
 
 @registerDataType(GCSJSON)
 class GCSJSON extends Serializer {
@@ -7,18 +11,9 @@ class GCSJSON extends Serializer {
         super();
     }
 
-    mapSkill() {
-    }
-    mapTechnique(object: any) {
-
-    }
-    mapSpell(object: any) {
-
-    }
-    mapItem(object: any) {
-
-    }
-    mapTrait(object: any) {
-
-    }
+    mapSkill() { return {} as Skill }
+    mapTechnique(object: any) { return {} as Technique }
+    mapSpell(object: any) { return {} as Spell }
+    mapItem(object: any) { return {} as Item }
+    mapTrait(object: any) { return {} as Trait }
 }

@@ -1,6 +1,7 @@
 import { Skill, SkillDefault, difficulty } from "./skill";
 import { signatures } from "./character";
 import { List } from "./misc/list";
+import { objectify, json } from "../utils/json_utils";
 
 export class Technique extends Skill {
     tag = "technique"
@@ -66,7 +67,8 @@ export class Technique extends Skill {
     toJSON() {
         return {}
     }
-    loadJSON(object: any) {
+    loadJSON(object: string | json) {
+        object = objectify(object);
         super.loadJSON(object);
         this.limit = object.limit;
         this.difficulty = object.difficulty;

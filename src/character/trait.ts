@@ -1,10 +1,10 @@
 import { Modifier } from "./misc/modifier";
 import { List, ListItem } from "./misc/list";
 import { Character } from "./character";
+import { json, objectify } from "../utils/json_utils";
 
 export class TraitList extends List<Trait> {
     class = Trait
-
     constructor(character: Character) {
         super(character);
     }
@@ -47,12 +47,6 @@ export class TraitList extends List<Trait> {
             }
         }, 0);
     }
-}
-
-interface TraitContainer {
-    containerType: ContainerType
-    modifiers: Set<TraitModifier>
-    children: Set<Trait>
 }
 
 enum ContainerType {
@@ -211,30 +205,30 @@ export class Trait extends ListItem<Trait> {
     toJSON() {
         return {}
     }
-    loadJSON(object: any) {
-        function mapTrait(object: any, trait: Trait) {
+    loadJSON(object: string | json) {
+        object = objectify(object);
+        super.loadJSON(object);
+        function mapTrait(object: json, trait: Trait) {
             trait.name = object.type;
-            object.modifiers.forEach((modifier: any) => trait.modifiers.add(new TraitModifier(trait).loadJSON(modifier)));
+            object.modifiers?.forEach((modifier: json) => trait.modifiers.add(new TraitModifier(trait).loadJSON(modifier)));
             trait.basePoints = object.base_points;
             trait.levels = object.levels;
             trait.allowHalfLevels = object.allow_half_levels;
             trait.hasHalfLevel = object.has_half_level;
             trait.roundDown = object.round_down;
             trait.controlRating = object.cr;
-            object.types.forEach((type: any) => trait.types.add(type));
+            object.types?.forEach((type: TraitType) => trait.types.add(type));
             trait.pointsPerLevel = object.points_per_level;
             trait.enabled = !object.disabled;
         }
-        function loadSubElements(object: any, parent: Trait) {
-            object.children.forEach((object: any) => {
+        function loadSubElements(object: json, parent: Trait) {
+            object.children.forEach((object: json) => {
                 const subElement = parent.list.addListItem().loadJSON(object);
                 subElement.containedBy = parent;
                 parent.children.add(subElement);
             });
             return parent
         }
-        if (typeof object === "string") object = JSON.parse(object);
-        super.loadJSON(object);
         mapTrait(object, this);
         if (object.type.includes("_container")) {
             this.canContainChildren = true;
@@ -327,47 +321,20 @@ class TraitModifier extends Modifier<Trait> {
     static applyRounding(value: number, roundCostDown: boolean) {
         return roundCostDown ? Math.floor(value) : Math.ceil(value)
     }
+    toJSON() {
 
-    loadXML(element: string | Element) {
-        super.loadXML(element);
-        if (typeof element === "string") {
-            const template = document.createElement("template");
-            element.trim();
-            template.innerHTML = element;
-            element = template.content.firstChild as Element;
-        }
-        this.cost = parseInt(element.querySelector(":scope > cost")?.textContent ?? "0");
-        this.type = element.querySelector(":scope > cost")?.getAttribute("type") as TraitModifierType ?? null;
-        this.affects = element.querySelector(":scope > affects")?.textContent as TraitModifierAffects ?? null;
-        this.levels = parseInt(element.querySelector(":scope > levels")?.textContent ?? "0");
-
-        return this
     }
-
-    toXML() {
-        const modifier = super.toXML();
-        const cost = modifier.appendChild(document.createElement("cost"))
-        modifier.appendChild(cost).textContent = this.cost ? this.cost.toString() : "0";
-        cost.setAttribute("type", this.type);
-        if (this.hasLevels) modifier.appendChild(document.createElement("levels"));
-        modifier.appendChild(document.createElement("affects")).textContent = this.affects;
-        return modifier
-    }
-
-    loadJSON(object: any, map?: () => TraitModifier): TraitModifier {
-        function mapModifier(object: any, modifier: TraitModifier): TraitModifier {
+    loadJSON(object: string | json): TraitModifier {
+        object = objectify(object);
+        super.loadJSON(object);
+        function mapModifier(object: json, modifier: TraitModifier): TraitModifier {
             modifier.cost = object.cost;
             modifier.type = object.cost_type;
             modifier.affects = object.affects;
             modifier.levels = object.levels;
             return modifier
         }
-        super.loadJSON(object);
         return mapModifier(object, this);
-    }
-
-    toJSON() {
-
     }
 }
 

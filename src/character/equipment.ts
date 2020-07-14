@@ -1,13 +1,12 @@
 import { List, ListItem } from "./misc/list";
 import { Modifier, Modifiable } from "./misc/modifier";
 import { Character, Featurable } from "./character";
-import { stringToTemplate } from "../utils/element_utils";
 import { Feature, FeatureType } from "./misc/feature";
 import { Skill } from "./skill";
 import { Trait } from "./trait";
+import { objectify, json } from "../utils/json_utils";
 
 export class ItemList extends List<Item> {
-    filter = ["equipment, equipment_list"]
     class = Item
 
     constructor(character: Character) {
@@ -205,69 +204,33 @@ export class Item extends ListItem<Item> {
             }
         }
     }
-
     toJSON() {
         return {}
     }
-
-    loadJSON(object: any) {
-        function mapItem(object: any, item: Item) {
-            object.modifiers.forEach((modifier: any) => item.modifiers.add(new EquipmentModifier(item).loadJSON(modifier)));
+    loadJSON(object: string | json) {
+        object = objectify(object);
+        super.loadJSON(object);
+        function mapItem(object: json, item: Item) {
+            object?.modifiers?.forEach((modifier: json) => item.modifiers.add(new EquipmentModifier(item).loadJSON(modifier)));
             item.description = object.description;
             item.equipped = object.equipped;
             item.quantity = object.quantity;
-            item.value = object.value,
-                item.techLevel = object.tech_level;
+            item.value = object.value;
+            item.techLevel = object.tech_level;
             item.legalityClass = object.legality_class;
         }
-        function loadSubElements(object: any, parent: Item) {
-            object.children.forEach((object: any) => {
+        function loadSubElements(object: json, parent: Item) {
+            object.children.forEach((object: json) => {
                 const subElement = parent.list.addListItem().loadJSON(object);
                 subElement.containedBy = parent;
                 parent.children.add(subElement);
             });
             return parent
         }
-        if (typeof object === "string") object = JSON.parse(object);
-        super.loadJSON(object);
         mapItem(object, this);
         if (object.type.includes("_container")) {
             this.canContainChildren = true;
             loadSubElements(object, this);
-        }
-        return this
-    }
-
-    toXML() {
-        return document.createElement("test")
-    }
-
-    loadXML(element: string | Element) {
-        function mapItem(element: Element, item: Item) {
-            const modifiers = (element.querySelectorAll(`:scope > ${EquipmentModifier.nodeName}`));
-            modifiers.forEach(modifier => item.modifiers.add(new EquipmentModifier(this).loadXML(modifier)));
-            item.description = element.querySelector(":scope > description")?.textContent;
-            item.equipped = element.getAttribute("equipped") === "yes";
-            item.quantity = parseInt(element.querySelector(":scope > quantity")?.textContent ?? "1");
-            item.weight = parseFloat(element.querySelector(":scope > weight")?.textContent ?? "0");
-            item.value = parseFloat(element.querySelector(":scope > value")?.textContent ?? "0");
-            item.techLevel = element.querySelector(":scope > tech_level")?.textContent;
-            item.legalityClass = element.querySelector(":scope > legality_class")?.textContent;
-        }
-        function loadSubElements(element: Element, parent: Item) {
-            element.querySelectorAll(`:scope > ${parent.tag}, :scope > ${parent.tag}_container`).forEach(element => {
-                const subElement = parent.list.addListItem().loadXML(element);
-                subElement.containedBy = subElement;
-                parent.children.add(subElement);
-            });
-            return parent
-        }
-        element = stringToTemplate(element);
-        super.loadXML(element);
-        mapItem(element, this);
-        if (element.nodeName.includes("_container")) {
-            this.canContainChildren = true;
-            loadSubElements(element, this);
         }
         return this
     }
@@ -316,7 +279,8 @@ class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
     toJSON() {
 
     }
-    loadJSON(object: any) {
+    loadJSON(object: string | json) {
+        object = objectify(object);
         super.loadJSON(object);
         this.cost = object.cost;
         this.weight = object.weight;
@@ -324,45 +288,6 @@ class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
         this.weightType = object.weightType;
         return this
     }
-    toXML() {
-        const equipmentModifier = document.createElement(EquipmentModifier.nodeName);
-        equipmentModifier.appendChild(super.toXML());
-        equipmentModifier.setAttribute("enabled", this.enabled.toString());
-        const cost = equipmentModifier.appendChild(document.createElement("cost"));
-        cost.setAttribute("cost_type", this.costType);
-        const weight = equipmentModifier.appendChild(document.createElement("weight"));
-        weight.setAttribute("weight_type", this.weightType);
-        return equipmentModifier
-    }
-    loadXML(element: string | Element) {
-        super.loadXML(element);
-        if (typeof element === "string") {
-            const template = document.createElement("template");
-            element.trim();
-            template.innerHTML = element;
-            element = template.content.firstChild as Element;
-        }
-
-        this.cost = element.querySelector(":scope > cost")?.textContent;
-        this.costType = element.querySelector(":scope > cost")?.getAttribute("cost_type") as EquipmentModifierValueType;
-        this.weight = element.querySelector(":scope > weight")?.textContent;
-        this.weightType = element.querySelector(":scope > weight")?.getAttribute("weight_type") as EquipmentModifierWeightType;
-
-        return this
-    }
-}
-
-enum BaseDamage {
-    swing = "sw",
-    thrust = "thr"
-}
-
-enum DamageType {
-    impaling = "imp",
-    crushing = "cr",
-    cutting = "cut",
-    fatigue = "fat",
-    toxic = "tox",
 }
 
 enum EquipmentModifierWeightType {

@@ -1,4 +1,5 @@
 import { Featurable } from "./character";
+import { objectify, json } from "../utils/json_utils";
 
 export abstract class Weapon<T extends Featurable> {
     owner: T
@@ -9,8 +10,8 @@ export abstract class Weapon<T extends Featurable> {
     toJSON() {
 
     }
-    loadJSON() {
-
+    loadJSON(object: string | json) {
+        object = objectify(object);
     }
 }
 
@@ -20,4 +21,17 @@ class MeleeWeapon<T extends Featurable> extends Weapon<T> {
 
 class RangedWeapon<T extends Featurable> extends Weapon<T> {
 
+}
+
+enum BaseDamage {
+    swing = "sw",
+    thrust = "thr"
+}
+
+enum DamageType {
+    impaling = "imp",
+    crushing = "cr",
+    cutting = "cut",
+    fatigue = "fat",
+    toxic = "tox",
 }

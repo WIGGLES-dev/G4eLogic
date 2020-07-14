@@ -1,8 +1,8 @@
-import { Character, Featurable } from "../character";
+import { Character } from "../character";
 import { CharacterElement } from "./element";
-import { stringToTemplate } from "../../utils/element_utils";
 import { Feature } from "./feature";
 import { Weapon } from "../weapon";
+import { objectify, json } from "../../utils/json_utils";
 
 export abstract class ListItem<T extends ListItem<T>> extends CharacterElement<T> {
     abstract tag: string
@@ -76,14 +76,16 @@ export abstract class ListItem<T extends ListItem<T>> extends CharacterElement<T
 
         }
     }
-
     findSelf(): T {
         return this.list.getByUUID(this.uuid);
     }
+
     toJSON(): Object {
         return {}
     }
-    loadJSON(object: any) {
+    loadJSON(object: string | json) {
+        object = objectify(object);
+        super.loadJSON(object);
         this.open = object.open ?? true;
     }
 }
@@ -91,7 +93,7 @@ export abstract class ListItem<T extends ListItem<T>> extends CharacterElement<T
 export abstract class List<T extends ListItem<T>> {
     #contents: Map<string, T>
     contents: Set<T>
-    
+
     abstract class: new (list: List<T>) => T
 
     character: Character
@@ -134,7 +136,6 @@ export abstract class List<T extends ListItem<T>> {
     getByUUID(uuid: string) {
         return this.#contents.get(uuid);
     }
-
     iter() {
         return Array.from(this.#contents.values())
     }
@@ -148,16 +149,17 @@ export abstract class List<T extends ListItem<T>> {
     toJSON() {
 
     }
-    loadJSON(object: any) {
+    loadJSON(object: string | json) {
+        object = objectify(object);
         if (object) {
-            object.forEach((skill: any) => {
+            object.forEach((skill: json) => {
                 const item = new this.class(this);
+                console.log(item);
                 this.#contents.set(item.uuid, item);
                 item.loadJSON(skill);
             });
             this.generate();
-            return this
         }
-        throw new Error("failed to load");
+        return this
     }
 }

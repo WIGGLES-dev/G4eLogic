@@ -21,6 +21,7 @@
   "homepage": "https://github.com/WIGGLES-dev/G4eLogic#readme",
   "dependencies": {
     "@types/node": "^14.0.23",
+    "ts-node": "^8.10.2",
     "typescript": "^3.9.6"
   }
 }

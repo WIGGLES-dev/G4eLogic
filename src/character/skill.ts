@@ -3,7 +3,7 @@ import { List, ListItem } from "./misc/list";
 import { Feature, FeatureType } from "./misc/feature";
 import { CharacterElement } from "./misc/element";
 import { StringCompare } from "../utils/string_utils";
-import { stringToTemplate, stringToFragment } from "../utils/element_utils";
+import { objectify, json } from "../utils/json_utils";
 
 export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
     name: string
@@ -168,6 +168,13 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
         }
         return extraPointsSpent
     }
+    toJSON() {
+        return {}
+    }
+    loadJSON(object: string | json) {
+        object = objectify(object);
+        super.loadJSON(object);
+    }
 }
 
 export class SkillList extends List<Skill> {
@@ -235,26 +242,27 @@ export class Skill extends SkillLike<Skill> {
     toJSON() {
         return {}
     }
-    loadJSON(object: any) {
-        function mapSkill(element: Element, skill: Skill) {
+    loadJSON(object: string | json) {
+        object = objectify(object);
+        super.loadJSON(object);
+        function mapSkill(object: json, skill: Skill) {
             skill.name = object.name;
             skill.specialization = object.specialization;
             skill.points = object.points
             skill.signature = object.difficulty?.split("/")[0] as signatures;
             skill.difficulty = object.difficulty?.split("/")[1] as difficulty;
             skill.techLevel = object.tech_level ?? "";
-            object.forEach((skillDefault: any) => skill.defaults.add(new SkillDefault<Skill>(skill).loadJSON(skillDefault, skill)));
-            skill.defaultedFrom = new SkillDefault<Skill>(skill).loadJSON(object.defaulted_from, skill);
+            object.defaults?.forEach((skillDefault: json) => skill.defaults.add(new SkillDefault<Skill>(skill).loadJSON(skillDefault, skill)));
+            if (object.defaulted_from) skill.defaultedFrom = new SkillDefault<Skill>(skill).loadJSON(object.defaulted_from, skill);
         }
-        function loadSubElements(object: any, parent: Skill) {
-            object.children.forEach((child: any) => {
+        function loadSubElements(object: json, parent: Skill) {
+            object.children.forEach((child: json) => {
                 const subElement = parent.list.addListItem().loadJSON(child);
                 subElement.containedBy = parent;
                 parent.children.add(subElement);
             });
             return parent
         }
-        super.loadJSON(object);
         mapSkill(object, this);
         if (object.type.includes("_container")) {
             this.canContainChildren = true;
@@ -324,18 +332,18 @@ export class SkillBonus<T extends Featurable> extends Feature<T> {
         let specializationMatch = false;
         let categoryMatch = false
         switch (this.nameCompareType) {
-            case StringCompare.is_anything:
+            case StringCompare.isAnything:
                 nameMatch = true;
                 break
             case StringCompare.is:
                 nameMatch = skill.name === this.name;
                 break
-            case StringCompare.starts_with:
+            case StringCompare.startsWith:
                 nameMatch = skill.name.toLowerCase().startsWith(this.name.toLowerCase())
                 break
         }
         switch (this.specializationCompareType) {
-            case StringCompare.is_anything:
+            case StringCompare.isAnything:
                 specializationMatch = true;
                 break
             case StringCompare.is:
@@ -343,7 +351,7 @@ export class SkillBonus<T extends Featurable> extends Feature<T> {
                 break
         }
         switch (this.categoryCompareType) {
-            case StringCompare.is_anything:
+            case StringCompare.isAnything:
                 categoryMatch = true;
                 break
         }
@@ -352,8 +360,9 @@ export class SkillBonus<T extends Featurable> extends Feature<T> {
     toJSON() {
         return {}
     }
-    loadJSON() {
-
+    loadJSON(object: string | json) {
+        object = objectify(object);
+        super.loadJSON(object);
     }
 }
 
@@ -367,7 +376,7 @@ interface SkillBinding<T> {
 export class SkillDefault<T extends SkillLike<T>> {
     tag = "default"
 
-    bound: SkillBinding<T>
+    bound: SkillBinding<T> = {} as SkillBinding<T>
 
     type: string
     name: string
@@ -398,20 +407,21 @@ export class SkillDefault<T extends SkillLike<T>> {
         }
     }
     toJSON() {
-        
+
     }
-    loadJSON(object: any, skill: T) {
+    loadJSON(object: json, skill: T) {
+        object = objectify(object);
+        this.bound.skill = skill;
         this.type = object.type;
         this.name = object.name;
         this.specialization = object.specialization;
         this.modifier = object.modifier;
         if (object.type.includes("_from")) {
-            this.bound = {
-                skill: skill,
+            Object.assign(this.bound, {
                 level: object.level,
                 adjustedLevel: object.adjusted_level,
                 points: object.points
-            }
+            })
         }
         return this
     }

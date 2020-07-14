@@ -1,9 +1,7 @@
-import { Skill, SkillLike } from "./skill";
-import { List, ListItem } from "./misc/list";
+import { SkillLike } from "./skill";
+import { List } from "./misc/list";
 import { Character } from "./character";
-import { stringToTemplate } from "../utils/element_utils";
-import { Feature } from "./misc/feature";
-import { Weapon } from "./weapon";
+import { objectify, json } from "../utils/json_utils";
 
 
 export class SpellList extends List<Spell> {
@@ -38,8 +36,10 @@ export class Spell extends SkillLike<Spell> {
     toJSON() {
         return {}
     }
-    loadJSON(object: any) {
-        function mapSpell(object: any, spell: Spell) {
+    loadJSON(object: string | json) {
+        object = objectify(object);
+        super.loadJSON(object);
+        function mapSpell(object: json, spell: Spell) {
             spell.college = object.college;
             spell.powerSource = object.power_source;
             spell.spellClass = object.spell_class;
@@ -48,14 +48,13 @@ export class Spell extends SkillLike<Spell> {
             spell.castingTime = object.casting_time;
             spell.duration = object.duration;
         }
-        function loadSubElements(object: any, parent: Spell) {
-            object.children.forEach((child: any) => {
-                const subElement = parent.list.addListItem().loadJSON(object);
+        function loadSubElements(object: json, parent: Spell) {
+            object.children.forEach((child: json) => {
+                const subElement = parent.list.addListItem().loadJSON(child);
                 subElement.containedBy = parent;
                 parent.children.add(subElement);
             });
         }
-        super.loadJSON(object);
         mapSpell(object, this);
         if (object.type.includes("_container")) {
             this.canContainChildren = true;
