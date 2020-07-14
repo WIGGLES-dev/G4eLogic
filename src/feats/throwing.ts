@@ -1,4 +1,4 @@
-import { Character } from "gcs/character/character";
+import { Character } from "../character/character";
 
 class Throw {
     character: Character
