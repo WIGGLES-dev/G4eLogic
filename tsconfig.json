@@ -1,0 +1,30 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "allowSyntheticDefaultImports": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "lib": [
+            "ESNext",
+            "DOM"
+        ],
+        "types": [
+            "node"
+        ],
+        "baseUrl": "src/",
+        "target": "ES2016",
+        "allowJs": true
+    },
+    "include": [
+        "src/"
+    ],
+    "exclude": [
+        "node_modules",
+        "**/*.spec.ts",
+    ]
+}
