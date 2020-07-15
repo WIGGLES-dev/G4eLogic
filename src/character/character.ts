@@ -8,7 +8,7 @@ import { Profile } from "./profile";
 import { SpellList } from "./spell";
 import { exportR20 } from "../utils/2R20";
 
-abstract class Sheet {
+class Sheet {
     configuration: {}
 
     constructor(configuration: {}) {
