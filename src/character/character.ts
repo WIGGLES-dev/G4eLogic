@@ -6,6 +6,7 @@ import { Item, ItemList } from "./equipment";
 import { Feature } from "./misc/feature";
 import { Profile } from "./profile";
 import { SpellList } from "./spell";
+import { exportR20 } from "utils/2R20";
 
 export abstract class Sheet {
     configuration: {}
@@ -177,7 +178,7 @@ export class Character extends Sheet {
         }
     }
 
-    allItems() {
+    allItems(): Item[] {
         return [].concat.apply([],
             [
                 this.equipmentList.iter(),
@@ -262,6 +263,9 @@ export class Character extends Sheet {
         this.Will.setLevel(json.will_adj);
 
         return this
+    }
+    toR20() {
+        return exportR20(this)
     }
 }
 
