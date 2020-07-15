@@ -51,6 +51,7 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
         return relativeLevel
     }
     calculateLevel() {
+        if (this.isContainer()) return null
         const defaultedFrom = this.getBestDefaultWithPoints();
         const character = this.list.character;
         let points = this.points;
@@ -60,13 +61,13 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
             if (this.difficulty === difficulty.wildcard) {
                 points /= 3;
             } else {
-                if (defaultedFrom.bound !== null && defaultedFrom.bound.points > 0) {
+                if (defaultedFrom && defaultedFrom.bound !== null && defaultedFrom.bound.points > 0) {
                     points += defaultedFrom.bound.points;
                 }
             }
             if (points > 0) {
                 relativeLevel = SkillLike.calculateRelativeLevel(points, relativeLevel);
-            } else if (defaultedFrom.bound !== null && defaultedFrom.bound.points < 0) {
+            } else if (defaultedFrom && defaultedFrom.bound !== null && defaultedFrom.bound.points < 0) {
                 relativeLevel = defaultedFrom.bound.adjustedLevel - level;
             } else {
                 level = Number.NEGATIVE_INFINITY;
@@ -74,7 +75,7 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
             }
             if (level !== Number.NEGATIVE_INFINITY) {
                 level += relativeLevel;
-                if (defaultedFrom.bound !== null) {
+                if (defaultedFrom && defaultedFrom.bound !== null) {
                     if (level < defaultedFrom.bound.adjustedLevel) {
                         level = defaultedFrom.bound.adjustedLevel;
                     }
@@ -213,16 +214,14 @@ export class Skill extends SkillLike<Skill> {
     }
 
     getBonus() {
-        return this.list.character.featureList.iter().flatMap(feature => {
-            if (feature instanceof SkillBonus && feature.isApplicableTo(this)) {
-                return feature
-            } else {
-                return false
-            }
-        }).reduce((prev, cur) => {
-            if (cur) prev += cur.totalBonus()
-            return prev
-        }, 0);
+        return this.list.character.featureList.iter().reduce(
+            (prev, cur) => {
+                if (cur instanceof SkillBonus && cur.isApplicableTo(this)) {
+                    prev += cur.totalBonus();
+                }
+                return prev
+            }, 0
+        );
     }
 
     toString() {
@@ -324,7 +323,7 @@ export class SkillBonus<T extends Featurable> extends Feature<T> {
     }
 
     totalBonus() {
-        return this.leveled ? this.amount * 1 : this.amount
+        return this.leveled && this.owner.canHaveLevels ? this.amount * this.owner.levels : this.amount
     }
 
     isApplicableTo(skill: Skill): boolean {
@@ -355,6 +354,10 @@ export class SkillBonus<T extends Featurable> extends Feature<T> {
                 categoryMatch = true;
                 break
         }
+        if (nameMatch && specializationMatch && categoryMatch) {
+            console.log(`testing against ${skill.name} is a match`);
+        }
+
         return nameMatch && specializationMatch && categoryMatch
     }
     toJSON() {
@@ -363,6 +366,13 @@ export class SkillBonus<T extends Featurable> extends Feature<T> {
     loadJSON(object: string | json) {
         object = objectify(object);
         super.loadJSON(object);
+        this.selectionType = object.selection_type;
+        this.name = object?.name?.qualifier;
+        this.nameCompareType = object?.name?.compare ?? StringCompare.isAnything;
+        this.specialization = object?.specialization?.qualifier;
+        this.specializationCompareType = object?.specialization?.compare ?? StringCompare.isAnything;
+        this.categoryCompareType = object?.category?.compare ?? StringCompare.isAnything;
+        return this
     }
 }
 

@@ -11,7 +11,8 @@
         "emitDecoratorMetadata": true,
         "lib": [
             "ESNext",
-            "DOM"
+            "DOM",
+            "es2019"
         ],
         "types": [
             "node"

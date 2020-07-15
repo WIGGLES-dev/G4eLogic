@@ -2,6 +2,8 @@ import { Modifier } from "./misc/modifier";
 import { List, ListItem } from "./misc/list";
 import { Character } from "./character";
 import { json, objectify } from "../utils/json_utils";
+import { Feature, FeatureType } from "./misc/feature";
+import { SkillBonus } from "./skill";
 
 export class TraitList extends List<Trait> {
     class = Trait
@@ -209,7 +211,7 @@ export class Trait extends ListItem<Trait> {
         object = objectify(object);
         super.loadJSON(object);
         function mapTrait(object: json, trait: Trait) {
-            trait.name = object.type;
+            trait.name = object.name;
             object.modifiers?.forEach((modifier: json) => trait.modifiers.add(new TraitModifier(trait).loadJSON(modifier)));
             trait.basePoints = object.base_points;
             trait.levels = object.levels;
@@ -220,6 +222,14 @@ export class Trait extends ListItem<Trait> {
             object.types?.forEach((type: TraitType) => trait.types.add(type));
             trait.pointsPerLevel = object.points_per_level;
             trait.enabled = !object.disabled;
+            object.features?.forEach((feature: json) => {
+                switch (feature.type) {
+                    case FeatureType.skillBonus:
+                        trait.features.add(
+                            new SkillBonus<Trait>(trait).loadJSON(feature)
+                        )
+                }
+            });
         }
         function loadSubElements(object: json, parent: Trait) {
             object.children.forEach((object: json) => {

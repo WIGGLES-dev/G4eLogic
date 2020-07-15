@@ -9,6 +9,9 @@ export abstract class ListItem<T extends ListItem<T>> extends CharacterElement<T
 
     list: List<T>
 
+    canHaveLevels: boolean
+    levels: number
+
     canContainChildren: boolean
     open: boolean
 
@@ -86,6 +89,8 @@ export abstract class ListItem<T extends ListItem<T>> extends CharacterElement<T
     loadJSON(object: string | json) {
         object = objectify(object);
         super.loadJSON(object);
+        this.levels = object?.levels ?? false;
+        this.canHaveLevels = this.levels ? true : false;
         this.open = object.open ?? true;
     }
 }
@@ -154,7 +159,7 @@ export abstract class List<T extends ListItem<T>> {
         if (object) {
             object.forEach((skill: json) => {
                 const item = new this.class(this);
-                console.log(item);
+                //console.log(item);
                 this.#contents.set(item.uuid, item);
                 item.loadJSON(skill);
             });

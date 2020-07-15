@@ -22,6 +22,8 @@ export abstract class Feature<T extends Featurable> extends CharacterElement<T> 
     owner: T
     type: FeatureType
 
+    registered: boolean
+
     constructor(owner: T, type: FeatureType) {
         super();
         this.owner = owner;
