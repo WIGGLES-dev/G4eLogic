@@ -1,5 +1,5 @@
 import { Feature, FeatureType } from "./misc/feature";
-import { Sheet, Character } from "./character";
+import { Character } from "./character";
 
 export class Attribute {
     sheet: Character
