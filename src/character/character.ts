@@ -6,7 +6,7 @@ import { Item, ItemList } from "./equipment";
 import { Feature } from "./misc/feature";
 import { Profile } from "./profile";
 import { SpellList } from "./spell";
-import { exportR20 } from "utils/2R20";
+import { exportR20 } from "../utils/2R20";
 
 export abstract class Sheet {
     configuration: {}
