@@ -7,8 +7,9 @@ import { Feature } from "./misc/feature";
 import { Profile } from "./profile";
 import { SpellList } from "./spell";
 import { exportR20 } from "../utils/2R20";
+import { json, objectify } from "../utils/json_utils";
 
-class Sheet {
+abstract class Sheet {
     configuration: {}
 
     constructor(configuration: {}) {
@@ -238,7 +239,8 @@ export class Character extends Sheet {
     toJSON() {
 
     }
-    loadJSON(json: any) {
+    loadJSON(json: string  | json) {
+        json = objectify(json);
         this.gCalcID = json.id;
 
         this.profile.loadJSON(json.profile);
@@ -266,6 +268,9 @@ export class Character extends Sheet {
     }
     toR20() {
         return exportR20(this)
+    }
+    loadFromActor(actor: Actor) {
+        
     }
 }
 

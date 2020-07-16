@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "module": "commonjs",
+        "esModuleInterop": true,
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": true,
@@ -11,19 +12,14 @@
         "emitDecoratorMetadata": true,
         "lib": [
             "ESNext",
-            "DOM",
-            "es2019"
+            "DOM"
         ],
         "types": [
-            "node"
+            "foundry-pc-types"
         ],
-        "baseUrl": "src/",
-        "target": "ES2016",
+        "target": "ESNext",
         "allowJs": true
     },
-    "include": [
-        "src/"
-    ],
     "exclude": [
         "node_modules",
         "**/*.spec.ts",

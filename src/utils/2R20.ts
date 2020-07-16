@@ -37,7 +37,7 @@ const base = {
 
 export function exportR20(character: Character) {
     const profile = character.profile;
-    const pointTotals = character.pointTotals;
+    const pointTotals = character.pointTotals();
     const native_language = character.traitList.iter().find(trait => {
         if (
             trait.categories.has("Language") &&
@@ -87,8 +87,8 @@ export function exportR20(character: Character) {
         eyes: profile.eyes,
         hair: profile.hair,
 
-        total_points: pointTotals().total,
-        skills_points: pointTotals().skills
+        total_points: pointTotals.total,
+        skills_points: pointTotals.skills
     }
     var output = base;
     output.name = profile.name;

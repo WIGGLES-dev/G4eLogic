@@ -9,7 +9,7 @@ const testSubject = new Character().loadJSON(testSubjectData);
 console.log(
     testSubject.skillList.iter().map(
         skill => [
-            skill.name, 
+            skill.name,
             skill.calculateLevel(),
             skill.getBonus()
         ]
