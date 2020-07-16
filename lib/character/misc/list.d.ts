@@ -1,0 +1,54 @@
+import { Character } from "../character";
+import { CharacterElement } from "./element";
+import { Feature } from "./feature";
+import { Weapon } from "../weapon";
+import { json } from "../../utils/json_utils";
+export declare abstract class ListItem<T extends ListItem<T>> extends CharacterElement<T> {
+    #private;
+    abstract tag: string;
+    list: List<T>;
+    canHaveLevels: boolean;
+    levels: number;
+    canContainChildren: boolean;
+    open: boolean;
+    children: Set<T>;
+    isContained: boolean;
+    containedBy: T;
+    features: Set<Feature<T>>;
+    weapons: Set<Weapon<T>>;
+    constructor(list: List<T>);
+    isContainer(): boolean;
+    isContainerOpen(): boolean;
+    isVisible(): boolean;
+    previousVisibleSibling(): void;
+    nextVisibleSibling(): void;
+    toggle(): void;
+    openContainer(): void;
+    closeContainer(): void;
+    depth(): void;
+    index(): void;
+    iterChildren(): T[];
+    addChild(child?: T): T;
+    removeChild(child: string | T): void;
+    getRecursiveChildren(): void;
+    findSelf(): T;
+    toJSON(): Object;
+    loadJSON(object: string | json): void;
+}
+export declare abstract class List<T extends ListItem<T>> {
+    #private;
+    contents: Set<T>;
+    abstract class: new (list: List<T>) => T;
+    character: Character;
+    constructor(character: Character);
+    generate(): void;
+    addListItem(item?: T): T;
+    removeListItem(item: T): void;
+    getByIndex(index: number): T;
+    getByUUID(uuid: string): T;
+    iter(): T[];
+    iterTop(): T[];
+    keys(): T[];
+    toJSON(): void;
+    loadJSON(object: string | json): this;
+}

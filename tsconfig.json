@@ -12,6 +12,7 @@
         "emitDecoratorMetadata": true,
         "forceConsistentCasingInFileNames": true,
         "outDir": "./lib",
+        "declaration": true,
         "lib": [
             "ESNext",
             "DOM"
