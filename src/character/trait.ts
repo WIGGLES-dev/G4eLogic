@@ -6,7 +6,7 @@ import { Feature, FeatureType } from "./misc/feature";
 import { SkillBonus } from "./skill";
 
 export class TraitList extends List<Trait> {
-    class = Trait
+    populator = Trait
     constructor(character: Character) {
         super(character);
     }
@@ -17,7 +17,7 @@ export class TraitList extends List<Trait> {
             } else {
                 return prev
             }
-        }, 0);
+        }, 0)
     }
     sumAdvantages() {
         return this.iter().reduce((prev, cur) => {
@@ -27,7 +27,7 @@ export class TraitList extends List<Trait> {
             } else {
                 return prev
             }
-        }, 0);
+        }, 0)
     }
     sumDisadvantages() {
         return this.iter().reduce((prev, cur) => {
@@ -37,7 +37,7 @@ export class TraitList extends List<Trait> {
             } else {
                 return prev
             }
-        }, 0);
+        }, 0)
     }
     sumQuirks() {
         return this.iter().reduce((prev, cur) => {
@@ -47,7 +47,7 @@ export class TraitList extends List<Trait> {
             } else {
                 return prev
             }
-        }, 0);
+        }, 0)
     }
 }
 
@@ -59,8 +59,10 @@ enum ContainerType {
 }
 
 export class Trait extends ListItem<Trait> {
+    version = 1
     tag = "advantage"
-    static version = 4
+
+    hasLevels: boolean
 
     name: string
     basePoints: number
@@ -82,6 +84,8 @@ export class Trait extends ListItem<Trait> {
         this.modifiers = new Set();
     }
 
+    getLevel() { return 0 }
+
     isRacial(): Boolean {
         if (!this.containedBy) {
             return false
@@ -96,9 +100,9 @@ export class Trait extends ListItem<Trait> {
     childrenPoints(): number {
         return this.iterChildren().reduce((prev, cur) => {
             if (cur.canContainChildren) {
-                prev += cur.childrenPoints();
+                prev += cur.findSelf().childrenPoints();
             } else {
-                prev += cur.adjustedPoints();
+                prev += cur.findSelf().adjustedPoints();
             }
             return prev
         }, 0)
@@ -208,7 +212,7 @@ export class Trait extends ListItem<Trait> {
         return {}
     }
     loadJSON(object: string | json) {
-        object = objectify(object);
+        object = objectify<json>(object);
         super.loadJSON(object);
         function mapTrait(object: json, trait: Trait) {
             trait.name = object.name;
@@ -335,7 +339,7 @@ class TraitModifier extends Modifier<Trait> {
 
     }
     loadJSON(object: string | json): TraitModifier {
-        object = objectify(object);
+        object = objectify<json>(object);
         super.loadJSON(object);
         function mapModifier(object: json, modifier: TraitModifier): TraitModifier {
             modifier.cost = object.cost;
@@ -359,7 +363,6 @@ enum TraitModifierAffects {
     levels = "levels only",
     total = "total"
 }
-
 
 enum TraitType {
     mental = "Mental",

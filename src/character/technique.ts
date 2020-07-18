@@ -1,20 +1,27 @@
-import { Skill, SkillDefault, difficulty } from "./skill";
-import { signatures } from "./character";
+import { Skill, SkillDefault, Difficulty, SkillLike } from "./skill";
+import { Signature } from "./character";
 import { List } from "./misc/list";
 import { objectify, json } from "../utils/json_utils";
 
+type TehcniqueDifficulty = Difficulty.average | Difficulty.hard
 export class Technique extends Skill {
     tag = "technique"
 
     limit: number
-    difficulty: difficulty
+    difficulty: TehcniqueDifficulty = Difficulty.average
+
+    defaults: Set<SkillDefault<SkillLike<any>>> = null
+
     default: SkillDefault<Skill>
+    defaultedFrom: SkillDefault<SkillLike<any>> = null
+
+    isTechnique: boolean = true
 
     constructor(list: List<Skill>) {
         super(list);
     }
 
-    get signature(): signatures { return null }
+    get signature(): Signature { return null }
 
     getBonus() {
         return 0
@@ -31,7 +38,7 @@ export class Technique extends Skill {
             if (level !== Number.NEGATIVE_INFINITY) {
                 let baseLevel = level;
                 level += techniqueDefault.modifier;
-                if (this.difficulty === difficulty.hard) {
+                if (this.difficulty === Difficulty.hard) {
                     points--;
                 }
                 if (points > 0) {
@@ -67,12 +74,12 @@ export class Technique extends Skill {
     toJSON() {
         return {}
     }
-    loadJSON(object: string | json) {
-        object = objectify(object);
-        super.loadJSON(object);
-        this.limit = object.limit;
-        this.difficulty = object.difficulty;
-        this.default = new SkillDefault<Skill>(this).loadJSON(object.default, this);
+    loadJSON(json: string | json) {
+        const data = objectify<gcs.Technique>(json);
+        super.loadJSON(json);
+        this.limit = data.limit;
+        this.difficulty = data.difficulty as TehcniqueDifficulty;
+        this.default = new SkillDefault<Skill>(this).loadJSON(data.default);
         return this
     }
     toR20(): any {

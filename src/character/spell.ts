@@ -1,12 +1,11 @@
-import { SkillLike } from "./skill";
+import { SkillLike, SkillDefault, Difficulty } from "./skill";
 import { List } from "./misc/list";
-import { Character } from "./character";
+import { Character, Signature } from "./character";
 import { objectify, json } from "../utils/json_utils";
 
 
 export class SpellList extends List<Spell> {
-    tag = "spell"
-    class = Spell
+    populator = Spell
 
     constructor(character: Character) {
         super(character);
@@ -14,7 +13,9 @@ export class SpellList extends List<Spell> {
 }
 
 export class Spell extends SkillLike<Spell> {
+    version = 1
     tag = "spell"
+    type: "spell" | "spell_container"
 
     college: string
     powerSource: string
@@ -23,6 +24,13 @@ export class Spell extends SkillLike<Spell> {
     maintenanceCost: string
     castingTime: string
     duration: string
+
+    difficulty: Difficulty = Difficulty.hard
+
+    signature: Signature = Signature.IQ
+    defaults: Set<SkillDefault<SkillLike<any>>>
+    defaultedFrom: SkillDefault<SkillLike<any>> = null
+    encumbrancePenaltyMultiple: number = null;
 
     constructor(list: List<Spell>) {
         super(list)
@@ -37,7 +45,7 @@ export class Spell extends SkillLike<Spell> {
         return {}
     }
     loadJSON(object: string | json) {
-        object = objectify(object);
+        object = objectify<json>(object);
         super.loadJSON(object);
         function mapSpell(object: json, spell: Spell) {
             spell.college = object.college;

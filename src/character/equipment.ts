@@ -4,10 +4,10 @@ import { Character, Featurable } from "./character";
 import { Feature, FeatureType } from "./misc/feature";
 import { Skill } from "./skill";
 import { Trait } from "./trait";
-import { objectify, json } from "../utils/json_utils";
+import { objectify, json, isArray } from "../utils/json_utils";
 
-export class ItemList extends List<Item> {
-    class = Item
+export class EquipmentList extends List<Equipment> {
+    populator = Equipment
 
     constructor(character: Character) {
         super(character);
@@ -15,7 +15,8 @@ export class ItemList extends List<Item> {
 }
 
 
-export class Item extends ListItem<Item> {
+export class Equipment extends ListItem<Equipment> {
+    version = 1
     tag = "equipment"
 
     description: string
@@ -27,13 +28,16 @@ export class Item extends ListItem<Item> {
     value: number
     containedWeightReduction: string
 
-    modifiers: Set<EquipmentModifier<Item>>
+    modifiers: Set<EquipmentModifier<Equipment>>
 
-    constructor(list: List<Item>) {
+    hasLevels = false
+
+    constructor(list: List<Equipment>) {
         super(list);
         this.modifiers = new Set();
     }
 
+    getLevel(): number { return null }
     private childrenWeight(): number | null {
         return 0
     }
@@ -67,7 +71,7 @@ export class Item extends ListItem<Item> {
     adjustedValue() {
         let modifiers = this.modifiers;
         let value = this.value;
-        let cost = Item.processNonCFStep(EquipmentModifierValueType.originalCost, value, modifiers);
+        let cost = Equipment.processNonCFStep(EquipmentModifierValueType.originalCost, value, modifiers);
         let cf = 0;
         let count = 0;
 
@@ -90,13 +94,13 @@ export class Item extends ListItem<Item> {
             }
             cost *= (cf + 1);
         }
-        cost = Item.processNonCFStep(EquipmentModifierValueType.finalBaseCost, cost, modifiers)
-        cost = Item.processNonCFStep(EquipmentModifierValueType.finalCost, cost, modifiers);
+        cost = Equipment.processNonCFStep(EquipmentModifierValueType.finalBaseCost, cost, modifiers)
+        cost = Equipment.processNonCFStep(EquipmentModifierValueType.finalCost, cost, modifiers);
 
         return cost > 0 ? cost : 0;
     }
 
-    private static processNonCFStep(costType: EquipmentModifierValueType, value: number, modifiers: Set<EquipmentModifier<Item>>) {
+    private static processNonCFStep(costType: EquipmentModifierValueType, value: number, modifiers: Set<EquipmentModifier<Equipment>>) {
         let percentages = 0;
         let additions = 0;
         let cost = value;
@@ -151,9 +155,9 @@ export class Item extends ListItem<Item> {
             original = original *= (percentages / 100);
         }
 
-        weight = Item.processMultiplyAddWeightStep(EquipmentModifierWeightType.baseWeight, weight, modifiers);
-        weight = Item.processMultiplyAddWeightStep(EquipmentModifierWeightType.finalBaseWeight, weight, modifiers);
-        weight = Item.processMultiplyAddWeightStep(EquipmentModifierWeightType.finalWeight, weight, modifiers);
+        weight = Equipment.processMultiplyAddWeightStep(EquipmentModifierWeightType.baseWeight, weight, modifiers);
+        weight = Equipment.processMultiplyAddWeightStep(EquipmentModifierWeightType.finalBaseWeight, weight, modifiers);
+        weight = Equipment.processMultiplyAddWeightStep(EquipmentModifierWeightType.finalWeight, weight, modifiers);
 
         if (weight < 0) {
             weight = 0;
@@ -162,7 +166,7 @@ export class Item extends ListItem<Item> {
         return weight
     }
 
-    private static processMultiplyAddWeightStep(weightType: EquipmentModifierWeightType, weight: number, modifiers: Set<EquipmentModifier<Item>>) {
+    private static processMultiplyAddWeightStep(weightType: EquipmentModifierWeightType, weight: number, modifiers: Set<EquipmentModifier<Equipment>>) {
         let sum = 0;
         modifiers.forEach(modifier => {
             if (modifier.enabled && modifier.weightType === weightType) {
@@ -186,6 +190,30 @@ export class Item extends ListItem<Item> {
         return weight
     }
 
+    static mapEquipment(data: gcs.Equipment, equipment: Equipment): Equipment {
+        isArray(data?.modifiers)?.forEach((modifier: json) => equipment.modifiers.add(new EquipmentModifier(equipment).loadJSON(modifier)));
+        equipment.description = data.description;
+        equipment.equipped = data.equipped;
+        equipment.quantity = data.quantity;
+        equipment.value = data.value;
+        equipment.techLevel = data.tech_level;
+        equipment.legalityClass = data.legality_class;
+        return equipment
+    }
+    toJSON() {
+        return {}
+    }
+    loadJSON(json: string | json) {
+        const data = objectify<gcs.Equipment>(json);
+        super.loadJSON(json);
+        Equipment.mapEquipment(data, this);
+        if (data.type.includes("_container")) {
+            this.canContainChildren = true;
+            this.list.addListItem(this);
+            this.loadChildren(isArray(data?.children), this, Equipment.mapEquipment);
+        }
+        return this
+    }
     toR20() {
         return {
             key: "repeating_item",
@@ -204,36 +232,6 @@ export class Item extends ListItem<Item> {
             }
         }
     }
-    toJSON() {
-        return {}
-    }
-    loadJSON(object: string | json) {
-        object = objectify(object);
-        super.loadJSON(object);
-        function mapItem(object: json, item: Item) {
-            object?.modifiers?.forEach((modifier: json) => item.modifiers.add(new EquipmentModifier(item).loadJSON(modifier)));
-            item.description = object.description;
-            item.equipped = object.equipped;
-            item.quantity = object.quantity;
-            item.value = object.value;
-            item.techLevel = object.tech_level;
-            item.legalityClass = object.legality_class;
-        }
-        function loadSubElements(object: json, parent: Item) {
-            object.children.forEach((object: json) => {
-                const subElement = parent.list.addListItem().loadJSON(object);
-                subElement.containedBy = parent;
-                parent.children.add(subElement);
-            });
-            return parent
-        }
-        mapItem(object, this);
-        if (object.type.includes("_container")) {
-            this.canContainChildren = true;
-            loadSubElements(object, this);
-        }
-        return this
-    }
 }
 
 class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
@@ -245,8 +243,8 @@ class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
     weight: string
     weightType: EquipmentModifierWeightType
 
-    constructor(item: T) {
-        super(item);
+    constructor(equipment: T) {
+        super(equipment);
     }
 
     static determineWeightType(type: string) {
@@ -279,13 +277,13 @@ class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
     toJSON() {
 
     }
-    loadJSON(object: string | json) {
-        object = objectify(object);
-        super.loadJSON(object);
-        this.cost = object.cost;
-        this.weight = object.weight;
-        this.costType = object.cost_type;
-        this.weightType = object.weightType;
+    loadJSON(json: string | json) {
+        const data = objectify<any>(json);
+        super.loadJSON(json);
+        this.cost = data.cost;
+        this.weight = data.weight;
+        this.costType = data.cost_type;
+        this.weightType = data.weightType;
         return this
     }
 }

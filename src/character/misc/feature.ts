@@ -47,7 +47,7 @@ export abstract class Feature<T extends Featurable> extends CharacterElement<T> 
 
     }
     loadJSON(object: string | json) {
-        object = objectify(object);
+        object = objectify<json>(object);
         super.loadJSON(object);
         this.amount = object.amount;
         this.leveled = object?.per_level ?? false;

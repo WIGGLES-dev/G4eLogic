@@ -27,10 +27,10 @@ export class Profile {
 
     }
     loadJSON(object: string | json) {
-        object = objectify(object);
+        object = objectify<gcs.Profile>(object);
         this.sizeModifier = object?.size_modifier ?? "";
         this.techLevel = object?.tech_level ?? "";
-        this.birthday = object?.tech_level ?? "";
+        this.birthday = object?.birthday ?? "";
         this.name = object?.name ?? "";
         this.eyes = object?.eyes ?? "";
         this.skin = object?.skin ?? "";

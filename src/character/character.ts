@@ -2,12 +2,13 @@ import { List, ListItem } from "./misc/list";
 import { Attribute } from "./attribute";
 import { SkillList } from "./skill";
 import { TraitList } from "./trait";
-import { Item, ItemList } from "./equipment";
+import { Equipment, EquipmentList } from "./equipment";
 import { Feature } from "./misc/feature";
 import { Profile } from "./profile";
 import { SpellList } from "./spell";
 import { exportR20 } from "../utils/2R20";
 import { json, objectify } from "../utils/json_utils";
+import { Weapon } from "./weapon";
 
 abstract class Sheet {
     configuration: {}
@@ -17,24 +18,29 @@ abstract class Sheet {
     }
 }
 
-export type Featurable = ListItem<any>;
+export interface Featurable extends ListItem<any> {
+    hasLevels: boolean
+    getLevel: () => number
+}
+
 class FeatureList {
-    #contents: Map<string, Feature<Featurable>>
+    features: Map<string, Feature<Featurable>>
+    weapons: Map<string, Weapon<Featurable>>
 
     constructor() {
-        this.#contents = new Map();
+        this.features = new Map();
+        this.weapons = new Map();
     }
-
-    get table() { return this.#contents }
 
     registerFeature(feature: Feature<Featurable>) {
-        this.#contents.set(feature.uuid, feature);
+        this.features.set(feature.uuid, feature);
     }
     removeFeature(uuid: string) {
-        this.#contents.delete(uuid);
+        this.features.delete(uuid);
     }
+
     getFeaturesByUUID(id: string) {
-        return Array.from(this.#contents.values()).filter(feature => {
+        return Array.from(this.features.values()).filter(feature => {
             if (feature.owner.uuid = id) {
                 return true
             } else {
@@ -42,7 +48,8 @@ class FeatureList {
             }
         });
     }
-    iter() { return Array.from(this.#contents.values()) }
+
+    iter() { return Array.from(this.features.values()) }
 }
 
 export class Character extends Sheet {
@@ -64,8 +71,8 @@ export class Character extends Sheet {
 
     profile: Profile
     skillList: SkillList
-    equipmentList: ItemList
-    otherEquipmentList: ItemList
+    equipmentList: EquipmentList
+    otherEquipmentList: EquipmentList
     traitList: TraitList
     spellList: SpellList
 
@@ -74,8 +81,8 @@ export class Character extends Sheet {
     constructor() {
         super({});
         this.profile = new Profile();
-        this.equipmentList = new ItemList(this);
-        this.otherEquipmentList = new ItemList(this);
+        this.equipmentList = new EquipmentList(this);
+        this.otherEquipmentList = new EquipmentList(this);
         this.skillList = new SkillList(this);
         this.traitList = new TraitList(this);
         this.spellList = new SpellList(this);
@@ -142,19 +149,19 @@ export class Character extends Sheet {
         }, 0)
     }
 
-    attributes(attribute: signatures) {
+    attributes(attribute: Signature) {
         switch (attribute) {
-            case signatures.HP: return this.HP.calculateLevel()
-            case signatures.FP: return this.FP.calculateLevel()
-            case signatures.ST: return this.ST.calculateLevel()
-            case signatures.DX: return this.DX.calculateLevel()
-            case signatures.IQ: return this.IQ.calculateLevel()
-            case signatures.HT: return this.HT.calculateLevel()
-            case signatures.Per: return this.Per.calculateLevel()
-            case signatures.Will: return this.Will.calculateLevel()
-            case signatures.Base: return 10
-            case signatures.Speed: return this.Speed.calculateLevel()
-            case signatures.Move: return this.Move.calculateLevel()
+            case Signature.HP: return this.HP.calculateLevel()
+            case Signature.FP: return this.FP.calculateLevel()
+            case Signature.ST: return this.ST.calculateLevel()
+            case Signature.DX: return this.DX.calculateLevel()
+            case Signature.IQ: return this.IQ.calculateLevel()
+            case Signature.HT: return this.HT.calculateLevel()
+            case Signature.Per: return this.Per.calculateLevel()
+            case Signature.Will: return this.Will.calculateLevel()
+            case Signature.Base: return 10
+            case Signature.Speed: return this.Speed.calculateLevel()
+            case Signature.Move: return this.Move.calculateLevel()
         }
     }
 
@@ -179,7 +186,7 @@ export class Character extends Sheet {
         }
     }
 
-    allItems(): Item[] {
+    allItems(): Equipment[] {
         return [].concat.apply([],
             [
                 this.equipmentList.iter(),
@@ -196,51 +203,50 @@ export class Character extends Sheet {
         if (carriedWeight < basicLift) {
             return 0
         } else if (carriedWeight < basicLift * 2) {
-            return 1
+            return -1
         } else if (carriedWeight < basicLift * 3) {
-            return 2
+            return -2
         } else if (carriedWeight < basicLift * 6) {
-            return 3
+            return -3
         } else if (carriedWeight < basicLift * 10) {
-            return 4
+            return -4
         }
     }
 
     encumberedMove() {
-        return this.Move.calculateLevel() + this.encumbranceLevel() + 1
+        return this.Move.calculateLevel() + this.encumbranceLevel()
     }
-    carriedWeight(list: List<Item>) {
+    carriedWeight(list: List<Equipment>) {
         return list.iterTop().reduce((prev, cur) => {
             return prev + cur.extendedWeight()
         }, 0)
     }
-    carriedValue(list: List<Item>) {
+    carriedValue(list: List<Equipment>) {
         return list.iterTop().reduce((prev, cur) => {
             return prev + cur.extendedValue()
         }, 0);
     }
 
     dodgeScore() { return Math.floor(this.Speed.calculateLevel() + Attribute.bonusReducer(this, "dodge") + 3) }
-
     encumberedDodgeScore() {
         switch (this.encumbranceLevel()) {
             case 0:
                 return this.dodgeScore()
-            case 1:
+            case -1:
                 return Math.floor(this.dodgeScore() * .8)
-            case 2:
+            case -2:
                 return Math.floor(this.dodgeScore() * .6)
-            case 3:
+            case -3:
                 return Math.floor(this.dodgeScore() * .4)
-            case 4:
+            case -4:
                 return Math.floor(this.dodgeScore() * .2)
         }
     }
     toJSON() {
 
     }
-    loadJSON(json: string  | json) {
-        json = objectify(json);
+    loadJSON(json: string | json) {
+        json = objectify<json>(json);
         this.gCalcID = json.id;
 
         this.profile.loadJSON(json.profile);
@@ -270,11 +276,32 @@ export class Character extends Sheet {
         return exportR20(this)
     }
     loadFromActor(actor: Actor) {
-        
+        const data = actor.data.data;
+
+        const items: Entity[] = actor.items.filter((item: Entity) => item.data.type === "item");
+        const skills: Entity[] = actor.items.filter((item: Entity) => item.data.type === "skill");
+        const traits: Entity[] = actor.items.filter((item: Entity) => item.data.type === "trait");
+
+        this.DX.setLevel(data.attributes.dexterity);
+        this.FP.setLevel(data.pools.fatigue_points.max);
+        this.HP.setLevel(data.pools.hit_points);
+        this.HT.setLevel(data.attributes.health);
+        this.IQ.setLevel(data.attributes.intelligence);
+        this.Move.setLevel(data.attributes.move);
+        this.Per.setLevel(data.attributes.perception);
+        this.ST.setLevel(data.attributes.strength);
+        this.Speed.setLevel(data.attributes.speed);
+        this.Will.setLevel(data.attributes.will);
+
+        this.equipmentList.loadEntity(items);
+        this.skillList.loadEntity(skills);
+        this.traitList.loadEntity(traits);
+
+        return this
     }
 }
 
-export enum signatures {
+export enum Signature {
     ST = "ST",
     DX = "DX",
     IQ = "IQ",
