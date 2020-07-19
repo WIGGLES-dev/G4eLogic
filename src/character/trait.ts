@@ -1,9 +1,10 @@
 import { Modifier } from "./misc/modifier";
 import { List, ListItem } from "./misc/list";
 import { Character } from "./character";
-import { json, objectify } from "../utils/json_utils";
-import { Feature, FeatureType } from "./misc/feature";
-import { SkillBonus } from "./skill";
+import { json, objectify } from "@utils/json_utils";
+import { Feature } from "./misc/feature";
+import * as gcs from "@gcs/gcs";
+
 
 export class TraitList extends List<Trait> {
     populator = Trait
@@ -73,7 +74,7 @@ export class Trait extends ListItem<Trait> {
     controlRating: ControlRollMultiplier
     types: Set<TraitType>
     pointsPerLevel: number
-    enabled: boolean
+    disabled: boolean = false
     containerType: ContainerType
 
     modifiers: Set<TraitModifier>
@@ -84,7 +85,8 @@ export class Trait extends ListItem<Trait> {
         this.modifiers = new Set();
     }
 
-    getLevel() { return 0 }
+    isActive() { return !this.disabled }
+    getLevel() { return this.levels }
 
     isRacial(): Boolean {
         if (!this.containedBy) {
@@ -127,8 +129,8 @@ export class Trait extends ListItem<Trait> {
         }
     }
 
-    disable() { this.enabled = false; }
-    enable() { this.enabled = true; }
+    disable() { this.disabled = true; }
+    enable() { this.disabled = false; }
 
     static getAdjustedPoints(modifiers: Set<TraitModifier>, trait: Trait): number {
         let basePoints = trait.basePoints;
@@ -218,21 +220,18 @@ export class Trait extends ListItem<Trait> {
             trait.name = object.name;
             object.modifiers?.forEach((modifier: json) => trait.modifiers.add(new TraitModifier(trait).loadJSON(modifier)));
             trait.basePoints = object.base_points;
-            trait.levels = object.levels;
+            trait.levels = parseInt(object?.levels) ?? null;
             trait.allowHalfLevels = object.allow_half_levels;
             trait.hasHalfLevel = object.has_half_level;
             trait.roundDown = object.round_down;
             trait.controlRating = object.cr;
             object.types?.forEach((type: TraitType) => trait.types.add(type));
             trait.pointsPerLevel = object.points_per_level;
-            trait.enabled = !object.disabled;
+            trait.disabled = object.disabled;
+            trait.hasLevels = trait.levels ? true : false;
+            
             object.features?.forEach((feature: json) => {
-                switch (feature.type) {
-                    case FeatureType.skillBonus:
-                        trait.features.add(
-                            new SkillBonus<Trait>(trait).loadJSON(feature)
-                        )
-                }
+                Feature.loadFeature<Trait>(trait, feature.type)?.loadJSON(feature)
             });
         }
         function loadSubElements(object: json, parent: Trait) {

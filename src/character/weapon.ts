@@ -1,5 +1,5 @@
 import { Featurable } from "./character";
-import { objectify, json } from "../utils/json_utils";
+import { objectify, json } from "@utils/json_utils";
 import { ListItem } from "./misc/list";
 import { Default } from "./misc/default";
 
@@ -14,7 +14,7 @@ export abstract class Weapon<T extends Featurable> {
 
     }
     loadJSON(object: string | json) {
-        object = objectify(object);
+        object = objectify<json>(object);
         object.defaults?.forEach((weaponDefault: any) => this.defaults.add(new WeaponDefault<T>(this.owner).loadJSON(weaponDefault)))
     }
 }

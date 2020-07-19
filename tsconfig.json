@@ -1,6 +1,5 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
         "esModuleInterop": true,
         "noImplicitAny": false,
         "removeComments": true,
@@ -18,11 +17,29 @@
             "DOM"
         ],
         "types": [
-            "foundry-pc-types"
+            "foundry-pc-types",
+            "webpack",
+            "webpack-dev-server"
         ],
+        "baseUrl": "./src",
+        "paths": {
+            "@character/*": [
+                "character/*"
+            ],
+            "@utils/*": [
+                "utils/*"
+            ],
+            "@gcs/*": [
+                "gcs/*"
+            ]
+        },
         "target": "ES2015",
         "allowJs": false
     },
+    "include": [
+        "src/**/*",
+        "test/tests"
+    ],
     "exclude": [
         "node_modules",
         "**/*.spec.ts",

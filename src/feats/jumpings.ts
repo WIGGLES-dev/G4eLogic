@@ -1,4 +1,4 @@
-import { Character } from "../character/character";
+import { Character } from "character/character";
 import { features } from "process";
 import { format } from "path";
 

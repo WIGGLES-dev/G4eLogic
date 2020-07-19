@@ -1,9 +1,9 @@
 import { Modifier } from "./misc/modifier";
 import { List, ListItem } from "./misc/list";
 import { Character } from "./character";
-import { json } from "../utils/json_utils";
+import { json } from "utils/json_utils";
 export declare class TraitList extends List<Trait> {
-    class: typeof Trait;
+    populator: typeof Trait;
     constructor(character: Character);
     sumRacials(): number;
     sumAdvantages(): number;
@@ -17,8 +17,9 @@ declare enum ContainerType {
     alternativeAbilities = "alternative abilities"
 }
 export declare class Trait extends ListItem<Trait> {
+    version: number;
     tag: string;
-    static version: number;
+    hasLevels: boolean;
     name: string;
     basePoints: number;
     levels: number;
@@ -28,13 +29,15 @@ export declare class Trait extends ListItem<Trait> {
     controlRating: ControlRollMultiplier;
     types: Set<TraitType>;
     pointsPerLevel: number;
-    enabled: boolean;
+    disabled: boolean;
     containerType: ContainerType;
     modifiers: Set<TraitModifier>;
     constructor(list: List<Trait>);
+    isActive(): boolean;
+    getLevel(): number;
     isRacial(): Boolean;
     childrenPoints(): number;
-    static getCRMultipland(cr: ControlRollMultiplier): 1 | 2 | 2.5 | 1.5 | 0.5;
+    static getCRMultipland(cr: ControlRollMultiplier): 1 | 2 | 0.5 | 2.5 | 1.5;
     adjustedPoints(): number;
     disable(): void;
     enable(): void;

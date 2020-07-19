@@ -1,22 +1,28 @@
-import { Feature, FeatureType } from "./misc/feature";
-import { Character } from "./character";
+import { Feature } from "./misc/feature";
+import { Character, Signature } from "./character";
+import { FeatureType } from "@gcs/gcs";
+import { objectify, json } from "@utils/json_utils";
+import { Featurable } from "@character/character";
 
 export class Attribute {
-    sheet: Character
+    name: Signature
+    character: Character
     level: number
     costPerLevel: number
     defaultLevel: number
     basedOn: () => number
 
     constructor(
-        sheet: Character,
+        name: Signature,
+        character: Character,
         costPerLevel: number,
         {
             defaultLevel = 0,
             basedOn = () => 0
         }
     ) {
-        this.sheet = sheet
+        this.name = name;
+        this.character = character;
         this.level = defaultLevel;
         this.costPerLevel = costPerLevel;
         this.defaultLevel = defaultLevel;
@@ -26,7 +32,7 @@ export class Attribute {
     setLevel(level: number) { if (level) this.level = level }
     setLevelDelta() { }
 
-    getMod() { return 0 }
+    getMod() { return Attribute.bonusReducer(this.character, this.name) }
     pointsSpent() { return this.levelsIncreased() * this.costPerLevel }
     levelsIncreased() { return this.level - this.defaultLevel }
     calculateLevel() { return this.level + this.getMod() + this.basedOn() }
@@ -42,16 +48,27 @@ export class Attribute {
         }
     }
 
-    static bonusReducer(sheet: Character, attribute: string) {
-        return 0
+    static bonusReducer(sheet: Character, attribute: Signature) {
+        return sheet.featureList.getFeaturesByType(FeatureType.attributeBonus).reduce((prev, cur) => {
+            if (cur instanceof AttributeBonus) {
+                if (cur.ownerIsActive() && cur.attribute?.toString()?.toLowerCase() === attribute?.toString()?.toLowerCase()) {
+                    prev += cur.getBonus()
+                }
+            }
+            return prev
+        }, 0)
     }
 }
 
-class AttributeBonus extends Feature<any> {
-    element: Element
-    constructor(element: Element) {
-        super(element, FeatureType.attributeBonus);
-        this.element = element;
+export class AttributeBonus<T extends Featurable> extends Feature<T> {
+    attribute: Signature
+    constructor(owner: T) {
+        super(owner, FeatureType.attributeBonus);
     }
-    get attribute() { return this.element.querySelector("attribute")?.textContent ?? "" }
+    loadJSON(json: json) {
+        const data = objectify<json>(json);
+        super.loadJSON(data);
+        this.attribute = data.attribute
+        return this
+    }
 }

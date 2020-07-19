@@ -4,7 +4,8 @@
   "description": "Logic API for GURPS 4e",
   "main": "lib/index.js",
   "scripts": {
-    "build": "npx tsc -p tsconfig.json"
+    "build": "npx tsc -p tsconfig.json",
+    "test": "webpack-dev-server"
   },
   "repository": {
     "type": "git",
@@ -20,8 +21,16 @@
   },
   "homepage": "https://github.com/WIGGLES-dev/G4eLogic#readme",
   "dependencies": {
+    "@types/webpack": "^4.41.21",
+    "@types/webpack-dev-server": "^3.11.0",
+    "link-module-alias": "^1.2.0",
+    "ts-loader": "^8.0.1",
     "ts-node": "^8.10.2",
-    "typescript": "^3.9.6"
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^3.9.6",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.0"
   },
   "devDependencies": {
     "foundry-pc-types": "gitlab:foundry-projects/foundry-pc/foundry-pc-types"

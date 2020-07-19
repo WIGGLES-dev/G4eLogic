@@ -1,8 +1,8 @@
 import { Trait } from "../trait";
-import { Item } from "../equipment";
-import { json } from "../../utils/json_utils";
+import { Equipment } from "../equipment";
+import { json } from "utils/json_utils";
 import { CharacterElement } from "./element";
-export declare type Modifiable = Trait | Item;
+export declare type Modifiable = Trait | Equipment;
 export declare abstract class Modifier<T extends Modifiable> extends CharacterElement<T> {
     static version: number;
     enabled: boolean;

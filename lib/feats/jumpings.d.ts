@@ -1,4 +1,4 @@
-import { Character } from "../character/character";
+import { Character } from "character/character";
 export declare class Jump {
     character: Character;
     distanceMoved: number;

@@ -1,4 +1,4 @@
-import { json, objectify } from "utils/json_utils"
+import { json, objectify } from "@utils/json_utils"
 
 enum DefaultType {
     skill = "Skill"

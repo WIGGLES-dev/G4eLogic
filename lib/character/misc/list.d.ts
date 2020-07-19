@@ -1,22 +1,24 @@
-import { Character } from "../character";
+import { Character, Featurable } from "../character";
 import { CharacterElement } from "./element";
 import { Feature } from "./feature";
 import { Weapon } from "../weapon";
-import { json } from "../../utils/json_utils";
-export declare abstract class ListItem<T extends ListItem<T>> extends CharacterElement<T> {
+import { json } from "utils/json_utils";
+import * as gcs from "gcs";
+export declare abstract class ListItem<T extends Featurable> extends CharacterElement<T> implements gcs.ListItem<T> {
     #private;
+    abstract version: number;
     abstract tag: string;
     list: List<T>;
-    canHaveLevels: boolean;
-    levels: number;
     canContainChildren: boolean;
     open: boolean;
-    children: Set<T>;
+    children: Set<ListItem<T>>;
     isContained: boolean;
     containedBy: T;
     features: Set<Feature<T>>;
     weapons: Set<Weapon<T>>;
     constructor(list: List<T>);
+    abstract isActive(): boolean;
+    getCharacter(): Character;
     isContainer(): boolean;
     isContainerOpen(): boolean;
     isVisible(): boolean;
@@ -27,18 +29,22 @@ export declare abstract class ListItem<T extends ListItem<T>> extends CharacterE
     closeContainer(): void;
     depth(): void;
     index(): void;
-    iterChildren(): T[];
+    iterChildren(): ListItem<T>[];
     addChild(child?: T): T;
     removeChild(child: string | T): void;
     getRecursiveChildren(): void;
     findSelf(): T;
+    loadChildren<U>(children: U[], parent: T, loader: (data: U, listItem: T) => T): this;
     toJSON(): Object;
-    loadJSON(object: string | json): void;
+    loadJSON(json: string | json): void;
+    toEntity(): void;
+    loadEntity(entity: Entity): this;
+    load<U>(loader: (subject: T) => U[]): void;
 }
-export declare abstract class List<T extends ListItem<T>> {
+export declare abstract class List<T extends Featurable> {
     #private;
     contents: Set<T>;
-    abstract class: new (list: List<T>) => T;
+    abstract populator: new (list: List<T>) => T;
     character: Character;
     constructor(character: Character);
     generate(): void;
@@ -51,4 +57,6 @@ export declare abstract class List<T extends ListItem<T>> {
     keys(): T[];
     toJSON(): void;
     loadJSON(object: string | json): this;
+    toEntity(): void;
+    loadEntity(entity: Entity[]): this;
 }

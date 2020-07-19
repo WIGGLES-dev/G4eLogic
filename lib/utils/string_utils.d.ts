@@ -9,3 +9,4 @@ export declare enum StringCompare {
     endsWith = "ends with",
     doesNotEndWith = "does not end with"
 }
+export declare function stringCompare(compare: string, compareTo: string | string[] | Set<string>, type: StringCompare): boolean;

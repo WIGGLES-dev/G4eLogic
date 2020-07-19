@@ -1,48 +1,56 @@
-import { signatures, Character, Featurable } from "./character";
+import { Signature, Character } from "./character";
 import { List, ListItem } from "./misc/list";
-import { Feature } from "./misc/feature";
-import { StringCompare } from "../utils/string_utils";
-import { json } from "../utils/json_utils";
-export declare abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T> {
-    name: string;
-    difficulty: difficulty;
-    points: number;
-    specialization?: string;
-    signature?: signatures;
-    defaults?: Set<SkillDefault<T>>;
-    defaultedFrom?: SkillDefault<T>;
-    constructor(list: List<T>);
-    abstract getBonus(): number;
-    getBaseRelativeLevel(): -1 | 0 | -2 | -3;
-    getRelativeLevel(): number;
-    static calculateRelativeLevel(points: number, relativeLevel: number): number;
-    calculateLevel(): number;
-    getBestDefaultWithPoints(): SkillDefault<any>;
-    getBestDefault(): SkillDefault<any>;
-    canSwapDefaults(skill: SkillLike<T>): boolean;
-    hasDefaultTo(skill: SkillLike<T>): boolean;
-    swapDefault(): number;
-    toJSON(): {};
-    loadJSON(object: string | json): void;
-}
+import { json } from "utils/json_utils";
+import { Default } from "./misc/default";
+import * as gcs from "gcs";
 export declare class SkillList extends List<Skill> {
-    class: typeof Skill;
+    populator: typeof Skill;
     constructor(character: Character);
 }
-export declare class Skill extends SkillLike<Skill> {
-    tag: string;
+export declare abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T> {
+    abstract type: "skill" | "skill_container" | "spell" | "spell_container" | "technique";
+    name: string;
+    difficulty: Difficulty;
+    points: number;
     specialization: string;
-    signature: signatures;
+    abstract defaults: Set<SkillDefault<SkillLike<any>>>;
+    abstract defaultedFrom: SkillDefault<SkillLike<any>>;
+    abstract signature: Signature;
+    abstract encumbrancePenaltyMultiple: number;
+    hasLevels: boolean;
+    constructor(list: List<T>);
+    abstract getBonus(): number;
+    getLevel(): number;
+    getBaseRelativeLevel(): -1 | 0 | -2 | -3;
+    static getBaseRelativeLevel(difficulty: Difficulty): -1 | 0 | -2 | -3;
+    static calculateRelativeLevel(points: number, relativeLevel: number): number;
+    calculateLevel(): number;
+    static calculateLevel(difficulty: Difficulty, points: number, base?: number, defaultedFrom?: SkillDefault<SkillLike<any>>, bonus?: number, encumbranceLevel?: number, encPenaltyMult?: number): number;
+    static getBestDefaultWithPoints<T extends SkillLike<T>>(character: Character, skill: T, defaults: Set<SkillDefault<T>>): SkillDefault<T>;
+    static getBestDefault<T extends SkillLike<T>>(character: Character, defaults: Set<SkillDefault<T>>): SkillDefault<T>;
+    canSwapDefaults(skill: SkillLike<T>, defaults: Set<SkillDefault<T>>): boolean;
+    hasDefaultTo(skill: SkillLike<T>, defaults: Set<SkillDefault<T>>): boolean;
+    swapDefault(skill: SkillLike<T>, defaults: Set<SkillDefault<T>>): number;
+    loadJSON(json: string | json): void;
+}
+export declare class Skill extends SkillLike<Skill> {
+    version: number;
+    tag: string;
+    type: "skill" | "skill_container";
+    signature: Signature;
     techLevel: string;
-    defaults: Set<SkillDefault<Skill>>;
-    defaultedFrom: SkillDefault<Skill>;
+    defaults: Set<SkillDefault<SkillLike<any>>>;
+    defaultedFrom: SkillDefault<SkillLike<any>>;
+    encumbrancePenaltyMultiple: number;
     isTechnique: boolean;
-    constructor(list: List<Skill>);
+    constructor(list: List<Skill>, isTechnique?: boolean);
+    isActive(): boolean;
     childrenPoints(): number;
     getBonus(): number;
     toString(): string;
+    static mapSkill(data: gcs.Skill, skill: Skill): Skill;
     toJSON(): {};
-    loadJSON(object: string | json): this;
+    loadJSON(json: string | json): this;
     toR20(): {
         key: string;
         row_id: string;
@@ -61,32 +69,10 @@ export declare class Skill extends SkillLike<Skill> {
         };
     };
 }
-export declare class SkillBonus<T extends Featurable> extends Feature<T> {
-    selectionType: string;
-    nameCompareType: StringCompare;
-    name: string;
-    specializationCompareType: string;
-    specialization: string;
-    categoryCompareType: string;
-    constructor(owner: T);
-    totalBonus(): number;
-    isApplicableTo(skill: Skill): boolean;
-    toJSON(): {};
-    loadJSON(object: string | json): this;
-}
-interface SkillBinding<T> {
-    skill: T;
+export declare class SkillDefault<T extends SkillLike<any>> extends Default<T> {
     level: number;
     adjustedLevel: number;
     points: number;
-}
-export declare class SkillDefault<T extends SkillLike<T>> {
-    tag: string;
-    bound: SkillBinding<T>;
-    type: string;
-    name: string;
-    specialization: string;
-    modifier: number;
     constructor(skill: T);
     isSkillBased(): boolean;
     getSkillsNamedFrom(list: List<T>): {
@@ -94,13 +80,12 @@ export declare class SkillDefault<T extends SkillLike<T>> {
         highest: T;
     };
     toJSON(): void;
-    loadJSON(object: json, skill: T): this;
+    loadJSON(data: json): this;
 }
-export declare enum difficulty {
+export declare enum Difficulty {
     easy = "E",
     average = "A",
     hard = "H",
     very_hard = "VH",
     wildcard = "W"
 }
-export {};

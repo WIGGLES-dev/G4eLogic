@@ -1,7 +1,8 @@
 import { Skill, SkillDefault, Difficulty, SkillLike } from "./skill";
 import { Signature } from "./character";
 import { List } from "./misc/list";
-import { objectify, json } from "../utils/json_utils";
+import { objectify, json } from "@utils/json_utils";
+import * as gcs from "@gcs/gcs";
 
 type TehcniqueDifficulty = Difficulty.average | Difficulty.hard
 export class Technique extends Skill {

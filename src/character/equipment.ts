@@ -1,10 +1,8 @@
 import { List, ListItem } from "./misc/list";
 import { Modifier, Modifiable } from "./misc/modifier";
-import { Character, Featurable } from "./character";
-import { Feature, FeatureType } from "./misc/feature";
-import { Skill } from "./skill";
-import { Trait } from "./trait";
-import { objectify, json, isArray } from "../utils/json_utils";
+import { Character } from "./character";
+import { objectify, json, isArray } from "@utils/json_utils";
+import * as gcs from "@gcs/gcs";
 
 export class EquipmentList extends List<Equipment> {
     populator = Equipment
@@ -37,7 +35,9 @@ export class Equipment extends ListItem<Equipment> {
         this.modifiers = new Set();
     }
 
+    isActive() { return this.equipped }
     getLevel(): number { return null }
+
     private childrenWeight(): number | null {
         return 0
     }

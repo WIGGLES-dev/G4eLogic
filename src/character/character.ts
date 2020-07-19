@@ -3,12 +3,13 @@ import { Attribute } from "./attribute";
 import { SkillList } from "./skill";
 import { TraitList } from "./trait";
 import { Equipment, EquipmentList } from "./equipment";
-import { Feature } from "./misc/feature";
+import { FeatureList } from "./misc/feature";
 import { Profile } from "./profile";
 import { SpellList } from "./spell";
-import { exportR20 } from "../utils/2R20";
-import { json, objectify } from "../utils/json_utils";
+import { exportR20 } from "@utils/2R20";
+import { json, objectify } from "@utils/json_utils";
 import { Weapon } from "./weapon";
+import { FeatureType } from "@gcs/gcs";
 
 abstract class Sheet {
     configuration: {}
@@ -21,35 +22,6 @@ abstract class Sheet {
 export interface Featurable extends ListItem<any> {
     hasLevels: boolean
     getLevel: () => number
-}
-
-class FeatureList {
-    features: Map<string, Feature<Featurable>>
-    weapons: Map<string, Weapon<Featurable>>
-
-    constructor() {
-        this.features = new Map();
-        this.weapons = new Map();
-    }
-
-    registerFeature(feature: Feature<Featurable>) {
-        this.features.set(feature.uuid, feature);
-    }
-    removeFeature(uuid: string) {
-        this.features.delete(uuid);
-    }
-
-    getFeaturesByUUID(id: string) {
-        return Array.from(this.features.values()).filter(feature => {
-            if (feature.owner.uuid = id) {
-                return true
-            } else {
-                return false
-            }
-        });
-    }
-
-    iter() { return Array.from(this.features.values()) }
 }
 
 export class Character extends Sheet {
@@ -87,51 +59,61 @@ export class Character extends Sheet {
         this.traitList = new TraitList(this);
         this.spellList = new SpellList(this);
         this.ST = new Attribute(
+            Signature.ST,
             this,
             10,
             { defaultLevel: 10 }
         );
         this.DX = new Attribute(
+            Signature.DX,
             this,
             20,
             { defaultLevel: 10 }
         );
         this.IQ = new Attribute(
+            Signature.IQ,
             this,
             20,
             { defaultLevel: 10 }
         );
         this.HT = new Attribute(
+            Signature.HT,
             this,
             10,
             { defaultLevel: 10 }
         );
         this.Will = new Attribute(
+            Signature.Will,
             this,
             5,
             { basedOn: () => this.IQ.calculateLevel() }
         );
         this.Speed = new Attribute(
+            Signature.Speed,
             this,
             20,
             { basedOn: () => (this.DX.calculateLevel() + this.HT.calculateLevel()) / 4 }
         );
         this.Move = new Attribute(
+            Signature.Move,
             this,
             5,
             { basedOn: () => Math.floor(this.Speed.calculateLevel()) }
         );
         this.Per = new Attribute(
+            Signature.Per,
             this,
             5,
             { basedOn: () => this.IQ.calculateLevel() }
         );
         this.HP = new Attribute(
+            Signature.HP,
             this,
             2,
             { basedOn: () => this.ST.calculateLevel() }
         );
         this.FP = new Attribute(
+            Signature.FP,
             this,
             3,
             { basedOn: () => this.HT.calculateLevel() }
@@ -227,7 +209,7 @@ export class Character extends Sheet {
         }, 0);
     }
 
-    dodgeScore() { return Math.floor(this.Speed.calculateLevel() + Attribute.bonusReducer(this, "dodge") + 3) }
+    dodgeScore() { return Math.floor(this.Speed.calculateLevel() + Attribute.bonusReducer(this, Signature.Dodge) + 3) }
     encumberedDodgeScore() {
         switch (this.encumbranceLevel()) {
             case 0:
@@ -316,6 +298,7 @@ export enum Signature {
     Move = "Move",
     Vision = "Vision",
     Hearing = "Hearing",
-    Taste_Smell = "Taste Smell",
+    TasteSmell = "Taste Smell",
     Touch = "Touch",
+    Dodge = "dodge"
 }

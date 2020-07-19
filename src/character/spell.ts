@@ -1,8 +1,7 @@
 import { SkillLike, SkillDefault, Difficulty } from "./skill";
 import { List } from "./misc/list";
 import { Character, Signature } from "./character";
-import { objectify, json } from "../utils/json_utils";
-
+import { objectify, json } from "@utils/json_utils";
 
 export class SpellList extends List<Spell> {
     populator = Spell
@@ -36,7 +35,7 @@ export class Spell extends SkillLike<Spell> {
         super(list)
         this.list = list;
     }
-
+    isActive() { return true }
     getBonus() {
         return 0
     }

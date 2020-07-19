@@ -2,12 +2,12 @@ import { Character, Featurable } from "../character";
 import { CharacterElement } from "./element";
 import { Feature } from "./feature";
 import { Weapon } from "../weapon";
-import { objectify, json } from "../../utils/json_utils";
+import { objectify, json } from "@utils/json_utils";
+import * as gcs from "@gcs/gcs";
 
 export abstract class ListItem<T extends Featurable> extends CharacterElement<T> implements gcs.ListItem<T> {
     abstract version: number
     abstract tag: string
-    type: string
 
     list: List<T>
 
@@ -33,6 +33,8 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
         this.canContainChildren = false;
         this.open = true;
     }
+
+    abstract isActive(): boolean
 
     getCharacter(): Character { return this.list.character }
 

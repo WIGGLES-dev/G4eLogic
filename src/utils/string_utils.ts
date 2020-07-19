@@ -1,31 +1,35 @@
 export enum StringCompare {
-    isAnything = "is anything",
+    isAnything = "is_anything",
     is = "is",
-    isNot = "is not",
+    isNot = "is_not",
     contains = "contains",
-    doesNotContain = "does not contain",
-    startsWith = "starts with",
-    doesNotStartWith = "does not start with",
-    endsWith = "ends with",
-    doesNotEndWith = "does not end with",
+    doesNotContain = "does_not_contain",
+    startsWith = "starts_with",
+    doesNotStartWith = "does_not_start_with",
+    endsWith = "ends_with",
+    doesNotEndWith = "does_not_end_with",
 }
 
 function iterableCompare(compare: string, compareTo: string | string[] | Set<string>) {
 
 }
 
-export function stringCompare(compare: string, compareTo: string | string[] | Set<string>, type: StringCompare): boolean {
-    compare = compare.toLowerCase();
-    compareTo = compareTo.toString().toLowerCase();
+export function stringCompare(defaultQuery: string, skillQuery: string | string[] | Set<string>, type: StringCompare): boolean {
+    defaultQuery = defaultQuery?.toLowerCase();
+    skillQuery = skillQuery?.toString()?.toLowerCase();
+
+    //if (defaultQuery === "fast-draw") console.log(skillQuery, type, defaultQuery);
+
     switch (type) {
         case StringCompare.isAnything: return true
-        case StringCompare.is: return compare === compareTo
-        case StringCompare.isNot: return compare !== compareTo
-        case StringCompare.contains: return compare.includes(compareTo)
-        case StringCompare.doesNotContain: return compare.includes(compareTo)
-        case StringCompare.startsWith: return compare.startsWith(compareTo)
-        case StringCompare.doesNotStartWith: return compare.startsWith(compareTo)
-        case StringCompare.endsWith: return compare.startsWith(compareTo)
-        case StringCompare.doesNotEndWith: return compare.endsWith(compareTo)
+        case StringCompare.is: return skillQuery === defaultQuery
+        case StringCompare.isNot: return skillQuery !== defaultQuery
+        case StringCompare.contains: return skillQuery.includes(defaultQuery)
+        case StringCompare.doesNotContain: return !skillQuery.includes(defaultQuery)
+        case StringCompare.startsWith: return skillQuery.startsWith(defaultQuery)
+        case StringCompare.doesNotStartWith: return !skillQuery.startsWith(defaultQuery)
+        case StringCompare.endsWith: return skillQuery.endsWith(defaultQuery)
+        case StringCompare.doesNotEndWith: return !skillQuery.endsWith(defaultQuery)
+        default: return false
     }
 }

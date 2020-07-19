@@ -1,31 +1,18 @@
 import { Signature, Character, Featurable } from "./character";
 import { List, ListItem } from "./misc/list";
-import { Feature, FeatureType } from "./misc/feature";
-import { StringCompare, stringCompare } from "../utils/string_utils";
-import { objectify, json, isArray } from "../utils/json_utils";
+import { Feature, SkillBonus } from "./misc/feature";
+import { StringCompare, stringCompare } from "utils/string_utils";
+import { objectify, json, isArray } from "@utils/json_utils";
 import { Default } from "./misc/default";
-import { Attribute } from "./attribute";
-import { Technique } from "index";
+import * as gcs from "@gcs/gcs";
+import { Trait } from "./trait";
+
 
 export class SkillList extends List<Skill> {
     populator = Skill
 
     constructor(character: Character) {
         super(character);
-    }
-    /**
-     * List entities normally represent one data type but must accomodate skills and techniques in this case. For now in order to add a technique to a
-     * skill list you must pass it a boolean parameter to specify you are creating a technique and not a skill.
-     * @param item 
-     * @param isTechnique 
-     */
-    addListItem(item?: Skill, isTechnique = false): Skill | Technique {
-        if (item) return super.addListItem(item)
-        if (isTechnique) {
-            return super.addListItem(new Technique(this))
-        } else {
-            return super.addListItem(new Skill(this))
-        }
     }
 }
 
@@ -283,9 +270,8 @@ export class Skill extends SkillLike<Skill> {
         super(list);
         this.isTechnique = false;
         this.defaults = new Set();
-        if (isTechnique) return new Technique(list);
     }
-
+    isActive() { return true }
     childrenPoints() {
         return this.iterChildren().reduce((prev, cur) => {
             if (cur.canContainChildren) {
@@ -297,15 +283,14 @@ export class Skill extends SkillLike<Skill> {
         }, 0)
     }
 
-    getBonus() {
-        return this.list.character.featureList.iter().reduce(
+    getBonus(): any {
+        return this.list.character.featureList.getFeaturesByType(gcs.FeatureType.skillBonus).reduce(
             (prev, cur) => {
-                if (cur instanceof SkillBonus && cur.isApplicableTo(this)) {
-                    prev += cur.totalBonus();
+                if (cur instanceof SkillBonus && cur.type === gcs.FeatureType.skillBonus && cur.isApplicableTo(this) && cur.ownerIsActive()) {
+                    prev += cur.getBonus();
                 }
                 return prev
-            }, 0
-        );
+            }, 0)
     }
 
     toString() {
@@ -384,45 +369,6 @@ export class Skill extends SkillLike<Skill> {
                 notes: this.notes
             }
         }
-    }
-}
-
-export class SkillBonus<T extends Featurable> extends Feature<T> {
-    selectionType: string
-    nameCompareType: StringCompare
-    name: string
-    specializationCompareType: StringCompare
-    specialization: string
-    category: string
-    categoryCompareType: StringCompare
-
-    constructor(owner: T) {
-        super(owner, FeatureType.skillBonus);
-    }
-
-    totalBonus() {
-        return this.leveled && this.owner.hasLevels ? this.amount * this.owner.getLevel() : this.amount
-    }
-
-    isApplicableTo(skill: Skill): boolean {
-        let nameMatch = stringCompare(this.name, skill.name, this.nameCompareType);
-        let specializationMatch = stringCompare(this.specialization, skill.specialization, this.specializationCompareType);
-        let categoryMatch = stringCompare(this.category, skill.categories, this.categoryCompareType)
-        return nameMatch && specializationMatch && categoryMatch
-    }
-    toJSON() {
-        return {}
-    }
-    loadJSON(json: string | json) {
-        const data = objectify<json>(json);
-        super.loadJSON(data);
-        this.selectionType = data.selection_type;
-        this.name = data?.name?.qualifier;
-        this.nameCompareType = data?.name?.compare ?? StringCompare.isAnything;
-        this.specialization = data?.specialization?.qualifier;
-        this.specializationCompareType = data?.specialization?.compare ?? StringCompare.isAnything;
-        this.categoryCompareType = data?.category?.compare ?? StringCompare.isAnything;
-        return this
     }
 }
 

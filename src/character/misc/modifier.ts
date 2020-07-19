@@ -1,9 +1,9 @@
 import { Trait } from "../trait"
-import { Item } from "../equipment"
-import { objectify, json } from "../../utils/json_utils"
+import { Equipment } from "../equipment"
+import { objectify, json } from "@utils/json_utils"
 import { CharacterElement } from "./element"
 
-export type Modifiable = Trait | Item
+export type Modifiable = Trait | Equipment
 export abstract class Modifier<T extends Modifiable> extends CharacterElement<T> {
     static version = 2
 
