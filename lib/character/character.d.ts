@@ -51,7 +51,7 @@ export declare class Character extends Sheet {
     };
     allItems(): Equipment[];
     basicLift(): number;
-    encumbranceLevel(): -1 | 0 | -2 | -3 | -4;
+    encumbranceLevel(): 0 | -1 | -2 | -3 | -4;
     encumberedMove(): number;
     carriedWeight(list: List<Equipment>): number;
     carriedValue(list: List<Equipment>): number;

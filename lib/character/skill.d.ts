@@ -21,8 +21,8 @@ export declare abstract class SkillLike<T extends SkillLike<T>> extends ListItem
     constructor(list: List<T>);
     abstract getBonus(): number;
     getLevel(): number;
-    getBaseRelativeLevel(): -1 | 0 | -2 | -3;
-    static getBaseRelativeLevel(difficulty: Difficulty): -1 | 0 | -2 | -3;
+    getBaseRelativeLevel(): 0 | -1 | -2 | -3;
+    static getBaseRelativeLevel(difficulty: Difficulty): 0 | -1 | -2 | -3;
     static calculateRelativeLevel(points: number, relativeLevel: number): number;
     calculateLevel(): number;
     static calculateLevel(difficulty: Difficulty, points: number, base?: number, defaultedFrom?: SkillDefault<SkillLike<any>>, bonus?: number, encumbranceLevel?: number, encPenaltyMult?: number): number;

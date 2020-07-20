@@ -10,10 +10,10 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "forceConsistentCasingInFileNames": true,
-        "outDir": "./lib",
+        "outDir": "lib",
         "declaration": true,
         "lib": [
-            "ESNext",
+            "ES2015",
             "DOM"
         ],
         "types": [
@@ -37,7 +37,7 @@
         "allowJs": false
     },
     "include": [
-        "./src"
+        "src"
     ],
     "exclude": [
         "node_modules",
