@@ -7,7 +7,7 @@ const prod = mode === 'production';
 
 const config: webpack.Configuration = {
     entry: {
-        'lib': [path.resolve(__dirname, 'src/index.ts')],
+        'index': [path.resolve(__dirname, 'src/index.ts')],
         'lib-min': [path.resolve(__dirname, 'src/index.ts')]
     },
     resolve: {
