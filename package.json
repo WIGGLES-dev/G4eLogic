@@ -2,9 +2,9 @@
   "name": "g4elogic",
   "version": "1.0.0",
   "description": "Logic API for GURPS 4e",
-  "main": "lib/lib-min.js",
+  "main": "lib/index.js",
   "scripts": {
-    "build": "npx tsc -p tsconfig.json",
+    "build": "webpack --config libary.webpack.config",
     "test": "webpack-dev-server"
   },
   "repository": {
