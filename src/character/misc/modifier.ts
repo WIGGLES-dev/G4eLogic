@@ -32,6 +32,11 @@ export abstract class Modifier<T extends Modifiable> extends CharacterElement<T>
         mapModifier(object, this);
     }
 
+    /**
+     * Utility statement for extract numbers from strings with non numerical characters
+     * @param value String from which a number is to be extracted.
+     */
+
     static extractValue(value: string) {
         if (typeof value === "string") {
             let numArr = value.match(/(\d+)/);

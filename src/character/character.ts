@@ -206,7 +206,7 @@ export class Character extends Sheet {
     carriedValue(list: List<Equipment>) {
         return list.iterTop().reduce((prev, cur) => {
             return prev + cur.extendedValue()
-        }, 0);
+        }, 0)
     }
 
     dodgeScore() { return Math.floor(this.Speed.calculateLevel() + Attribute.bonusReducer(this, Signature.Dodge) + 3) }

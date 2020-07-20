@@ -2,12 +2,14 @@ import { Character, Featurable } from "../character";
 import { CharacterElement } from "./element";
 import { Feature } from "./feature";
 import { Weapon } from "../weapon";
-import { objectify, json } from "@utils/json_utils";
+import { objectify, json, isArray } from "@utils/json_utils";
 import * as gcs from "@gcs/gcs";
 
 export abstract class ListItem<T extends Featurable> extends CharacterElement<T> implements gcs.ListItem<T> {
     abstract version: number
     abstract tag: string
+
+    abstract name: string
 
     list: List<T>
 
@@ -24,17 +26,27 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
     features: Set<Feature<T>>
     weapons: Set<Weapon<T>>
 
+    listIndex: number
+
     constructor(list: List<T>) {
         super();
-
         this.list = list;
         this.features = new Set();
         this.children = new Set();
         this.canContainChildren = false;
         this.open = true;
+        this.listIndex = this.list.iter().length;
     }
 
     abstract isActive(): boolean
+    getListDepth(): number {
+        let x = 0;
+        let listItem = this.findSelf();
+        while (listItem = listItem.containedBy) {
+            x++
+        }
+        return x
+    }
 
     getCharacter(): Character { return this.list.character }
 
@@ -88,10 +100,11 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
     }
 
     loadChildren<U>(children: U[], parent: T, loader: (data: U, listItem: T) => T) {
-        children.forEach(child => {
+        children.forEach((child: any) => {
             const subElement = loader(child, parent.list.addListItem());
             subElement.containedBy = parent;
             parent.children.add(subElement);
+            subElement.loadChildren(isArray(child?.children), subElement, loader)
         });
         return this
     }

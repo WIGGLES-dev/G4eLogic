@@ -314,8 +314,9 @@ export class Skill extends SkillLike<Skill> {
         skill.signature = data.difficulty?.split("/")[0] as Signature;
         skill.difficulty = data.difficulty?.split("/")[1] as Difficulty;
         skill.techLevel = data.tech_level ?? "";
-        isArray(data.defaults)?.forEach((skillDefault: json) => skill.defaults.add(new SkillDefault<Skill>(skill).loadJSON(skillDefault)));
+        if (data.encumbrance_penalty_multiplier) skill.encumbrancePenaltyMultiple = data.encumbrance_penalty_multiplier;
         if (data.defaulted_from) skill.defaultedFrom = new SkillDefault<Skill>(skill).loadJSON(data.defaulted_from);
+        isArray(data.defaults)?.forEach((skillDefault: json) => skill.defaults.add(new SkillDefault<Skill>(skill).loadJSON(skillDefault)));
         return skill
     }
 

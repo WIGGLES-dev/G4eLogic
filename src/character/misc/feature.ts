@@ -65,16 +65,6 @@ export abstract class Feature<T extends Featurable> extends CharacterElement<T> 
     unregister() {
         this.owner.list.character.featureList.removeFeature(this.uuid);
     }
-    ownerOwnedBy(owner: T): Boolean {
-        if (this.owner.uuid === owner.uuid) {
-            return true
-        }
-        if (owner.containedBy && owner.containedBy.uuid === this.owner.uuid) {
-
-        } else {
-            return false
-        }
-    }
     toJSON() {
 
     }

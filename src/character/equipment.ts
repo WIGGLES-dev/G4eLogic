@@ -3,6 +3,7 @@ import { Modifier, Modifiable } from "./misc/modifier";
 import { Character } from "./character";
 import { objectify, json, isArray } from "@utils/json_utils";
 import * as gcs from "@gcs/gcs";
+import { Feature } from "./misc/feature";
 
 export class EquipmentList extends List<Equipment> {
     populator = Equipment
@@ -11,7 +12,6 @@ export class EquipmentList extends List<Equipment> {
         super(character);
     }
 }
-
 
 export class Equipment extends ListItem<Equipment> {
     version = 1
@@ -35,22 +35,37 @@ export class Equipment extends ListItem<Equipment> {
         this.modifiers = new Set();
     }
 
+    get name() { return this.description }
     isActive() { return this.equipped }
     getLevel(): number { return null }
 
     private childrenWeight(): number | null {
-        return 0
+        return Array.from(this.children).reduce((prev, cur) => {
+            return prev += cur.findSelf().extendedWeight()
+        }, 0)
     }
     private childrenValue(): number | null {
         return 0
     }
 
+    private reduceContainedWeight(weight: number) {
+        const weightReduction = this?.containedBy?.containedWeightReduction;
+
+        if (weightReduction?.endsWith("%")) {
+            let multiplyBy = Modifier.extractValue(weightReduction) / 100;
+            return weight * multiplyBy
+        } else if (weightReduction) {
+            let subtract = parseFloat(weightReduction.split(" ")[0]);
+            return weight - subtract
+        } else {
+            return weight
+        }
+    }
+
     extendedWeight() {
         const adjustedWeight = this.adjustedWeight();
-        const multiplyBy = this.containedBy && this.containedBy.containedWeightReduction ? 1 - Modifier.extractValue(this.containedBy.containedWeightReduction) / 100 : 1;
-
         if (this.isContainer()) {
-            return (this.childrenWeight() + adjustedWeight) * multiplyBy;
+            return this.reduceContainedWeight((this.childrenWeight() + adjustedWeight))
         } else {
             return adjustedWeight * this.quantity
         }
@@ -94,7 +109,7 @@ export class Equipment extends ListItem<Equipment> {
             }
             cost *= (cf + 1);
         }
-        cost = Equipment.processNonCFStep(EquipmentModifierValueType.finalBaseCost, cost, modifiers)
+        cost = Equipment.processNonCFStep(EquipmentModifierValueType.finalBaseCost, cost, modifiers);
         cost = Equipment.processNonCFStep(EquipmentModifierValueType.finalCost, cost, modifiers);
 
         return cost > 0 ? cost : 0;
@@ -192,12 +207,18 @@ export class Equipment extends ListItem<Equipment> {
 
     static mapEquipment(data: gcs.Equipment, equipment: Equipment): Equipment {
         isArray(data?.modifiers)?.forEach((modifier: json) => equipment.modifiers.add(new EquipmentModifier(equipment).loadJSON(modifier)));
+
         equipment.description = data.description;
         equipment.equipped = data.equipped;
         equipment.quantity = data.quantity;
-        equipment.value = data.value;
+        equipment.value = parseFloat(data?.value);
+        equipment.weight = parseFloat(data?.weight?.split(" ")[0] ?? "0");
         equipment.techLevel = data.tech_level;
         equipment.legalityClass = data.legality_class;
+        equipment.containedWeightReduction = isArray(data?.features)?.find(feature => feature.type === "contained_weight_reduction")?.reduction ?? null;
+        data.features?.forEach((feature: json) => {
+            Feature.loadFeature<Equipment>(equipment, feature.type)?.loadJSON(feature)
+        });
         return equipment
     }
     toJSON() {
@@ -289,10 +310,10 @@ class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
 }
 
 enum EquipmentModifierWeightType {
-    originalWeight = "to original weight",
-    baseWeight = "to base weight",
-    finalBaseWeight = "to final base weight",
-    finalWeight = "to final weight",
+    originalWeight = "to_original_weight",
+    baseWeight = "to_base_weight",
+    finalBaseWeight = "to_final_base_weight",
+    finalWeight = "to_final_weight",
 }
 
 enum EquipmentModifierWeightValueType {
@@ -303,10 +324,10 @@ enum EquipmentModifierWeightValueType {
 }
 
 enum EquipmentModifierValueType {
-    originalCost = "to original cost",
-    baseCost = "to base cost",
-    finalBaseCost = "to final base cost",
-    finalCost = "to final cost",
+    originalCost = "to_original_cost",
+    baseCost = "to_base_cost",
+    finalBaseCost = "to_final_base_cost",
+    finalCost = "to_final_cost",
 }
 
 enum EquipmentModifierCostValueType {

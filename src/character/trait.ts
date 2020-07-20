@@ -229,7 +229,7 @@ export class Trait extends ListItem<Trait> {
             trait.pointsPerLevel = object.points_per_level;
             trait.disabled = object.disabled;
             trait.hasLevels = trait.levels ? true : false;
-            
+
             object.features?.forEach((feature: json) => {
                 Feature.loadFeature<Trait>(trait, feature.type)?.loadJSON(feature)
             });

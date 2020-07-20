@@ -29,7 +29,7 @@ export enum FeatureType {
     costReduction = "cost_reduction"
 }
 
-export type LooseList<T> = T[] | Iterable<T>;
+export type LooseList<T> = T[] | Set<T>;
 
 export interface Prerequisite<T> {
 
@@ -152,8 +152,8 @@ export interface Equipment extends ListItem<Equipment>, Weaponized, Featurable, 
     type: "equipment" | "equipment_container"
     quantity: number
     equipped: boolean
-    weight: number
-    value: number
+    weight: string
+    value: string
     description: string
     tech_level: string
     legality_class: string

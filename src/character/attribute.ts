@@ -51,7 +51,7 @@ export class Attribute {
     static bonusReducer(sheet: Character, attribute: Signature) {
         return sheet.featureList.getFeaturesByType(FeatureType.attributeBonus).reduce((prev, cur) => {
             if (cur instanceof AttributeBonus) {
-                if (cur.ownerIsActive() && cur.attribute?.toString()?.toLowerCase() === attribute?.toString()?.toLowerCase()) {
+                if (cur.ownerIsActive() && cur.attribute?.toString()?.toLowerCase() === attribute?.toString()?.toLowerCase() && !cur.limitation) {
                     prev += cur.getBonus()
                 }
             }
