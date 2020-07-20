@@ -14,7 +14,7 @@ export abstract class Serializer {
     abstract mapSkill(skill: Skill): Skill
     abstract mapTechnique(technique: Technique): Technique
     abstract mapSpell(spell: Spell): Spell
-    abstract mapItem(item: Item): Equipment
+    abstract mapItem(item: Equipment): Equipment
     abstract mapTrait(trait: Trait): Trait
 }
 

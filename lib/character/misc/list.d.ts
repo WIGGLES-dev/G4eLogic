@@ -40,8 +40,6 @@ export declare abstract class ListItem<T extends Featurable> extends CharacterEl
     loadChildren<U>(children: U[], parent: T, loader: (data: U, listItem: T) => T): this;
     toJSON(): Object;
     loadJSON(json: string | json): void;
-    toEntity(): void;
-    loadEntity(entity: Entity): this;
     load<U>(loader: (subject: T) => U[]): void;
 }
 export declare abstract class List<T extends Featurable> {
@@ -60,6 +58,4 @@ export declare abstract class List<T extends Featurable> {
     keys(): T[];
     toJSON(): void;
     loadJSON(object: string | json): this;
-    toEntity(): void;
-    loadEntity(entity: Entity[]): this;
 }

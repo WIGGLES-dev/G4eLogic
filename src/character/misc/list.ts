@@ -116,10 +116,6 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
         super.loadJSON(data);
         this.open = data.open ?? true;
     }
-    toEntity() { }
-    loadEntity(entity: Entity) {
-        return this
-    }
     load<U>(loader: (subject: T) => U[]): void {
         function applyChildLoader() {
             return (data: U, listItem: T): T => {
@@ -205,13 +201,6 @@ export abstract class List<T extends Featurable> {
             });
             this.generate();
         }
-        return this
-    }
-    toEntity() { }
-    loadEntity(entity: Entity[]) {
-        entity.forEach(entity => {
-            const item = new this.populator(this)
-        });
         return this
     }
 }

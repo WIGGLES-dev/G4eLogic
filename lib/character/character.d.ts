@@ -60,7 +60,6 @@ export declare class Character extends Sheet {
     toJSON(): void;
     loadJSON(json: string | json): this;
     toR20(): string;
-    loadFromActor(actor: Actor): this;
 }
 export declare enum Signature {
     ST = "ST",

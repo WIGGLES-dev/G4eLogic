@@ -17,7 +17,6 @@
             "DOM"
         ],
         "types": [
-            "foundry-pc-types",
             "webpack",
             "webpack-dev-server"
         ],

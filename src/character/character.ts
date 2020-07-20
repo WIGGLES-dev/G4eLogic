@@ -257,30 +257,6 @@ export class Character extends Sheet {
     toR20() {
         return exportR20(this)
     }
-    loadFromActor(actor: Actor) {
-        const data = actor.data.data;
-
-        const items: Entity[] = actor.items.filter((item: Entity) => item.data.type === "item");
-        const skills: Entity[] = actor.items.filter((item: Entity) => item.data.type === "skill");
-        const traits: Entity[] = actor.items.filter((item: Entity) => item.data.type === "trait");
-
-        this.DX.setLevel(data.attributes.dexterity);
-        this.FP.setLevel(data.pools.fatigue_points.max);
-        this.HP.setLevel(data.pools.hit_points);
-        this.HT.setLevel(data.attributes.health);
-        this.IQ.setLevel(data.attributes.intelligence);
-        this.Move.setLevel(data.attributes.move);
-        this.Per.setLevel(data.attributes.perception);
-        this.ST.setLevel(data.attributes.strength);
-        this.Speed.setLevel(data.attributes.speed);
-        this.Will.setLevel(data.attributes.will);
-
-        this.equipmentList.loadEntity(items);
-        this.skillList.loadEntity(skills);
-        this.traitList.loadEntity(traits);
-
-        return this
-    }
 }
 
 export enum Signature {
