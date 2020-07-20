@@ -2,12 +2,13 @@ import { Character, Featurable } from "../character";
 import { CharacterElement } from "./element";
 import { Feature } from "./feature";
 import { Weapon } from "../weapon";
-import { json } from "utils/json_utils";
-import * as gcs from "gcs";
+import { json } from "@utils/json_utils";
+import * as gcs from "@gcs/gcs";
 export declare abstract class ListItem<T extends Featurable> extends CharacterElement<T> implements gcs.ListItem<T> {
     #private;
     abstract version: number;
     abstract tag: string;
+    abstract name: string;
     list: List<T>;
     canContainChildren: boolean;
     open: boolean;
@@ -16,8 +17,10 @@ export declare abstract class ListItem<T extends Featurable> extends CharacterEl
     containedBy: T;
     features: Set<Feature<T>>;
     weapons: Set<Weapon<T>>;
+    listIndex: number;
     constructor(list: List<T>);
     abstract isActive(): boolean;
+    getListDepth(): number;
     getCharacter(): Character;
     isContainer(): boolean;
     isContainerOpen(): boolean;

@@ -8,7 +8,7 @@ import * as gcs from "@gcs/gcs";
 export abstract class ListItem<T extends Featurable> extends CharacterElement<T> implements gcs.ListItem<T> {
     abstract version: number
     abstract tag: string
-
+    
     abstract name: string
 
     list: List<T>

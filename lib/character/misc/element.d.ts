@@ -1,4 +1,4 @@
-import { json } from "utils/json_utils";
+import { json } from "@utils/json_utils";
 export declare abstract class CharacterElement<T extends CharacterElement<T>> {
     uuid: string;
     r20rowID: string;

@@ -6,7 +6,7 @@ import { Equipment, EquipmentList } from "./equipment";
 import { FeatureList } from "./misc/feature";
 import { Profile } from "./profile";
 import { SpellList } from "./spell";
-import { json } from "utils/json_utils";
+import { json } from "@utils/json_utils";
 declare abstract class Sheet {
     configuration: {};
     constructor(configuration: {});

@@ -1,4 +1,4 @@
-import { json } from "utils/json_utils";
+import { json } from "@utils/json_utils";
 declare enum DefaultType {
     skill = "Skill"
 }

@@ -37,8 +37,7 @@
         "allowJs": false
     },
     "include": [
-        "src/**/*",
-        "test/tests"
+        "./src"
     ],
     "exclude": [
         "node_modules",

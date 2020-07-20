@@ -1,8 +1,8 @@
 import { List, ListItem } from "./misc/list";
 import { Modifier, Modifiable } from "./misc/modifier";
 import { Character } from "./character";
-import { json } from "utils/json_utils";
-import * as gcs from "gcs";
+import { json } from "@utils/json_utils";
+import * as gcs from "@gcs/gcs";
 export declare class EquipmentList extends List<Equipment> {
     populator: typeof Equipment;
     constructor(character: Character);
@@ -21,10 +21,12 @@ export declare class Equipment extends ListItem<Equipment> {
     modifiers: Set<EquipmentModifier<Equipment>>;
     hasLevels: boolean;
     constructor(list: List<Equipment>);
+    get name(): string;
     isActive(): boolean;
     getLevel(): number;
     private childrenWeight;
     private childrenValue;
+    private reduceContainedWeight;
     extendedWeight(): number;
     extendedValue(): number;
     getModifiers(): void;
@@ -66,10 +68,10 @@ declare class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
     loadJSON(json: string | json): this;
 }
 declare enum EquipmentModifierWeightType {
-    originalWeight = "to original weight",
-    baseWeight = "to base weight",
-    finalBaseWeight = "to final base weight",
-    finalWeight = "to final weight"
+    originalWeight = "to_original_weight",
+    baseWeight = "to_base_weight",
+    finalBaseWeight = "to_final_base_weight",
+    finalWeight = "to_final_weight"
 }
 declare enum EquipmentModifierWeightValueType {
     addition = "+",
@@ -78,10 +80,10 @@ declare enum EquipmentModifierWeightValueType {
     multiplier = 0
 }
 declare enum EquipmentModifierValueType {
-    originalCost = "to original cost",
-    baseCost = "to base cost",
-    finalBaseCost = "to final base cost",
-    finalCost = "to final cost"
+    originalCost = "to_original_cost",
+    baseCost = "to_base_cost",
+    finalBaseCost = "to_final_base_cost",
+    finalCost = "to_final_cost"
 }
 declare enum EquipmentModifierCostValueType {
     addition = "+",

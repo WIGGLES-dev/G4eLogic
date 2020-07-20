@@ -1,6 +1,6 @@
 import { Feature } from "./misc/feature";
 import { Character, Signature } from "./character";
-import { json } from "utils/json_utils";
+import { json } from "@utils/json_utils";
 import { Featurable } from "@character/character";
 export declare class Attribute {
     name: Signature;

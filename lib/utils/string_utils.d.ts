@@ -1,12 +1,12 @@
 export declare enum StringCompare {
-    isAnything = "is anything",
+    isAnything = "is_anything",
     is = "is",
-    isNot = "is not",
+    isNot = "is_not",
     contains = "contains",
-    doesNotContain = "does not contain",
-    startsWith = "starts with",
-    doesNotStartWith = "does not start with",
-    endsWith = "ends with",
-    doesNotEndWith = "does not end with"
+    doesNotContain = "does_not_contain",
+    startsWith = "starts_with",
+    doesNotStartWith = "does_not_start_with",
+    endsWith = "ends_with",
+    doesNotEndWith = "does_not_end_with"
 }
-export declare function stringCompare(compare: string, compareTo: string | string[] | Set<string>, type: StringCompare): boolean;
+export declare function stringCompare(defaultQuery: string, skillQuery: string | string[] | Set<string>, type: StringCompare): boolean;

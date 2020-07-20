@@ -50,7 +50,7 @@ export class Equipment extends ListItem<Equipment> {
 
     private reduceContainedWeight(weight: number) {
         const weightReduction = this?.containedBy?.containedWeightReduction;
-
+        console.log(weightReduction);
         if (weightReduction?.endsWith("%")) {
             let multiplyBy = Modifier.extractValue(weightReduction) / 100;
             return weight * multiplyBy

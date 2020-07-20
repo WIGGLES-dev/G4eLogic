@@ -1,10 +1,10 @@
 import { CharacterElement } from "./element";
 import { Featurable } from "../character";
-import { json } from "utils/json_utils";
-import { FeatureType } from "gcs";
+import { json } from "@utils/json_utils";
+import { FeatureType } from "@gcs/gcs";
 import { SkillLike } from "@character/skill";
 import { Weapon } from "@character/weapon";
-import { StringCompare } from "utils/string_utils";
+import { StringCompare } from "@utils/string_utils";
 export declare class FeatureList {
     features: Map<string, Feature<Featurable>>;
     weapons: Map<string, Weapon<Featurable>>;
@@ -26,7 +26,6 @@ export declare abstract class Feature<T extends Featurable> extends CharacterEle
     ownerIsActive(): boolean;
     getBonus(): number;
     unregister(): void;
-    ownerOwnedBy(owner: T): Boolean;
     toJSON(): void;
     loadJSON(object: string | json): void;
     static loadFeature<T extends Featurable>(owner: T, featureType: FeatureType): Feature<T>;

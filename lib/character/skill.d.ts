@@ -1,8 +1,8 @@
 import { Signature, Character } from "./character";
 import { List, ListItem } from "./misc/list";
-import { json } from "utils/json_utils";
+import { json } from "@utils/json_utils";
 import { Default } from "./misc/default";
-import * as gcs from "gcs";
+import * as gcs from "@gcs/gcs";
 export declare class SkillList extends List<Skill> {
     populator: typeof Skill;
     constructor(character: Character);
@@ -46,7 +46,7 @@ export declare class Skill extends SkillLike<Skill> {
     constructor(list: List<Skill>, isTechnique?: boolean);
     isActive(): boolean;
     childrenPoints(): number;
-    getBonus(): number;
+    getBonus(): any;
     toString(): string;
     static mapSkill(data: gcs.Skill, skill: Skill): Skill;
     toJSON(): {};
@@ -58,7 +58,7 @@ export declare class Skill extends SkillLike<Skill> {
             name: string;
             base: string | number;
             difficulty: string | number;
-            bonus: number;
+            bonus: any;
             points: number;
             wildcard_skill_points: number;
             use_wildcard_points: number;

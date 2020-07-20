@@ -1,7 +1,7 @@
 import { Modifier } from "./misc/modifier";
 import { List, ListItem } from "./misc/list";
 import { Character } from "./character";
-import { json } from "utils/json_utils";
+import { json } from "@utils/json_utils";
 export declare class TraitList extends List<Trait> {
     populator: typeof Trait;
     constructor(character: Character);

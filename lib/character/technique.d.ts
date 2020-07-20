@@ -1,7 +1,7 @@
 import { Skill, SkillDefault, Difficulty, SkillLike } from "./skill";
 import { Signature } from "./character";
 import { List } from "./misc/list";
-import { json } from "utils/json_utils";
+import { json } from "@utils/json_utils";
 declare type TehcniqueDifficulty = Difficulty.average | Difficulty.hard;
 export declare class Technique extends Skill {
     tag: string;

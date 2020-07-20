@@ -1,7 +1,7 @@
 import { SkillLike, SkillDefault, Difficulty } from "./skill";
 import { List } from "./misc/list";
 import { Character, Signature } from "./character";
-import { json } from "utils/json_utils";
+import { json } from "@utils/json_utils";
 export declare class SpellList extends List<Spell> {
     populator: typeof Spell;
     constructor(character: Character);
