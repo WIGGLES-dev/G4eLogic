@@ -19,6 +19,8 @@ abstract class Sheet {
     constructor(serializer: Serializer) {
         this.serializer = serializer;
     }
+
+    abstract load(sheet: Sheet, data: any): Sheet
 }
 
 export interface Featurable extends ListItem<any> {
@@ -226,35 +228,8 @@ export class Character extends Sheet {
                 return Math.floor(this.dodgeScore() * .2)
         }
     }
-    toJSON() {
-
-    }
-    loadJSON(json: string | json) {
-        json = objectify<json>(json);
-        this.gCalcID = json.id;
-
-        this.profile.loadJSON(json.profile);
-        this.equipmentList.load(json.equipment);
-        this.otherEquipmentList.load(json.otherEquipmentList);
-        this.skillList.load(json.skills);
-        this.traitList.load(json.advantages);
-        this.spellList.load(json.spells);
-
-        this.missingHP = json?.hp_damage ?? 0;
-        this.missingFP = json?.fp_damage ?? 0;
-
-        this.DX.setLevel(json.DX);
-        this.FP.setLevel(json.fp_adj);
-        this.HP.setLevel(json.hp_adj);
-        this.HT.setLevel(json.HT);
-        this.IQ.setLevel(json.IQ)
-        this.Move.setLevel(json.move_adj);
-        this.Per.setLevel(json.per_adj);
-        this.ST.setLevel(json.ST);
-        this.Speed.setLevel(json.speed_adj);
-        this.Will.setLevel(json.will_adj);
-
-        return this
+    load(data: any) {
+        return this.serializer.load(this, data)
     }
     toR20() {
         return exportR20(this)

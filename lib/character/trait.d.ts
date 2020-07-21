@@ -38,7 +38,7 @@ export declare class Trait extends ListItem<Trait> {
     getLevel(): number;
     isRacial(): Boolean;
     childrenPoints(): number;
-    static getCRMultipland(cr: ControlRollMultiplier): 1 | 2 | 2.5 | 1.5 | 0.5;
+    static getCRMultipland(cr: ControlRollMultiplier): 2 | 1 | 2.5 | 1.5 | 0.5;
     adjustedPoints(): number;
     disable(): void;
     enable(): void;

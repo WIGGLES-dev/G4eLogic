@@ -6,11 +6,11 @@ import { Equipment, EquipmentList } from "./equipment";
 import { FeatureList } from "./misc/feature";
 import { Profile } from "./profile";
 import { SpellList } from "./spell";
-import { json } from "@utils/json_utils";
 import { Serializer } from "./serialization/serializer";
 declare abstract class Sheet {
     serializer: Serializer;
     constructor(serializer: Serializer);
+    abstract load(sheet: Sheet, data: any): Sheet;
 }
 export interface Featurable extends ListItem<any> {
     hasLevels: boolean;
@@ -58,8 +58,7 @@ export declare class Character extends Sheet {
     carriedValue(list: List<Equipment>): number;
     dodgeScore(): number;
     encumberedDodgeScore(): number;
-    toJSON(): void;
-    loadJSON(json: string | json): this;
+    load(data: any): Character;
     toR20(): string;
 }
 export declare enum Signature {

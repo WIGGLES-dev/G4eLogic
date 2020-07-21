@@ -5,8 +5,8 @@ import { Spell } from "../../character/spell";
 import { Equipment, EquipmentModifier } from "../../character/equipment";
 import { Trait, TraitType, TraitModifier } from "../../character/trait";
 import * as gcs from "@gcs/gcs";
-import { isArray, json } from "@utils/json_utils";
-import { Signature } from "@character/character";
+import { isArray, json, objectify } from "@utils/json_utils";
+import { Signature, Character } from "@character/character";
 import { Feature } from "@character/misc/feature";
 
 @registerDataType(GCSJSON)
@@ -97,5 +97,33 @@ export class GCSJSON extends Serializer {
         if (data.type.includes("_container")) {
             return data.children as json[]
         }
+    }
+
+    load(character: Character, data: any) {
+        data = objectify<json>(data);
+        character.gCalcID = data.id;
+
+        character.profile.loadJSON(data.profile);
+        character.equipmentList.load(data.equipment);
+        character.otherEquipmentList.load(data.other_equipment);
+        character.skillList.load(data.skills);
+        character.traitList.load(data.advantages);
+        character.spellList.load(data.spells);
+
+        character.missingHP = data?.hp_damage ?? 0;
+        character.missingFP = data?.fp_damage ?? 0;
+
+        character.DX.setLevel(data.DX);
+        character.FP.setLevel(data.fp_adj);
+        character.HP.setLevel(data.hp_adj);
+        character.HT.setLevel(data.HT);
+        character.IQ.setLevel(data.IQ)
+        character.Move.setLevel(data.move_adj);
+        character.Per.setLevel(data.per_adj);
+        character.ST.setLevel(data.ST);
+        character.Speed.setLevel(data.speed_adj);
+        character.Will.setLevel(data.will_adj);
+
+        return character
     }
 }

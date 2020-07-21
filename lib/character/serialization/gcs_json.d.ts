@@ -6,6 +6,7 @@ import { Equipment } from "../../character/equipment";
 import { Trait } from "../../character/trait";
 import * as gcs from "@gcs/gcs";
 import { json } from "@utils/json_utils";
+import { Character } from "@character/character";
 export declare class GCSJSON extends Serializer {
     constructor();
     private static mapSkillLike;
@@ -14,4 +15,5 @@ export declare class GCSJSON extends Serializer {
     mapSpell(spell: Spell, data?: gcs.Spell): json[];
     mapEquipment(equipment: Equipment, data?: gcs.Equipment): gcs.Equipment[];
     mapTrait(trait: Trait, data?: json): json[];
+    load(character: Character, data: any): Character;
 }

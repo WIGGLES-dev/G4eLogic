@@ -37,8 +37,6 @@ export declare abstract class ListItem<T extends Featurable> extends CharacterEl
     removeChild(child: string | T): void;
     getRecursiveChildren(): void;
     findSelf(): T;
-    toJSON(): Object;
-    loadJSON(json: string | json): void;
     private loadChildren;
     load<U>(loader: (subject: T, data?: U) => U[], data: any): T;
 }

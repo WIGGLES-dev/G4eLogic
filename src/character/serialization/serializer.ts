@@ -3,6 +3,7 @@ import { Technique } from "../technique";
 import { Spell } from "../spell";
 import { Equipment } from "../equipment";
 import { Trait } from "../trait";
+import { Character } from "index";
 
 /**
  * Abstract class from which all serializers draw functionality. It covers loading and saving functionality
@@ -23,7 +24,8 @@ export abstract class Serializer {
     abstract mapSpell(spell: Spell, data?: any): any[]
     abstract mapEquipment(equipment: Equipment, data: any): any[]
     abstract mapTrait(trait: Trait, data?: any): any[]
-    
+
+    abstract load(character: Character, data: any): Character
 }
 
 export function registerDataType(type: { new(): Serializer }) {

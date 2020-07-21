@@ -98,14 +98,6 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
     findSelf(): T {
         return this.list.getByUUID(this.uuid);
     }
-    toJSON(): Object {
-        return {}
-    }
-    loadJSON(json: string | json) {
-        const data = objectify<gcs.ListItem<T>>(json);
-        super.loadJSON(data);
-        this.open = data.open ?? true;
-    }
     private loadChildren<U>(children: U[], parent: T, loader: (subject: T, data: U) => U[]) {
         children.forEach(child => {
             const subElement = parent.list.addListItem();
@@ -185,7 +177,6 @@ export abstract class List<T extends Featurable> {
         if (data) {
             data.forEach((skill: json) => {
                 const item = new this.populator(this);
-                //console.log(item);
                 item.load<T>(this.loader, skill);
             });
             this.generate();
