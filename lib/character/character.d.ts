@@ -10,7 +10,7 @@ import { json } from "@utils/json_utils";
 import { Serializer } from "./serialization/serializer";
 declare abstract class Sheet {
     serializer: Serializer;
-    constructor();
+    constructor(serializer?: Serializer);
 }
 export interface Featurable extends ListItem<any> {
     hasLevels: boolean;

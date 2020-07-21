@@ -23,7 +23,7 @@ export abstract class Serializer {
     abstract mapSpell(spell: Spell, data?: any): any[]
     abstract mapEquipment(equipment: Equipment, data: any): any[]
     abstract mapTrait(trait: Trait, data?: any): any[]
-
+    
 }
 
 export function registerDataType(type: { new(): Serializer }) {

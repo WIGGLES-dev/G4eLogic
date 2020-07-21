@@ -16,8 +16,8 @@ import { GCSJSON } from "./serialization/gcs_json";
 abstract class Sheet {
     serializer: Serializer
 
-    constructor() {
-        this.serializer = new GCSJSON();
+    constructor(serializer: Serializer = new GCSJSON()) {
+        this.serializer = serializer;
     }
 }
 
