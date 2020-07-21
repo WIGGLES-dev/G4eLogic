@@ -14,7 +14,7 @@ export class SkillList extends List<Skill> {
 
     constructor(character: Character) {
         super(character);
-        this.loader = this.character.serializer.mapSkill
+        this.loader = this.character.serializer.mapSkill;
     }
 }
 
