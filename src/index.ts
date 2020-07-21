@@ -6,6 +6,7 @@ import { Technique, TehchniqueDifficulty } from "./character/technique";
 import { Equipment, EquipmentList, EquipmentModifier } from "./character/equipment";
 
 import { Serializer } from "./character/serialization/serializer";
+import { isArray, json } from "@utils/json_utils";
 
 export {
     Character,
@@ -26,5 +27,7 @@ export {
     Equipment,
     EquipmentList,
     EquipmentModifier,
-    Serializer
+    Serializer,
+    isArray,
+    json
 }

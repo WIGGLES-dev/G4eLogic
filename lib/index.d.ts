@@ -5,4 +5,5 @@ import { Spell, SpellList } from "./character/spell";
 import { Technique, TehchniqueDifficulty } from "./character/technique";
 import { Equipment, EquipmentList, EquipmentModifier } from "./character/equipment";
 import { Serializer } from "./character/serialization/serializer";
-export { Character, Signature, Skill, Difficulty, SkillDefault, SkillLike, SkillList, Trait, TraitType, TraitList, TraitModifier, Spell, SpellList, Technique, TehchniqueDifficulty, Equipment, EquipmentList, EquipmentModifier, Serializer };
+import { isArray, json } from "@utils/json_utils";
+export { Character, Signature, Skill, Difficulty, SkillDefault, SkillLike, SkillList, Trait, TraitType, TraitList, TraitModifier, Spell, SpellList, Technique, TehchniqueDifficulty, Equipment, EquipmentList, EquipmentModifier, Serializer, isArray, json };
