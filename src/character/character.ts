@@ -16,7 +16,7 @@ import { GCSJSON } from "./serialization/gcs_json";
 abstract class Sheet {
     serializer: Serializer
 
-    constructor(serializer: Serializer = new GCSJSON()) {
+    constructor(serializer: Serializer) {
         this.serializer = serializer;
     }
 }
@@ -52,8 +52,8 @@ export class Character extends Sheet {
 
     featureList: FeatureList
 
-    constructor() {
-        super();
+    constructor(serializer: Serializer = new GCSJSON()) {
+        super(serializer);
         this.profile = new Profile();
         this.equipmentList = new EquipmentList(this);
         this.otherEquipmentList = new EquipmentList(this);
