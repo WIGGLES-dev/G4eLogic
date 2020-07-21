@@ -7,6 +7,7 @@ import { Equipment, EquipmentList, EquipmentModifier } from "./character/equipme
 
 import { Serializer } from "./character/serialization/serializer";
 import { isArray, json } from "@utils/json_utils";
+import { Feature } from "@character/misc/feature";
 
 export {
     Character,
@@ -29,5 +30,6 @@ export {
     EquipmentModifier,
     Serializer,
     isArray,
-    json
+    json,
+    Feature
 }
