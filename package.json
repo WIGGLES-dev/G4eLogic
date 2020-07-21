@@ -4,7 +4,7 @@
   "description": "Logic API for GURPS 4e",
   "main": "lib/index.js",
   "scripts": {
-    "build": "webpack --config libary.webpack.config",
+    "build": "npx webpack --config libary.webpack.config.ts",
     "test": "webpack-dev-server"
   },
   "repository": {

@@ -10,7 +10,7 @@ import { json } from "@utils/json_utils";
 import { Serializer } from "./serialization/serializer";
 declare abstract class Sheet {
     serializer: Serializer;
-    constructor(serializer?: Serializer);
+    constructor(serializer: Serializer);
 }
 export interface Featurable extends ListItem<any> {
     hasLevels: boolean;
@@ -37,7 +37,7 @@ export declare class Character extends Sheet {
     traitList: TraitList;
     spellList: SpellList;
     featureList: FeatureList;
-    constructor();
+    constructor(serializer?: Serializer);
     totalAttributesCost(): any;
     attributes(attribute: Signature): number;
     pointTotals(): {
