@@ -10,12 +10,14 @@ import { exportR20 } from "@utils/2R20";
 import { json, objectify } from "@utils/json_utils";
 import { Weapon } from "./weapon";
 import { FeatureType } from "@gcs/gcs";
+import { Serializer } from "./serialization/serializer";
+import { GCSJSON } from "./serialization/gcs_json";
 
 abstract class Sheet {
-    configuration: {}
+    serializer: Serializer
 
-    constructor(configuration: {}) {
-        this.configuration = configuration;
+    constructor() {
+        this.serializer = new GCSJSON();
     }
 }
 
@@ -51,7 +53,7 @@ export class Character extends Sheet {
     featureList: FeatureList
 
     constructor() {
-        super({});
+        super();
         this.profile = new Profile();
         this.equipmentList = new EquipmentList(this);
         this.otherEquipmentList = new EquipmentList(this);
@@ -232,11 +234,11 @@ export class Character extends Sheet {
         this.gCalcID = json.id;
 
         this.profile.loadJSON(json.profile);
-        this.equipmentList.loadJSON(json.equipment);
-        this.otherEquipmentList.loadJSON(json.otherEquipmentList);
-        this.skillList.loadJSON(json.skills);
-        this.traitList.loadJSON(json.advantages);
-        this.spellList.loadJSON(json.spells);
+        this.equipmentList.load(json.equipment);
+        this.otherEquipmentList.load(json.otherEquipmentList);
+        this.skillList.load(json.skills);
+        this.traitList.load(json.advantages);
+        this.spellList.load(json.spells);
 
         this.missingHP = json?.hp_damage ?? 0;
         this.missingFP = json?.fp_damage ?? 0;

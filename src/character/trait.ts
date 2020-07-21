@@ -8,8 +8,10 @@ import * as gcs from "@gcs/gcs";
 
 export class TraitList extends List<Trait> {
     populator = Trait
+    loader
     constructor(character: Character) {
         super(character);
+        this.loader = this.character.serializer.mapTrait
     }
     sumRacials() {
         return this.iter().reduce((prev, cur) => {
@@ -210,45 +212,6 @@ export class Trait extends ListItem<Trait> {
         }
         return TraitModifier.applyRounding((modifiedBasePoints * multiplier), Boolean(trait.roundDown))
     }
-    toJSON() {
-        return {}
-    }
-    loadJSON(object: string | json) {
-        object = objectify<json>(object);
-        super.loadJSON(object);
-        function mapTrait(object: json, trait: Trait) {
-            trait.name = object.name;
-            object.modifiers?.forEach((modifier: json) => trait.modifiers.add(new TraitModifier(trait).loadJSON(modifier)));
-            trait.basePoints = object.base_points;
-            trait.levels = parseInt(object?.levels) ?? null;
-            trait.allowHalfLevels = object.allow_half_levels;
-            trait.hasHalfLevel = object.has_half_level;
-            trait.roundDown = object.round_down;
-            trait.controlRating = object.cr;
-            object.types?.forEach((type: TraitType) => trait.types.add(type));
-            trait.pointsPerLevel = object.points_per_level;
-            trait.disabled = object.disabled;
-            trait.hasLevels = trait.levels ? true : false;
-
-            object.features?.forEach((feature: json) => {
-                Feature.loadFeature<Trait>(trait, feature.type)?.loadJSON(feature)
-            });
-        }
-        function loadSubElements(object: json, parent: Trait) {
-            object.children.forEach((object: json) => {
-                const subElement = parent.list.addListItem().loadJSON(object);
-                subElement.containedBy = parent;
-                parent.children.add(subElement);
-            });
-            return parent
-        }
-        mapTrait(object, this);
-        if (object.type.includes("_container")) {
-            this.canContainChildren = true;
-            loadSubElements(object, this);
-        }
-        return this
-    }
     toR20() {
         let key;
         const traitTemplate = {
@@ -308,7 +271,7 @@ export class Trait extends ListItem<Trait> {
     }
 }
 
-class TraitModifier extends Modifier<Trait> {
+export class TraitModifier extends Modifier<Trait> {
     static nodeName = "modifier"
 
     cost: number
@@ -363,7 +326,7 @@ enum TraitModifierAffects {
     total = "total"
 }
 
-enum TraitType {
+export enum TraitType {
     mental = "Mental",
     physical = "Physical",
     social = "Social",

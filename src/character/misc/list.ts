@@ -8,13 +8,13 @@ import * as gcs from "@gcs/gcs";
 export abstract class ListItem<T extends Featurable> extends CharacterElement<T> implements gcs.ListItem<T> {
     abstract version: number
     abstract tag: string
-    
+
     abstract name: string
 
     list: List<T>
 
     canContainChildren: boolean
-    open: boolean
+    open: boolean = true
 
     children: Set<ListItem<T>>
     #childIDs: Set<string>
@@ -31,10 +31,10 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
     constructor(list: List<T>) {
         super();
         this.list = list;
+        this.list.addListItem(this);
         this.features = new Set();
         this.children = new Set();
         this.canContainChildren = false;
-        this.open = true;
         this.listIndex = this.list.iter().length;
     }
 
@@ -98,16 +98,6 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
     findSelf(): T {
         return this.list.getByUUID(this.uuid);
     }
-
-    loadChildren<U>(children: U[], parent: T, loader: (data: U, listItem: T) => T) {
-        children.forEach((child: any) => {
-            const subElement = loader(child, parent.list.addListItem());
-            subElement.containedBy = parent;
-            parent.children.add(subElement);
-            subElement.loadChildren(isArray(child?.children), subElement, loader)
-        });
-        return this
-    }
     toJSON(): Object {
         return {}
     }
@@ -116,18 +106,22 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
         super.loadJSON(data);
         this.open = data.open ?? true;
     }
-    load<U>(loader: (subject: T) => U[]): void {
-        function applyChildLoader() {
-            return (data: U, listItem: T): T => {
-                loader(listItem)
-                return listItem
-            }
+    private loadChildren<U>(children: U[], parent: T, loader: (subject: T, data: U) => U[]) {
+        children.forEach(child => {
+            const subElement = parent.list.addListItem();
+            const children = loader(subElement, child);
+            subElement.containedBy = parent;
+            parent.children.add(subElement);
+            subElement.loadChildren(isArray(children), subElement, loader)
+        });
+    }
+    load<U>(loader: (subject: T, data?: U) => U[], data): T {
+        const children: U[] = loader(this.findSelf(), data)
+        if (children && children.length > 0) {
+            this.canContainChildren = true;
+            this.loadChildren(children, this.findSelf(), loader)
         }
-        this.loadChildren(
-            loader(this.findSelf()),
-            this.findSelf(),
-            applyChildLoader()
-        )
+        return this.findSelf()
     }
 }
 
@@ -136,6 +130,7 @@ export abstract class List<T extends Featurable> {
     contents: Set<T>
 
     abstract populator: new (list: List<T>) => T
+    abstract loader: (subject: T, data?: T) => T[]
 
     character: Character
 
@@ -144,7 +139,6 @@ export abstract class List<T extends Featurable> {
         this.#contents = new Map();
         this.contents = new Set();
     }
-
     generate() {
         this.contents.clear();
         this.iter().reduce((prev, cur) => {
@@ -153,14 +147,13 @@ export abstract class List<T extends Featurable> {
         }, this.contents);
     }
 
-    addListItem(item?: T): T {
+    addListItem(item?: T | ListItem<T>): T {
         let listItem: T;
         if (item) {
-            this.#contents.set(item.uuid, item);
-            listItem = item;
+            this.#contents.set(item.uuid, item as T);
+            listItem = item.findSelf();
         } else {
             listItem = new this.populator(this);
-            this.#contents.set(listItem.uuid, listItem);
         }
         this.generate();
         return listItem
@@ -187,17 +180,13 @@ export abstract class List<T extends Featurable> {
     keys() {
         return Array.from(this.contents.keys());
     }
-    toJSON() {
-
-    }
-    loadJSON(object: string | json) {
-        object = objectify<json>(object);
-        if (object) {
-            object.forEach((skill: json) => {
+    load(data: string | json) {
+        data = objectify<json>(data);
+        if (data) {
+            data.forEach((skill: json) => {
                 const item = new this.populator(this);
                 //console.log(item);
-                this.#contents.set(item.uuid, item);
-                item.loadJSON(skill);
+                item.load<T>(this.loader, skill);
             });
             this.generate();
         }

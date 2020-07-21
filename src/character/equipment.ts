@@ -7,9 +7,11 @@ import { Feature } from "./misc/feature";
 
 export class EquipmentList extends List<Equipment> {
     populator = Equipment
+    loader;
 
     constructor(character: Character) {
         super(character);
+        this.loader = this.character.serializer.mapEquipment
     }
 }
 
@@ -205,7 +207,7 @@ export class Equipment extends ListItem<Equipment> {
         return weight
     }
 
-    static mapEquipment(data: gcs.Equipment, equipment: Equipment): Equipment {
+    static mapEquipment(equipment: Equipment, data: gcs.Equipment) {
         isArray(data?.modifiers)?.forEach((modifier: json) => equipment.modifiers.add(new EquipmentModifier(equipment).loadJSON(modifier)));
 
         equipment.description = data.description;
@@ -219,21 +221,11 @@ export class Equipment extends ListItem<Equipment> {
         data.features?.forEach((feature: json) => {
             Feature.loadFeature<Equipment>(equipment, feature.type)?.loadJSON(feature)
         });
-        return equipment
-    }
-    toJSON() {
-        return {}
-    }
-    loadJSON(json: string | json) {
-        const data = objectify<gcs.Equipment>(json);
-        super.loadJSON(json);
-        Equipment.mapEquipment(data, this);
+
+        const children = data?.children as gcs.Equipment[] || null
         if (data.type.includes("_container")) {
-            this.canContainChildren = true;
-            this.list.addListItem(this);
-            this.loadChildren(isArray(data?.children), this, Equipment.mapEquipment);
+            return children
         }
-        return this
     }
     toR20() {
         return {
@@ -255,7 +247,7 @@ export class Equipment extends ListItem<Equipment> {
     }
 }
 
-class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
+export class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
     static nodeName = "eqp_modifier"
     static minCF = -0.8
 

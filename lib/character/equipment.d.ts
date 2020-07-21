@@ -5,6 +5,7 @@ import { json } from "@utils/json_utils";
 import * as gcs from "@gcs/gcs";
 export declare class EquipmentList extends List<Equipment> {
     populator: typeof Equipment;
+    loader: any;
     constructor(character: Character);
 }
 export declare class Equipment extends ListItem<Equipment> {
@@ -34,9 +35,7 @@ export declare class Equipment extends ListItem<Equipment> {
     private static processNonCFStep;
     adjustedWeight(): number;
     private static processMultiplyAddWeightStep;
-    static mapEquipment(data: gcs.Equipment, equipment: Equipment): Equipment;
-    toJSON(): {};
-    loadJSON(json: string | json): this;
+    static mapEquipment(equipment: Equipment, data: gcs.Equipment): gcs.Equipment[];
     toR20(): {
         key: string;
         row_id: string;
@@ -54,7 +53,7 @@ export declare class Equipment extends ListItem<Equipment> {
         };
     };
 }
-declare class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
+export declare class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
     static nodeName: string;
     static minCF: number;
     cost: string;

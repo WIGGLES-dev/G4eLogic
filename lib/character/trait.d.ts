@@ -4,6 +4,7 @@ import { Character } from "./character";
 import { json } from "@utils/json_utils";
 export declare class TraitList extends List<Trait> {
     populator: typeof Trait;
+    loader: any;
     constructor(character: Character);
     sumRacials(): number;
     sumAdvantages(): number;
@@ -37,13 +38,11 @@ export declare class Trait extends ListItem<Trait> {
     getLevel(): number;
     isRacial(): Boolean;
     childrenPoints(): number;
-    static getCRMultipland(cr: ControlRollMultiplier): 2 | 1 | 2.5 | 1.5 | 0.5;
+    static getCRMultipland(cr: ControlRollMultiplier): 1 | 2 | 2.5 | 1.5 | 0.5;
     adjustedPoints(): number;
     disable(): void;
     enable(): void;
     static getAdjustedPoints(modifiers: Set<TraitModifier>, trait: Trait): number;
-    toJSON(): {};
-    loadJSON(object: string | json): this;
     toR20(): {
         key: any;
         row_id: string;
@@ -55,7 +54,7 @@ export declare class Trait extends ListItem<Trait> {
         };
     };
 }
-declare class TraitModifier extends Modifier<Trait> {
+export declare class TraitModifier extends Modifier<Trait> {
     static nodeName: string;
     cost: number;
     type: TraitModifierType;
@@ -80,7 +79,7 @@ declare enum TraitModifierAffects {
     levels = "levels only",
     total = "total"
 }
-declare enum TraitType {
+export declare enum TraitType {
     mental = "Mental",
     physical = "Physical",
     social = "Social",

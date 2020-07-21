@@ -10,9 +10,11 @@ import { Trait } from "./trait";
 
 export class SkillList extends List<Skill> {
     populator = Skill
+    loader
 
     constructor(character: Character) {
         super(character);
+        this.loader = this.character.serializer.mapSkill
     }
 }
 
@@ -62,7 +64,6 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
      * @override Skill-like entities do not provide leveled feature bonuses.
      */
     getLevel(): number { return null }
-
 
     getBaseRelativeLevel() { return SkillLike.getBaseRelativeLevel(this.difficulty) }
     static getBaseRelativeLevel(difficulty: Difficulty) {
@@ -244,13 +245,6 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
         }
         return extraPointsSpent
     }
-    loadJSON(json: string | json) {
-        const data = objectify<gcs.SkillLike>(json);
-        super.loadJSON(json);
-        this.name = data.name;
-        this.difficulty = data.difficulty as Difficulty;
-        this.points = data.points;
-    }
 }
 
 export class Skill extends SkillLike<Skill> {
@@ -306,33 +300,6 @@ export class Skill extends SkillLike<Skill> {
             }
         }
         return string
-    }
-    static mapSkill(data: gcs.Skill, skill: Skill) {
-        skill.name = data.name;
-        skill.specialization = data.specialization;
-        skill.points = data.points
-        skill.signature = data.difficulty?.split("/")[0] as Signature;
-        skill.difficulty = data.difficulty?.split("/")[1] as Difficulty;
-        skill.techLevel = data.tech_level ?? "";
-        if (data.encumbrance_penalty_multiplier) skill.encumbrancePenaltyMultiple = data.encumbrance_penalty_multiplier;
-        if (data.defaulted_from) skill.defaultedFrom = new SkillDefault<Skill>(skill).loadJSON(data.defaulted_from);
-        isArray(data.defaults)?.forEach((skillDefault: json) => skill.defaults.add(new SkillDefault<Skill>(skill).loadJSON(skillDefault)));
-        return skill
-    }
-
-    toJSON() {
-        return {}
-    }
-    loadJSON(json: string | json) {
-        const data = objectify<gcs.Skill>(json);
-        super.loadJSON(data);
-        Skill.mapSkill(data, this);
-        if (data.type.includes("_container")) {
-            this.canContainChildren = true;
-            this.list.addListItem(this);
-            this.loadChildren(isArray(data?.children), this, Skill.mapSkill)
-        }
-        return this
     }
     toR20() {
         return {

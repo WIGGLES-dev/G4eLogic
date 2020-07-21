@@ -7,9 +7,10 @@ import { FeatureList } from "./misc/feature";
 import { Profile } from "./profile";
 import { SpellList } from "./spell";
 import { json } from "@utils/json_utils";
+import { Serializer } from "./serialization/serializer";
 declare abstract class Sheet {
-    configuration: {};
-    constructor(configuration: {});
+    serializer: Serializer;
+    constructor();
 }
 export interface Featurable extends ListItem<any> {
     hasLevels: boolean;

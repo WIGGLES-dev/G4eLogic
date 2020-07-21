@@ -37,25 +37,25 @@ export declare abstract class ListItem<T extends Featurable> extends CharacterEl
     removeChild(child: string | T): void;
     getRecursiveChildren(): void;
     findSelf(): T;
-    loadChildren<U>(children: U[], parent: T, loader: (data: U, listItem: T) => T): this;
     toJSON(): Object;
     loadJSON(json: string | json): void;
-    load<U>(loader: (subject: T) => U[]): void;
+    private loadChildren;
+    load<U>(loader: (subject: T, data?: U) => U[], data: any): T;
 }
 export declare abstract class List<T extends Featurable> {
     #private;
     contents: Set<T>;
     abstract populator: new (list: List<T>) => T;
+    abstract loader: (subject: T, data?: T) => T[];
     character: Character;
     constructor(character: Character);
     generate(): void;
-    addListItem(item?: T): T;
+    addListItem(item?: T | ListItem<T>): T;
     removeListItem(item: T): void;
     getByIndex(index: number): T;
     getByUUID(uuid: string): T;
     iter(): T[];
     iterTop(): T[];
     keys(): T[];
-    toJSON(): void;
-    loadJSON(object: string | json): this;
+    load(data: string | json): this;
 }

@@ -106,11 +106,11 @@ export interface SkillDefault extends Default {
 export interface DefaultedFrom extends SkillDefault {
 }
 export interface Skill extends SkillLike {
-    tech_level: string;
-    specialization: string;
-    defaulted_from: DefaultedFrom;
-    encumbrance_penalty_multiplier: number;
-    defaults: LooseList<SkillDefault>;
+    tech_level?: string;
+    specialization?: string;
+    defaulted_from?: DefaultedFrom;
+    encumbrance_penalty_multiplier?: number;
+    defaults?: LooseList<SkillDefault>;
 }
 export interface Technique extends SkillLike {
     type: "technique";

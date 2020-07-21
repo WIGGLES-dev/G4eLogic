@@ -2,9 +2,9 @@ import { Signature, Character } from "./character";
 import { List, ListItem } from "./misc/list";
 import { json } from "@utils/json_utils";
 import { Default } from "./misc/default";
-import * as gcs from "@gcs/gcs";
 export declare class SkillList extends List<Skill> {
     populator: typeof Skill;
+    loader: any;
     constructor(character: Character);
 }
 export declare abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T> {
@@ -31,7 +31,6 @@ export declare abstract class SkillLike<T extends SkillLike<T>> extends ListItem
     canSwapDefaults(skill: SkillLike<T>, defaults: Set<SkillDefault<T>>): boolean;
     hasDefaultTo(skill: SkillLike<T>, defaults: Set<SkillDefault<T>>): boolean;
     swapDefault(skill: SkillLike<T>, defaults: Set<SkillDefault<T>>): number;
-    loadJSON(json: string | json): void;
 }
 export declare class Skill extends SkillLike<Skill> {
     version: number;
@@ -48,9 +47,6 @@ export declare class Skill extends SkillLike<Skill> {
     childrenPoints(): number;
     getBonus(): any;
     toString(): string;
-    static mapSkill(data: gcs.Skill, skill: Skill): Skill;
-    toJSON(): {};
-    loadJSON(json: string | json): this;
     toR20(): {
         key: string;
         row_id: string;

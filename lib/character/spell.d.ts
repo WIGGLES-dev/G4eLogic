@@ -1,9 +1,9 @@
 import { SkillLike, SkillDefault, Difficulty } from "./skill";
 import { List } from "./misc/list";
 import { Character, Signature } from "./character";
-import { json } from "@utils/json_utils";
 export declare class SpellList extends List<Spell> {
     populator: typeof Spell;
+    loader: any;
     constructor(character: Character);
 }
 export declare class Spell extends SkillLike<Spell> {
@@ -25,6 +25,4 @@ export declare class Spell extends SkillLike<Spell> {
     constructor(list: List<Spell>);
     isActive(): boolean;
     getBonus(): number;
-    toJSON(): {};
-    loadJSON(object: string | json): this;
 }

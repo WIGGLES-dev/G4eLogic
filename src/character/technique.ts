@@ -4,12 +4,12 @@ import { List } from "./misc/list";
 import { objectify, json } from "@utils/json_utils";
 import * as gcs from "@gcs/gcs";
 
-type TehcniqueDifficulty = Difficulty.average | Difficulty.hard
+export type TehchniqueDifficulty = Difficulty.average | Difficulty.hard
 export class Technique extends Skill {
     tag = "technique"
 
     limit: number
-    difficulty: TehcniqueDifficulty = Difficulty.average
+    difficulty: TehchniqueDifficulty = Difficulty.average
 
     defaults: Set<SkillDefault<SkillLike<any>>> = null
 
@@ -71,17 +71,6 @@ export class Technique extends Skill {
         const relativeTo = this.default.getSkillsNamedFrom(this.list).highest;
         console.log(this.name, relativeTo.name, relativeTo.calculateLevel());
         return this.calculateLevel() - relativeTo.calculateLevel()
-    }
-    toJSON() {
-        return {}
-    }
-    loadJSON(json: string | json) {
-        const data = objectify<gcs.Technique>(json);
-        super.loadJSON(json);
-        this.limit = data.limit;
-        this.difficulty = data.difficulty as TehcniqueDifficulty;
-        this.default = new SkillDefault<Skill>(this).loadJSON(data.default);
-        return this
     }
     toR20(): any {
         const link = this.default.isSkillBased() ? this.default.getSkillsNamedFrom(this.list).highest : null
