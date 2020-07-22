@@ -183,4 +183,8 @@ export abstract class List<T extends Featurable> {
         }
         return this
     }
+    empty() {
+        this.#contents.clear();
+        this.generate();
+    }
 }

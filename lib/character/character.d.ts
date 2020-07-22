@@ -18,6 +18,7 @@ export interface Featurable extends ListItem<any> {
 }
 export declare class Character extends Sheet {
     gCalcID: string;
+    attributes: Map<Signature, Attribute>;
     ST: Attribute;
     DX: Attribute;
     IQ: Attribute;
@@ -38,17 +39,17 @@ export declare class Character extends Sheet {
     spellList: SpellList;
     featureList: FeatureList;
     constructor(serializer?: Serializer);
-    totalAttributesCost(): any;
-    attributes(attribute: Signature): number;
+    totalAttributesCost(): number;
+    getAttribute(attribute: Signature): Attribute;
     pointTotals(): {
         racialPoints: number;
-        attributePoints: any;
+        attributePoints: number;
         advantages: number;
         disadvantages: number;
         quirks: number;
         skills: number;
         spells: number;
-        total: any;
+        total: number;
     };
     allItems(): Equipment[];
     basicLift(): number;
@@ -59,6 +60,7 @@ export declare class Character extends Sheet {
     dodgeScore(): number;
     encumberedDodgeScore(): number;
     load(data: any): Character;
+    void(): void;
     toR20(): string;
 }
 export declare enum Signature {

@@ -56,4 +56,5 @@ export declare abstract class List<T extends Featurable> {
     iterTop(): T[];
     keys(): T[];
     load(data: string | json): this;
+    empty(): void;
 }

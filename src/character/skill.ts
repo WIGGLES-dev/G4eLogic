@@ -95,7 +95,7 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
         return SkillLike.calculateLevel(
             this.difficulty,
             this.points,
-            this.list.character.attributes(this.signature),
+            this.list.character.getAttribute(this.signature).calculateLevel(),
             this.defaultedFrom,
             this.getBonus(),
             this.list.character.encumbranceLevel(),
@@ -166,7 +166,7 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
         ): SkillDefault<T> {
         let best = SkillLike.getBestDefault(character, defaults);
         if (best !== null) {
-            let baseLine = character.attributes(skill.signature) + SkillLike.getBaseRelativeLevel(skill.difficulty);
+            let baseLine = character.getAttribute(skill.signature).calculateLevel() + SkillLike.getBaseRelativeLevel(skill.difficulty);
             let level = best.level;
             best.adjustedLevel = level;
             if (level === baseLine) {

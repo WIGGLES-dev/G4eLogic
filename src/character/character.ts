@@ -31,6 +31,8 @@ export interface Featurable extends ListItem<any> {
 export class Character extends Sheet {
     gCalcID: string
 
+    attributes: Map<Signature, Attribute>
+
     ST: Attribute
     DX: Attribute
     IQ: Attribute
@@ -62,71 +64,90 @@ export class Character extends Sheet {
         this.skillList = new SkillList(this);
         this.traitList = new TraitList(this);
         this.spellList = new SpellList(this);
-        this.ST = new Attribute(
+        this.attributes = new Map();
+        this.attributes.set(
             Signature.ST,
-            this,
-            10,
-            { defaultLevel: 10 }
-        );
-        this.DX = new Attribute(
+            new Attribute(
+                Signature.ST,
+                this,
+                10,
+                { defaultLevel: 10 }
+            ));
+        this.attributes.set(
             Signature.DX,
-            this,
-            20,
-            { defaultLevel: 10 }
-        );
-        this.IQ = new Attribute(
+            new Attribute(
+                Signature.DX,
+                this,
+                20,
+                { defaultLevel: 10 }
+            ));
+        this.attributes.set(
             Signature.IQ,
-            this,
-            20,
-            { defaultLevel: 10 }
-        );
-        this.HT = new Attribute(
+            new Attribute(
+                Signature.IQ,
+                this,
+                20,
+                { defaultLevel: 10 }
+            ));
+        this.attributes.set(
             Signature.HT,
-            this,
-            10,
-            { defaultLevel: 10 }
-        );
-        this.Will = new Attribute(
+            new Attribute(
+                Signature.HT,
+                this,
+                10,
+                { defaultLevel: 10 }
+            ));
+        this.attributes.set(
             Signature.Will,
-            this,
-            5,
-            { basedOn: () => this.IQ.calculateLevel() }
-        );
-        this.Speed = new Attribute(
+            new Attribute(
+                Signature.Will,
+                this,
+                5,
+                { basedOn: () => this.IQ.calculateLevel() }
+            ));
+        this.attributes.set(
             Signature.Speed,
-            this,
-            20,
-            { basedOn: () => (this.DX.calculateLevel() + this.HT.calculateLevel()) / 4 }
-        );
+            new Attribute(
+                Signature.Speed,
+                this,
+                20,
+                { basedOn: () => (this.DX.calculateLevel() + this.HT.calculateLevel()) / 4 }
+            ));
         this.Move = new Attribute(
             Signature.Move,
             this,
             5,
             { basedOn: () => Math.floor(this.Speed.calculateLevel()) }
         );
-        this.Per = new Attribute(
+        this.attributes.set(
             Signature.Per,
-            this,
-            5,
-            { basedOn: () => this.IQ.calculateLevel() }
-        );
-        this.HP = new Attribute(
+            new Attribute(
+                Signature.Per,
+                this,
+                5,
+                { basedOn: () => this.IQ.calculateLevel() }
+            ));
+        this.attributes.set(
             Signature.HP,
-            this,
-            2,
-            { basedOn: () => this.ST.calculateLevel() }
-        );
-        this.FP = new Attribute(
+            new Attribute(
+                Signature.HP,
+                this,
+                2,
+                { basedOn: () => this.ST.calculateLevel() }
+            ));
+        this.attributes.set(
             Signature.FP,
-            this,
-            3,
-            { basedOn: () => this.HT.calculateLevel() }
-        );
+            new Attribute(
+                Signature.FP,
+                this,
+                3,
+                { basedOn: () => this.HT.calculateLevel() }
+            ));
         this.featureList = new FeatureList();
     }
 
     totalAttributesCost() {
-        return Object.values(this).reduce((prev, cur) => {
+        return Array.from(this.attributes.values()).reduce((prev, cur) => {
             if (cur instanceof Attribute) {
                 return prev + cur.pointsSpent()
             } else {
@@ -135,20 +156,8 @@ export class Character extends Sheet {
         }, 0)
     }
 
-    attributes(attribute: Signature) {
-        switch (attribute) {
-            case Signature.HP: return this.HP.calculateLevel()
-            case Signature.FP: return this.FP.calculateLevel()
-            case Signature.ST: return this.ST.calculateLevel()
-            case Signature.DX: return this.DX.calculateLevel()
-            case Signature.IQ: return this.IQ.calculateLevel()
-            case Signature.HT: return this.HT.calculateLevel()
-            case Signature.Per: return this.Per.calculateLevel()
-            case Signature.Will: return this.Will.calculateLevel()
-            case Signature.Base: return 10
-            case Signature.Speed: return this.Speed.calculateLevel()
-            case Signature.Move: return this.Move.calculateLevel()
-        }
+    getAttribute(attribute: Signature) {
+        return this.attributes.get(attribute)
     }
 
     pointTotals() {
@@ -229,7 +238,14 @@ export class Character extends Sheet {
         }
     }
     load(data: any) {
+        this.void();
         return this.serializer.load(this, data)
+    }
+    void(): void {
+        this.traitList.empty();
+        this.skillList.empty();
+        this.equipmentList.empty();
+        this.otherEquipmentList.empty();
     }
     toR20() {
         return exportR20(this)
