@@ -65,10 +65,4 @@ export class AttributeBonus<T extends Featurable> extends Feature<T> {
     constructor(owner: T) {
         super(owner, FeatureType.attributeBonus);
     }
-    loadJSON(json: json) {
-        const data = objectify<json>(json);
-        super.loadJSON(data);
-        this.attribute = data.attribute
-        return this
-    }
 }

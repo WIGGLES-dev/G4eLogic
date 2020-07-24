@@ -5,11 +5,9 @@ import { objectify, json } from "@utils/json_utils";
 
 export class SpellList extends List<Spell> {
     populator = Spell
-    loader
 
     constructor(character: Character) {
         super(character);
-        this.loader = this.character.serializer.mapSpell
     }
 }
 
@@ -35,7 +33,6 @@ export class Spell extends SkillLike<Spell> {
 
     constructor(list: List<Spell>) {
         super(list)
-        this.list = list;
     }
     isActive() { return true }
     getBonus() {

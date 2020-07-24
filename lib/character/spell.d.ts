@@ -3,7 +3,6 @@ import { List } from "./misc/list";
 import { Character, Signature } from "./character";
 export declare class SpellList extends List<Spell> {
     populator: typeof Spell;
-    loader: any;
     constructor(character: Character);
 }
 export declare class Spell extends SkillLike<Spell> {

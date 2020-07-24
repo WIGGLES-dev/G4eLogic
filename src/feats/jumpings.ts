@@ -1,4 +1,4 @@
-import { Character } from "character/character";
+import { Character, Signature } from "character/character";
 import { features } from "process";
 import { format } from "path";
 
@@ -25,7 +25,7 @@ export class Jump {
     }
 
     characterEffectiveHighestMove() {
-        const move = this.character.Move.calculateLevel();
+        const move = this.character.getAttribute(Signature.Move).calculateLevel();
         const jumpMove = this.jumpingSkillLevel().calculateLevel() / 2;
         const encumbranceLevel = this.character.encumbranceLevel();
         if (move > jumpMove) {

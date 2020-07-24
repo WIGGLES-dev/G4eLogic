@@ -38,13 +38,15 @@ export declare abstract class ListItem<T extends Featurable> extends CharacterEl
     getRecursiveChildren(): void;
     findSelf(): T;
     private loadChildren;
-    load<U>(loader: (subject: T, data?: U) => U[], data: any): T;
+    load<U>(data: any): T;
+    save(): any;
 }
 export declare abstract class List<T extends Featurable> {
     #private;
     contents: Set<T>;
     abstract populator: new (list: List<T>) => T;
-    abstract loader: (subject: T, data?: T) => T[];
+    loader: (list: List<any>, data: any) => List<any>;
+    serializer: (list: List<T>) => any;
     character: Character;
     constructor(character: Character);
     generate(): void;
@@ -55,6 +57,7 @@ export declare abstract class List<T extends Featurable> {
     iter(): T[];
     iterTop(): T[];
     keys(): T[];
-    load(data: string | json): this;
+    save(): any;
+    load(data: string | json): List<any>;
     empty(): void;
 }

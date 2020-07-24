@@ -1,10 +1,8 @@
 import { Modifier } from "./misc/modifier";
 import { List, ListItem } from "./misc/list";
 import { Character } from "./character";
-import { json } from "@utils/json_utils";
 export declare class TraitList extends List<Trait> {
     populator: typeof Trait;
-    loader: any;
     constructor(character: Character);
     sumRacials(): number;
     sumAdvantages(): number;
@@ -43,6 +41,7 @@ export declare class Trait extends ListItem<Trait> {
     disable(): void;
     enable(): void;
     static getAdjustedPoints(modifiers: Set<TraitModifier>, trait: Trait): number;
+    addModifier(): TraitModifier;
     toR20(): {
         key: any;
         row_id: string;
@@ -55,19 +54,19 @@ export declare class Trait extends ListItem<Trait> {
     };
 }
 export declare class TraitModifier extends Modifier<Trait> {
-    static nodeName: string;
+    tag: string;
+    version: number;
     cost: number;
     type: TraitModifierType;
     levels: number;
     affects: TraitModifierAffects;
     hasLevels: boolean;
+    load: (data: any) => TraitModifier;
     constructor(owner: Trait);
     costModifier(): number;
     static modifyPoints(points: number, modifier: number): number;
     static calculateModifierPoints(points: number, modifier: number): number;
     static applyRounding(value: number, roundCostDown: boolean): number;
-    toJSON(): void;
-    loadJSON(object: string | json): TraitModifier;
 }
 declare enum TraitModifierType {
     percentage = "percentage",

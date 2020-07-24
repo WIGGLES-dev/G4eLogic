@@ -17,6 +17,6 @@ export declare class Profile {
     age: string;
     portrait: string;
     constructor();
-    toJSON(): void;
-    loadJSON(object: string | json): void;
+    save(): any;
+    load(object: json): this;
 }

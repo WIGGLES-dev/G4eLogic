@@ -19,16 +19,6 @@ export interface Featurable extends ListItem<any> {
 export declare class Character extends Sheet {
     gCalcID: string;
     attributes: Map<Signature, Attribute>;
-    ST: Attribute;
-    DX: Attribute;
-    IQ: Attribute;
-    HT: Attribute;
-    Will: Attribute;
-    Speed: Attribute;
-    Move: Attribute;
-    Per: Attribute;
-    HP: Attribute;
-    FP: Attribute;
     missingHP: number;
     missingFP: number;
     profile: Profile;

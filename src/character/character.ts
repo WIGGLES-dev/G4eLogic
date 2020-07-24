@@ -33,17 +33,6 @@ export class Character extends Sheet {
 
     attributes: Map<Signature, Attribute>
 
-    ST: Attribute
-    DX: Attribute
-    IQ: Attribute
-    HT: Attribute
-    Will: Attribute
-    Speed: Attribute
-    Move: Attribute
-    Per: Attribute
-    HP: Attribute
-    FP: Attribute
-
     missingHP: number
     missingFP: number
 
@@ -103,7 +92,7 @@ export class Character extends Sheet {
                 Signature.Will,
                 this,
                 5,
-                { basedOn: () => this.IQ.calculateLevel() }
+                { basedOn: () => this.getAttribute(Signature.IQ).calculateLevel() }
             ));
         this.attributes.set(
             Signature.Speed,
@@ -111,21 +100,23 @@ export class Character extends Sheet {
                 Signature.Speed,
                 this,
                 20,
-                { basedOn: () => (this.DX.calculateLevel() + this.HT.calculateLevel()) / 4 }
+                { basedOn: () => (this.getAttribute(Signature.DX).calculateLevel() + this.getAttribute(Signature.HT).calculateLevel()) / 4 }
             ));
-        this.Move = new Attribute(
+        this.attributes.set(
             Signature.Move,
-            this,
-            5,
-            { basedOn: () => Math.floor(this.Speed.calculateLevel()) }
-        );
+            new Attribute(
+                Signature.Move,
+                this,
+                5,
+                { basedOn: () => Math.floor(this.getAttribute(Signature.Speed).calculateLevel()) }
+            ));
         this.attributes.set(
             Signature.Per,
             new Attribute(
                 Signature.Per,
                 this,
                 5,
-                { basedOn: () => this.IQ.calculateLevel() }
+                { basedOn: () => this.getAttribute(Signature.IQ).calculateLevel() }
             ));
         this.attributes.set(
             Signature.HP,
@@ -133,7 +124,7 @@ export class Character extends Sheet {
                 Signature.HP,
                 this,
                 2,
-                { basedOn: () => this.ST.calculateLevel() }
+                { basedOn: () => this.getAttribute(Signature.ST).calculateLevel() }
             ));
         this.attributes.set(
             Signature.FP,
@@ -141,7 +132,7 @@ export class Character extends Sheet {
                 Signature.FP,
                 this,
                 3,
-                { basedOn: () => this.HT.calculateLevel() }
+                { basedOn: () => this.getAttribute(Signature.HT).calculateLevel() }
             ));
         this.featureList = new FeatureList();
     }
@@ -189,7 +180,7 @@ export class Character extends Sheet {
             ])
     }
     basicLift() {
-        const ST = this.ST.calculateLevel();
+        const ST = this.getAttribute(Signature.ST).calculateLevel();
         return Math.round(ST * ST / 5)
     }
     encumbranceLevel() {
@@ -209,7 +200,7 @@ export class Character extends Sheet {
     }
 
     encumberedMove() {
-        return this.Move.calculateLevel() + this.encumbranceLevel()
+        return this.getAttribute(Signature.Move).calculateLevel() + this.encumbranceLevel()
     }
     carriedWeight(list: List<Equipment>) {
         return list.iterTop().reduce((prev, cur) => {
@@ -222,7 +213,7 @@ export class Character extends Sheet {
         }, 0)
     }
 
-    dodgeScore() { return Math.floor(this.Speed.calculateLevel() + Attribute.bonusReducer(this, Signature.Dodge) + 3) }
+    dodgeScore() { return Math.floor(this.getAttribute(Signature.Speed).calculateLevel() + Attribute.bonusReducer(this, Signature.Dodge) + 3) }
     encumberedDodgeScore() {
         switch (this.encumbranceLevel()) {
             case 0:

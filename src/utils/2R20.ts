@@ -1,4 +1,4 @@
-import { Character } from "../character/character";
+import { Character, Signature } from "../character/character";
 
 const base = {
     "schema_version": 2,
@@ -49,26 +49,26 @@ export function exportR20(character: Character) {
         }
     });
     const static_fields = {
-        strength_mod: character.ST.getMod(),
-        strength_points: character.ST.pointsSpent(),
-        dexterity_mod: character.DX.getMod(),
-        dexterity_points: character.DX.pointsSpent(),
-        intelligence_mod: character.IQ.getMod(),
-        intelligence_points: character.IQ.pointsSpent(),
-        health_mod: character.HT.getMod(),
-        health_points: character.HT.pointsSpent(),
-        perception_mod: character.Per.getMod(),
-        perception_points: character.Per.pointsSpent(),
-        willpower_mod: character.Will.getMod(),
-        willpower_points: character.Will.pointsSpent(),
-        basic_speed_mod: character.Speed.getMod(),
-        basic_speed_points: character.Speed.pointsSpent(),
-        basic_move_mod: character.Move.getMod(),
-        basic_move_points: character.Move.pointsSpent(),
-        hit_points_max_mod: character.HP.getMod(),
-        hit_points_max_points: character.HP.pointsSpent(),
-        fatigue_points_mod: character.FP.getMod(),
-        fatigue_points_points: character.FP.pointsSpent(),
+        strength_mod: character.getAttribute(Signature.ST).getMod(),
+        strength_points: character.getAttribute(Signature.ST).pointsSpent(),
+        dexterity_mod: character.getAttribute(Signature.DX).getMod(),
+        dexterity_points: character.getAttribute(Signature.DX).pointsSpent(),
+        intelligence_mod: character.getAttribute(Signature.IQ).getMod(),
+        intelligence_points: character.getAttribute(Signature.IQ).pointsSpent(),
+        health_mod: character.getAttribute(Signature.HT).getMod(),
+        health_points: character.getAttribute(Signature.HT).pointsSpent(),
+        perception_mod: character.getAttribute(Signature.Per).getMod(),
+        perception_points: character.getAttribute(Signature.Per).pointsSpent(),
+        willpower_mod: character.getAttribute(Signature.Will).getMod(),
+        willpower_points: character.getAttribute(Signature.Will).pointsSpent(),
+        basic_speed_mod: character.getAttribute(Signature.Speed).getMod(),
+        basic_speed_points: character.getAttribute(Signature.Speed).pointsSpent(),
+        basic_move_mod: character.getAttribute(Signature.Move).getMod(),
+        basic_move_points: character.getAttribute(Signature.Move).pointsSpent(),
+        hit_points_max_mod: character.getAttribute(Signature.HP).getMod(),
+        hit_points_max_points: character.getAttribute(Signature.HP).pointsSpent(),
+        fatigue_points_mod: character.getAttribute(Signature.FP).getMod(),
+        fatigue_points_points: character.getAttribute(Signature.FP).pointsSpent(),
 
         name_native_language: native_language ? native_language.name : "",
         native_language_spoken: 0,

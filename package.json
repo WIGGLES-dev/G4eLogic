@@ -24,6 +24,7 @@
     "@types/webpack": "^4.41.21",
     "@types/webpack-dev-server": "^3.11.0",
     "awesome-typescript-loader": "^5.2.1",
+    "jsonpath": "^1.0.2",
     "link-module-alias": "^1.2.0",
     "ts-loader": "^8.0.1",
     "ts-node": "^8.10.2",

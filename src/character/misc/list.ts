@@ -4,6 +4,7 @@ import { Feature } from "./feature";
 import { Weapon } from "../weapon";
 import { objectify, json, isArray } from "@utils/json_utils";
 import * as gcs from "@gcs/gcs";
+import { Constructor } from "@character/serialization/serializer";
 
 export abstract class ListItem<T extends Featurable> extends CharacterElement<T> implements gcs.ListItem<T> {
     abstract version: number
@@ -29,7 +30,7 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
     listIndex: number
 
     constructor(list: List<T>) {
-        super();
+        super(list.character);
         this.list = list;
         this.list.addListItem(this);
         this.features = new Set();
@@ -39,6 +40,7 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
     }
 
     abstract isActive(): boolean
+
     getListDepth(): number {
         let x = 0;
         let listItem = this.findSelf();
@@ -107,13 +109,17 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
             subElement.loadChildren(isArray(children), subElement, loader)
         });
     }
-    load<U>(loader: (subject: T, data?: U) => U[], data): T {
+    load<U>(data): T {
+        const loader = this.getSerializer().transformers.get(this.constructor as Constructor).load;
         const children: U[] = loader(this.findSelf(), data)
         if (children && children.length > 0) {
             this.canContainChildren = true;
             this.loadChildren(children, this.findSelf(), loader)
         }
         return this.findSelf()
+    }
+    save() {
+        return this.getSerializer().transformers.get(this.constructor as Constructor).save(this);
     }
 }
 
@@ -122,7 +128,9 @@ export abstract class List<T extends Featurable> {
     contents: Set<T>
 
     abstract populator: new (list: List<T>) => T
-    abstract loader: (subject: T, data?: T) => T[]
+
+    loader: (list: List<any>, data: any) => List<any>
+    serializer: (list: List<T>) => any
 
     character: Character
 
@@ -130,6 +138,8 @@ export abstract class List<T extends Featurable> {
         this.character = character;
         this.#contents = new Map();
         this.contents = new Set();
+        this.loader = character.serializer.loadList;
+        this.serializer = character.serializer.saveList;
     }
     generate() {
         this.contents.clear();
@@ -172,16 +182,11 @@ export abstract class List<T extends Featurable> {
     keys() {
         return Array.from(this.contents.keys());
     }
+    save() {
+        return this.serializer(this)
+    }
     load(data: string | json) {
-        data = objectify<json>(data);
-        if (data) {
-            data.forEach((skill: json) => {
-                const item = new this.populator(this);
-                item.load<T>(this.loader, skill);
-            });
-            this.generate();
-        }
-        return this
+        return this.character.serializer.loadList(this, data as any[])
     }
     empty() {
         this.#contents.clear();

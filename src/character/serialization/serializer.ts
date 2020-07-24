@@ -3,7 +3,10 @@ import { Technique } from "../technique";
 import { Spell } from "../spell";
 import { Equipment } from "../equipment";
 import { Trait } from "../trait";
-import { Character } from "index";
+import { Character, Feature, SkillDefault } from "index";
+import { List } from "@character/misc/list";
+import { Featurable } from "@gcs/gcs";
+import { Modifier } from "@character/misc/modifier";
 
 /**
  * Abstract class from which all serializers draw functionality. It covers loading and saving functionality
@@ -12,23 +15,40 @@ import { Character } from "index";
  * be loaded next. The loader will stop loading when your function does not return a non-zero length array.
  */
 
+export type Constructor<T = {}> = new (...arger: any[]) => T;
 export abstract class Serializer {
-    static dataTypes: Set<{ new(): Serializer }> = new Set()
+    abstract scope: string
+    transformers: Map<Constructor | string, { save: any, load: any }>
 
     constructor() {
-
+        this.transformers = new Map();
+        this.init();
     }
 
-    abstract mapSkill(skill: Skill, data?: any): any[]
-    abstract mapTechnique(technique: Technique, data: any): any[]
-    abstract mapSpell(spell: Spell, data?: any): any[]
-    abstract mapEquipment(equipment: Equipment, data: any): any[]
-    abstract mapTrait(trait: Trait, data?: any): any[]
+    static purgeObject(object: any) {
+        object.keys.forEach(key => {
+            const data = object[key];
+            if (data === undefined || data === null) delete object[key];
+            if (Array.isArray(data)) data.forEach(data => Serializer.purgeObject(data));
+            if (Object.keys(data).length > 0) Serializer.purgeObject(data);
+        });
+        return object
+    }
+
+    abstract init(): void
+    
+    register(key: Constructor | string, transformer: { save: any, load: any }) {
+        this.transformers.set(key, transformer)
+        return this
+    }
+
+    static reverseMap(input: string) {
+        Object.keys(input)
+    }
+
+    abstract loadList(list: List<any>, data: any[]): List<any>
+    abstract saveList(list: List<any>): any
 
     abstract load(character: Character, data: any): Character
-}
-
-export function registerDataType(type: { new(): Serializer }) {
-    Serializer.dataTypes.add(type);
-    return this
+    abstract save(character: Character): any
 }

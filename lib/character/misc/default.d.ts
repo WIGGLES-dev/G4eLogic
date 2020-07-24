@@ -1,10 +1,11 @@
-import { json } from "@utils/json_utils";
+import { SkillLike } from "@character/skill";
+import { CharacterElement } from "./element";
 declare enum DefaultType {
     skill = "Skill"
 }
 export declare abstract class DefaultList {
 }
-export declare abstract class Default<T> {
+export declare abstract class Default<T extends SkillLike<any>> extends CharacterElement<T> {
     tag: string;
     type: DefaultType;
     modifier: number;
@@ -12,7 +13,5 @@ export declare abstract class Default<T> {
     specialization?: string;
     owner: T;
     constructor(owner: T);
-    toJSON(): void;
-    loadJSON(object: json): this;
 }
 export {};

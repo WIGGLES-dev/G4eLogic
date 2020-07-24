@@ -2,34 +2,27 @@ import { Trait } from "../trait"
 import { Equipment } from "../equipment"
 import { objectify, json } from "@utils/json_utils"
 import { CharacterElement } from "./element"
+import { Constructor } from "@character/serialization/serializer"
 
 export type Modifiable = Trait | Equipment
 export abstract class Modifier<T extends Modifiable> extends CharacterElement<T> {
-    static version = 2
+    abstract version: number
+    abstract tag: string
 
     enabled: boolean = true
     name: string
     owner: T
 
     constructor(owner: T) {
-        super();
+        super(owner.character);
         this.owner = owner
         this.categories = new Set();
     }
-    toJSON() {
-
+    save() {
+        return this.getSerializer().transformers.get(this.constructor as Constructor).save(this)
     }
-    loadJSON(object: string | json) {
-        object = objectify(object);
-        super.loadJSON(object);
-        function mapModifier(object: any, modifier: Modifier<T>): Modifier<T> {
-            modifier.name = object.name;
-            modifier.reference = object.reference;
-            modifier.notes = object.notes;
-            modifier.enabled = !object.disabled;
-            return modifier
-        }
-        mapModifier(object, this);
+    load(data: any) {
+        return this.getSerializer().transformers.get(this.constructor as Constructor).save(this, data)
     }
 
     /**

@@ -1,11 +1,8 @@
 import { List, ListItem } from "./misc/list";
 import { Modifier, Modifiable } from "./misc/modifier";
 import { Character } from "./character";
-import { json } from "@utils/json_utils";
-import * as gcs from "@gcs/gcs";
 export declare class EquipmentList extends List<Equipment> {
     populator: typeof Equipment;
-    loader: any;
     constructor(character: Character);
 }
 export declare class Equipment extends ListItem<Equipment> {
@@ -22,6 +19,7 @@ export declare class Equipment extends ListItem<Equipment> {
     modifiers: Set<EquipmentModifier<Equipment>>;
     hasLevels: boolean;
     constructor(list: List<Equipment>);
+    addModifier(): EquipmentModifier<Equipment>;
     get name(): string;
     isActive(): boolean;
     getLevel(): number;
@@ -35,7 +33,6 @@ export declare class Equipment extends ListItem<Equipment> {
     private static processNonCFStep;
     adjustedWeight(): number;
     private static processMultiplyAddWeightStep;
-    static mapEquipment(equipment: Equipment, data: gcs.Equipment): gcs.Equipment[];
     toR20(): {
         key: string;
         row_id: string;
@@ -54,7 +51,8 @@ export declare class Equipment extends ListItem<Equipment> {
     };
 }
 export declare class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
-    static nodeName: string;
+    tag: string;
+    version: number;
     static minCF: number;
     cost: string;
     costType: EquipmentModifierValueType;
@@ -63,8 +61,6 @@ export declare class EquipmentModifier<T extends Modifiable> extends Modifier<T>
     constructor(equipment: T);
     static determineWeightType(type: string): EquipmentModifierWeightValueType;
     static determineCostType(type: string): EquipmentModifierCostValueType;
-    toJSON(): void;
-    loadJSON(json: string | json): this;
 }
 declare enum EquipmentModifierWeightType {
     originalWeight = "to_original_weight",

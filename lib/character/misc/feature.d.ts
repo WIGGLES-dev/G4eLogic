@@ -1,6 +1,5 @@
 import { CharacterElement } from "./element";
 import { Featurable } from "../character";
-import { json } from "@utils/json_utils";
 import { FeatureType } from "@gcs/gcs";
 import { SkillLike } from "@character/skill";
 import { Weapon } from "@character/weapon";
@@ -16,6 +15,7 @@ export declare class FeatureList {
     getFeaturesByType(type: FeatureType): Feature<Featurable>[];
 }
 export declare abstract class Feature<T extends Featurable> extends CharacterElement<T> {
+    tag: string;
     amount: number;
     leveled: boolean;
     limitation: false | string;
@@ -26,8 +26,8 @@ export declare abstract class Feature<T extends Featurable> extends CharacterEle
     ownerIsActive(): boolean;
     getBonus(): number;
     unregister(): void;
-    toJSON(): void;
-    loadJSON(object: string | json): void;
+    save(): any;
+    load(data: any): any;
     static loadFeature<T extends Featurable>(owner: T, featureType: FeatureType): Feature<T>;
 }
 export declare class SkillBonus<T extends Featurable> extends Feature<T> {
@@ -40,6 +40,4 @@ export declare class SkillBonus<T extends Featurable> extends Feature<T> {
     categoryCompareType: StringCompare;
     constructor(owner: T);
     isApplicableTo(skill: SkillLike<any>): boolean;
-    toJSON(): {};
-    loadJSON(json: string | json): this;
 }

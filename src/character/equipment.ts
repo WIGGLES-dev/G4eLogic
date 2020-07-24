@@ -7,11 +7,9 @@ import { Feature } from "./misc/feature";
 
 export class EquipmentList extends List<Equipment> {
     populator = Equipment
-    loader;
 
     constructor(character: Character) {
         super(character);
-        this.loader = this.character.serializer.mapEquipment
     }
 }
 
@@ -36,7 +34,11 @@ export class Equipment extends ListItem<Equipment> {
         super(list);
         this.modifiers = new Set();
     }
-
+    addModifier() {
+        const modifier = new EquipmentModifier<Equipment>(this);
+        this.modifiers.add(modifier)
+        return modifier
+    }
     get name() { return this.description }
     isActive() { return this.equipped }
     getLevel(): number { return null }
@@ -206,27 +208,6 @@ export class Equipment extends ListItem<Equipment> {
         weight += sum;
         return weight
     }
-
-    static mapEquipment(equipment: Equipment, data: gcs.Equipment) {
-        isArray(data?.modifiers)?.forEach((modifier: json) => equipment.modifiers.add(new EquipmentModifier(equipment).loadJSON(modifier)));
-
-        equipment.description = data.description;
-        equipment.equipped = data.equipped;
-        equipment.quantity = data.quantity;
-        equipment.value = parseFloat(data?.value);
-        equipment.weight = parseFloat(data?.weight?.split(" ")[0] ?? "0");
-        equipment.techLevel = data.tech_level;
-        equipment.legalityClass = data.legality_class;
-        equipment.containedWeightReduction = isArray(data?.features)?.find(feature => feature.type === "contained_weight_reduction")?.reduction ?? null;
-        data.features?.forEach((feature: json) => {
-            Feature.loadFeature<Equipment>(equipment, feature.type)?.loadJSON(feature)
-        });
-
-        const children = data?.children as gcs.Equipment[] || null
-        if (data.type.includes("_container")) {
-            return children
-        }
-    }
     toR20() {
         return {
             key: "repeating_item",
@@ -248,7 +229,8 @@ export class Equipment extends ListItem<Equipment> {
 }
 
 export class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
-    static nodeName = "eqp_modifier"
+    tag: string = "eqp_modifier"
+    version: number = 1
     static minCF = -0.8
 
     cost: string
@@ -287,18 +269,6 @@ export class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
         return EquipmentModifierCostValueType.addition
     }
 
-    toJSON() {
-
-    }
-    loadJSON(json: string | json) {
-        const data = objectify<any>(json);
-        super.loadJSON(json);
-        this.cost = data.cost;
-        this.weight = data.weight;
-        this.costType = data.cost_type;
-        this.weightType = data.weightType;
-        return this
-    }
 }
 
 enum EquipmentModifierWeightType {

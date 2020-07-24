@@ -6,15 +6,14 @@ import { objectify, json, isArray } from "@utils/json_utils";
 import { Default } from "./misc/default";
 import * as gcs from "@gcs/gcs";
 import { Trait } from "./trait";
+import { Constructor } from "./serialization/serializer";
 
 
 export class SkillList extends List<Skill> {
     populator = Skill
-    loader
 
     constructor(character: Character) {
         super(character);
-        this.loader = this.character.serializer.mapSkill;
     }
 }
 
@@ -27,7 +26,6 @@ export class SkillList extends List<Skill> {
  * @param difficulty
  * @param points
  * @param specialization
- * 
  * 
  * @override @param hasLevels Skill-like entities do not support the idea of level bases bonuses 
  * @todo Skill-like entities could provide bonuses based on their relative skill level (e.g +1 to strength per relative skill level above 2)
@@ -301,6 +299,11 @@ export class Skill extends SkillLike<Skill> {
         }
         return string
     }
+    addDefault(): SkillDefault<Skill> {
+        const newDefault = new SkillDefault(this);
+        this.defaults.add(newDefault);
+        return newDefault
+    }
     toR20() {
         return {
             key: "repeating_skills",
@@ -341,6 +344,7 @@ export class Skill extends SkillLike<Skill> {
 }
 
 export class SkillDefault<T extends SkillLike<any>> extends Default<T> {
+    tag = "default"
     level: number
     adjustedLevel: number
     points: number
@@ -368,14 +372,8 @@ export class SkillDefault<T extends SkillLike<any>> extends Default<T> {
             highest
         }
     }
-    toJSON() {
-
-    }
-    loadJSON(data: json) {
-        data = objectify(data);
-        super.loadJSON(data);
-        return this
-    }
+    save() { return this.getSerializer().transformers.get(this.constructor as Constructor).save(this) }
+    load(data: any) { return this.getSerializer().transformers.get(this.constructor as Constructor).load(this, data) }
 }
 
 export enum Difficulty {

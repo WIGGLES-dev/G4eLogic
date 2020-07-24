@@ -24,10 +24,27 @@ export class Profile {
 
     }
 
-    toJSON() {
-
+    save() {
+        let data: any = {
+            size_modifier: this.sizeModifier,
+            tech_level: this.techLevel,
+            birthday: this.birthday,
+            name: this.name,
+            eyes: this.eyes,
+            skin: this.skin,
+            hair: this.hair,
+            handedness: this.handedness,
+            weight: this.weight,
+            height: this.height,
+            gender: this.gender,
+            body_type: this.bodyType,
+            age: this.age,
+            portrait: this.portrait
+        }
+        return data
     }
-    loadJSON(object: string | json) {
+
+    load(object: json) {
         object = objectify<gcs.Profile>(object);
         this.sizeModifier = object?.size_modifier ?? "";
         this.techLevel = object?.tech_level ?? "";
@@ -44,5 +61,6 @@ export class Profile {
         this.bodyType = object?.bodyType ?? "";
         this.age = object?.age ?? "";
         this.portrait = object?.portait ?? "";
+        return this
     }
 }

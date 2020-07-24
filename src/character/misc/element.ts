@@ -3,6 +3,7 @@ import {
     generateUUID
 } from "@utils/2R20";
 import { objectify, json } from "@utils/json_utils";
+import { Character } from "@character/character";
 
 export abstract class CharacterElement<T extends CharacterElement<T>> {
     uuid: string
@@ -14,7 +15,10 @@ export abstract class CharacterElement<T extends CharacterElement<T>> {
     notes: string = ""
     categories: Set<string>
 
-    constructor(foundryID?: string) {
+    character: Character
+
+    constructor(character: Character, foundryID?: string) {
+        this.character = character;
         this.foundryID = foundryID;
         this.uuid = generateUUID().toString();
         this.r20rowID = generateRowID();
@@ -26,11 +30,5 @@ export abstract class CharacterElement<T extends CharacterElement<T>> {
         element.notes = data.notes;
         data.categories?.forEach((category: string) => element.categories.add(category));
     }
-    toJSON() {
-
-    }
-    loadJSON(object: string | json) {
-        object = objectify<json>(object)
-        CharacterElement.mapElement(object, this);
-    }
+    getSerializer() { return this.character.serializer }
 }

@@ -1,6 +1,5 @@
 import { Feature } from "./misc/feature";
 import { Character, Signature } from "./character";
-import { json } from "@utils/json_utils";
 import { Featurable } from "@character/character";
 export declare class Attribute {
     name: Signature;
@@ -26,5 +25,4 @@ export declare class Attribute {
 export declare class AttributeBonus<T extends Featurable> extends Feature<T> {
     attribute: Signature;
     constructor(owner: T);
-    loadJSON(json: json): this;
 }

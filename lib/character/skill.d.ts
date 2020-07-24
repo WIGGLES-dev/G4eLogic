@@ -1,10 +1,8 @@
 import { Signature, Character } from "./character";
 import { List, ListItem } from "./misc/list";
-import { json } from "@utils/json_utils";
 import { Default } from "./misc/default";
 export declare class SkillList extends List<Skill> {
     populator: typeof Skill;
-    loader: any;
     constructor(character: Character);
 }
 export declare abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T> {
@@ -47,6 +45,7 @@ export declare class Skill extends SkillLike<Skill> {
     childrenPoints(): number;
     getBonus(): any;
     toString(): string;
+    addDefault(): SkillDefault<Skill>;
     toR20(): {
         key: string;
         row_id: string;
@@ -66,6 +65,7 @@ export declare class Skill extends SkillLike<Skill> {
     };
 }
 export declare class SkillDefault<T extends SkillLike<any>> extends Default<T> {
+    tag: string;
     level: number;
     adjustedLevel: number;
     points: number;
@@ -75,8 +75,8 @@ export declare class SkillDefault<T extends SkillLike<any>> extends Default<T> {
         skills: T[];
         highest: T;
     };
-    toJSON(): void;
-    loadJSON(data: json): this;
+    save(): any;
+    load(data: any): any;
 }
 export declare enum Difficulty {
     easy = "E",

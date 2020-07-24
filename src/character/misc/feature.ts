@@ -39,6 +39,7 @@ export class FeatureList {
 }
 
 export abstract class Feature<T extends Featurable> extends CharacterElement<T> {
+    tag = "feature"
     amount: number
     leveled: boolean
     limitation: false | string
@@ -49,7 +50,7 @@ export abstract class Feature<T extends Featurable> extends CharacterElement<T> 
     registered: boolean
 
     constructor(owner: T, type: FeatureType) {
-        super();
+        super(owner.character);
         this.owner = owner;
         owner.features.add(this);
         this.type = type;
@@ -65,15 +66,11 @@ export abstract class Feature<T extends Featurable> extends CharacterElement<T> 
     unregister() {
         this.owner.list.character.featureList.removeFeature(this.uuid);
     }
-    toJSON() {
-
+    save() {
+        return this.getSerializer().transformers.get(this.tag).save(this)
     }
-    loadJSON(object: string | json) {
-        object = objectify<json>(object);
-        super.loadJSON(object);
-        this.amount = object.amount;
-        this.leveled = object?.per_level ?? false;
-        this.limitation = object?.limitation ?? false;
+    load(data: any) {
+        return this.getSerializer().transformers.get(this.tag).load(this, data)
     }
 
     static loadFeature<T extends Featurable>(owner: T, featureType: FeatureType): Feature<T> {
@@ -120,22 +117,5 @@ export class SkillBonus<T extends Featurable> extends Feature<T> {
         if (this.specializationCompareType) result = stringCompare(this.specialization, skill.specialization, this.specializationCompareType);
 
         return result
-    }
-    toJSON() {
-        return {}
-    }
-    loadJSON(json: string | json) {
-        const data = objectify<json>(json);
-        super.loadJSON(data);
-        this.selectionType = data.selection_type;
-
-        this.name = data?.name?.qualifier;
-        this.nameCompareType = data?.name?.compare;
-
-        this.specialization = data?.specialization?.qualifier;
-        this.specializationCompareType = data?.specialization?.compare;
-
-        this.categoryCompareType = data?.category?.compare;
-        return this
     }
 }

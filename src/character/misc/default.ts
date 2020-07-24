@@ -1,4 +1,6 @@
 import { json, objectify } from "@utils/json_utils"
+import { SkillLike } from "@character/skill"
+import { CharacterElement } from "./element"
 
 enum DefaultType {
     skill = "Skill"
@@ -8,7 +10,7 @@ export abstract class DefaultList {
 
 }
 
-export abstract class Default<T> {
+export abstract class Default<T extends SkillLike<any>> extends CharacterElement<T> {
     tag = "default"
 
     type: DefaultType
@@ -20,15 +22,7 @@ export abstract class Default<T> {
     owner: T
 
     constructor(owner: T) {
+        super(owner.character)
         this.owner = owner;
-    }
-    toJSON() { }
-    loadJSON(object: json) {
-        object = objectify(object);
-        this.type = object.type;
-        this.modifier = object.modifier;
-        this.name = object.name;
-        this.specialization = object.specialization;
-        return this
     }
 }

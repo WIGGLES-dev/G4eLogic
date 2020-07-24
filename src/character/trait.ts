@@ -8,10 +8,8 @@ import * as gcs from "@gcs/gcs";
 
 export class TraitList extends List<Trait> {
     populator = Trait
-    loader
     constructor(character: Character) {
         super(character);
-        this.loader = this.character.serializer.mapTrait
     }
     sumRacials() {
         return this.iter().reduce((prev, cur) => {
@@ -63,7 +61,7 @@ enum ContainerType {
 
 export class Trait extends ListItem<Trait> {
     version = 1
-    tag = "advantage"
+    tag = "trait"
 
     hasLevels: boolean
 
@@ -212,6 +210,11 @@ export class Trait extends ListItem<Trait> {
         }
         return TraitModifier.applyRounding((modifiedBasePoints * multiplier), Boolean(trait.roundDown))
     }
+    addModifier(): TraitModifier {
+        const modifier = new TraitModifier(this);
+        this.modifiers.add(modifier);
+        return modifier
+    }
     toR20() {
         let key;
         const traitTemplate = {
@@ -272,7 +275,8 @@ export class Trait extends ListItem<Trait> {
 }
 
 export class TraitModifier extends Modifier<Trait> {
-    static nodeName = "modifier"
+    tag: string = "modifier"
+    version: number = 1
 
     cost: number
     type: TraitModifierType
@@ -280,6 +284,8 @@ export class TraitModifier extends Modifier<Trait> {
     affects: TraitModifierAffects
 
     hasLevels: boolean
+
+    load: (data: any) => TraitModifier
 
     constructor(owner: Trait) {
         super(owner)
@@ -296,21 +302,6 @@ export class TraitModifier extends Modifier<Trait> {
     }
     static applyRounding(value: number, roundCostDown: boolean) {
         return roundCostDown ? Math.floor(value) : Math.ceil(value)
-    }
-    toJSON() {
-
-    }
-    loadJSON(object: string | json): TraitModifier {
-        object = objectify<json>(object);
-        super.loadJSON(object);
-        function mapModifier(object: json, modifier: TraitModifier): TraitModifier {
-            modifier.cost = object.cost;
-            modifier.type = object.cost_type;
-            modifier.affects = object.affects;
-            modifier.levels = object.levels;
-            return modifier
-        }
-        return mapModifier(object, this);
     }
 }
 
