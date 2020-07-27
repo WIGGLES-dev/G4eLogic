@@ -1,5 +1,5 @@
 import { json, objectify } from "@utils/json_utils"
-import { SkillLike } from "@character/skill"
+import { SkillLike } from "@character/skill/skill"
 import { CharacterElement } from "./element"
 
 enum DefaultType {

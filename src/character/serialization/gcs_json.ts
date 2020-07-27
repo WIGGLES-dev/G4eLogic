@@ -1,5 +1,5 @@
 import { Serializer } from "./serializer";
-import { Skill, Difficulty, SkillDefault, SkillLike } from "../../character/skill";
+import { Skill, Difficulty, SkillDefault, SkillLike } from "../../character/skill/skill";
 import { Technique, TehchniqueDifficulty } from "../../character/technique";
 import { Spell } from "../../character/spell";
 import { Equipment, EquipmentModifier } from "../../character/equipment";

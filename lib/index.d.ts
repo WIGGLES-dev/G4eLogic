@@ -1,5 +1,5 @@
 import { Character, Signature } from "./character/character";
-import { Skill, Difficulty, SkillDefault, SkillLike, SkillList } from "./character/skill";
+import { Skill, Difficulty, SkillDefault, SkillLike, SkillList } from "./character/skill/skill";
 import { Trait, TraitType, TraitList, TraitModifier } from "./character/trait";
 import { Spell, SpellList } from "./character/spell";
 import { Technique, TehchniqueDifficulty } from "./character/technique";

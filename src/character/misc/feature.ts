@@ -2,7 +2,7 @@ import { CharacterElement } from "./element";
 import { Featurable } from "../character";
 import { objectify, json } from "@utils/json_utils";
 import { FeatureType } from "@gcs/gcs";
-import { SkillLike } from "@character/skill";
+import { SkillLike } from "@character/skill/skill";
 import { AttributeBonus } from "@character/attribute";
 import { Weapon } from "@character/weapon";
 import { StringCompare, stringCompare } from "@utils/string_utils";

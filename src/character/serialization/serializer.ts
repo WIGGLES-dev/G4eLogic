@@ -1,4 +1,4 @@
-import { Skill } from "../skill";
+import { Skill } from "../skill/skill";
 import { Technique } from "../technique";
 import { Spell } from "../spell";
 import { Equipment } from "../equipment";

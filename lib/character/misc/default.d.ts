@@ -1,4 +1,4 @@
-import { SkillLike } from "@character/skill";
+import { SkillLike } from "@character/skill/skill";
 import { CharacterElement } from "./element";
 declare enum DefaultType {
     skill = "Skill"

@@ -1,12 +1,12 @@
-import { Signature, Character, Featurable } from "./character";
-import { List, ListItem } from "./misc/list";
-import { Feature, SkillBonus } from "./misc/feature";
+import { Signature, Character, Featurable } from "../character";
+import { List, ListItem } from "../misc/list";
+import { Feature, SkillBonus } from "../misc/feature";
 import { StringCompare, stringCompare } from "utils/string_utils";
 import { objectify, json, isArray } from "@utils/json_utils";
-import { Default } from "./misc/default";
+import { Default } from "../misc/default";
 import * as gcs from "@gcs/gcs";
-import { Trait } from "./trait";
-import { Constructor } from "./serialization/serializer";
+import { Constructor } from "../serialization/serializer";
+import { calculateSkillLevel } from "./logic";
 
 
 export class SkillList extends List<Skill> {
@@ -90,10 +90,10 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
         return relativeLevel
     }
     calculateLevel(): number {
-        return SkillLike.calculateLevel(
+        return calculateSkillLevel(
             this.difficulty,
             this.points,
-            this.list.character.getAttribute(this.signature).calculateLevel(),
+            this.list.character.getAttribute(this.signature)?.calculateLevel(),
             this.defaultedFrom,
             this.getBonus(),
             this.list.character.encumbranceLevel(),
@@ -101,61 +101,6 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
         )
     }
 
-    /**
-     * Pure function responsible for determining final skill level.
-     * @param difficulty 
-     * @param points 
-     * @param base 
-     * @param defaultedFrom 
-     * @param bonus 
-     * @param encumbranceLevel 
-     * @param encPenaltyMult
-     * @returns The final calculated skill level.
-     */
-
-    static calculateLevel
-        (
-            difficulty: Difficulty,
-            points: number,
-            base: number = 10,
-            defaultedFrom?: SkillDefault<SkillLike<any>>,
-            bonus = 0,
-            encumbranceLevel = 0,
-            encPenaltyMult = 1,
-
-    ) {
-        let relativeLevel = SkillLike.getBaseRelativeLevel(difficulty);
-        let level = base;
-        if (level !== Number.NEGATIVE_INFINITY) {
-            if (difficulty === Difficulty.wildcard) {
-                points /= 3;
-            } else {
-                if (defaultedFrom && defaultedFrom.points > 0) {
-                    points += defaultedFrom.points;
-                }
-            }
-            if (points > 0) {
-                relativeLevel = SkillLike.calculateRelativeLevel(points, relativeLevel);
-            } else if (defaultedFrom && defaultedFrom.points < 0) {
-                relativeLevel = defaultedFrom.adjustedLevel - level;
-            } else {
-                level = Number.NEGATIVE_INFINITY;
-                relativeLevel = 0;
-            }
-            if (level !== Number.NEGATIVE_INFINITY) {
-                level += relativeLevel;
-                if (defaultedFrom) {
-                    if (level < defaultedFrom.adjustedLevel) {
-                        level = defaultedFrom.adjustedLevel;
-                    }
-                }
-                const encumbrancePenalty = encumbranceLevel * encPenaltyMult;
-                level += bonus + encumbrancePenalty;
-                relativeLevel += bonus + encumbrancePenalty;
-            }
-        }
-        return level;
-    }
     static getBestDefaultWithPoints<T extends SkillLike<T>>
         (
             character: Character,
@@ -283,17 +228,6 @@ export class Skill extends SkillLike<Skill> {
                 }
                 return prev
             }, 0)
-    }
-    calculateLevel(): number {
-        return SkillLike.calculateLevel(
-            this.difficulty,
-            this.points,
-            this.list.character.getAttribute(this.signature).calculateLevel(),
-            this.defaultedFrom,
-            this.getBonus(),
-            this.list.character.encumbranceLevel(),
-            this.encumbrancePenaltyMultiple
-        )
     }
 
     toString() {

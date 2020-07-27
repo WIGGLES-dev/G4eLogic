@@ -1,7 +1,7 @@
 import { CharacterElement } from "./element";
 import { Featurable } from "../character";
 import { FeatureType } from "@gcs/gcs";
-import { SkillLike } from "@character/skill";
+import { SkillLike } from "@character/skill/skill";
 import { Weapon } from "@character/weapon";
 import { StringCompare } from "@utils/string_utils";
 export declare class FeatureList {

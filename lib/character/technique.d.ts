@@ -1,4 +1,4 @@
-import { Skill, SkillDefault, Difficulty, SkillLike } from "./skill";
+import { Skill, SkillDefault, Difficulty, SkillLike } from "./skill/skill";
 import { Signature } from "./character";
 import { List } from "./misc/list";
 export declare type TehchniqueDifficulty = Difficulty.average | Difficulty.hard;

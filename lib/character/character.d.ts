@@ -1,6 +1,6 @@
 import { List, ListItem } from "./misc/list";
 import { Attribute } from "./attribute";
-import { SkillList } from "./skill";
+import { SkillList } from "./skill/skill";
 import { TraitList } from "./trait";
 import { Equipment, EquipmentList } from "./equipment";
 import { FeatureList } from "./misc/feature";

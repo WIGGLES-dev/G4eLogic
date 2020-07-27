@@ -1,4 +1,4 @@
-import { SkillLike, SkillDefault, Difficulty } from "./skill";
+import { SkillLike, SkillDefault, Difficulty } from "./skill/skill";
 import { List } from "./misc/list";
 import { Character, Signature } from "./character";
 export declare class SpellList extends List<Spell> {
