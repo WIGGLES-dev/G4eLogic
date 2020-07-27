@@ -133,8 +133,9 @@ export class Trait extends ListItem<Trait> {
     enable() { this.disabled = false; }
 
     static getAdjustedPoints(modifiers: Set<TraitModifier>, trait: Trait): number {
-        let basePoints = trait.basePoints;
-        let pointsPerLevel = trait.pointsPerLevel;
+        let basePoints = trait.basePoints || 0;
+        let pointsPerLevel = trait.pointsPerLevel || 0;
+        let levels = trait.levels || 0;
 
         let baseEnh = 0;
         let levelEnh = 0;
@@ -145,6 +146,7 @@ export class Trait extends ListItem<Trait> {
         modifiers?.forEach(modifier => {
             if (modifier.enabled) {
                 let mod = modifier.costModifier();
+                console.log(mod);
                 switch (modifier.type) {
                     case TraitModifierType.percentage:
                     default:
@@ -193,20 +195,24 @@ export class Trait extends ListItem<Trait> {
                 }
             }
         });
+
         let modifiedBasePoints = basePoints;
-        let leveledPoints = pointsPerLevel * (trait.levels + (trait.hasHalfLevel ? .5 : 0));
-        if (baseEnh != 0 || baseLim != 0 || levelEnh != 0 || levelLim != 0) {
+
+        let leveledPoints = pointsPerLevel * (levels + (trait.hasHalfLevel ? .5 : 0)) || 0;
+        if (baseEnh !== 0 || baseLim !== 0 || levelEnh !== 0 || levelLim !== 0) {
             if (false) {
                 //TODO multiplicative modifiers
             } else {
                 let baseMod = Math.max(baseEnh + baseLim, -80);
                 let levelMod = Math.max(levelEnh + levelLim, -80);
+
                 modifiedBasePoints = baseMod === levelMod ?
                     TraitModifier.modifyPoints((modifiedBasePoints + leveledPoints), baseMod) :
                     TraitModifier.modifyPoints(modifiedBasePoints, baseMod) + TraitModifier.modifyPoints(leveledPoints, levelMod);
             }
+
         } else {
-            modifiedBasePoints += leveledPoints;
+            modifiedBasePoints += (leveledPoints);
         }
         return TraitModifier.applyRounding((modifiedBasePoints * multiplier), Boolean(trait.roundDown))
     }
@@ -292,7 +298,9 @@ export class TraitModifier extends Modifier<Trait> {
         this.hasLevels = false;
     }
 
-    costModifier() { return this.levels > 0 ? this.cost * this.levels : this.cost }
+    costModifier() {
+        return this.levels > 0 ? this.cost * this.levels : this.cost
+    }
 
     static modifyPoints(points: number, modifier: number) {
         return points + TraitModifier.calculateModifierPoints(points, modifier);

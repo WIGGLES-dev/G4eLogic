@@ -36,7 +36,7 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
         this.features = new Set();
         this.children = new Set();
         this.canContainChildren = false;
-        this.listIndex = this.list.iter().length;
+        this.listIndex = this.list.iter().length - 1;
     }
 
     abstract isActive(): boolean
@@ -111,7 +111,7 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
     }
     load<U>(data): T {
         const loader = this.getSerializer().transformers.get(this.constructor as Constructor).load;
-        const children: U[] = loader(this.findSelf(), data)
+        const children: U[] = loader(this.findSelf(), data);
         if (children && children.length > 0) {
             this.canContainChildren = true;
             this.loadChildren(children, this.findSelf(), loader)

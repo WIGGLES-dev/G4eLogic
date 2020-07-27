@@ -54,7 +54,7 @@ export class GCSJSON extends Serializer {
             .register(EquipmentModifier, {
                 save: this.saveModifier,
                 load: this.mapModifier
-            })
+            });
     }
 
     private static saveListLike(listLike: ListItem<any>, data: any) {
@@ -72,7 +72,6 @@ export class GCSJSON extends Serializer {
     }
 
     mapSkillDefault(skillDefault: SkillDefault<any>, data: any) {
-
         return skillDefault
     }
 

@@ -36,7 +36,7 @@ export abstract class Serializer {
     }
 
     abstract init(): void
-    
+
     register(key: Constructor | string, transformer: { save: any, load: any }) {
         this.transformers.set(key, transformer)
         return this

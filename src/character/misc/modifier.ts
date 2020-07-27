@@ -22,11 +22,11 @@ export abstract class Modifier<T extends Modifiable> extends CharacterElement<T>
         return this.getSerializer().transformers.get(this.constructor as Constructor).save(this)
     }
     load(data: any) {
-        return this.getSerializer().transformers.get(this.constructor as Constructor).save(this, data)
+        return this.getSerializer().transformers.get(this.constructor as Constructor).load(this, data)
     }
 
     /**
-     * Utility statement for extract numbers from strings with non numerical characters
+     * Utility function for extract numbers from strings with non numerical characters
      * @param value String from which a number is to be extracted.
      */
 
