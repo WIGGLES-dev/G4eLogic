@@ -284,6 +284,17 @@ export class Skill extends SkillLike<Skill> {
                 return prev
             }, 0)
     }
+    calculateLevel(): number {
+        return SkillLike.calculateLevel(
+            this.difficulty,
+            this.points,
+            this.list.character.getAttribute(this.signature).calculateLevel(),
+            this.defaultedFrom,
+            this.getBonus(),
+            this.list.character.encumbranceLevel(),
+            this.encumbrancePenaltyMultiple
+        )
+    }
 
     toString() {
         let string = "";

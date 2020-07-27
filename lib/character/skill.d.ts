@@ -44,6 +44,7 @@ export declare class Skill extends SkillLike<Skill> {
     isActive(): boolean;
     childrenPoints(): number;
     getBonus(): any;
+    calculateLevel(): number;
     toString(): string;
     addDefault(): SkillDefault<Skill>;
     toR20(): {
