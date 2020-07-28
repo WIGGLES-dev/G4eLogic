@@ -143,7 +143,7 @@ export abstract class List<T extends Featurable> {
     }
     generate() {
         this.contents.clear();
-        this.iter().reduce((prev, cur) => {
+        this.iter().sort((a, b) => a.listIndex - b.listIndex).reduce((prev, cur) => {
             if (!cur.containedBy) prev.add(cur);
             return prev
         }, this.contents);
