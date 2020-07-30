@@ -36,7 +36,7 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
         this.features = new Set();
         this.children = new Set();
         this.canContainChildren = false;
-        this.listIndex = this.list.iter().length - 1;
+        this.listIndex = this.list.iter().length + 1;
     }
 
     abstract isActive(): boolean
@@ -173,7 +173,8 @@ export abstract class List<T extends Featurable> {
         return this.#contents.get(uuid);
     }
     iter() {
-        return Array.from(this.#contents.values()).sort((a, b) => a.listIndex - b.listIndex)
+        const contents = Array.from(this.#contents.values());
+        return contents.sort((a, b) => a.listIndex - b.listIndex)
     }
     iterTop() {
         this.generate();
