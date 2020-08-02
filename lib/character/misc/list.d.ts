@@ -54,6 +54,7 @@ export declare abstract class List<T extends Featurable> {
     removeListItem(item: T): void;
     getByIndex(index: number): T;
     getByUUID(uuid: string): T;
+    getSize(): number;
     iter(): T[];
     iterTop(): T[];
     keys(): T[];

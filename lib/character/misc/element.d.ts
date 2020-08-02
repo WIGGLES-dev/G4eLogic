@@ -9,7 +9,8 @@ export declare abstract class CharacterElement<T extends CharacterElement<T>> {
     notes: string;
     categories: Set<string>;
     character: Character;
-    constructor(character: Character, foundryID?: string);
+    constructor(character: Character);
+    delete(): void;
     static mapElement(data: json, element: CharacterElement<any>): void;
     getSerializer(): import("../..").Serializer;
 }

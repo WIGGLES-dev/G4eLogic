@@ -10,6 +10,8 @@ export declare class Spell extends SkillLike<Spell> {
     tag: string;
     type: "spell" | "spell_container";
     college: string;
+    class: string;
+    resist: string;
     powerSource: string;
     spellClass: string;
     castingCost: string;

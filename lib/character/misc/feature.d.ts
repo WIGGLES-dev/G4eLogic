@@ -10,6 +10,8 @@ export declare class FeatureList {
     constructor();
     registerFeature(feature: Feature<Featurable>): void;
     removeFeature(uuid: string): void;
+    registerWeapon(weapon: Weapon<Featurable>): void;
+    removeWeapon(uuid: string): void;
     getFeaturesByUUID(id: string): Feature<Featurable>[];
     iter(): Feature<Featurable>[];
     getFeaturesByType(type: FeatureType): Feature<Featurable>[];

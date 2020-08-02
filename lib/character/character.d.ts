@@ -7,10 +7,15 @@ import { FeatureList } from "./misc/feature";
 import { Profile } from "./profile";
 import { SpellList } from "./spell";
 import { Serializer } from "./serialization/serializer";
+import { CharacterElement } from "./misc/element";
 declare abstract class Sheet {
+    #private;
     serializer: Serializer;
     constructor(serializer: Serializer);
     abstract load(sheet: Sheet, data: any): Sheet;
+    registerElement(element: CharacterElement<Featurable>): void;
+    removeElement(element: CharacterElement<Featurable>): void;
+    getElementById(type: string, id: string): any;
 }
 export interface Featurable extends ListItem<any> {
     hasLevels: boolean;

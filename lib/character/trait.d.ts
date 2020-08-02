@@ -36,7 +36,7 @@ export declare class Trait extends ListItem<Trait> {
     getLevel(): number;
     isRacial(): Boolean;
     childrenPoints(): number;
-    static getCRMultipland(cr: ControlRollMultiplier): 2 | 1 | 2.5 | 1.5 | 0.5;
+    static getCRMultipland(cr: ControlRollMultiplier): 1 | 2 | 2.5 | 1.5 | 0.5;
     adjustedPoints(): number;
     disable(): void;
     enable(): void;
@@ -74,8 +74,8 @@ declare enum TraitModifierType {
     multiplier = "multiplier"
 }
 declare enum TraitModifierAffects {
-    base = "base only",
-    levels = "levels only",
+    base = "base_only",
+    levels = "levels_only",
     total = "total"
 }
 export declare enum TraitType {
