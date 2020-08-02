@@ -17,6 +17,8 @@ export class Spell extends SkillLike<Spell> {
     type: "spell" | "spell_container"
 
     college: string
+    class: string
+    resist: string
     powerSource: string
     spellClass: string
     castingCost: string

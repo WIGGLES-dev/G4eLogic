@@ -23,6 +23,12 @@ export class FeatureList {
     removeFeature(uuid: string) {
         this.features.delete(uuid);
     }
+    registerWeapon(weapon: Weapon<Featurable>) {
+        this.weapons.set(weapon.uuid, weapon);
+    }
+    removeWeapon(uuid: string) {
+        this.weapons.delete(uuid);
+    }
     getFeaturesByUUID(id: string) {
         return Array.from(this.features.values()).filter(feature => {
             if (feature.owner.uuid = id) {

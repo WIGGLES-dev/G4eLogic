@@ -17,12 +17,15 @@ export abstract class CharacterElement<T extends CharacterElement<T>> {
 
     character: Character
 
-    constructor(character: Character, foundryID?: string) {
+    constructor(character: Character) {
         this.character = character;
-        this.foundryID = foundryID;
         this.uuid = generateUUID().toString();
         this.r20rowID = generateRowID();
         this.categories = new Set();
+        this.character.registerElement(this);
+    }
+    delete() {
+        this.character.removeElement(this);
     }
     static mapElement(data: json, element: CharacterElement<any>) {
         element.reference = data.reference;

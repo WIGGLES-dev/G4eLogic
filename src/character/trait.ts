@@ -320,8 +320,8 @@ enum TraitModifierType {
 }
 
 enum TraitModifierAffects {
-    base = "base only",
-    levels = "levels only",
+    base = "base_only",
+    levels = "levels_only",
     total = "total"
 }
 

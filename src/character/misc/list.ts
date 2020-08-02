@@ -172,6 +172,9 @@ export abstract class List<T extends Featurable> {
     getByUUID(uuid: string) {
         return this.#contents.get(uuid);
     }
+    getSize() {
+        return this.#contents.size
+    }
     iter() {
         const contents = Array.from(this.#contents.values());
         return contents.sort((a, b) => a.listIndex - b.listIndex)

@@ -12,15 +12,33 @@ import { Weapon } from "./weapon";
 import { FeatureType } from "@gcs/gcs";
 import { Serializer } from "./serialization/serializer";
 import { GCSJSON } from "./serialization/gcs_json";
+import { CharacterElement } from "./misc/element";
 
 abstract class Sheet {
     serializer: Serializer
+    #elements: Set<CharacterElement<Featurable>> = new Set();
 
     constructor(serializer: Serializer) {
         this.serializer = serializer;
     }
 
     abstract load(sheet: Sheet, data: any): Sheet
+
+    registerElement(element: CharacterElement<Featurable>) {
+        this.#elements.add(element);
+    }
+    removeElement(element: CharacterElement<Featurable>) {
+        this.#elements.delete(element);
+    }
+    getElementById(type: string, id: string) {
+        let result;
+        this.#elements.forEach(element => {
+            if (element[type] === id) {
+                result = element;
+            }
+        })
+        return result || null
+    }
 }
 
 export interface Featurable extends ListItem<any> {
@@ -237,6 +255,7 @@ export class Character extends Sheet {
         this.skillList.empty();
         this.equipmentList.empty();
         this.otherEquipmentList.empty();
+        this.spellList.empty();
     }
     toR20() {
         return exportR20(this)
