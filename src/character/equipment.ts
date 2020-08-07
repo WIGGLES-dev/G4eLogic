@@ -6,14 +6,18 @@ import * as gcs from "@gcs/gcs";
 import { Feature } from "./misc/feature";
 
 export class EquipmentList extends List<Equipment> {
-    populator = Equipment
 
     constructor(character: Character) {
         super(character);
     }
+
+    populator(data: any) {
+        return new Equipment(this)
+    }
 }
 
 export class Equipment extends ListItem<Equipment> {
+    static keys = ["description", "equipped", "techLevel", "legalityClass", "quantity", "weight", "value", "containedWeightReduction"]
     version = 1
     tag = "equipment"
 
@@ -26,13 +30,12 @@ export class Equipment extends ListItem<Equipment> {
     value: number
     containedWeightReduction: string
 
-    modifiers: Set<EquipmentModifier<Equipment>>
+    modifiers: Set<EquipmentModifier<Equipment>> = new Set()
 
     hasLevels = false
 
-    constructor(list: List<Equipment>) {
-        super(list);
-        this.modifiers = new Set();
+    constructor(list: List<Equipment>, keys: string[] = []) {
+        super(list, [...keys, ...Equipment.keys]);
     }
     addModifier() {
         const modifier = new EquipmentModifier<Equipment>(this);
@@ -228,6 +231,7 @@ export class Equipment extends ListItem<Equipment> {
 }
 
 export class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
+    static keys = ["cost", "costType", "weight", "weightType"]
     tag: string = "eqp_modifier"
     version: number = 1
     static minCF = -0.8
@@ -237,8 +241,8 @@ export class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
     weight: string
     weightType: EquipmentModifierWeightType
 
-    constructor(equipment: T) {
-        super(equipment);
+    constructor(equipment: T, keys: string[] = []) {
+        super(equipment, [...keys, ...EquipmentModifier.keys]);
     }
 
     static determineWeightType(type: string) {

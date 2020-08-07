@@ -7,14 +7,14 @@ import { AttributeBonus } from "@character/attribute";
 import { Weapon } from "@character/weapon";
 import { StringCompare, stringCompare } from "@utils/string_utils";
 import * as gcs from "@gcs/gcs";
+import { Collection } from "./collection";
 
 export class FeatureList {
-    features: Map<string, Feature<Featurable>>
-    weapons: Map<string, Weapon<Featurable>>
+    features: Collection<string, Feature<Featurable>> = new Collection()
+    weapons: Collection<string, Weapon<Featurable>> = new Collection()
 
     constructor() {
-        this.features = new Map();
-        this.weapons = new Map();
+
     }
 
     registerFeature(feature: Feature<Featurable>) {
@@ -38,29 +38,40 @@ export class FeatureList {
             }
         });
     }
-    iter() { return Array.from(this.features.values()) }
+
     getFeaturesByType(type: FeatureType) {
-        return this.iter().filter(feature => feature.type === type)
+        return this.features.filter(feature => feature.type === type)
+    }
+
+    empty() {
+        this.weapons.clear();
+        this.features.clear();
     }
 }
 
 export abstract class Feature<T extends Featurable> extends CharacterElement<T> {
+    static keys = ["amount", "leveled", "limitation", "type"]
+
     tag = "feature"
+
     amount: number
     leveled: boolean
     limitation: false | string
-
-    owner: T
     type: FeatureType
 
+    owner: T
     registered: boolean
 
-    constructor(owner: T, type: FeatureType) {
-        super(owner.character);
+    constructor(owner: T, keys: string[]) {
+        super(owner.character, [...keys, ...Feature.keys]);
         this.owner = owner;
         owner.features.add(this);
-        this.type = type;
         this.owner.list.character.featureList.registerFeature(this);
+    }
+
+    getType(): string {
+        //@ts-ignore
+        return this.constructor.type
     }
 
     ownerIsActive(): boolean {
@@ -104,6 +115,8 @@ export abstract class Feature<T extends Featurable> extends CharacterElement<T> 
 }
 
 export class SkillBonus<T extends Featurable> extends Feature<T> {
+    static type = FeatureType.skillBonus
+
     selectionType: string
     nameCompareType: StringCompare
     name: string
@@ -112,8 +125,8 @@ export class SkillBonus<T extends Featurable> extends Feature<T> {
     category: string
     categoryCompareType: StringCompare
 
-    constructor(owner: T) {
-        super(owner, gcs.FeatureType.skillBonus);
+    constructor(owner: T, keys: string[] = []) {
+        super(owner, [...keys, ...SkillBonus.keys]);
     }
 
     isApplicableTo(skill: SkillLike<any>): boolean {

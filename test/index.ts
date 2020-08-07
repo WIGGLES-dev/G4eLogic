@@ -4,8 +4,14 @@ const testSubjectData = require("./subjects/Mysterious_Warrior.json");
 
 const testSubject: Character = new Character().load(testSubjectData);
 
+testSubject.skillList.iter().forEach(skill => {
+    let unsubscribe = skill.subscribe((value) => {
+        console.log(value);
+    });
+})
+
 console.log(testSubject);
 
-console.log(
-    testSubject.skillList.iter().map(skill => skill.calculateLevel())
-);
+testSubject.skillList.iter().forEach(skill => {
+    skill.name = "test";
+});

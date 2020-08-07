@@ -8,8 +8,13 @@ import { Equipment, EquipmentList, EquipmentModifier } from "./character/equipme
 import { Serializer } from "./character/serialization/serializer";
 import { isArray, json } from "@utils/json_utils";
 import { Feature } from "@character/misc/feature";
+import { MeleeWeapon, RangedWeapon, Weapon } from "@character/weapon";
+import { List, ListItem } from "@character/misc/list";
 
 export {
+    Weapon,
+    MeleeWeapon,
+    RangedWeapon,
     Character,
     Signature,
     Skill,
@@ -31,5 +36,7 @@ export {
     Serializer,
     isArray,
     json,
-    Feature
+    Feature,
+    List,
+    ListItem
 }

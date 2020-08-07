@@ -10,10 +10,13 @@ import { calculateSkillLevel } from "./logic";
 
 
 export class SkillList extends List<Skill> {
-    populator = Skill
 
     constructor(character: Character) {
         super(character);
+    }
+
+    populator(data: any) {
+        return new Skill(this, [], data.isTechnique);
     }
 }
 
@@ -32,15 +35,15 @@ export class SkillList extends List<Skill> {
  * 
  * @method getBonus
  */
-
 export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
     abstract type: "skill" | "skill_container" | "spell" | "spell_container" | "technique"
+    static keys = ["name", "difficulty", "points", "specialization", "gMod"]
 
     name: string
-
     difficulty: Difficulty
     points: number
     specialization: string
+    gMod: number = 0
 
     abstract defaults: Set<SkillDefault<SkillLike<any>>>
     abstract defaultedFrom: SkillDefault<SkillLike<any>>
@@ -49,8 +52,8 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
 
     hasLevels = false
 
-    constructor(list: List<T>) {
-        super(list);
+    constructor(list: List<T>, keys: string[]) {
+        super(list, [...keys, ...SkillLike.keys]);
     }
 
     /**
@@ -89,6 +92,7 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
         }
         return relativeLevel
     }
+    
     calculateLevel(): number {
         return calculateSkillLevel(
             this.difficulty,
@@ -97,7 +101,8 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
             this.defaultedFrom,
             this.getBonus(),
             this.list.character.encumbranceLevel(),
-            this.encumbrancePenaltyMultiple
+            this.encumbrancePenaltyMultiple,
+            this.gMod
         )
     }
 
@@ -191,6 +196,7 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
 }
 
 export class Skill extends SkillLike<Skill> {
+    static keys = ["signature", "techLevel", "defaults", "defaultedFrom", "encumbrancePenaltyMultiple"]
     version = 1
     tag = "skill"
     type: "skill" | "skill_container"
@@ -203,8 +209,8 @@ export class Skill extends SkillLike<Skill> {
 
     isTechnique: boolean = false
 
-    constructor(list: List<Skill>, isTechnique = false) {
-        super(list);
+    constructor(list: List<Skill>, keys: string[] = [], isTechnique = false) {
+        super(list, [...keys, ...Skill.keys]);
         this.isTechnique = false;
         this.defaults = new Set();
     }
@@ -289,13 +295,14 @@ export class Skill extends SkillLike<Skill> {
 }
 
 export class SkillDefault<T extends SkillLike<any>> extends Default<T> {
+    static keys = ["level", "adjustedLevel", "points"]
     tag = "default"
     level: number
     adjustedLevel: number
     points: number
 
-    constructor(skill: T) {
-        super(skill);
+    constructor(skill: T, keys: string[] = []) {
+        super(skill, [...keys, ...SkillDefault.keys]);
     }
 
     isSkillBased() {

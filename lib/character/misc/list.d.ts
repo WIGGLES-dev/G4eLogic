@@ -6,6 +6,7 @@ import { json } from "@utils/json_utils";
 import * as gcs from "@gcs/gcs";
 export declare abstract class ListItem<T extends Featurable> extends CharacterElement<T> implements gcs.ListItem<T> {
     #private;
+    static keys: any[];
     abstract version: number;
     abstract tag: string;
     abstract name: string;
@@ -18,8 +19,10 @@ export declare abstract class ListItem<T extends Featurable> extends CharacterEl
     features: Set<Feature<T>>;
     weapons: Set<Weapon<T>>;
     listIndex: number;
-    constructor(list: List<T>);
+    constructor(list: List<T>, keys: string[]);
     abstract isActive(): boolean;
+    addFeature(): void;
+    addWeapon(type?: string): Weapon<T>;
     getListDepth(): number;
     getCharacter(): Character;
     isContainer(): boolean;
@@ -44,13 +47,15 @@ export declare abstract class ListItem<T extends Featurable> extends CharacterEl
 export declare abstract class List<T extends Featurable> {
     #private;
     contents: Set<T>;
-    abstract populator: new (list: List<T>) => T;
     loader: (list: List<any>, data: any) => List<any>;
     serializer: (list: List<T>) => any;
     character: Character;
     constructor(character: Character);
+    get length(): number;
+    get [Symbol.iterator](): () => IterableIterator<T>;
+    abstract populator(data: any): T;
     generate(): void;
-    addListItem(item?: T | ListItem<T>): T;
+    addListItem(item?: T | ListItem<T>, data?: any): T;
     removeListItem(item: T): void;
     getByIndex(index: number): T;
     getByUUID(uuid: string): T;

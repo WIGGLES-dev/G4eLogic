@@ -54,7 +54,11 @@ export class GCSJSON extends Serializer {
             .register(EquipmentModifier, {
                 save: this.saveModifier,
                 load: this.mapModifier
-            });
+            })
+            .register("weapon", {
+                save: this.saveWeapon,
+                load: this.mapWeapon
+            })
     }
 
     private static saveListLike(listLike: ListItem<any>, data: any) {
@@ -281,11 +285,19 @@ export class GCSJSON extends Serializer {
         return data
     }
 
+    mapWeapon() {
+
+    }
+
+    saveWeapon() {
+
+    }
+
     loadList(list: List<any>, data: any[]) {
         data = objectify<json[]>(data);
         if (data) {
             data.forEach(listItem => {
-                const item = new list.populator(list);
+                const item = list.populator(data);
                 item.load(listItem);
             });
         }

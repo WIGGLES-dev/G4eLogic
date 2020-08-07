@@ -11,6 +11,7 @@ export abstract class DefaultList {
 }
 
 export abstract class Default<T extends SkillLike<any>> extends CharacterElement<T> {
+    static keys = ["type", "modifier"]
     tag = "default"
 
     type: DefaultType
@@ -21,8 +22,8 @@ export abstract class Default<T extends SkillLike<any>> extends CharacterElement
 
     owner: T
 
-    constructor(owner: T) {
-        super(owner.character)
+    constructor(owner: T, keys: string[]) {
+        super(owner.character, [...keys, ...Default.keys])
         this.owner = owner;
     }
 }

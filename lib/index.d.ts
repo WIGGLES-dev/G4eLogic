@@ -7,4 +7,6 @@ import { Equipment, EquipmentList, EquipmentModifier } from "./character/equipme
 import { Serializer } from "./character/serialization/serializer";
 import { isArray, json } from "@utils/json_utils";
 import { Feature } from "@character/misc/feature";
-export { Character, Signature, Skill, Difficulty, SkillDefault, SkillLike, SkillList, Trait, TraitType, TraitList, TraitModifier, Spell, SpellList, Technique, TehchniqueDifficulty, Equipment, EquipmentList, EquipmentModifier, Serializer, isArray, json, Feature };
+import { MeleeWeapon, RangedWeapon, Weapon } from "@character/weapon";
+import { List, ListItem } from "@character/misc/list";
+export { Weapon, MeleeWeapon, RangedWeapon, Character, Signature, Skill, Difficulty, SkillDefault, SkillLike, SkillList, Trait, TraitType, TraitList, TraitModifier, Spell, SpellList, Technique, TehchniqueDifficulty, Equipment, EquipmentList, EquipmentModifier, Serializer, isArray, json, Feature, List, ListItem };

@@ -4,27 +4,30 @@ import { FeatureType } from "@gcs/gcs";
 import { SkillLike } from "@character/skill/skill";
 import { Weapon } from "@character/weapon";
 import { StringCompare } from "@utils/string_utils";
+import { Collection } from "./collection";
 export declare class FeatureList {
-    features: Map<string, Feature<Featurable>>;
-    weapons: Map<string, Weapon<Featurable>>;
+    features: Collection<string, Feature<Featurable>>;
+    weapons: Collection<string, Weapon<Featurable>>;
     constructor();
     registerFeature(feature: Feature<Featurable>): void;
     removeFeature(uuid: string): void;
     registerWeapon(weapon: Weapon<Featurable>): void;
     removeWeapon(uuid: string): void;
     getFeaturesByUUID(id: string): Feature<Featurable>[];
-    iter(): Feature<Featurable>[];
     getFeaturesByType(type: FeatureType): Feature<Featurable>[];
+    empty(): void;
 }
 export declare abstract class Feature<T extends Featurable> extends CharacterElement<T> {
+    static keys: string[];
     tag: string;
     amount: number;
     leveled: boolean;
     limitation: false | string;
-    owner: T;
     type: FeatureType;
+    owner: T;
     registered: boolean;
-    constructor(owner: T, type: FeatureType);
+    constructor(owner: T, keys: string[]);
+    getType(): string;
     ownerIsActive(): boolean;
     getBonus(): number;
     unregister(): void;
@@ -33,6 +36,7 @@ export declare abstract class Feature<T extends Featurable> extends CharacterEle
     static loadFeature<T extends Featurable>(owner: T, featureType: FeatureType): Feature<T>;
 }
 export declare class SkillBonus<T extends Featurable> extends Feature<T> {
+    static type: FeatureType;
     selectionType: string;
     nameCompareType: StringCompare;
     name: string;
@@ -40,6 +44,6 @@ export declare class SkillBonus<T extends Featurable> extends Feature<T> {
     specialization: string;
     category: string;
     categoryCompareType: StringCompare;
-    constructor(owner: T);
+    constructor(owner: T, keys?: string[]);
     isApplicableTo(skill: SkillLike<any>): boolean;
 }

@@ -6,6 +6,7 @@ import { Constructor } from "@character/serialization/serializer"
 
 export type Modifiable = Trait | Equipment
 export abstract class Modifier<T extends Modifiable> extends CharacterElement<T> {
+    static keys = ["enabled", "name"]
     abstract version: number
     abstract tag: string
 
@@ -13,10 +14,9 @@ export abstract class Modifier<T extends Modifiable> extends CharacterElement<T>
     name: string
     owner: T
 
-    constructor(owner: T) {
-        super(owner.character);
+    constructor(owner: T, keys: string[]) {
+        super(owner.character, [...keys, ...Modifier.keys]);
         this.owner = owner
-        this.categories = new Set();
     }
     save() {
         return this.getSerializer().transformers.get(this.constructor as Constructor).save(this)

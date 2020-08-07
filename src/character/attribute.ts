@@ -61,8 +61,11 @@ export class Attribute {
 }
 
 export class AttributeBonus<T extends Featurable> extends Feature<T> {
+    static type = FeatureType.attributeBonus
+    static keys = ["attribute"]
+
     attribute: Signature
-    constructor(owner: T) {
-        super(owner, FeatureType.attributeBonus);
+    constructor(owner: T, keys: string[] = []) {
+        super(owner, [...keys, ...AttributeBonus.keys]);
     }
 }

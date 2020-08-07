@@ -251,6 +251,7 @@ export class Character extends Sheet {
         return this.serializer.load(this, data)
     }
     void(): void {
+        this.featureList.empty();
         this.traitList.empty();
         this.skillList.empty();
         this.equipmentList.empty();

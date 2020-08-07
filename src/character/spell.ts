@@ -4,14 +4,31 @@ import { Character, Signature } from "./character";
 import { objectify, json } from "@utils/json_utils";
 
 export class SpellList extends List<Spell> {
-    populator = Spell
-
     constructor(character: Character) {
         super(character);
+    }
+
+    populator(data: any) {
+        return new Spell(this)
     }
 }
 
 export class Spell extends SkillLike<Spell> {
+    static keys = [
+        "college",
+        "class",
+        "resist",
+        "powerSource",
+        "spellClass",
+        "castingCost",
+        "maintenanceCost",
+        "castingTime",
+        "duration",
+        "difficulty",
+        "signature",
+        "defaults",
+        "defaultedFrom",
+        "encumbrancePenaltyMultiple"]
     version = 1
     tag = "spell"
     type: "spell" | "spell_container"
@@ -33,9 +50,10 @@ export class Spell extends SkillLike<Spell> {
     defaultedFrom: SkillDefault<SkillLike<any>> = null
     encumbrancePenaltyMultiple: number = null;
 
-    constructor(list: List<Spell>) {
-        super(list)
+    constructor(list: List<Spell>, keys: string[] = []) {
+        super(list, [...keys, ...Spell.keys])
     }
+
     isActive() { return true }
     getBonus() {
         return 0

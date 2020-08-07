@@ -32,6 +32,8 @@ export declare class GCSJSON extends Serializer {
     saveFeature(feature: Feature<Featurable>): any;
     mapModifier(modifier: Modifier<Modifiable>, data: json): Modifier<Modifiable>;
     saveModifier(modifier: Modifier<Modifiable>): any;
+    mapWeapon(): void;
+    saveWeapon(): void;
     loadList(list: List<any>, data: any[]): List<any>;
     saveList(list: List<Featurable>): any[];
     load(character: Character, data: any): Character;

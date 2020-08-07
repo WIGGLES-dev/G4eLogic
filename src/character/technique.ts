@@ -6,6 +6,7 @@ import * as gcs from "@gcs/gcs";
 
 export type TehchniqueDifficulty = Difficulty.average | Difficulty.hard
 export class Technique extends Skill {
+    static keys = ["limit", "default"]
     tag = "technique"
 
     limit: number
@@ -18,8 +19,8 @@ export class Technique extends Skill {
 
     isTechnique: boolean = true
 
-    constructor(list: List<Skill>) {
-        super(list);
+    constructor(list: List<Skill>, keys: string[] = []) {
+        super(list, [...keys, ...Technique.keys]);
     }
 
     get signature(): Signature { return null }

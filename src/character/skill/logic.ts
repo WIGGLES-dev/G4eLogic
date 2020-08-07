@@ -20,6 +20,7 @@ export function calculateSkillLevel(
     bonus = 0,
     encumbranceLevel = 0,
     encPenaltyMult = 1,
+    gMod = 0
 ) {
     let relativeLevel = SkillLike.getBaseRelativeLevel(difficulty);
     let level = base;
@@ -51,5 +52,5 @@ export function calculateSkillLevel(
             relativeLevel += bonus + encumbrancePenalty;
         }
     }
-    return level;
+    return level + gMod;
 }

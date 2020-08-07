@@ -7,10 +7,14 @@ import * as gcs from "@gcs/gcs";
 
 
 export class TraitList extends List<Trait> {
-    populator = Trait
     constructor(character: Character) {
         super(character);
     }
+
+    populator(data: any) {
+        return new Trait(this)
+    }
+
     sumRacials() {
         return this.iter().reduce((prev, cur) => {
             if (cur.isRacial()) {
@@ -60,6 +64,7 @@ enum ContainerType {
 }
 
 export class Trait extends ListItem<Trait> {
+    static keys = ["name", "basePoints", "levels", "allowHalfLevels", "hasHalfLevel", "roundDown", "controlRating", "types", ""]
     version = 1
     tag = "trait"
 
@@ -72,17 +77,15 @@ export class Trait extends ListItem<Trait> {
     hasHalfLevel: boolean
     roundDown: boolean
     controlRating: ControlRollMultiplier
-    types: Set<TraitType>
+    types: Set<TraitType> = new Set()
     pointsPerLevel: number
     disabled: boolean = false
     containerType: ContainerType
 
-    modifiers: Set<TraitModifier>
+    modifiers: Set<TraitModifier> = new Set()
 
-    constructor(list: List<Trait>) {
-        super(list);
-        this.types = new Set();
-        this.modifiers = new Set();
+    constructor(list: List<Trait>, keys: string[] = []) {
+        super(list, [...keys, ...Trait.keys]);
     }
 
     isActive() { return !this.disabled }
@@ -281,6 +284,7 @@ export class Trait extends ListItem<Trait> {
 }
 
 export class TraitModifier extends Modifier<Trait> {
+    static keys = ["cost", "type", "levels", "affects"]
     tag: string = "modifier"
     version: number = 1
 
@@ -289,13 +293,10 @@ export class TraitModifier extends Modifier<Trait> {
     levels: number
     affects: TraitModifierAffects
 
-    hasLevels: boolean
+    hasLevels: boolean = false
 
-    load: (data: any) => TraitModifier
-
-    constructor(owner: Trait) {
-        super(owner)
-        this.hasLevels = false;
+    constructor(owner: Trait, keys = []) {
+        super(owner, [...keys, ...TraitModifier.keys])
     }
 
     costModifier() {

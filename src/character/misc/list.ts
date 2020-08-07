@@ -1,12 +1,15 @@
 import { Character, Featurable } from "../character";
 import { CharacterElement } from "./element";
 import { Feature } from "./feature";
-import { Weapon } from "../weapon";
+import { Weapon, MeleeWeapon, RangedWeapon } from "../weapon";
 import { objectify, json, isArray } from "@utils/json_utils";
 import * as gcs from "@gcs/gcs";
 import { Constructor } from "@character/serialization/serializer";
+import { Collection } from "./collection";
 
 export abstract class ListItem<T extends Featurable> extends CharacterElement<T> implements gcs.ListItem<T> {
+    static keys = []
+
     abstract version: number
     abstract tag: string
 
@@ -17,29 +20,45 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
     canContainChildren: boolean
     open: boolean = true
 
-    children: Set<ListItem<T>>
+    children: Set<ListItem<T>> = new Set()
     #childIDs: Set<string>
 
     isContained: boolean
     containedBy: T
     #containedByID: string
 
-    features: Set<Feature<T>>
-    weapons: Set<Weapon<T>>
+    features: Set<Feature<T>> = new Set();
+    weapons: Set<Weapon<T>> = new Set();
 
     listIndex: number
 
-    constructor(list: List<T>) {
-        super(list.character);
+    constructor(list: List<T>, keys: string[]) {
+        super(list.character, [...keys, ...ListItem.keys]);
         this.list = list;
-        this.list.addListItem(this);
-        this.features = new Set();
-        this.children = new Set();
+        list.addListItem(this);
         this.canContainChildren = false;
         this.listIndex = this.list.iter().length + 1;
     }
 
     abstract isActive(): boolean
+
+    addFeature() {
+
+    }
+
+    addWeapon(type: string = "melee_weapon") {
+        let weapon: Weapon<T>;
+        switch (type) {
+            case "melee_weapon":
+                weapon = new MeleeWeapon(this.findSelf());
+                break
+            case "ranged_weapon":
+                weapon = new RangedWeapon(this.findSelf());
+                break
+            default:
+        }
+        return weapon || null
+    }
 
     getListDepth(): number {
         let x = 0;
@@ -124,10 +143,8 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
 }
 
 export abstract class List<T extends Featurable> {
-    #contents: Map<string, T>
+    #contents: Collection<string, T>
     contents: Set<T>
-
-    abstract populator: new (list: List<T>) => T
 
     loader: (list: List<any>, data: any) => List<any>
     serializer: (list: List<T>) => any
@@ -136,11 +153,17 @@ export abstract class List<T extends Featurable> {
 
     constructor(character: Character) {
         this.character = character;
-        this.#contents = new Map();
+        this.#contents = new Collection();
         this.contents = new Set();
         this.loader = character.serializer.loadList;
         this.serializer = character.serializer.saveList;
     }
+
+    get length() { return this.#contents.size }
+    get [Symbol.iterator]() { return this.#contents[Symbol.iterator] }
+
+    abstract populator(data: any): T
+
     generate() {
         this.contents.clear();
         this.iter().reduce((prev, cur) => {
@@ -149,13 +172,13 @@ export abstract class List<T extends Featurable> {
         }, this.contents);
     }
 
-    addListItem(item?: T | ListItem<T>): T {
+    addListItem(item?: T | ListItem<T>, data: any = {}): T {
         let listItem: T;
         if (item) {
             this.#contents.set(item.uuid, item as T);
             listItem = item.findSelf();
         } else {
-            listItem = new this.populator(this);
+            listItem = this.populator(data);
         }
         this.generate();
         return listItem
@@ -176,7 +199,7 @@ export abstract class List<T extends Featurable> {
         return this.#contents.size
     }
     iter() {
-        const contents = Array.from(this.#contents.values());
+        const contents = this.#contents.iter();
         return contents.sort((a, b) => a.listIndex - b.listIndex)
     }
     iterTop() {

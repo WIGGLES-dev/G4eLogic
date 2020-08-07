@@ -3,6 +3,7 @@ import { Signature } from "./character";
 import { List } from "./misc/list";
 export declare type TehchniqueDifficulty = Difficulty.average | Difficulty.hard;
 export declare class Technique extends Skill {
+    static keys: string[];
     tag: string;
     limit: number;
     difficulty: TehchniqueDifficulty;
@@ -10,7 +11,7 @@ export declare class Technique extends Skill {
     default: SkillDefault<Skill>;
     defaultedFrom: SkillDefault<SkillLike<any>>;
     isTechnique: boolean;
-    constructor(list: List<Skill>);
+    constructor(list: List<Skill>, keys?: string[]);
     get signature(): Signature;
     getBonus(): number;
     calculateLevel(): number;

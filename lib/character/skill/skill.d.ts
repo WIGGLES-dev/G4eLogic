@@ -2,21 +2,23 @@ import { Signature, Character } from "../character";
 import { List, ListItem } from "../misc/list";
 import { Default } from "../misc/default";
 export declare class SkillList extends List<Skill> {
-    populator: typeof Skill;
     constructor(character: Character);
+    populator(data: any): any;
 }
 export declare abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T> {
     abstract type: "skill" | "skill_container" | "spell" | "spell_container" | "technique";
+    static keys: string[];
     name: string;
     difficulty: Difficulty;
     points: number;
     specialization: string;
+    gMod: number;
     abstract defaults: Set<SkillDefault<SkillLike<any>>>;
     abstract defaultedFrom: SkillDefault<SkillLike<any>>;
     abstract signature: Signature;
     abstract encumbrancePenaltyMultiple: number;
     hasLevels: boolean;
-    constructor(list: List<T>);
+    constructor(list: List<T>, keys: string[]);
     abstract getBonus(): number;
     getLevel(): number;
     getBaseRelativeLevel(): 0 | -1 | -2 | -3;
@@ -30,6 +32,7 @@ export declare abstract class SkillLike<T extends SkillLike<T>> extends ListItem
     swapDefault(skill: SkillLike<T>, defaults: Set<SkillDefault<T>>): number;
 }
 export declare class Skill extends SkillLike<Skill> {
+    static keys: string[];
     version: number;
     tag: string;
     type: "skill" | "skill_container";
@@ -39,7 +42,7 @@ export declare class Skill extends SkillLike<Skill> {
     defaultedFrom: SkillDefault<SkillLike<any>>;
     encumbrancePenaltyMultiple: number;
     isTechnique: boolean;
-    constructor(list: List<Skill>, isTechnique?: boolean);
+    constructor(list: List<Skill>, keys?: string[], isTechnique?: boolean);
     isActive(): boolean;
     childrenPoints(): number;
     getBonus(): any;
@@ -64,11 +67,12 @@ export declare class Skill extends SkillLike<Skill> {
     };
 }
 export declare class SkillDefault<T extends SkillLike<any>> extends Default<T> {
+    static keys: string[];
     tag: string;
     level: number;
     adjustedLevel: number;
     points: number;
-    constructor(skill: T);
+    constructor(skill: T, keys?: string[]);
     isSkillBased(): boolean;
     getSkillsNamedFrom(list: List<T>): {
         skills: T[];

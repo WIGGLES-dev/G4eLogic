@@ -2,10 +2,11 @@ import { List, ListItem } from "./misc/list";
 import { Modifier, Modifiable } from "./misc/modifier";
 import { Character } from "./character";
 export declare class EquipmentList extends List<Equipment> {
-    populator: typeof Equipment;
     constructor(character: Character);
+    populator(data: any): Equipment;
 }
 export declare class Equipment extends ListItem<Equipment> {
+    static keys: string[];
     version: number;
     tag: string;
     description: string;
@@ -18,7 +19,7 @@ export declare class Equipment extends ListItem<Equipment> {
     containedWeightReduction: string;
     modifiers: Set<EquipmentModifier<Equipment>>;
     hasLevels: boolean;
-    constructor(list: List<Equipment>);
+    constructor(list: List<Equipment>, keys?: string[]);
     addModifier(): EquipmentModifier<Equipment>;
     get name(): string;
     isActive(): boolean;
@@ -51,6 +52,7 @@ export declare class Equipment extends ListItem<Equipment> {
     };
 }
 export declare class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
+    static keys: string[];
     tag: string;
     version: number;
     static minCF: number;
@@ -58,7 +60,7 @@ export declare class EquipmentModifier<T extends Modifiable> extends Modifier<T>
     costType: EquipmentModifierValueType;
     weight: string;
     weightType: EquipmentModifierWeightType;
-    constructor(equipment: T);
+    constructor(equipment: T, keys?: string[]);
     static determineWeightType(type: string): EquipmentModifierWeightValueType;
     static determineCostType(type: string): EquipmentModifierCostValueType;
 }
