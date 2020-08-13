@@ -3,7 +3,9 @@ import { Modifier, Modifiable } from "./misc/modifier";
 import { Character } from "./character";
 export declare class EquipmentList extends List<Equipment> {
     constructor(character: Character);
-    populator(data: any): Equipment;
+    populator(data: any): any;
+    carriedWeight(): number;
+    carriedValue(): number;
 }
 export declare class Equipment extends ListItem<Equipment> {
     static keys: string[];

@@ -1,4 +1,4 @@
-import { List, ListItem } from "./misc/list";
+import { ListItem } from "./misc/list";
 import { Attribute } from "./attribute";
 import { SkillList } from "./skill/skill";
 import { TraitList } from "./trait";
@@ -50,8 +50,6 @@ export declare class Character extends Sheet {
     basicLift(): number;
     encumbranceLevel(): 0 | -1 | -2 | -3 | -4;
     encumberedMove(): number;
-    carriedWeight(list: List<Equipment>): number;
-    carriedValue(list: List<Equipment>): number;
     dodgeScore(): number;
     encumberedDodgeScore(): number;
     load(data: any): Character;

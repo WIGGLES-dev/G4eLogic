@@ -7,9 +7,11 @@ import { Trait, TraitType, TraitModifier } from "../../character/trait";
 import * as gcs from "@gcs/gcs";
 import { isArray, json, objectify } from "@utils/json_utils";
 import { Signature, Character, Featurable } from "@character/character";
-import { Feature } from "@character/misc/feature";
+import { Feature, DRBonus, SkillBonus } from "@character/misc/feature";
 import { List, ListItem } from "@character/misc/list";
 import { Modifier, Modifiable } from "@character/misc/modifier";
+import { FeatureType } from "@gcs/gcs";
+import { AttributeBonus } from "@character/attribute";
 
 export class GCSJSON extends Serializer {
     scope = "GCSJSON"
@@ -214,11 +216,41 @@ export class GCSJSON extends Serializer {
     }
 
     mapFeature(feature: Feature<Featurable>, data: json) {
-        feature.leveled = data.levels;
-        feature.limitation = data.limitation;
         feature.type = data.type;
-        switch (data.type) {
 
+        feature.leveled = data.per_level;
+        feature.limitation = data.limitation;
+        feature.amount = data.amount;
+
+        switch (data.type) {
+            case FeatureType.attributeBonus:
+                if (feature instanceof AttributeBonus) {
+                    feature.attribute = data.attribute;
+                }
+                break
+            case FeatureType.damageResistanceBonus:
+                if (feature instanceof DRBonus) {
+                    feature.location = data.location;
+                }
+                break
+            case FeatureType.reactionBonus:
+                break
+            case FeatureType.skillBonus:
+                if (feature instanceof SkillBonus) {
+                    feature.selectionType = data.selection_type;
+                    feature.nameCompareType = data.name?.compare;
+                    feature.name = data.name?.qualifier;
+                    feature.specializationCompareType = data.specialization?.compare;
+                    feature.specialization = data.specialization?.qualifier;
+                    feature.categoryCompareType = data?.category?.compare;
+                    feature.category = data?.category?.qualifier;
+                }
+                break
+            case FeatureType.spellBonus:
+                break
+            case FeatureType.weaponDamageBonus:
+                break
+            default:
         }
         return feature
     }

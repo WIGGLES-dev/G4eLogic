@@ -4,6 +4,7 @@ import { Character, Signature } from "./character";
 export declare class SpellList extends List<Spell> {
     constructor(character: Character);
     populator(data: any): any;
+    sumSpells(): number;
 }
 export declare class Spell extends SkillLike<Spell> {
     static keys: string[];

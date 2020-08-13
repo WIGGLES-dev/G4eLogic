@@ -1,9 +1,9 @@
 import { Character } from "@character/character";
 import { Collection } from "./collection";
 export declare abstract class CharacterElement<T extends CharacterElement<T>> {
-    #private;
     static keys: string[];
     subscriptions: Set<(store: any) => void>;
+    data: any;
     uuid: string;
     r20rowID: string;
     foundryID: string;

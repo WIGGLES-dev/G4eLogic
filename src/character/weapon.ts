@@ -1,4 +1,4 @@
-import { Featurable } from "./character";
+import { Featurable, Signature } from "./character";
 import { objectify, json } from "@utils/json_utils";
 import { ListItem } from "./misc/list";
 import { Default } from "./misc/default";
@@ -44,6 +44,21 @@ export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
 
     onDestroy() {
         this.owner.getCharacter().featureList.removeWeapon(this.uuid);
+    }
+
+    calculateWeaponUsePenalty(): number {
+        const userStrength = this.owner.getCharacter().getAttribute(Signature.ST).calculateLevel();
+        const weaponRequirement = this.strength;
+        const penalty = userStrength - weaponRequirement;
+        if (penalty < 0) {
+            return penalty
+        } else {
+            return 0
+        }
+    }
+
+    toString() {
+
     }
 }
 

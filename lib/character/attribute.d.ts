@@ -2,7 +2,9 @@ import { Feature } from "./misc/feature";
 import { Character, Signature } from "./character";
 import { FeatureType } from "@gcs/gcs";
 import { Featurable } from "@character/character";
-export declare class Attribute {
+import { CharacterElement } from "./misc/element";
+export declare class Attribute extends CharacterElement<Attribute> {
+    static keys: string[];
     name: Signature;
     character: Character;
     level: number;
@@ -12,8 +14,8 @@ export declare class Attribute {
     constructor(name: Signature, character: Character, costPerLevel: number, { defaultLevel, basedOn }: {
         defaultLevel?: number;
         basedOn?: () => number;
-    });
-    setLevel(level: number): void;
+    }, keys?: string[]);
+    setLevel(level: number): number;
     setLevelDelta(): void;
     getMod(): number;
     pointsSpent(): number;

@@ -4,6 +4,7 @@ import { Default } from "../misc/default";
 export declare class SkillList extends List<Skill> {
     constructor(character: Character);
     populator(data: any): any;
+    sumSkills(): number;
 }
 export declare abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T> {
     abstract type: "skill" | "skill_container" | "spell" | "spell_container" | "technique";

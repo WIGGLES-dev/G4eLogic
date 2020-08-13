@@ -175,9 +175,8 @@ export class Character extends Sheet {
         const advantages = this.traitList.sumAdvantages();
         const disadvantages = this.traitList.sumDisadvantages();
         const quirks = this.traitList.sumQuirks();
-        const skills = this.traitList.sumQuirks();
-        const spells = 0;
-
+        const skills = this.skillList.sumSkills();
+        const spells = this.spellList.sumSpells();
         return {
             racialPoints,
             attributePoints,
@@ -189,7 +188,6 @@ export class Character extends Sheet {
             total: racialPoints + attributePoints + advantages + disadvantages + quirks + skills + spells
         }
     }
-
     allItems(): Equipment[] {
         return [].concat.apply([],
             [
@@ -203,7 +201,7 @@ export class Character extends Sheet {
     }
     encumbranceLevel() {
         const basicLift = this.basicLift();
-        const carriedWeight = this.carriedWeight(this.equipmentList);
+        const carriedWeight = this.equipmentList.carriedWeight();
         if (carriedWeight < basicLift) {
             return 0
         } else if (carriedWeight < basicLift * 2) {
@@ -219,16 +217,6 @@ export class Character extends Sheet {
 
     encumberedMove() {
         return this.getAttribute(Signature.Move).calculateLevel() + this.encumbranceLevel()
-    }
-    carriedWeight(list: List<Equipment>) {
-        return list.iterTop().reduce((prev, cur) => {
-            return prev + cur.extendedWeight()
-        }, 0)
-    }
-    carriedValue(list: List<Equipment>) {
-        return list.iterTop().reduce((prev, cur) => {
-            return prev + cur.extendedValue()
-        }, 0)
     }
 
     dodgeScore() { return Math.floor(this.getAttribute(Signature.Speed).calculateLevel() + Attribute.bonusReducer(this, Signature.Dodge) + 3) }

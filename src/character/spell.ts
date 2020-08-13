@@ -11,6 +11,12 @@ export class SpellList extends List<Spell> {
     populator(data: any) {
         return new Spell(this)
     }
+
+    sumSpells() {
+        return this.iter().reduce((prev, cur) => {
+            return prev + cur.points
+        }, 0);
+    }
 }
 
 export class Spell extends SkillLike<Spell> {

@@ -43,6 +43,7 @@ export declare class Trait extends ListItem<Trait> {
     enable(): void;
     static getAdjustedPoints(modifiers: Set<TraitModifier>, trait: Trait): number;
     addModifier(): TraitModifier;
+    toString(): string;
     toR20(): {
         key: any;
         row_id: string;

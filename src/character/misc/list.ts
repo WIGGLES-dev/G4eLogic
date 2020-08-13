@@ -8,7 +8,7 @@ import { Constructor } from "@character/serialization/serializer";
 import { Collection } from "./collection";
 
 export abstract class ListItem<T extends Featurable> extends CharacterElement<T> implements gcs.ListItem<T> {
-    static keys = []
+    static keys = ["open", "listIndex"]
 
     abstract version: number
     abstract tag: string

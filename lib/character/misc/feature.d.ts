@@ -14,7 +14,7 @@ export declare class FeatureList {
     registerWeapon(weapon: Weapon<Featurable>): void;
     removeWeapon(uuid: string): void;
     getFeaturesByUUID(id: string): Feature<Featurable>[];
-    getFeaturesByType(type: FeatureType): Feature<Featurable>[];
+    getFeaturesByType<T extends FeatureType>(type: T): Feature<Featurable>[];
     empty(): void;
 }
 export declare abstract class Feature<T extends Featurable> extends CharacterElement<T> {
@@ -36,6 +36,7 @@ export declare abstract class Feature<T extends Featurable> extends CharacterEle
     static loadFeature<T extends Featurable>(owner: T, featureType: FeatureType): Feature<T>;
 }
 export declare class SkillBonus<T extends Featurable> extends Feature<T> {
+    static keys: any[];
     static type: FeatureType;
     selectionType: string;
     nameCompareType: StringCompare;
@@ -46,4 +47,10 @@ export declare class SkillBonus<T extends Featurable> extends Feature<T> {
     categoryCompareType: StringCompare;
     constructor(owner: T, keys?: string[]);
     isApplicableTo(skill: SkillLike<any>): boolean;
+}
+export declare class DRBonus<T extends Featurable> extends Feature<T> {
+    static keys: string[];
+    static type: FeatureType;
+    location: string;
+    constructor(owner: T, keys?: string[]);
 }

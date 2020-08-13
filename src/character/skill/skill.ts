@@ -18,6 +18,12 @@ export class SkillList extends List<Skill> {
     populator(data: any) {
         return new Skill(this, [], data.isTechnique);
     }
+
+    sumSkills() {
+        return this.iter().reduce((prev, cur) => {
+            return prev + cur.points
+        }, 0);
+    }
 }
 
 /**
@@ -92,7 +98,7 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
         }
         return relativeLevel
     }
-    
+
     calculateLevel(): number {
         return calculateSkillLevel(
             this.difficulty,
@@ -203,7 +209,7 @@ export class Skill extends SkillLike<Skill> {
 
     signature: Signature
     techLevel: string
-    defaults: Set<SkillDefault<SkillLike<any>>>
+    defaults: Set<SkillDefault<SkillLike<any>>> = new Set()
     defaultedFrom: SkillDefault<SkillLike<any>>
     encumbrancePenaltyMultiple: number = 0
 
@@ -212,7 +218,6 @@ export class Skill extends SkillLike<Skill> {
     constructor(list: List<Skill>, keys: string[] = [], isTechnique = false) {
         super(list, [...keys, ...Skill.keys]);
         this.isTechnique = false;
-        this.defaults = new Set();
     }
     isActive() { return true }
     childrenPoints() {
@@ -252,7 +257,6 @@ export class Skill extends SkillLike<Skill> {
     }
     addDefault(): SkillDefault<Skill> {
         const newDefault = new SkillDefault(this);
-        this.defaults.add(newDefault);
         return newDefault
     }
     toR20() {
@@ -303,6 +307,7 @@ export class SkillDefault<T extends SkillLike<any>> extends Default<T> {
 
     constructor(skill: T, keys: string[] = []) {
         super(skill, [...keys, ...SkillDefault.keys]);
+        this.owner.defaults.add(this);
     }
 
     isSkillBased() {

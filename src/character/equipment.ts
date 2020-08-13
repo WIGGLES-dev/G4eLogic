@@ -14,6 +14,18 @@ export class EquipmentList extends List<Equipment> {
     populator(data: any) {
         return new Equipment(this)
     }
+
+    carriedWeight() {
+        return this.iterTop().reduce((prev, cur) => {
+            return prev + cur.extendedWeight();
+        }, 0);
+    }
+
+    carriedValue() {
+        return this.iterTop().reduce((prev, cur) => {
+            return prev + cur.extendedValue();
+        }, 0);
+    }
 }
 
 export class Equipment extends ListItem<Equipment> {

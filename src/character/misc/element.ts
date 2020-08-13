@@ -14,7 +14,7 @@ export abstract class CharacterElement<T extends CharacterElement<T>> {
     static keys = ["reference", "userDescription", "notes", "categories"]
     subscriptions: Set<(store: any) => void> = new Set()
 
-    #data: any
+    data: any
 
     uuid: string = generateUUID().toString()
     r20rowID: string = generateRowID()
@@ -28,8 +28,8 @@ export abstract class CharacterElement<T extends CharacterElement<T>> {
     character: Character
 
     constructor(character: Character, keys: string[]) {
-        this.#data = this.proxy();
         this.createDataAccessors([...keys, ...CharacterElement.keys]);
+        this.data = this.proxy();
 
         this.character = character;
         this.character.registerElement(this);
@@ -47,23 +47,23 @@ export abstract class CharacterElement<T extends CharacterElement<T>> {
         const _this = this;
         return new Proxy({}, {
             get(target, prop, receiver) {
-                let obj = target[prop]
-                if (target instanceof Collection) {
-                    
+                if (target[prop] instanceof Collection) {
+                    return target[prop].iter()
                 }
-                return obj
+                return target[prop]
             },
             set(target, prop, value, receiver) {
-                let obj = target[prop]
-                if (obj === undefined) {
+                if (target[prop] === undefined) {
                     target[prop] = value
                     return true
                 }
 
-                if (obj === value) {
+                if (target[prop] instanceof Collection) {
+                    
+                } else if (target[prop] === value) {
 
-                } else if (obj !== value) {
-                    obj = value
+                } else if (target[prop] !== value) {
+                    target[prop] = value
                     _this.dispatch();
                 }
 

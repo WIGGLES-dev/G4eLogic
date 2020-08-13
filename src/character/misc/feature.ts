@@ -39,7 +39,7 @@ export class FeatureList {
         });
     }
 
-    getFeaturesByType(type: FeatureType) {
+    getFeaturesByType<T extends FeatureType>(type: T) {
         return this.features.filter(feature => feature.type === type)
     }
 
@@ -99,7 +99,7 @@ export abstract class Feature<T extends Featurable> extends CharacterElement<T> 
             case FeatureType.costReduction:
                 break
             case FeatureType.damageResistanceBonus:
-                break
+                return new DRBonus(owner);
             case FeatureType.reactionBonus:
                 break
             case FeatureType.skillBonus:
@@ -115,6 +115,7 @@ export abstract class Feature<T extends Featurable> extends CharacterElement<T> 
 }
 
 export class SkillBonus<T extends Featurable> extends Feature<T> {
+    static keys = []
     static type = FeatureType.skillBonus
 
     selectionType: string
@@ -136,5 +137,16 @@ export class SkillBonus<T extends Featurable> extends Feature<T> {
         if (this.specializationCompareType) result = stringCompare(this.specialization, skill.specialization, this.specializationCompareType);
 
         return result
+    }
+}
+
+export class DRBonus<T extends Featurable> extends Feature<T> {
+    static keys = ["location"]
+    static type = FeatureType.damageResistanceBonus
+
+    location: string
+
+    constructor(owner: T, keys: string[] = []) {
+        super(owner, [...keys, ...DRBonus.keys]);
     }
 }

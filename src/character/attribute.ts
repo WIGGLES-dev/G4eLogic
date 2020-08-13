@@ -3,8 +3,10 @@ import { Character, Signature } from "./character";
 import { FeatureType } from "@gcs/gcs";
 import { objectify, json } from "@utils/json_utils";
 import { Featurable } from "@character/character";
+import { CharacterElement } from "./misc/element";
 
-export class Attribute {
+export class Attribute extends CharacterElement<Attribute> {
+    static keys = ["name", "level", "costPerLevel", "defaultLevel"]
     name: Signature
     character: Character
     level: number
@@ -19,8 +21,10 @@ export class Attribute {
         {
             defaultLevel = 0,
             basedOn = () => 0
-        }
+        },
+        keys: string[] = []
     ) {
+        super(character, [...keys, ...Attribute.keys]);
         this.name = name;
         this.character = character;
         this.level = defaultLevel;
@@ -29,14 +33,13 @@ export class Attribute {
         this.basedOn = basedOn;
     }
 
-    setLevel(level: number) { if (level) this.level = level }
+    setLevel(level: number) { if (level || level === 0) this.level = level; return level }
     setLevelDelta() { }
 
     getMod() { return Attribute.bonusReducer(this.character, this.name) }
     pointsSpent() { return this.levelsIncreased() * this.costPerLevel }
     levelsIncreased() { return this.level - this.defaultLevel }
     calculateLevel() { return this.level + this.getMod() + this.basedOn() }
-
 
     get displayLevel() { return this.calculateLevel() }
     set displayLevel(level) {

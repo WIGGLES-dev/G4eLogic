@@ -6,7 +6,7 @@ import { json } from "@utils/json_utils";
 import * as gcs from "@gcs/gcs";
 export declare abstract class ListItem<T extends Featurable> extends CharacterElement<T> implements gcs.ListItem<T> {
     #private;
-    static keys: any[];
+    static keys: string[];
     abstract version: number;
     abstract tag: string;
     abstract name: string;

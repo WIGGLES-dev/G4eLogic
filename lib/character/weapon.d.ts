@@ -21,6 +21,8 @@ export declare abstract class Weapon<T extends Featurable> extends CharacterElem
     load(data: any): void;
     save(): void;
     onDestroy(): void;
+    calculateWeaponUsePenalty(): number;
+    toString(): void;
 }
 export declare class MeleeWeapon<T extends Featurable> extends Weapon<T> {
     static keys: string[];
