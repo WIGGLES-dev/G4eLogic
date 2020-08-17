@@ -5,7 +5,7 @@ import { Spell, SpellList } from "./character/spell";
 import { Technique, TehchniqueDifficulty } from "./character/technique";
 import { Equipment, EquipmentList, EquipmentModifier } from "./character/equipment";
 
-import { Serializer } from "./character/serialization/serializer";
+import { Serializer, registerSerializer } from "./character/serialization/serializer";
 import { isArray, json } from "@utils/json_utils";
 import { Feature, SkillBonus, DRBonus } from "@character/misc/feature";
 import { MeleeWeapon, RangedWeapon, Weapon } from "@character/weapon";
@@ -40,6 +40,7 @@ export {
     EquipmentList,
     EquipmentModifier,
     Serializer,
+    registerSerializer,
     isArray,
     json,
     Feature,

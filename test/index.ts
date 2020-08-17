@@ -2,16 +2,16 @@ import { Character } from "../src/character/character";
 
 const testSubjectData = require("./subjects/Mysterious_Warrior.json");
 
-const testSubject: Character = new Character().load(testSubjectData);
+const testSubject: Character = new Character("GCSJSON").load(testSubjectData, "GCSJSON");
 
-testSubject.skillList.iter().forEach(skill => {
-    let unsubscribe = skill.subscribe((value) => {
-        console.log(value);
-    });
-})
+// testSubject.skillList.iter().forEach(skill => {
+//     let unsubscribe = skill.subscribe((value) => {
+//         console.log(value);
+//     });
+// });
 
 console.log(testSubject);
 
-testSubject.skillList.iter().forEach(skill => {
-    skill.name = "test";
-});
+// testSubject.skillList.iter().forEach(skill => {
+//     skill.name = "test";
+// });

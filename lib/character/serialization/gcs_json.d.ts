@@ -10,8 +10,9 @@ import { Character, Featurable } from "@character/character";
 import { Feature } from "@character/misc/feature";
 import { List } from "@character/misc/list";
 import { Modifier, Modifiable } from "@character/misc/modifier";
+import { Weapon } from "../weapon";
 export declare class GCSJSON extends Serializer {
-    scope: string;
+    static scope: string;
     constructor();
     init(): void;
     private static saveListLike;
@@ -32,10 +33,10 @@ export declare class GCSJSON extends Serializer {
     saveFeature(feature: Feature<Featurable>): any;
     mapModifier(modifier: Modifier<Modifiable>, data: json): Modifier<Modifiable>;
     saveModifier(modifier: Modifier<Modifiable>): any;
-    mapWeapon(): void;
+    mapWeapon(weapon: Weapon<any>, data: any): Weapon<any>;
     saveWeapon(): void;
     loadList(list: List<any>, data: any[]): List<any>;
     saveList(list: List<Featurable>): any[];
     load(character: Character, data: any): Character;
-    save(character: Character): any;
+    save(character: Character, target: any): any;
 }

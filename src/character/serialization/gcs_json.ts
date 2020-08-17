@@ -1,4 +1,4 @@
-import { Serializer } from "./serializer";
+import { Serializer, registerSerializer } from "./serializer";
 import { Skill, Difficulty, SkillDefault, SkillLike } from "../../character/skill/skill";
 import { Technique, TehchniqueDifficulty } from "../../character/technique";
 import { Spell } from "../../character/spell";
@@ -12,9 +12,11 @@ import { List, ListItem } from "@character/misc/list";
 import { Modifier, Modifiable } from "@character/misc/modifier";
 import { FeatureType } from "@gcs/gcs";
 import { AttributeBonus } from "@character/attribute";
+import { Weapon, MeleeWeapon, RangedWeapon } from "../weapon";
 
+@registerSerializer
 export class GCSJSON extends Serializer {
-    scope = "GCSJSON"
+    static scope = "GCSJSON"
     constructor() {
         super();
     }
@@ -144,7 +146,6 @@ export class GCSJSON extends Serializer {
     }
 
     mapEquipment(equipment: Equipment, data?: gcs.Equipment) {
-        isArray(data?.modifiers)?.forEach((modifier: json) => equipment.addModifier().load(modifier));
         equipment.description = data.description;
         equipment.equipped = data.equipped;
         equipment.quantity = data.quantity;
@@ -153,8 +154,16 @@ export class GCSJSON extends Serializer {
         equipment.techLevel = data.tech_level;
         equipment.legalityClass = data.legality_class;
         equipment.containedWeightReduction = isArray(data?.features)?.find(feature => feature.type === "contained_weight_reduction")?.reduction ?? null;
+
         data.features?.forEach((feature: json) => {
             Feature.loadFeature<Equipment>(equipment, feature.type)?.load(feature)
+        });
+        data.modifiers?.forEach((modifier: json) => {
+            equipment.addModifier().load(modifier);
+        });
+
+        data.weapons?.forEach((weapon: any) => {
+            equipment.addWeapon(weapon.type).load(weapon)
         });
 
         if (data && data.type?.includes("_container")) {
@@ -317,8 +326,25 @@ export class GCSJSON extends Serializer {
         return data
     }
 
-    mapWeapon() {
-
+    mapWeapon(weapon: Weapon<any>, data: any) {
+        weapon.usage = data.usage;
+        weapon.strength = data.strength
+        switch (weapon.getType()) {
+            case "melee_weapon":
+                if (weapon instanceof MeleeWeapon) {
+                    weapon.reach = data.reach;
+                    weapon.parry = data.parry;
+                }
+            case "ranged_weapon":
+                if (weapon instanceof RangedWeapon) {
+                    weapon.accuracy = data.accurage;
+                    weapon.range = data.range;
+                    weapon.rateOfFire = data.rate_of_fire;
+                    weapon.shots = data.shots;
+                    weapon.bulk = data.bulk
+                }
+        }
+        return weapon
     }
 
     saveWeapon() {
@@ -367,7 +393,7 @@ export class GCSJSON extends Serializer {
 
         return character
     }
-    save(character: Character): any {
+    save(character: Character, target): any {
         let output = {
             DX: character.getAttribute(Signature.DX).level,
             fp_adj: character.getAttribute(Signature.FP).level,

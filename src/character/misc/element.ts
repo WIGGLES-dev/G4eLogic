@@ -48,7 +48,7 @@ export abstract class CharacterElement<T extends CharacterElement<T>> {
         return new Proxy({}, {
             get(target, prop, receiver) {
                 if (target[prop] instanceof Collection) {
-                    return target[prop].iter()
+                    //return target[prop].iter()
                 }
                 return target[prop]
             },
@@ -59,7 +59,7 @@ export abstract class CharacterElement<T extends CharacterElement<T>> {
                 }
 
                 if (target[prop] instanceof Collection) {
-                    
+                    target[prop] = value;
                 } else if (target[prop] === value) {
 
                 } else if (target[prop] !== value) {
@@ -101,7 +101,7 @@ export abstract class CharacterElement<T extends CharacterElement<T>> {
             }
             return prev
         }, {});
-        Object.defineProperties(this, props)
+        Object.defineProperties(this, props);
     }
 
     getClass() { return this.constructor }
@@ -110,15 +110,15 @@ export abstract class CharacterElement<T extends CharacterElement<T>> {
         this.character.removeElement(this);
     }
 
-    getSerializer() { return this.character.serializer }
+    getSerializer(scope?: string) { return this.character.getSerializer(scope) }
 
-    dispatch() {
+    private dispatch() {
         this.subscriptions.forEach(subscription => {
             subscription(this);
         });
     }
 
-    unsubscribe(subscribtion: (store: any) => void) {
+    private unsubscribe(subscribtion: (store: any) => void) {
         this.subscriptions.delete(subscribtion)
     }
 

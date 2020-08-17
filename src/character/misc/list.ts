@@ -7,8 +7,8 @@ import * as gcs from "@gcs/gcs";
 import { Constructor } from "@character/serialization/serializer";
 import { Collection } from "./collection";
 
-export abstract class ListItem<T extends Featurable> extends CharacterElement<T> implements gcs.ListItem<T> {
-    static keys = ["open", "listIndex"]
+export abstract class ListItem<T extends Featurable> extends CharacterElement<T> {
+    static keys = []
 
     abstract version: number
     abstract tag: string
@@ -17,8 +17,7 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
 
     list: List<T>
 
-    canContainChildren: boolean
-    open: boolean = true
+    canContainChildren: boolean = false
 
     children: Set<ListItem<T>> = new Set()
     #childIDs: Set<string>
@@ -30,16 +29,17 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
     features: Set<Feature<T>> = new Set();
     weapons: Set<Weapon<T>> = new Set();
 
-    listIndex: number
-
     constructor(list: List<T>, keys: string[]) {
         super(list.character, [...keys, ...ListItem.keys]);
         this.list = list;
         list.addListItem(this);
-        this.canContainChildren = false;
-        this.listIndex = this.list.iter().length + 1;
     }
 
+    /**
+     * Abstract method that all list items must impliment in order for features to
+     * determine whether or not to apply their bonus based on whatever information they
+     * might have available
+     */
     abstract isActive(): boolean
 
     addFeature() {
@@ -72,21 +72,6 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
     getCharacter(): Character { return this.list.character }
 
     isContainer() { return this.canContainChildren }
-    isContainerOpen() { return this.canContainChildren && this.open ? true : false }
-    isVisible() {
-        if (this.containedBy.isContainerOpen()) {
-            return false
-        } else {
-            return true
-        }
-    }
-    previousVisibleSibling() { }
-    nextVisibleSibling() { }
-    toggle() { if (this.isContainer()) this.open = !this.open; }
-    openContainer() { if (this.isContainer()) this.open = true; }
-    closeContainer() { if (this.isContainer()) this.open = false; }
-    depth() { }
-    index() { }
     iterChildren() { return Array.from(this.children) }
 
     addChild(child?: T) {
@@ -105,8 +90,12 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
         if (typeof child === "string") {
             child = this.list.getByUUID(child);
         }
-        child.containedBy.children.delete(child);
-        this.list.removeListItem(child);
+        if (child.containedBy === this) {
+            this.children.delete(child);
+        } else {
+            child.containedBy.children.delete(child);
+        }
+        child.delete();
     }
 
     getRecursiveChildren() {
@@ -116,8 +105,18 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
 
         }
     }
+
     findSelf(): T {
         return this.list.getByUUID(this.uuid);
+    }
+    delete() {
+        this.children.forEach(child => {
+            child.delete();
+            this.children.delete(child);
+        });
+        this.containedBy.removeChild(this);
+        this.list.removeListItem(this.findSelf());
+        super.delete();
     }
     private loadChildren<U>(children: U[], parent: T, loader: (subject: T, data: U) => U[]) {
         children.forEach(child => {
@@ -146,8 +145,8 @@ export abstract class List<T extends Featurable> {
     #contents: Collection<string, T>
     contents: Set<T>
 
-    loader: (list: List<any>, data: any) => List<any>
-    serializer: (list: List<T>) => any
+    //loader: (list: List<any>, data: any) => List<any>
+    //serializer: (list: List<T>) => any
 
     character: Character
 
@@ -155,8 +154,8 @@ export abstract class List<T extends Featurable> {
         this.character = character;
         this.#contents = new Collection();
         this.contents = new Set();
-        this.loader = character.serializer.loadList;
-        this.serializer = character.serializer.saveList;
+        //this.loader = character.getSerializer().loadList;
+        //this.serializer = character.getSerializer().saveList;
     }
 
     get length() { return this.#contents.size }
@@ -200,7 +199,7 @@ export abstract class List<T extends Featurable> {
     }
     iter() {
         const contents = this.#contents.iter();
-        return contents.sort((a, b) => a.listIndex - b.listIndex)
+        return contents
     }
     iterTop() {
         this.generate();
@@ -210,10 +209,10 @@ export abstract class List<T extends Featurable> {
         return Array.from(this.contents.keys());
     }
     save() {
-        return this.serializer(this)
+        return this.character.getSerializer().saveList(this);
     }
     load(data: string | json) {
-        return this.character.serializer.loadList(this, data as any[])
+        return this.character.getSerializer().loadList(this, data as any[])
     }
     empty() {
         this.#contents.clear();

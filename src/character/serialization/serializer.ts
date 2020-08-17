@@ -7,6 +7,8 @@ import { Character, Feature, SkillDefault } from "index";
 import { List } from "@character/misc/list";
 import { Featurable } from "@gcs/gcs";
 import { Modifier } from "@character/misc/modifier";
+import { Sheet } from "@character/character";
+import { GCSJSON } from "./gcs_json";
 
 /**
  * Abstract class from which all serializers draw functionality. It covers loading and saving functionality
@@ -16,8 +18,17 @@ import { Modifier } from "@character/misc/modifier";
  */
 
 export type Constructor<T = {}> = new (...arger: any[]) => T;
+
+export function registerSerializer(serializer: any) {
+    Serializer.serializers.set(serializer.scope, new serializer());
+    return serializer
+}
+
 export abstract class Serializer {
-    abstract scope: string
+    static serializers: Map<string, Serializer> = new Map()
+    static currentScope: string
+
+    static scope: string
     transformers: Map<Constructor | string, { save: any, load: any }>
 
     constructor() {
@@ -50,5 +61,5 @@ export abstract class Serializer {
     abstract saveList(list: List<any>): any
 
     abstract load(character: Character, data: any): Character
-    abstract save(character: Character): any
+    abstract save(character: Character, target: any): any
 }

@@ -3,22 +3,19 @@ import { CharacterElement } from "./element";
 import { Feature } from "./feature";
 import { Weapon } from "../weapon";
 import { json } from "@utils/json_utils";
-import * as gcs from "@gcs/gcs";
-export declare abstract class ListItem<T extends Featurable> extends CharacterElement<T> implements gcs.ListItem<T> {
+export declare abstract class ListItem<T extends Featurable> extends CharacterElement<T> {
     #private;
-    static keys: string[];
+    static keys: any[];
     abstract version: number;
     abstract tag: string;
     abstract name: string;
     list: List<T>;
     canContainChildren: boolean;
-    open: boolean;
     children: Set<ListItem<T>>;
     isContained: boolean;
     containedBy: T;
     features: Set<Feature<T>>;
     weapons: Set<Weapon<T>>;
-    listIndex: number;
     constructor(list: List<T>, keys: string[]);
     abstract isActive(): boolean;
     addFeature(): void;
@@ -26,20 +23,12 @@ export declare abstract class ListItem<T extends Featurable> extends CharacterEl
     getListDepth(): number;
     getCharacter(): Character;
     isContainer(): boolean;
-    isContainerOpen(): boolean;
-    isVisible(): boolean;
-    previousVisibleSibling(): void;
-    nextVisibleSibling(): void;
-    toggle(): void;
-    openContainer(): void;
-    closeContainer(): void;
-    depth(): void;
-    index(): void;
     iterChildren(): ListItem<T>[];
     addChild(child?: T): T;
     removeChild(child: string | T): void;
     getRecursiveChildren(): void;
     findSelf(): T;
+    delete(): void;
     private loadChildren;
     load<U>(data: any): T;
     save(): any;
@@ -47,8 +36,6 @@ export declare abstract class ListItem<T extends Featurable> extends CharacterEl
 export declare abstract class List<T extends Featurable> {
     #private;
     contents: Set<T>;
-    loader: (list: List<any>, data: any) => List<any>;
-    serializer: (list: List<T>) => any;
     character: Character;
     constructor(character: Character);
     get length(): number;

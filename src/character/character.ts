@@ -1,5 +1,5 @@
 import { List, ListItem } from "./misc/list";
-import { Attribute } from "./attribute";
+import { Attribute, AttributeList } from "./attribute";
 import { SkillList } from "./skill/skill";
 import { TraitList } from "./trait";
 import { Equipment, EquipmentList } from "./equipment";
@@ -10,26 +10,47 @@ import { exportR20 } from "@utils/2R20";
 import { json, objectify } from "@utils/json_utils";
 import { Weapon } from "./weapon";
 import { FeatureType } from "@gcs/gcs";
-import { Serializer } from "./serialization/serializer";
+import { Serializer, registerSerializer } from "./serialization/serializer";
 import { GCSJSON } from "./serialization/gcs_json";
 import { CharacterElement } from "./misc/element";
+import { LocationList } from "./locations";
+import { Collection } from "./misc/collection";
+import { Hooks } from "../hooks/hooks";
 
-abstract class Sheet {
-    serializer: Serializer
+export abstract class Sheet {
+    hooks: Hooks = new Hooks()
+    #serializer = Serializer
     #elements: Set<CharacterElement<Featurable>> = new Set();
 
-    constructor(serializer: Serializer) {
-        this.serializer = serializer;
+    constructor(defaultScope: string) {
+        registerSerializer(GCSJSON);
+        this.#serializer.currentScope = defaultScope;
     }
 
-    abstract load(sheet: Sheet, data: any): Sheet
+    static registerSerializer(serializer: Serializer) {
+        registerSerializer(serializer);
+    }
+
+    abstract void(): Sheet
+
+    getSerializer(scope?: string) {
+        try {
+            if (this.#serializer.serializers.has(scope)) this.#serializer.currentScope = scope;
+            return this.#serializer.serializers.get(scope || this.#serializer.currentScope)
+        } catch (err) {
+
+        }
+    }
 
     registerElement(element: CharacterElement<Featurable>) {
         this.#elements.add(element);
+        this.hooks.callAll("element_added", element);
     }
     removeElement(element: CharacterElement<Featurable>) {
         this.#elements.delete(element);
+        this.hooks.callAll("element_removed", element);
     }
+
     getElementById(type: string, id: string) {
         let result;
         this.#elements.forEach(element => {
@@ -49,7 +70,7 @@ export interface Featurable extends ListItem<any> {
 export class Character extends Sheet {
     gCalcID: string
 
-    attributes: Map<Signature, Attribute>
+    attributes: Collection<Signature, Attribute> = new Collection()
 
     missingHP: number
     missingFP: number
@@ -62,101 +83,26 @@ export class Character extends Sheet {
     spellList: SpellList
 
     featureList: FeatureList
+    locationList: LocationList
+    attributeList: AttributeList
 
-    constructor(serializer: Serializer = new GCSJSON()) {
-        super(serializer);
+    constructor(defaultScope: string) {
+        super(defaultScope);
+
         this.profile = new Profile();
         this.equipmentList = new EquipmentList(this);
         this.otherEquipmentList = new EquipmentList(this);
         this.skillList = new SkillList(this);
         this.traitList = new TraitList(this);
         this.spellList = new SpellList(this);
-        this.attributes = new Map();
-        this.attributes.set(
-            Signature.ST,
-            new Attribute(
-                Signature.ST,
-                this,
-                10,
-                { defaultLevel: 10 }
-            ));
-        this.attributes.set(
-            Signature.DX,
-            new Attribute(
-                Signature.DX,
-                this,
-                20,
-                { defaultLevel: 10 }
-            ));
-        this.attributes.set(
-            Signature.IQ,
-            new Attribute(
-                Signature.IQ,
-                this,
-                20,
-                { defaultLevel: 10 }
-            ));
-        this.attributes.set(
-            Signature.HT,
-            new Attribute(
-                Signature.HT,
-                this,
-                10,
-                { defaultLevel: 10 }
-            ));
-        this.attributes.set(
-            Signature.Will,
-            new Attribute(
-                Signature.Will,
-                this,
-                5,
-                { basedOn: () => this.getAttribute(Signature.IQ).calculateLevel() }
-            ));
-        this.attributes.set(
-            Signature.Speed,
-            new Attribute(
-                Signature.Speed,
-                this,
-                20,
-                { basedOn: () => (this.getAttribute(Signature.DX).calculateLevel() + this.getAttribute(Signature.HT).calculateLevel()) / 4 }
-            ));
-        this.attributes.set(
-            Signature.Move,
-            new Attribute(
-                Signature.Move,
-                this,
-                5,
-                { basedOn: () => Math.floor(this.getAttribute(Signature.Speed).calculateLevel()) }
-            ));
-        this.attributes.set(
-            Signature.Per,
-            new Attribute(
-                Signature.Per,
-                this,
-                5,
-                { basedOn: () => this.getAttribute(Signature.IQ).calculateLevel() }
-            ));
-        this.attributes.set(
-            Signature.HP,
-            new Attribute(
-                Signature.HP,
-                this,
-                2,
-                { basedOn: () => this.getAttribute(Signature.ST).calculateLevel() }
-            ));
-        this.attributes.set(
-            Signature.FP,
-            new Attribute(
-                Signature.FP,
-                this,
-                3,
-                { basedOn: () => this.getAttribute(Signature.HT).calculateLevel() }
-            ));
-        this.featureList = new FeatureList();
+
+        this.featureList = new FeatureList(this);
+        this.locationList = new LocationList(this);
+        this.attributeList = new AttributeList(this);
     }
 
     totalAttributesCost() {
-        return Array.from(this.attributes.values()).reduce((prev, cur) => {
+        return Array.from(this.attributeList.attributes.values()).reduce((prev, cur) => {
             if (cur instanceof Attribute) {
                 return prev + cur.pointsSpent()
             } else {
@@ -166,7 +112,7 @@ export class Character extends Sheet {
     }
 
     getAttribute(attribute: Signature) {
-        return this.attributes.get(attribute)
+        return this.attributeList.attributes.get(attribute)
     }
 
     pointTotals() {
@@ -234,18 +180,25 @@ export class Character extends Sheet {
                 return Math.floor(this.dodgeScore() * .2)
         }
     }
-    load(data: any) {
+
+    load(data: any, scope?: string) {
         this.void();
-        return this.serializer.load(this, data)
+        return this.getSerializer(scope).load(this, data)
     }
-    void(): void {
+    save(scope: string, target: any) {
+        return this.getSerializer(scope).save(this, target);
+    }
+
+    void() {
         this.featureList.empty();
         this.traitList.empty();
         this.skillList.empty();
         this.equipmentList.empty();
         this.otherEquipmentList.empty();
         this.spellList.empty();
+        return this
     }
+
     toR20() {
         return exportR20(this)
     }

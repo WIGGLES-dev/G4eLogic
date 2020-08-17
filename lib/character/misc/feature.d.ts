@@ -1,14 +1,15 @@
 import { CharacterElement } from "./element";
-import { Featurable } from "../character";
+import { Featurable, Character } from "../character";
 import { FeatureType } from "@gcs/gcs";
 import { SkillLike } from "@character/skill/skill";
 import { Weapon } from "@character/weapon";
 import { StringCompare } from "@utils/string_utils";
 import { Collection } from "./collection";
 export declare class FeatureList {
+    character: Character;
     features: Collection<string, Feature<Featurable>>;
     weapons: Collection<string, Weapon<Featurable>>;
-    constructor();
+    constructor(character: Character);
     registerFeature(feature: Feature<Featurable>): void;
     removeFeature(uuid: string): void;
     registerWeapon(weapon: Weapon<Featurable>): void;

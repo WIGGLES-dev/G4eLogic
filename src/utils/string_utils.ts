@@ -33,3 +33,7 @@ export function stringCompare(defaultQuery: string, skillQuery: string | string[
         default: return false
     }
 }
+
+export function insensitiveStringCompare(string1: string, string2: string): boolean {
+    return string1.toLowerCase() === string2.toLowerCase()
+}

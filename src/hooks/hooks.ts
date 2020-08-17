@@ -1,8 +1,8 @@
-class Hooks {
-    private static hooks: Map<string, Function[]> = new Map()
-    private static _once: Function[] = []
-    private static ids: Map<number, Function> = new Map
-    private static id: number = 1
+export class Hooks {
+    private hooks: Map<string, Function[]> = new Map()
+    private _once: Function[] = []
+    private ids: Map<number, Function> = new Map
+    private id: number = 1
 
     /**
     * Register a callback handler which should be triggered when a hook is triggered.
@@ -10,11 +10,11 @@ class Hooks {
     * @param {String} hook   The unique name of the hooked event
     * @param {Function} fn   The callback function which should be triggered when the hook event occurs
     */
-    static on(hook: string, fn: Function) {
-        const id = Hooks.id++
-        Hooks.hooks.set(hook, Hooks.hooks.get(hook) || []);
-        Hooks.hooks.get(hook).push(fn);
-        Hooks.ids.set(id, fn)
+    on(hook: string, fn: Function) {
+        const id = this.id++
+        this.hooks.set(hook, this.hooks.get(hook) || []);
+        this.hooks.get(hook).push(fn);
+        this.ids.set(id, fn)
         return id
     }
 
@@ -25,9 +25,9 @@ class Hooks {
     * @param {String} hook   The unique name of the hooked event
     * @param {Function} fn   The callback function which should be triggered when the hook event occurs
     */
-    static once(hook: string, fn: Function) {
-        Hooks._once.push(fn)
-        return Hooks.on(hook, fn)
+    once(hook: string, fn: Function) {
+        this._once.push(fn)
+        return this.on(hook, fn)
     }
 
     /**
@@ -36,16 +36,16 @@ class Hooks {
      * @param {String} hook   The unique name of the hooked event
      * @param {Function} fn   The function that should be removed from the set of hooked callbacks
      */
-    static off(hook: string, fn: Function) {
+    off(hook: string, fn: Function) {
         if (typeof fn === "number") {
             let id = fn;
-            fn = Hooks.ids.get(fn);
-            Hooks.ids.delete(id)
+            fn = this.ids.get(fn);
+            this.ids.delete(id)
         }
-        if (!Hooks.hooks.has(hook)) {
+        if (!this.hooks.has(hook)) {
 
         } else {
-            const fns = Hooks.hooks.get(hook);
+            const fns = this.hooks.get(hook);
             let idx = fns.indexOf(fn);
             if (idx !== -1) fns.splice(idx, 1)
         }
@@ -57,13 +57,13 @@ class Hooks {
    * @param {String} hook   The hook being triggered
    * @param {Array} args    Arguments passed to the hook callback functions
    */
-    static callAll(hook: string, ...args) {
-        if (!Hooks.hooks.has(hook)) {
+    callAll(hook: string, ...args) {
+        if (!this.hooks.has(hook)) {
 
         } else {
-            const fns = [...Hooks.hooks.get(hook)];
+            const fns = [...this.hooks.get(hook)];
             fns.forEach(fn => {
-                Hooks._call(hook, fn, args)
+                this._call(hook, fn, args)
             })
         }
     }
@@ -76,15 +76,15 @@ class Hooks {
      * hooks should be called.
      *
      * @param {String} hook   The hook being triggered
-     * @param {...*} args      Arguments passed to the hook callback functions
+     * @param {...*} args     Arguments passed to the hook callback functions
      */
-    static call(hook: string, ...args) {
-        if (!Hooks.hooks.has(hook)) {
+    call(hook: string, ...args) {
+        if (!this.hooks.has(hook)) {
 
         } else {
-            const fns = [...Hooks.hooks.get(hook)]
+            const fns = [...this.hooks.get(hook)]
             fns.forEach(fn => {
-                let callAdditional = Hooks._call(hook, fn, args);
+                let callAdditional = this._call(hook, fn, args);
                 if (callAdditional === false) return false
             })
         }
@@ -95,8 +95,8 @@ class Hooks {
      * Call a hooked function using provided arguments and perhaps unregister it.
      * @private
      */
-    private static _call(hook: string, fn: Function, args) {
-        if (Hooks._once.includes(fn)) Hooks.off(hook, fn);
+    private _call(hook: string, fn: Function, args) {
+        if (this._once.includes(fn)) this.off(hook, fn);
         try {
             return fn(...args)
         } catch (err) {

@@ -17,9 +17,9 @@ export declare abstract class CharacterElement<T extends CharacterElement<T>> {
     private createDataAccessors;
     getClass(): Function;
     delete(): void;
-    getSerializer(): import("../..").Serializer;
-    dispatch(): void;
-    unsubscribe(subscribtion: (store: any) => void): void;
+    getSerializer(scope?: string): import("../..").Serializer;
+    private dispatch;
+    private unsubscribe;
     subscribe(subscription: (store: any) => void): () => void;
     update(updater: (store: any) => any): void;
 }

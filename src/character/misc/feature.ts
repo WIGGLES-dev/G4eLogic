@@ -1,5 +1,5 @@
 import { CharacterElement } from "./element";
-import { Featurable } from "../character";
+import { Featurable, Character } from "../character";
 import { objectify, json } from "@utils/json_utils";
 import { FeatureType } from "@gcs/gcs";
 import { SkillLike } from "@character/skill/skill";
@@ -10,11 +10,13 @@ import * as gcs from "@gcs/gcs";
 import { Collection } from "./collection";
 
 export class FeatureList {
+    character: Character
+
     features: Collection<string, Feature<Featurable>> = new Collection()
     weapons: Collection<string, Weapon<Featurable>> = new Collection()
 
-    constructor() {
-
+    constructor(character: Character) {
+        this.character = character
     }
 
     registerFeature(feature: Feature<Featurable>) {
@@ -68,7 +70,9 @@ export abstract class Feature<T extends Featurable> extends CharacterElement<T> 
         owner.features.add(this);
         this.owner.list.character.featureList.registerFeature(this);
     }
-
+    /**
+     * Returns the type of the feature based on it's constructing class. This is a string that is a member of @enum FeatureType.
+     */
     getType(): string {
         //@ts-ignore
         return this.constructor.type
@@ -78,6 +82,10 @@ export abstract class Feature<T extends Featurable> extends CharacterElement<T> 
         return this.owner.isActive()
     }
 
+    /**
+     * Returns the applicable bonus taking into account the leveled traits. Featurable elements must impliment a getLevel method and
+     * the properties leveled and hasLevels
+     */
     getBonus(): number { return this.leveled && this.owner.hasLevels ? this.amount * this.owner.getLevel() : this.amount }
 
     unregister() {

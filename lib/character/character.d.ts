@@ -1,5 +1,5 @@
 import { ListItem } from "./misc/list";
-import { Attribute } from "./attribute";
+import { Attribute, AttributeList } from "./attribute";
 import { SkillList } from "./skill/skill";
 import { TraitList } from "./trait";
 import { Equipment, EquipmentList } from "./equipment";
@@ -8,11 +8,16 @@ import { Profile } from "./profile";
 import { SpellList } from "./spell";
 import { Serializer } from "./serialization/serializer";
 import { CharacterElement } from "./misc/element";
-declare abstract class Sheet {
+import { LocationList } from "./locations";
+import { Collection } from "./misc/collection";
+import { Hooks } from "../hooks/hooks";
+export declare abstract class Sheet {
     #private;
-    serializer: Serializer;
-    constructor(serializer: Serializer);
-    abstract load(sheet: Sheet, data: any): Sheet;
+    hooks: Hooks;
+    constructor(defaultScope: string);
+    static registerSerializer(serializer: Serializer): void;
+    abstract void(): Sheet;
+    getSerializer(scope?: string): Serializer;
     registerElement(element: CharacterElement<Featurable>): void;
     removeElement(element: CharacterElement<Featurable>): void;
     getElementById(type: string, id: string): any;
@@ -23,7 +28,7 @@ export interface Featurable extends ListItem<any> {
 }
 export declare class Character extends Sheet {
     gCalcID: string;
-    attributes: Map<Signature, Attribute>;
+    attributes: Collection<Signature, Attribute>;
     missingHP: number;
     missingFP: number;
     profile: Profile;
@@ -33,7 +38,9 @@ export declare class Character extends Sheet {
     traitList: TraitList;
     spellList: SpellList;
     featureList: FeatureList;
-    constructor(serializer?: Serializer);
+    locationList: LocationList;
+    attributeList: AttributeList;
+    constructor(defaultScope: string);
     totalAttributesCost(): number;
     getAttribute(attribute: Signature): Attribute;
     pointTotals(): {
@@ -52,8 +59,9 @@ export declare class Character extends Sheet {
     encumberedMove(): number;
     dodgeScore(): number;
     encumberedDodgeScore(): number;
-    load(data: any): Character;
-    void(): void;
+    load(data: any, scope?: string): Character;
+    save(scope: string, target: any): any;
+    void(): this;
     toR20(): string;
 }
 export declare enum Signature {
@@ -75,4 +83,3 @@ export declare enum Signature {
     Touch = "Touch",
     Dodge = "dodge"
 }
-export {};

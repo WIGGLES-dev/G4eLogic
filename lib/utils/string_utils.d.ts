@@ -10,3 +10,4 @@ export declare enum StringCompare {
     doesNotEndWith = "does_not_end_with"
 }
 export declare function stringCompare(defaultQuery: string, skillQuery: string | string[] | Set<string>, type: StringCompare): boolean;
+export declare function insensitiveStringCompare(string1: string, string2: string): boolean;
