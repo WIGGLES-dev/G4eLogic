@@ -11,4 +11,5 @@ import { MeleeWeapon, RangedWeapon, Weapon } from "@character/weapon";
 import { List, ListItem } from "@character/misc/list";
 import { AttributeBonus, Attribute } from "@character/attribute";
 import { FeatureType } from "@gcs/gcs";
-export { Attribute, AttributeBonus, Weapon, MeleeWeapon, RangedWeapon, Character, Signature, Skill, Difficulty, SkillDefault, SkillLike, SkillList, SkillBonus, Trait, TraitType, TraitList, TraitModifier, Spell, SpellList, Technique, TehchniqueDifficulty, Equipment, DRBonus, EquipmentList, EquipmentModifier, Serializer, registerSerializer, isArray, json, Feature, FeatureType, Featurable, List, ListItem, };
+import { GCSJSON } from "@character/serialization/gcs_json";
+export { Attribute, AttributeBonus, Weapon, MeleeWeapon, RangedWeapon, Character, Signature, Skill, Difficulty, SkillDefault, SkillLike, SkillList, SkillBonus, Trait, TraitType, TraitList, TraitModifier, Spell, SpellList, Technique, TehchniqueDifficulty, Equipment, DRBonus, EquipmentList, EquipmentModifier, Serializer, registerSerializer, isArray, json, Feature, FeatureType, Featurable, List, ListItem, GCSJSON };

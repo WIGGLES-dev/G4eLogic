@@ -14,7 +14,8 @@ import { Hooks } from "../hooks/hooks";
 export declare abstract class Sheet {
     #private;
     hooks: Hooks;
-    constructor(defaultScope: string);
+    serializer: typeof Serializer;
+    constructor(defaultScope?: string);
     static registerSerializer(serializer: Serializer): void;
     abstract void(): Sheet;
     getSerializer(scope?: string): Serializer;
@@ -41,6 +42,8 @@ export declare class Character extends Sheet {
     locationList: LocationList;
     attributeList: AttributeList;
     constructor(defaultScope: string);
+    getSwingDamage(strength?: number): string;
+    getThrustDamage(strength?: number): string;
     totalAttributesCost(): number;
     getAttribute(attribute: Signature): Attribute;
     pointTotals(): {
@@ -55,7 +58,7 @@ export declare class Character extends Sheet {
     };
     allItems(): Equipment[];
     basicLift(): number;
-    encumbranceLevel(): 0 | -1 | -2 | -3 | -4;
+    encumbranceLevel(): 0 | -1 | -2 | -3 | -4 | -5;
     encumberedMove(): number;
     dodgeScore(): number;
     encumberedDodgeScore(): number;

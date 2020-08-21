@@ -26,7 +26,6 @@ export function registerSerializer(serializer: any) {
 
 export abstract class Serializer {
     static serializers: Map<string, Serializer> = new Map()
-    static currentScope: string
 
     static scope: string
     transformers: Map<Constructor | string, { save: any, load: any }>

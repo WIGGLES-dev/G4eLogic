@@ -14,9 +14,9 @@ import { FeatureType } from "@gcs/gcs";
 import { AttributeBonus } from "@character/attribute";
 import { Weapon, MeleeWeapon, RangedWeapon } from "../weapon";
 
-@registerSerializer
 export class GCSJSON extends Serializer {
     static scope = "GCSJSON"
+
     constructor() {
         super();
     }
@@ -77,6 +77,7 @@ export class GCSJSON extends Serializer {
         skillLike.name = data.name;
         skillLike.difficulty = data.difficulty as Difficulty;
         skillLike.points = data.points;
+        skillLike.reference = data.reference;
     }
 
     mapSkillDefault(skillDefault: SkillDefault<any>, data: any) {
@@ -155,21 +156,25 @@ export class GCSJSON extends Serializer {
         equipment.legalityClass = data.legality_class;
         equipment.containedWeightReduction = isArray(data?.features)?.find(feature => feature.type === "contained_weight_reduction")?.reduction ?? null;
 
+        equipment.reference = data.reference;
+
         data.features?.forEach((feature: json) => {
             Feature.loadFeature<Equipment>(equipment, feature.type)?.load(feature)
         });
+
         data.modifiers?.forEach((modifier: json) => {
             equipment.addModifier().load(modifier);
         });
 
         data.weapons?.forEach((weapon: any) => {
-            equipment.addWeapon(weapon.type).load(weapon)
+            equipment.addWeapon(weapon.type).load(weapon);
         });
 
         if (data && data.type?.includes("_container")) {
             return data?.children as gcs.Equipment[] || null
         }
     }
+
     saveEquipment(equipment: Equipment): any {
         let data = {
             type: "equipment",
@@ -200,6 +205,8 @@ export class GCSJSON extends Serializer {
         trait.pointsPerLevel = data.points_per_level;
         trait.disabled = data.disabled;
         trait.hasLevels = trait.levels ? true : false;
+
+        trait.reference = data.reference;
 
         data.features?.forEach((feature: json) => {
             Feature.loadFeature<Trait>(trait, feature.type)?.load(feature)

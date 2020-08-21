@@ -4,7 +4,6 @@ export declare type Constructor<T = {}> = new (...arger: any[]) => T;
 export declare function registerSerializer(serializer: any): any;
 export declare abstract class Serializer {
     static serializers: Map<string, Serializer>;
-    static currentScope: string;
     static scope: string;
     transformers: Map<Constructor | string, {
         save: any;

@@ -10,20 +10,27 @@ export class EquipmentList extends List<Equipment> {
     constructor(character: Character) {
         super(character);
     }
-
     populator(data: any) {
         return new Equipment(this)
     }
-
-    carriedWeight() {
+    totalWeight({ carriedOnly = true } = {}) {
         return this.iterTop().reduce((prev, cur) => {
-            return prev + cur.extendedWeight();
-        }, 0);
+            if (carriedOnly) {
+                if (cur.equipped) prev += cur.extendedWeight();
+            } else {
+                prev += cur.extendedWeight()
+            }
+            return prev
+        }, 0)
     }
-
-    carriedValue() {
+    totalValue({ carriedOnly = true } = {}) {
         return this.iterTop().reduce((prev, cur) => {
-            return prev + cur.extendedValue();
+            if (carriedOnly) {
+                if (cur.equipped) prev += cur.extendedValue();
+            } else {
+                prev += cur.extendedValue()
+            }
+            return prev
         }, 0);
     }
 }
@@ -42,6 +49,8 @@ export class Equipment extends ListItem<Equipment> {
     value: number
     containedWeightReduction: string
 
+    appliesSkillEncumbrancePenalty: boolean = true
+
     modifiers: Set<EquipmentModifier<Equipment>> = new Set()
 
     hasLevels = false
@@ -49,11 +58,13 @@ export class Equipment extends ListItem<Equipment> {
     constructor(list: List<Equipment>, keys: string[] = []) {
         super(list, [...keys, ...Equipment.keys]);
     }
+
     addModifier() {
         const modifier = new EquipmentModifier<Equipment>(this);
         this.modifiers.add(modifier)
         return modifier
     }
+
     get name() { return this.description }
     isActive() { return this.equipped }
     getLevel(): number { return null }

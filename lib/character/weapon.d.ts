@@ -18,8 +18,8 @@ export declare abstract class Weapon<T extends Featurable> extends CharacterElem
     defaults: Set<WeaponDefault>;
     constructor(owner: T, keys: string[]);
     getType(): any;
-    load(data: any): void;
-    save(): void;
+    load(data: any): any;
+    save(): any;
     onDestroy(): void;
     calculateWeaponUsePenalty(): number;
     toString(): void;

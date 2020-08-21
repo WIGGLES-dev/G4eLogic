@@ -41,16 +41,14 @@ export function calculateSkillLevel(
             relativeLevel = 0;
         }
         if (level !== Number.NEGATIVE_INFINITY) {
-            level += relativeLevel;
             if (defaultedFrom) {
                 if (level < defaultedFrom.adjustedLevel) {
                     level = defaultedFrom.adjustedLevel;
                 }
             }
-            const encumbrancePenalty = encumbranceLevel * encPenaltyMult;
-            level += bonus + encumbrancePenalty;
-            relativeLevel += bonus + encumbrancePenalty;
         }
     }
-    return level + gMod;
+    const encumbrancePenalty = encumbranceLevel * encPenaltyMult;
+
+    return level + relativeLevel + encumbrancePenalty + gMod;
 }

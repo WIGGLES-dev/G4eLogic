@@ -39,8 +39,8 @@ export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
         return this.constructor.type
     }
 
-    load(data: any) { this.getSerializer().transformers.get(this.tag).load(this, data) }
-    save() { this.getSerializer().transformers.get(this.tag).save(this) }
+    load(data: any) { return this.getSerializer().transformers.get(this.tag).load(this, data) }
+    save() { return this.getSerializer().transformers.get(this.tag).save(this) }
 
     onDestroy() {
         this.owner.getCharacter().featureList.removeWeapon(this.uuid);

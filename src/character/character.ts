@@ -16,15 +16,17 @@ import { CharacterElement } from "./misc/element";
 import { LocationList } from "./locations";
 import { Collection } from "./misc/collection";
 import { Hooks } from "../hooks/hooks";
+import { getThrust, getSwing } from "../damage/damage";
 
 export abstract class Sheet {
     hooks: Hooks = new Hooks()
-    #serializer = Serializer
+    serializer = Serializer
+
+    #currentScope
     #elements: Set<CharacterElement<Featurable>> = new Set();
 
-    constructor(defaultScope: string) {
-        registerSerializer(GCSJSON);
-        this.#serializer.currentScope = defaultScope;
+    constructor(defaultScope: string = "GCSJSON") {
+        this.#currentScope = defaultScope;
     }
 
     static registerSerializer(serializer: Serializer) {
@@ -35,10 +37,10 @@ export abstract class Sheet {
 
     getSerializer(scope?: string) {
         try {
-            if (this.#serializer.serializers.has(scope)) this.#serializer.currentScope = scope;
-            return this.#serializer.serializers.get(scope || this.#serializer.currentScope)
+            if (scope) this.#currentScope = scope;
+            return this.serializer.serializers.get(scope || this.#currentScope)
         } catch (err) {
-
+            console.log(err);
         }
     }
 
@@ -101,6 +103,13 @@ export class Character extends Sheet {
         this.attributeList = new AttributeList(this);
     }
 
+    getSwingDamage(strength?: number) {
+        return getSwing(strength || this.attributeList.getAttribute(Signature.ST).calculateLevel())
+    }
+    getThrustDamage(strength?: number) {
+        return getThrust(strength || this.attributeList.getAttribute(Signature.ST).calculateLevel())
+    }
+
     totalAttributesCost() {
         return Array.from(this.attributeList.attributes.values()).reduce((prev, cur) => {
             if (cur instanceof Attribute) {
@@ -134,6 +143,7 @@ export class Character extends Sheet {
             total: racialPoints + attributePoints + advantages + disadvantages + quirks + skills + spells
         }
     }
+
     allItems(): Equipment[] {
         return [].concat.apply([],
             [
@@ -141,13 +151,15 @@ export class Character extends Sheet {
                 this.otherEquipmentList.iter()
             ])
     }
+
     basicLift() {
         const ST = this.getAttribute(Signature.ST).calculateLevel();
         return Math.round(ST * ST / 5)
     }
+
     encumbranceLevel() {
         const basicLift = this.basicLift();
-        const carriedWeight = this.equipmentList.carriedWeight();
+        const carriedWeight = this.equipmentList.totalWeight();
         if (carriedWeight < basicLift) {
             return 0
         } else if (carriedWeight < basicLift * 2) {
@@ -158,6 +170,8 @@ export class Character extends Sheet {
             return -3
         } else if (carriedWeight < basicLift * 10) {
             return -4
+        } else {
+            return -5
         }
     }
 
@@ -166,6 +180,7 @@ export class Character extends Sheet {
     }
 
     dodgeScore() { return Math.floor(this.getAttribute(Signature.Speed).calculateLevel() + Attribute.bonusReducer(this, Signature.Dodge) + 3) }
+
     encumberedDodgeScore() {
         switch (this.encumbranceLevel()) {
             case 0:

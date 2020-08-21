@@ -4,10 +4,18 @@ import { Character } from "./character";
 export declare class TraitList extends List<Trait> {
     constructor(character: Character);
     populator(data: any): any;
-    sumRacials(): number;
-    sumAdvantages(): number;
-    sumDisadvantages(): number;
-    sumQuirks(): number;
+    sumRacials({ activeOnly }?: {
+        activeOnly?: boolean;
+    }): number;
+    sumAdvantages({ activeOnly }?: {
+        activeOnly?: boolean;
+    }): number;
+    sumDisadvantages({ activeOnly }?: {
+        activeOnly?: boolean;
+    }): number;
+    sumQuirks({ activeOnly }?: {
+        activeOnly?: boolean;
+    }): number;
 }
 declare enum ContainerType {
     group = "",

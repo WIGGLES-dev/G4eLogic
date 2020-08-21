@@ -15,44 +15,57 @@ export class TraitList extends List<Trait> {
         return new Trait(this)
     }
 
-    sumRacials() {
+    sumRacials({ activeOnly = true } = {}) {
         return this.iter().reduce((prev, cur) => {
             if (cur.isRacial()) {
-                return prev + cur.adjustedPoints();
-            } else {
-                return prev
+                if (activeOnly) {
+                    if (!cur.disabled) prev += cur.adjustedPoints();
+                } else {
+                    prev += cur.adjustedPoints();
+                }
             }
+            return prev
         }, 0)
     }
-    sumAdvantages() {
+    sumAdvantages({ activeOnly = true } = {}) {
         return this.iter().reduce((prev, cur) => {
             if (cur.isRacial()) return prev
+
             if (cur.categories.has("Advantage") || cur.categories.has("Perk") || cur.adjustedPoints() >= 1) {
-                return prev + cur.adjustedPoints();
-            } else {
-                return prev
+                if (activeOnly) {
+                    if (!cur.disabled) prev += cur.adjustedPoints();
+                } else {
+                    prev += cur.adjustedPoints();
+                }
             }
+            return prev
         }, 0)
     }
-    sumDisadvantages() {
+    sumDisadvantages({ activeOnly = true } = {}) {
         return this.iter().reduce((prev, cur) => {
             if (cur.isRacial()) return prev
             if (cur.categories.has("Disadvantage") || cur.adjustedPoints() < -1) {
-                return prev + cur.adjustedPoints();
-            } else {
-                return prev
+                if (activeOnly) {
+                    if (!cur.disabled) prev += cur.adjustedPoints();
+                } else {
+                    prev += cur.adjustedPoints();
+                }
             }
-        }, 0)
+            return prev
+        }, 0);
     }
-    sumQuirks() {
+    sumQuirks({ activeOnly = true } = {}) {
         return this.iter().reduce((prev, cur) => {
             if (cur.isRacial()) return prev
             if (cur.categories.has("Quirk") || cur.adjustedPoints() === -1) {
-                return prev + cur.adjustedPoints();
-            } else {
-                return prev
+                if (activeOnly) {
+                    if (!cur.disabled) prev += cur.adjustedPoints();
+                } else {
+                    prev += cur.adjustedPoints();
+                }
             }
-        }, 0)
+            return prev
+        }, 0);
     }
 }
 
@@ -226,8 +239,7 @@ export class Trait extends ListItem<Trait> {
     }
 
     toString() {
-        return this.name
-            + this.hasLevels ? ` (${this.levels}${this.hasHalfLevel ? '.5' : ''})` : ""
+        return `${this.name} ${this.hasLevels ? this.hasHalfLevel ? "(.5)" : "" : `(${this.levels})`}`
     }
 
     toR20() {

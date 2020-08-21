@@ -12,6 +12,7 @@ import { MeleeWeapon, RangedWeapon, Weapon } from "@character/weapon";
 import { List, ListItem } from "@character/misc/list";
 import { AttributeBonus, Attribute } from "@character/attribute";
 import { FeatureType } from "@gcs/gcs";
+import { GCSJSON } from "@character/serialization/gcs_json";
 
 export {
     Attribute,
@@ -48,4 +49,5 @@ export {
     Featurable,
     List,
     ListItem,
+    GCSJSON
 }

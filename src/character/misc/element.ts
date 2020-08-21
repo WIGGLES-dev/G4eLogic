@@ -83,16 +83,18 @@ export abstract class CharacterElement<T extends CharacterElement<T>> {
                         try {
                             this.data[cur] = val
                         } catch (err) {
-
+                            console.log(err);
                         }
                     },
                     get() {
                         try {
                             return this.data[cur]
                         } catch (err) {
+                            console.log(err);
                             try {
                                 return this[cur]
                             } catch (err) {
+                                console.log(err);
                                 return undefined
                             }
                         }
