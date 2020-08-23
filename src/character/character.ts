@@ -48,6 +48,7 @@ export abstract class Sheet {
         this.#elements.add(element);
         this.hooks.callAll("element_added", element);
     }
+
     removeElement(element: CharacterElement<Featurable>) {
         this.#elements.delete(element);
         this.hooks.callAll("element_removed", element);

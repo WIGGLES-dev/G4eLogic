@@ -238,10 +238,6 @@ export class Trait extends ListItem<Trait> {
         return modifier
     }
 
-    toString() {
-        return `${this.name} ${this.hasLevels ? this.hasHalfLevel ? "(.5)" : "" : `(${this.levels})`}`
-    }
-
     toR20() {
         let key;
         const traitTemplate = {

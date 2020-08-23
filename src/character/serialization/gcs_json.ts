@@ -1,6 +1,5 @@
 import { Serializer, registerSerializer } from "./serializer";
-import { Skill, Difficulty, SkillDefault, SkillLike } from "../../character/skill/skill";
-import { Technique, TehchniqueDifficulty } from "../../character/technique";
+import { Skill, Difficulty, SkillDefault, SkillLike, Technique, TehchniqueDifficulty } from "../../character/skill/skill";
 import { Spell } from "../../character/spell";
 import { Equipment, EquipmentModifier } from "../../character/equipment";
 import { Trait, TraitType, TraitModifier } from "../../character/trait";
@@ -336,6 +335,8 @@ export class GCSJSON extends Serializer {
     mapWeapon(weapon: Weapon<any>, data: any) {
         weapon.usage = data.usage;
         weapon.strength = data.strength
+        weapon.damageBase = data?.damage?.base;
+        weapon.damageType = data?.damage?.type;
         switch (weapon.getType()) {
             case "melee_weapon":
                 if (weapon instanceof MeleeWeapon) {

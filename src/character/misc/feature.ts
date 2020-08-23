@@ -8,6 +8,7 @@ import { Weapon } from "@character/weapon";
 import { StringCompare, stringCompare } from "@utils/string_utils";
 import * as gcs from "@gcs/gcs";
 import { Collection } from "./collection";
+import { List } from "./list";
 
 export class FeatureList {
     character: Character

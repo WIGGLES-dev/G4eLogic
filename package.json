@@ -1,6 +1,6 @@
 {
   "name": "g4elogic",
-  "version": "1.1.25",
+  "version": "1.1.26",
   "description": "Logic API for GURPS 4e",
   "main": "lib/index.js",
   "scripts": {

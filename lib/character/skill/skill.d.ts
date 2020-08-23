@@ -5,6 +5,8 @@ export declare class SkillList extends List<Skill> {
     constructor(character: Character);
     populator(data: any): any;
     sumSkills(): number;
+    iterTechnique(): Skill[];
+    iterSkills(): Skill[];
 }
 export declare abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T> {
     abstract type: "skill" | "skill_container" | "spell" | "spell_container" | "technique";
@@ -43,11 +45,10 @@ export declare class Skill extends SkillLike<Skill> {
     defaultedFrom: SkillDefault<SkillLike<any>>;
     encumbrancePenaltyMultiple: number;
     isTechnique: boolean;
-    constructor(list: List<Skill>, keys?: string[], isTechnique?: boolean);
+    constructor(list: List<Skill>, keys?: string[]);
     isActive(): boolean;
     childrenPoints(): number;
     getBonus(): any;
-    toString(): string;
     addDefault(): SkillDefault<Skill>;
     toR20(): {
         key: string;
@@ -66,6 +67,24 @@ export declare class Skill extends SkillLike<Skill> {
             notes: string;
         };
     };
+}
+export declare type TehchniqueDifficulty = Difficulty.average | Difficulty.hard;
+export declare class Technique extends Skill {
+    static keys: string[];
+    tag: string;
+    limit: number;
+    difficulty: TehchniqueDifficulty;
+    defaults: Set<SkillDefault<SkillLike<any>>>;
+    default: SkillDefault<Skill>;
+    defaultedFrom: SkillDefault<SkillLike<any>>;
+    isTechnique: boolean;
+    constructor(list: List<Skill>, keys?: string[]);
+    get signature(): Signature;
+    getBonus(): number;
+    calculateLevel(): number;
+    getBaseLevel(def: SkillDefault<Skill>, requirePoints: boolean): number;
+    getRelativeLevel(): number;
+    toR20(): any;
 }
 export declare class SkillDefault<T extends SkillLike<any>> extends Default<T> {
     static keys: string[];
