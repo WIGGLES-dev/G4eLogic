@@ -4,6 +4,7 @@ import { Character } from "./character";
 export declare class EquipmentList extends List<Equipment> {
     constructor(character: Character);
     populator(data: any): any;
+    forSkillEncumbrancePenalty(): number;
     totalWeight({ carriedOnly }?: {
         carriedOnly?: boolean;
     }): number;
@@ -23,7 +24,7 @@ export declare class Equipment extends ListItem<Equipment> {
     weight: number;
     value: number;
     containedWeightReduction: string;
-    appliesSkillEncumbrancePenalty: boolean;
+    applySkillEncumbrancePenalty: boolean;
     modifiers: Set<EquipmentModifier<Equipment>>;
     hasLevels: boolean;
     constructor(list: List<Equipment>, keys?: string[]);

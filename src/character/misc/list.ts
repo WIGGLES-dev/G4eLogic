@@ -43,7 +43,7 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
     abstract isActive(): boolean
 
     addFeature() {
-
+        
     }
 
     addWeapon(type: string = "melee_weapon") {

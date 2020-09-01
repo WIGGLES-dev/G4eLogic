@@ -1,4 +1,4 @@
-import { Skill, Technique } from "../skill/skill";
+import { Skill } from "../skill/skill";
 import { Spell } from "../spell";
 import { Equipment } from "../equipment";
 import { Trait } from "../trait";
@@ -58,6 +58,6 @@ export abstract class Serializer {
     abstract loadList(list: List<any>, data: any[]): List<any>
     abstract saveList(list: List<any>): any
 
-    abstract load(character: Character, data: any): Character
+    abstract load(character: Character, data: any, config?: any): Character
     abstract save(character: Character, target: any): any
 }

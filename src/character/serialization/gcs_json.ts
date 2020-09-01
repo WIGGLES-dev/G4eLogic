@@ -1,5 +1,5 @@
 import { Serializer, registerSerializer } from "./serializer";
-import { Skill, Difficulty, SkillDefault, SkillLike, Technique, TehchniqueDifficulty } from "../../character/skill/skill";
+import { Skill, Difficulty, SkillDefault, SkillLike } from "../../character/skill/skill";
 import { Spell } from "../../character/spell";
 import { Equipment, EquipmentModifier } from "../../character/equipment";
 import { Trait, TraitType, TraitModifier } from "../../character/trait";
@@ -12,6 +12,9 @@ import { Modifier, Modifiable } from "@character/misc/modifier";
 import { FeatureType } from "@gcs/gcs";
 import { AttributeBonus } from "@character/attribute";
 import { Weapon, MeleeWeapon, RangedWeapon } from "../weapon";
+import { Technique, TehchniqueDifficulty } from "@character/technique";
+
+import jp from "jsonpath";
 
 export class GCSJSON extends Serializer {
     static scope = "GCSJSON"
@@ -28,7 +31,7 @@ export class GCSJSON extends Serializer {
             })
             .register(Skill, {
                 save: this.saveSkill,
-                load: this.mapSkill
+                load: GCSJSON.mapSkill
             })
             .register(Technique, {
                 save: this.saveTechnique,
@@ -80,6 +83,10 @@ export class GCSJSON extends Serializer {
     }
 
     mapSkillDefault(skillDefault: SkillDefault<any>, data: any) {
+        skillDefault.type = data.type;
+        skillDefault.modifier = data.modifier;
+        skillDefault.specialization = data.specialization;
+        skillDefault.name = data.name;
         return skillDefault
     }
 
@@ -90,14 +97,15 @@ export class GCSJSON extends Serializer {
         return data
     }
 
-    mapSkill(skill: Skill, data?: gcs.Skill) {
+    static mapSkill(skill: Skill, data?: gcs.Skill) {
         GCSJSON.mapSkillLike(skill, data);
         skill.difficulty = data.difficulty?.split("/")[1] as Difficulty;
         skill.signature = data.difficulty?.split("/")[0] as Signature;
         skill.techLevel = data.tech_level ?? "";
+        skill.specialization = data.specialization;
         if (data.encumbrance_penalty_multiplier) skill.encumbrancePenaltyMultiple = data.encumbrance_penalty_multiplier;
         if (data.defaulted_from) skill.defaultedFrom = new SkillDefault<Skill>(skill).load(data.defaulted_from);
-        isArray(data.defaults)?.forEach((skillDefault: json) => skill.addDefault().load(skillDefault));
+        data.defaults?.forEach((skillDefault: json) => skill.addDefault().load(skillDefault));
 
         if (data && data.type?.includes("_container")) {
             return data.children as gcs.Skill[]
@@ -117,7 +125,7 @@ export class GCSJSON extends Serializer {
     }
 
     mapTechnique(technique: Technique, data?: gcs.Technique) {
-        this.mapSkill(technique, data)
+        GCSJSON.mapSkill(technique, data)
         technique.limit = data.limit;
         technique.difficulty = data.difficulty as TehchniqueDifficulty;
         technique.default = new SkillDefault<Technique>(technique).load(data.default) as SkillDefault<Technique>;
@@ -148,7 +156,7 @@ export class GCSJSON extends Serializer {
     mapEquipment(equipment: Equipment, data?: gcs.Equipment) {
         equipment.description = data.description;
         equipment.equipped = data.equipped;
-        equipment.quantity = data.quantity;
+        equipment.quantity = data.quantity || 1;
         equipment.value = parseFloat(data?.value);
         equipment.weight = parseFloat(data?.weight?.split(" ")[0] ?? "0");
         equipment.techLevel = data.tech_level;
@@ -335,6 +343,7 @@ export class GCSJSON extends Serializer {
     mapWeapon(weapon: Weapon<any>, data: any) {
         weapon.usage = data.usage;
         weapon.strength = data.strength
+        weapon.damageStrength = data?.damage?.st
         weapon.damageBase = data?.damage?.base;
         weapon.damageType = data?.damage?.type;
         switch (weapon.getType()) {
@@ -375,13 +384,21 @@ export class GCSJSON extends Serializer {
     }
 
     load(character: Character, data: any) {
+        console.log(data);
+
         data = objectify<json>(data);
         character.gCalcID = data.id;
 
         character.profile.load(data.profile);
         character.equipmentList.load(data.equipment);
         character.otherEquipmentList.load(data.other_equipment);
-        character.skillList.load(data.skills);
+
+        const skills = jp.query(data, `$.skills..*[?(@.type=="skill")]`);
+        character.skillList.load(skills);
+
+        const techniques = jp.query(data, `$.skills..*[?(@.type=="technique")]`)
+        character.techniqueList.load(techniques);
+
         character.traitList.load(data.advantages);
         character.spellList.load(data.spells);
 

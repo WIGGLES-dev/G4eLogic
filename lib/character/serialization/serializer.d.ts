@@ -19,6 +19,6 @@ export declare abstract class Serializer {
     static reverseMap(input: string): void;
     abstract loadList(list: List<any>, data: any[]): List<any>;
     abstract saveList(list: List<any>): any;
-    abstract load(character: Character, data: any): Character;
+    abstract load(character: Character, data: any, config?: any): Character;
     abstract save(character: Character, target: any): any;
 }

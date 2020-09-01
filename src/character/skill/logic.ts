@@ -49,6 +49,7 @@ export function calculateSkillLevel(
         }
     }
     const encumbrancePenalty = encumbranceLevel * encPenaltyMult;
-
-    return level + relativeLevel + encumbrancePenalty + gMod;
+    const preliminaryLevel = level + relativeLevel + encumbrancePenalty;
+    const defaultLevel = defaultedFrom ? defaultedFrom.getHighestMatchLevel({ withBonuses: false }) : Number.NEGATIVE_INFINITY;
+    return Math.max(defaultLevel + gMod + bonus, preliminaryLevel + gMod + bonus)
 }

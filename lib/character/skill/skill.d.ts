@@ -1,12 +1,11 @@
 import { Signature, Character } from "../character";
 import { List, ListItem } from "../misc/list";
+import { SkillBonus } from "../misc/feature";
 import { Default } from "../misc/default";
 export declare class SkillList extends List<Skill> {
     constructor(character: Character);
-    populator(data: any): any;
+    populator(): any;
     sumSkills(): number;
-    iterTechnique(): Skill[];
-    iterSkills(): Skill[];
 }
 export declare abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T> {
     abstract type: "skill" | "skill_container" | "spell" | "spell_container" | "technique";
@@ -24,12 +23,17 @@ export declare abstract class SkillLike<T extends SkillLike<T>> extends ListItem
     constructor(list: List<T>, keys: string[]);
     abstract getBonus(): number;
     getLevel(): number;
+    getAttribute(): import("../attribute").Attribute;
+    getRelativeLevel(): number;
     getBaseRelativeLevel(): 0 | -1 | -2 | -3;
     static getBaseRelativeLevel(difficulty: Difficulty): 0 | -1 | -2 | -3;
     static calculateRelativeLevel(points: number, relativeLevel: number): number;
-    calculateLevel(): number;
-    static getBestDefaultWithPoints<T extends SkillLike<T>>(character: Character, skill: T, defaults: Set<SkillDefault<T>>): SkillDefault<T>;
-    static getBestDefault<T extends SkillLike<T>>(character: Character, defaults: Set<SkillDefault<T>>): SkillDefault<T>;
+    calculateLevel({ withBonuses, considerDefaults }?: {
+        withBonuses?: boolean;
+        considerDefaults?: boolean;
+    }): number;
+    static getBestDefaultWithPoints<T extends SkillLike<T>>(character: Character, skill: T, defaults: Set<SkillDefault<T>>): SkillDefault<any>;
+    getBestDefault<T extends SkillLike<T>>(): SkillDefault<SkillLike<T>>;
     canSwapDefaults(skill: SkillLike<T>, defaults: Set<SkillDefault<T>>): boolean;
     hasDefaultTo(skill: SkillLike<T>, defaults: Set<SkillDefault<T>>): boolean;
     swapDefault(skill: SkillLike<T>, defaults: Set<SkillDefault<T>>): number;
@@ -48,7 +52,8 @@ export declare class Skill extends SkillLike<Skill> {
     constructor(list: List<Skill>, keys?: string[]);
     isActive(): boolean;
     childrenPoints(): number;
-    getBonus(): any;
+    getBonus(): number;
+    getModList(): SkillBonus<any>[];
     addDefault(): SkillDefault<Skill>;
     toR20(): {
         key: string;
@@ -57,7 +62,7 @@ export declare class Skill extends SkillLike<Skill> {
             name: string;
             base: string | number;
             difficulty: string | number;
-            bonus: any;
+            bonus: number;
             points: number;
             wildcard_skill_points: number;
             use_wildcard_points: number;
@@ -68,24 +73,6 @@ export declare class Skill extends SkillLike<Skill> {
         };
     };
 }
-export declare type TehchniqueDifficulty = Difficulty.average | Difficulty.hard;
-export declare class Technique extends Skill {
-    static keys: string[];
-    tag: string;
-    limit: number;
-    difficulty: TehchniqueDifficulty;
-    defaults: Set<SkillDefault<SkillLike<any>>>;
-    default: SkillDefault<Skill>;
-    defaultedFrom: SkillDefault<SkillLike<any>>;
-    isTechnique: boolean;
-    constructor(list: List<Skill>, keys?: string[]);
-    get signature(): Signature;
-    getBonus(): number;
-    calculateLevel(): number;
-    getBaseLevel(def: SkillDefault<Skill>, requirePoints: boolean): number;
-    getRelativeLevel(): number;
-    toR20(): any;
-}
 export declare class SkillDefault<T extends SkillLike<any>> extends Default<T> {
     static keys: string[];
     tag: string;
@@ -93,11 +80,6 @@ export declare class SkillDefault<T extends SkillLike<any>> extends Default<T> {
     adjustedLevel: number;
     points: number;
     constructor(skill: T, keys?: string[]);
-    isSkillBased(): boolean;
-    getSkillsNamedFrom(list: List<T>): {
-        skills: T[];
-        highest: T;
-    };
     save(): any;
     load(data: any): any;
 }

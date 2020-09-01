@@ -17,6 +17,8 @@ import { LocationList } from "./locations";
 import { Collection } from "./misc/collection";
 import { Hooks } from "../hooks/hooks";
 import { getThrust, getSwing } from "../damage/damage";
+import { TechniqueList } from "./technique";
+import { Group } from "./misc/group";
 
 export abstract class Sheet {
     hooks: Hooks = new Hooks()
@@ -33,7 +35,10 @@ export abstract class Sheet {
         registerSerializer(serializer);
     }
 
-    abstract void(): Sheet
+    void() {
+        this.#elements.clear();
+        return this
+    }
 
     getSerializer(scope?: string) {
         try {
@@ -54,12 +59,18 @@ export abstract class Sheet {
         this.hooks.callAll("element_removed", element);
     }
 
+    getGroupNamed(name: string) {
+        let result;
+        this.#elements.forEach(element => {
+            if (element instanceof Group && element.name === name) result = element
+        });
+        return result || null
+    }
+
     getElementById(type: string, id: string) {
         let result;
         this.#elements.forEach(element => {
-            if (element[type] === id) {
-                result = element;
-            }
+            if (element[type] === id) result = element;
         })
         return result || null
     }
@@ -80,6 +91,7 @@ export class Character extends Sheet {
 
     profile: Profile
     skillList: SkillList
+    techniqueList: TechniqueList
     equipmentList: EquipmentList
     otherEquipmentList: EquipmentList
     traitList: TraitList
@@ -96,6 +108,7 @@ export class Character extends Sheet {
         this.equipmentList = new EquipmentList(this);
         this.otherEquipmentList = new EquipmentList(this);
         this.skillList = new SkillList(this);
+        this.techniqueList = new TechniqueList(this);
         this.traitList = new TraitList(this);
         this.spellList = new SpellList(this);
 
@@ -122,7 +135,7 @@ export class Character extends Sheet {
     }
 
     getAttribute(attribute: Signature) {
-        return this.attributeList.attributes.get(attribute)
+        return this.attributeList.getAttribute(attribute)
     }
 
     pointTotals() {
@@ -158,9 +171,9 @@ export class Character extends Sheet {
         return Math.round(ST * ST / 5)
     }
 
-    encumbranceLevel() {
+    encumbranceLevel({ forSkillEncumbrance = false } = {}) {
         const basicLift = this.basicLift();
-        const carriedWeight = this.equipmentList.totalWeight();
+        const carriedWeight = forSkillEncumbrance ? this.equipmentList.forSkillEncumbrancePenalty() : this.equipmentList.totalWeight({ carriedOnly: true });
         if (carriedWeight < basicLift) {
             return 0
         } else if (carriedWeight < basicLift * 2) {
@@ -180,7 +193,7 @@ export class Character extends Sheet {
         return this.getAttribute(Signature.Move).calculateLevel() + this.encumbranceLevel()
     }
 
-    dodgeScore() { return Math.floor(this.getAttribute(Signature.Speed).calculateLevel() + Attribute.bonusReducer(this, Signature.Dodge) + 3) }
+    dodgeScore() { return Math.floor(this.getAttribute(Signature.Speed).calculateLevel() + 3) }
 
     encumberedDodgeScore() {
         switch (this.encumbranceLevel()) {
@@ -201,6 +214,7 @@ export class Character extends Sheet {
         this.void();
         return this.getSerializer(scope).load(this, data)
     }
+
     save(scope: string, target: any) {
         return this.getSerializer(scope).save(this, target);
     }
@@ -209,10 +223,11 @@ export class Character extends Sheet {
         this.featureList.empty();
         this.traitList.empty();
         this.skillList.empty();
+        this.techniqueList.empty();
         this.equipmentList.empty();
         this.otherEquipmentList.empty();
         this.spellList.empty();
-        return this
+        return super.void();
     }
 
     toR20() {

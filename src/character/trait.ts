@@ -67,6 +67,17 @@ export class TraitList extends List<Trait> {
             return prev
         }, 0);
     }
+
+    splitByType() {
+        return {
+            advantages: this.iter().filter(trait => trait.categories.has("Advantage") || trait.adjustedPoints() > 1),
+            perks: this.iter().filter(trait => trait.categories.has("Perk") || trait.adjustedPoints() === 1),
+            disadvantages: this.iter().filter(trait => trait.categories.has("Disadvantage") || trait.adjustedPoints() < -1),
+            quirks: this.iter().filter(trait => trait.categories.has("Quirk") || trait.adjustedPoints() === -1),
+            languages: this.iter().filter(trait => trait.categories.has("Language")),
+            racial: this.iter().filter(trait => trait.isRacial())
+        }
+    }
 }
 
 enum ContainerType {
@@ -81,16 +92,18 @@ export class Trait extends ListItem<Trait> {
     version = 1
     tag = "trait"
 
-    hasLevels: boolean
-
     name: string
     basePoints: number
-    levels: number
-    allowHalfLevels: boolean
-    hasHalfLevel: boolean
+
+    hasLevels: boolean = false
+    levels: number = 0
+    allowHalfLevels: boolean = false
+    hasHalfLevel: boolean = false
     roundDown: boolean
     controlRating: ControlRollMultiplier
+
     types: Set<TraitType> = new Set()
+
     pointsPerLevel: number
     disabled: boolean = false
     containerType: ContainerType
@@ -151,7 +164,8 @@ export class Trait extends ListItem<Trait> {
     static getAdjustedPoints(modifiers: Set<TraitModifier>, trait: Trait): number {
         let basePoints = trait.basePoints || 0;
         let pointsPerLevel = trait.pointsPerLevel || 0;
-        let levels = trait.levels || 0;
+
+        let levels = trait.hasLevels ? trait.levels : 0;
 
         let baseEnh = 0;
         let levelEnh = 0;

@@ -3,22 +3,17 @@ import { List, ListItem } from "../misc/list";
 import { Feature, SkillBonus } from "../misc/feature";
 import { StringCompare, stringCompare } from "utils/string_utils";
 import { objectify, json, isArray } from "@utils/json_utils";
-import { Default } from "../misc/default";
+import { Default, DefaultType } from "../misc/default";
 import * as gcs from "@gcs/gcs";
 import { Constructor } from "../serialization/serializer";
 import { calculateSkillLevel } from "./logic";
 
-
 export class SkillList extends List<Skill> {
-
     constructor(character: Character) {
         super(character);
     }
 
-    populator(data: any) {
-        if (data.type === "technique") {
-            return new Technique(this, [])
-        }
+    populator() {
         return new Skill(this, []);
     }
 
@@ -27,9 +22,6 @@ export class SkillList extends List<Skill> {
             return prev + cur.points
         }, 0);
     }
-
-    iterTechnique() { return this.iter().filter(item => item instanceof Technique) }
-    iterSkills() { return this.iter().filter(item => item instanceof Skill) }
 }
 
 /**
@@ -60,7 +52,7 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
     abstract defaults: Set<SkillDefault<SkillLike<any>>>
     abstract defaultedFrom: SkillDefault<SkillLike<any>>
     abstract signature: Signature
-    abstract encumbrancePenaltyMultiple: number
+    abstract encumbrancePenaltyMultiple: number = 0
 
     hasLevels = false
 
@@ -77,6 +69,18 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
      * @override Skill-like entities do not provide leveled feature bonuses.
      */
     getLevel(): number { return null }
+
+    getAttribute() {
+        return this.list.character.getAttribute(this.signature);
+    }
+
+    getRelativeLevel() {
+        try {
+            return this.calculateLevel() - this.getAttribute().calculateLevel()
+        } catch (err) {
+
+        }
+    }
 
     getBaseRelativeLevel() { return SkillLike.getBaseRelativeLevel(this.difficulty) }
     static getBaseRelativeLevel(difficulty: Difficulty) {
@@ -105,16 +109,19 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
         return relativeLevel
     }
 
-    calculateLevel(): number {
+    calculateLevel({ withBonuses = true, considerDefaults = true } = {}): number {
+        if (this.isContainer()) return null
         return calculateSkillLevel(
             this.difficulty,
             this.points,
-            this.list.character.getAttribute(this.signature)?.calculateLevel(),
-            this.defaultedFrom,
-            this.getBonus(),
-            this.list.character.encumbranceLevel(),
+            this.list.character.getAttribute(this.signature).calculateLevel(),
+            considerDefaults ?
+                SkillLike.getBestDefaultWithPoints(this.list.character, this, this.defaults)
+                : undefined,
+            withBonuses ? this.getBonus() : 0,
+            this.list.character.encumbranceLevel({ forSkillEncumbrance: true }),
             this.encumbrancePenaltyMultiple,
-            this.gMod
+            withBonuses ? this.gMod : 0
         )
     }
 
@@ -123,9 +130,9 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
             character: Character,
             skill: T,
             defaults: Set<SkillDefault<T>>
-        ): SkillDefault<T> {
-        let best = SkillLike.getBestDefault(character, defaults);
-        if (best !== null) {
+        ): SkillDefault<any> {
+        const best = skill.getBestDefault();
+        if (!(best === null)) {
             let baseLine = character.getAttribute(skill.signature).calculateLevel() + SkillLike.getBaseRelativeLevel(skill.difficulty);
             let level = best.level;
             best.adjustedLevel = level;
@@ -145,30 +152,26 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
         }
         return best
     }
-    static getBestDefault<T extends SkillLike<T>>
-        (
-            character: Character,
-            defaults: Set<SkillDefault<T>>,
-    ) {
-        if (character) {
-            if (defaults.size > 0) {
-                let best: number = Number.NEGATIVE_INFINITY;
-                let bestSkill: SkillDefault<T>;
-                defaults.forEach(skillDefault => {
-                    if (true) {
-                        if (skillDefault.isSkillBased()) {
-                            var skill = skillDefault.getSkillsNamedFrom(skillDefault.owner.list).highest;
-                            var level = SkillLike.calculateRelativeLevel(skill.points, skill.getBaseRelativeLevel());
-                        }
-                        if (level > best) {
-                            best = level;
-                            bestSkill = skillDefault;
-                            bestSkill.level = level
-                        }
-                    }
-                })
-                return bestSkill
-            }
+    getBestDefault<T extends SkillLike<T>>() {
+        if (this.defaults.size > 0) {
+            let best: number = Number.NEGATIVE_INFINITY;
+            let bestSkill: SkillDefault<SkillLike<T>>;
+            this.defaults.forEach(skillDefault => {
+                let level;
+                if (skillDefault.isSkillBased()) {
+                    let skill = skillDefault.getMatches().highest;
+                    level = SkillLike.calculateRelativeLevel(this.points, this.getBaseRelativeLevel());
+                } else {
+                    level = this.list.character.getAttribute((skillDefault.type as Signature)).calculateLevel();
+                }
+                if (level > best) {
+                    best = level;
+                    bestSkill = skillDefault;
+                    if (bestSkill.isSkillBased()) bestSkill.level = level
+                }
+
+            })
+            return bestSkill
         }
         return null
     }
@@ -195,7 +198,7 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
     }
     swapDefault(skill: SkillLike<T>, defaults: Set<SkillDefault<T>>) {
         let extraPointsSpent = 0;
-        let baseSkill = this.defaultedFrom.getSkillsNamedFrom(this.list);
+        let baseSkill = this.defaultedFrom.getMatches().highest;
         if (baseSkill !== null) {
             this.defaultedFrom = SkillLike.getBestDefaultWithPoints<T>(
                 this.list.character,
@@ -237,15 +240,14 @@ export class Skill extends SkillLike<Skill> {
         }, 0)
     }
 
-    getBonus(): any {
-        return this.list.character.featureList.getFeaturesByType(gcs.FeatureType.skillBonus).reduce(
-            (prev, cur) => {
-                if (cur instanceof SkillBonus && cur.type === gcs.FeatureType.skillBonus && cur.isApplicableTo(this) && cur.ownerIsActive()) {
-                    prev += cur.getBonus();
-                }
-                return prev
-            }, 0)
+    getBonus(): number { return this.getModList().reduce((prev, cur) => prev + cur.getBonus(), 0) }
+    getModList(): SkillBonus<any>[] {
+        const skill = this;
+        return this.list.character.featureList.getFeaturesByType(gcs.FeatureType.skillBonus).filter(bonus =>
+            bonus instanceof SkillBonus && bonus.type === gcs.FeatureType.skillBonus && bonus.isApplicableTo(skill) && bonus.ownerIsActive()
+        ) as SkillBonus<any>[]
     }
+
     addDefault(): SkillDefault<Skill> {
         const newDefault = new SkillDefault(this);
         return newDefault
@@ -290,101 +292,10 @@ export class Skill extends SkillLike<Skill> {
     }
 }
 
-export type TehchniqueDifficulty = Difficulty.average | Difficulty.hard
-export class Technique extends Skill {
-    static keys = ["limit", "default"]
-    tag = "technique"
-
-    limit: number
-    difficulty: TehchniqueDifficulty = Difficulty.average
-
-    defaults: Set<SkillDefault<SkillLike<any>>> = null
-
-    default: SkillDefault<Skill>
-    defaultedFrom: SkillDefault<SkillLike<any>> = null
-
-    isTechnique: boolean = true
-
-    constructor(list: List<Skill>, keys: string[] = []) {
-        super(list, [...keys, ...Technique.keys]);
-    }
-
-    get signature(): Signature { return null }
-
-    getBonus() {
-        return 0
-    }
-
-    calculateLevel(): number {
-        const techniqueDefault = this.default;
-        const character = this.list.character;
-        let relativeLevel = 0;
-        let points = this.points;
-        let level = Number.NEGATIVE_INFINITY;
-        if (character != null) {
-            level = this.getBaseLevel(techniqueDefault, null);
-            if (level !== Number.NEGATIVE_INFINITY) {
-                let baseLevel = level;
-                level += techniqueDefault.modifier;
-                if (this.difficulty === Difficulty.hard) {
-                    points--;
-                }
-                if (points > 0) {
-                    relativeLevel = points;
-                }
-                if (level !== Number.NEGATIVE_INFINITY) {
-
-                    level += relativeLevel;
-                }
-                if (Boolean(this.limit)) {
-                    let max = baseLevel + this.limit;
-                    if (level > max) {
-                        relativeLevel -= level - max;
-                        level = max;
-                    }
-                }
-            }
-        }
-        return level
-    }
-
-    getBaseLevel(def: SkillDefault<Skill>, requirePoints: boolean) {
-        const character = this.list.character;
-        if (def.type === "Skill") {
-            let skill = def.getSkillsNamedFrom(this.list).highest;
-            return skill !== null ? skill.calculateLevel() : Number.NEGATIVE_INFINITY
-        }
-    }
-
-    getRelativeLevel() {
-        const relativeTo = this.default.getSkillsNamedFrom(this.list).highest;
-        console.log(this.name, relativeTo.name, relativeTo.calculateLevel());
-        return this.calculateLevel() - relativeTo.calculateLevel()
-    }
-    
-    toR20(): any {
-        const link = this.default.isSkillBased() ? this.default.getSkillsNamedFrom(this.list).highest : null
-        return {
-            key: "repeating_techniquesrevised",
-            row_id: this.r20rowID,
-            data: {
-                name: this.name,
-                parent: this.default.name,
-                default: this.default.modifier,
-                skill_modifier: 0,
-                points: this.points,
-                ref: this.reference,
-                notes: this.notes,
-                technique_row_type: link ? "Skill" : "10",
-                technique_skill_row_id: link ? link.uuid : "",
-            }
-        }
-    }
-}
-
 export class SkillDefault<T extends SkillLike<any>> extends Default<T> {
     static keys = ["level", "adjustedLevel", "points"]
     tag = "default"
+
     level: number
     adjustedLevel: number
     points: number
@@ -394,25 +305,6 @@ export class SkillDefault<T extends SkillLike<any>> extends Default<T> {
         this.owner.defaults.add(this);
     }
 
-    isSkillBased() {
-        return this.type === Signature.Base.toString()
-    }
-    getSkillsNamedFrom(list: List<T>) {
-        const skills = list.iter().filter(skill => {
-            return this.name === skill.name && this.specialization === skill.specialization
-        });
-        const highest = skills.reduce((prev, cur) => {
-            if (SkillLike.calculateRelativeLevel(prev.points, 10) > SkillLike.calculateRelativeLevel(cur.points, 10)) {
-                return prev
-            } else {
-                return cur
-            }
-        });
-        return {
-            skills,
-            highest
-        }
-    }
     save() { return this.getSerializer().transformers.get(this.constructor as Constructor).save(this) }
     load(data: any) { return this.getSerializer().transformers.get(this.constructor as Constructor).load(this, data) }
 }

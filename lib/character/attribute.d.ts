@@ -9,13 +9,14 @@ export declare class AttributeList {
     character: Character;
     attributes: Collection<Signature, Attribute>;
     constructor(character: Character, keys?: string[]);
+    signatureOptions(): string[];
     getAttribute(attribute: Signature): Attribute;
     addAttribute({ signature, costPerLevel, defaultLevel, basedOn }: {
         signature?: string;
         costPerLevel?: number;
         defaultLevel?: number;
         basedOn?: () => any;
-    }): void;
+    }): Attribute;
 }
 export declare class Attribute extends CharacterElement<Attribute> {
     static keys: string[];
@@ -32,12 +33,12 @@ export declare class Attribute extends CharacterElement<Attribute> {
     setLevel(level: number): number;
     setLevelDelta(): void;
     getMod(): number;
+    getModList(): AttributeBonus<any>[];
     pointsSpent(): number;
     levelsIncreased(): number;
     calculateLevel(): number;
     get displayLevel(): number;
     set displayLevel(level: number);
-    static bonusReducer(sheet: Character, attribute: string): number;
 }
 export declare class AttributeBonus<T extends Featurable> extends Feature<T> {
     static type: FeatureType;

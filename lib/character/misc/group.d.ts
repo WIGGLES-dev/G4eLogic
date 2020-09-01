@@ -1,9 +1,12 @@
 import { Character } from "../character";
 import { CharacterElement } from "./element";
-import { Collection } from "./collection";
-export declare class Group<T> extends CharacterElement<any> {
-    groupName: string;
+import { Weapon } from "@character/weapon";
+import { Feature } from "./feature";
+export declare class Group extends CharacterElement<any> {
     name: string;
-    contents: Collection<string, T>;
+    weapons: Set<Weapon<any>>;
+    features: Set<Feature<any>>;
+    character: Character;
     constructor(groupName: string, character: Character, keys?: string[]);
+    getCharacter(): Character;
 }

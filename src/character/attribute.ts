@@ -95,10 +95,16 @@ export class AttributeList {
             ));
     }
 
-    getAttribute(attribute: Signature) { return this.character.getAttribute(attribute) }
-    addAttribute({ signature = "", costPerLevel = 0, defaultLevel = 0, basedOn = () => null }) {
+    signatureOptions() { return Array.from(this.attributes).map(attribute => attribute.name) }
+
+    getAttribute(attribute: Signature) {
+        return this.attributes.get(attribute)
+    }
+
+    addAttribute({ signature = "", costPerLevel = 0, defaultLevel = 0, basedOn = () => null }): Attribute {
         if (typeof signature === "string") {
             const attribute = new Attribute(signature, this.character, costPerLevel, { defaultLevel, basedOn })
+            return attribute
         }
     }
 }
@@ -134,7 +140,14 @@ export class Attribute extends CharacterElement<Attribute> {
     setLevel(level: number) { if (level || level === 0) this.level = level; return level }
     setLevelDelta() { }
 
-    getMod() { return Attribute.bonusReducer(this.character, this.name) }
+    getMod() { return this.getModList().reduce((prev, cur) => prev + cur.getBonus(), 0) }
+    getModList(): AttributeBonus<any>[] {
+        const attributeName = this.name;
+        return this.character.featureList.getFeaturesByType(FeatureType.attributeBonus).filter(
+            feature => feature instanceof AttributeBonus && feature.ownerIsActive() && feature.attribute.toLowerCase() === attributeName.toLowerCase()
+        ) as AttributeBonus<any>[]
+    }
+
     pointsSpent() { return this.levelsIncreased() * this.costPerLevel }
     levelsIncreased() { return this.level - this.defaultLevel }
     calculateLevel() { return this.level + this.getMod() + this.basedOn() }
@@ -147,17 +160,6 @@ export class Attribute extends CharacterElement<Attribute> {
         } else if (!this.defaultLevel && this.basedOn) {
             this.level = level - this.basedOn() - mod;
         }
-    }
-
-    static bonusReducer(sheet: Character, attribute: string) {
-        return sheet.featureList.getFeaturesByType(FeatureType.attributeBonus).reduce((prev, cur) => {
-            if (cur instanceof AttributeBonus) {
-                if (cur.ownerIsActive() && cur.attribute?.toString()?.toLowerCase() === attribute?.toString()?.toLowerCase() && !cur.limitation) {
-                    prev += cur.getBonus()
-                }
-            }
-            return prev
-        }, 0)
     }
 }
 

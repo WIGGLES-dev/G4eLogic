@@ -123,11 +123,16 @@ export abstract class Feature<T extends Featurable> extends CharacterElement<T> 
     }
 }
 
+enum SkillBonusSelectionType {
+
+}
+
 export class SkillBonus<T extends Featurable> extends Feature<T> {
     static keys = []
     static type = FeatureType.skillBonus
 
-    selectionType: string
+    selectionType: SkillBonusSelectionType
+
     nameCompareType: StringCompare
     name: string
     specializationCompareType: StringCompare

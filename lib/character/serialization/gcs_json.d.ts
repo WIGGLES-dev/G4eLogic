@@ -1,5 +1,5 @@
 import { Serializer } from "./serializer";
-import { Skill, SkillDefault, Technique } from "../../character/skill/skill";
+import { Skill, SkillDefault } from "../../character/skill/skill";
 import { Spell } from "../../character/spell";
 import { Equipment } from "../../character/equipment";
 import { Trait } from "../../character/trait";
@@ -10,6 +10,7 @@ import { Feature } from "@character/misc/feature";
 import { List } from "@character/misc/list";
 import { Modifier, Modifiable } from "@character/misc/modifier";
 import { Weapon } from "../weapon";
+import { Technique } from "@character/technique";
 export declare class GCSJSON extends Serializer {
     static scope: string;
     constructor();
@@ -18,7 +19,7 @@ export declare class GCSJSON extends Serializer {
     private static mapSkillLike;
     mapSkillDefault(skillDefault: SkillDefault<any>, data: any): SkillDefault<any>;
     saveSkillDefault(skillDefault: SkillDefault<any>): any;
-    mapSkill(skill: Skill, data?: gcs.Skill): gcs.Skill[];
+    static mapSkill(skill: Skill, data?: gcs.Skill): gcs.Skill[];
     saveSkill(skill: Skill): any;
     mapTechnique(technique: Technique, data?: gcs.Technique): any;
     saveTechnique(technique: Technique): any;

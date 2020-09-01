@@ -36,10 +36,12 @@ export declare abstract class Feature<T extends Featurable> extends CharacterEle
     load(data: any): any;
     static loadFeature<T extends Featurable>(owner: T, featureType: FeatureType): Feature<T>;
 }
+declare enum SkillBonusSelectionType {
+}
 export declare class SkillBonus<T extends Featurable> extends Feature<T> {
     static keys: any[];
     static type: FeatureType;
-    selectionType: string;
+    selectionType: SkillBonusSelectionType;
     nameCompareType: StringCompare;
     name: string;
     specializationCompareType: StringCompare;
@@ -55,3 +57,4 @@ export declare class DRBonus<T extends Featurable> extends Feature<T> {
     location: string;
     constructor(owner: T, keys?: string[]);
 }
+export {};

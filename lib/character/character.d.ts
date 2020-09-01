@@ -11,16 +11,18 @@ import { CharacterElement } from "./misc/element";
 import { LocationList } from "./locations";
 import { Collection } from "./misc/collection";
 import { Hooks } from "../hooks/hooks";
+import { TechniqueList } from "./technique";
 export declare abstract class Sheet {
     #private;
     hooks: Hooks;
     serializer: typeof Serializer;
     constructor(defaultScope?: string);
     static registerSerializer(serializer: Serializer): void;
-    abstract void(): Sheet;
+    void(): this;
     getSerializer(scope?: string): Serializer;
     registerElement(element: CharacterElement<Featurable>): void;
     removeElement(element: CharacterElement<Featurable>): void;
+    getGroupNamed(name: string): any;
     getElementById(type: string, id: string): any;
 }
 export interface Featurable extends ListItem<any> {
@@ -34,6 +36,7 @@ export declare class Character extends Sheet {
     missingFP: number;
     profile: Profile;
     skillList: SkillList;
+    techniqueList: TechniqueList;
     equipmentList: EquipmentList;
     otherEquipmentList: EquipmentList;
     traitList: TraitList;
@@ -58,7 +61,9 @@ export declare class Character extends Sheet {
     };
     allItems(): Equipment[];
     basicLift(): number;
-    encumbranceLevel(): 0 | -1 | -2 | -3 | -4 | -5;
+    encumbranceLevel({ forSkillEncumbrance }?: {
+        forSkillEncumbrance?: boolean;
+    }): 0 | -1 | -2 | -3 | -4 | -5;
     encumberedMove(): number;
     dodgeScore(): number;
     encumberedDodgeScore(): number;

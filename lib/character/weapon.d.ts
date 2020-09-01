@@ -1,28 +1,33 @@
 import { Featurable } from "./character";
+import { Default } from "./misc/default";
 import { CharacterElement } from "./misc/element";
-import { WeaponDefault } from "@gcs/gcs";
+declare class WeaponDefault<T extends Weapon<any>> extends Default<any> {
+    static keys: any[];
+    constructor(owner: T, keys?: string[]);
+}
 export declare abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
     static keys: string[];
     tag: string;
     static type: string;
     owner: T;
-    damage: string;
     damageType: DamageType;
-    damageBase: BaseDamage;
-    damageMod: number;
-    perDieMod: number;
+    damageStrength: BaseDamage;
+    damageBase: string;
     armorDivisor: number;
-    strength: number;
-    requiresTwoHands: boolean;
+    strength: string;
     usage: string;
-    defaults: Set<WeaponDefault>;
+    defaults: Set<WeaponDefault<Weapon<T>>>;
     constructor(owner: T, keys: string[]);
+    addDefault(): WeaponDefault<this>;
     getType(): any;
     load(data: any): any;
     save(): any;
     onDestroy(): void;
+    getBestAttackLevel({ inferUsagePenalties }: {
+        inferUsagePenalties?: boolean;
+    }): number;
+    getBestDefault(): WeaponDefault<any>;
     calculateWeaponUsePenalty(): number;
-    toString(): void;
 }
 export declare class MeleeWeapon<T extends Featurable> extends Weapon<T> {
     static keys: string[];

@@ -3,35 +3,46 @@ import { objectify, json } from "@utils/json_utils";
 import { ListItem } from "./misc/list";
 import { Default } from "./misc/default";
 import { CharacterElement } from "./misc/element";
-import { WeaponDefault } from "@gcs/gcs";
+import { Collection } from "./misc/collection";
+import { Modifier } from "./misc/modifier";
+
+class WeaponDefault<T extends Weapon<any>> extends Default<any> {
+    static keys = []
+
+    constructor(owner: T, keys: string[] = []) {
+        super(owner, [...keys, ...WeaponDefault.keys]);
+        this.owner.defaults.add(this);
+    }
+}
 
 export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
-    static keys = ["type", "damageType", "damageBase", "damageMod", "perDieMod", "armorDivisor", "strength", "requiresTwoHands", "usage", "defaults"]
+    static keys = ["type", "damageType", "damageBase", "damageMod", "armorDivisor", "strength", "usage", "defaults"]
     tag: string = "weapon"
     static type: string
     owner: T
 
-    //temp damage property
-    damage: string
 
     damageType: DamageType
-    damageBase: BaseDamage
-    damageMod: number
-    perDieMod: number
+    damageStrength: BaseDamage
+    damageBase: string
 
     armorDivisor: number
 
-    strength: number = 10
-    requiresTwoHands: boolean = false
+    strength: string = "10"
 
     usage: string
-    defaults: Set<WeaponDefault>
+    defaults: Set<WeaponDefault<Weapon<T>>> = new Set
 
     constructor(owner: T, keys: string[]) {
         super(owner.getCharacter(), [...keys, ...Weapon.keys]);
         this.owner = owner;
         this.owner.weapons.add(this);
         this.owner.getCharacter().featureList.registerWeapon(this);
+    }
+
+    addDefault() {
+        const newDefault = new WeaponDefault(this);
+        return newDefault
     }
 
     getType() {
@@ -46,19 +57,32 @@ export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
         this.owner.getCharacter().featureList.removeWeapon(this.uuid);
     }
 
+    getBestAttackLevel({ inferUsagePenalties = false }) {
+        let bestBaseLevel = this.getBestDefault().getHighestMatchLevel();
+        return inferUsagePenalties ? bestBaseLevel : bestBaseLevel + this.calculateWeaponUsePenalty()
+    }
+
+    getBestDefault(): WeaponDefault<any> {
+        let best = Number.NEGATIVE_INFINITY;
+        let bestDefault;
+        this.defaults.forEach(weaponDefault => {
+            if (weaponDefault.getHighestMatchLevel() > best) {
+                best = weaponDefault.getHighestMatchLevel();
+                bestDefault = weaponDefault;
+            };
+        });
+        return bestDefault
+    }
+
     calculateWeaponUsePenalty(): number {
         const userStrength = this.owner.getCharacter().getAttribute(Signature.ST).calculateLevel();
-        const weaponRequirement = this.strength;
+        const weaponRequirement = Modifier.extractValue(this.strength.toString());
         const penalty = userStrength - weaponRequirement;
         if (penalty < 0) {
             return penalty
         } else {
             return 0
         }
-    }
-
-    toString() {
-
     }
 }
 

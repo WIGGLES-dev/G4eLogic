@@ -16,6 +16,14 @@ export declare class TraitList extends List<Trait> {
     sumQuirks({ activeOnly }?: {
         activeOnly?: boolean;
     }): number;
+    splitByType(): {
+        advantages: Trait[];
+        perks: Trait[];
+        disadvantages: Trait[];
+        quirks: Trait[];
+        languages: Trait[];
+        racial: Trait[];
+    };
 }
 declare enum ContainerType {
     group = "",
@@ -27,9 +35,9 @@ export declare class Trait extends ListItem<Trait> {
     static keys: string[];
     version: number;
     tag: string;
-    hasLevels: boolean;
     name: string;
     basePoints: number;
+    hasLevels: boolean;
     levels: number;
     allowHalfLevels: boolean;
     hasHalfLevel: boolean;
@@ -45,7 +53,7 @@ export declare class Trait extends ListItem<Trait> {
     getLevel(): number;
     isRacial(): Boolean;
     childrenPoints(): number;
-    static getCRMultipland(cr: ControlRollMultiplier): 1 | 2 | 2.5 | 1.5 | 0.5;
+    static getCRMultipland(cr: ControlRollMultiplier): 1 | 2.5 | 2 | 1.5 | 0.5;
     adjustedPoints(): number;
     disable(): void;
     enable(): void;

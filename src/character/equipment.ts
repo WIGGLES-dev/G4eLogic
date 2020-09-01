@@ -10,19 +10,29 @@ export class EquipmentList extends List<Equipment> {
     constructor(character: Character) {
         super(character);
     }
+
     populator(data: any) {
         return new Equipment(this)
     }
+
+    forSkillEncumbrancePenalty() {
+        return this.iterTop().reduce((prev, cur) => {
+            if (cur.equipped && cur.applySkillEncumbrancePenalty) prev += cur.extendedWeight();
+            return prev
+        }, 0)
+    }
+
     totalWeight({ carriedOnly = true } = {}) {
         return this.iterTop().reduce((prev, cur) => {
             if (carriedOnly) {
                 if (cur.equipped) prev += cur.extendedWeight();
             } else {
-                prev += cur.extendedWeight()
+                prev += cur.extendedWeight();
             }
             return prev
         }, 0)
     }
+
     totalValue({ carriedOnly = true } = {}) {
         return this.iterTop().reduce((prev, cur) => {
             if (carriedOnly) {
@@ -41,15 +51,15 @@ export class Equipment extends ListItem<Equipment> {
     tag = "equipment"
 
     description: string
-    equipped: boolean
+    equipped: boolean = true
     techLevel: string
     legalityClass: string
-    quantity: number
-    weight: number
-    value: number
+    quantity: number = 1
+    weight: number = 0
+    value: number = 0
     containedWeightReduction: string
 
-    appliesSkillEncumbrancePenalty: boolean = true
+    applySkillEncumbrancePenalty: boolean = true
 
     modifiers: Set<EquipmentModifier<Equipment>> = new Set()
 
@@ -94,8 +104,10 @@ export class Equipment extends ListItem<Equipment> {
     extendedWeight() {
         const adjustedWeight = this.adjustedWeight();
         if (this.isContainer()) {
+            return this.childrenWeight() + this.weight
             return this.reduceContainedWeight((this.childrenWeight() + adjustedWeight))
         } else {
+            return this.weight * this.quantity
             return adjustedWeight * this.quantity
         }
     }
@@ -104,8 +116,10 @@ export class Equipment extends ListItem<Equipment> {
         const adjustedValue = this.adjustedValue();
 
         if (this.isContainer()) {
-            return this.childrenValue() + adjustedValue
+            return this.childrenValue()
+            // + adjustedValue
         } else {
+            return this.value * this.quantity
             return adjustedValue * this.quantity
         }
     }

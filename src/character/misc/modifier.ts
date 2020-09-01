@@ -33,7 +33,7 @@ export abstract class Modifier<T extends Modifiable> extends CharacterElement<T>
     static extractValue(value: string) {
         if (typeof value === "string") {
             let numArr = value.match(/(\d+)/);
-            return parseFloat(numArr[0])
+            return +numArr[0]
         } else {
             return null
         }
