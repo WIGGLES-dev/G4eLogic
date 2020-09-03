@@ -6,7 +6,6 @@ import { Equipment, EquipmentList } from "./equipment";
 import { FeatureList } from "./misc/feature";
 import { Profile } from "./profile";
 import { SpellList } from "./spell";
-import { exportR20 } from "@utils/2R20";
 import { json, objectify } from "@utils/json_utils";
 import { Weapon } from "./weapon";
 import { FeatureType } from "@gcs/gcs";
@@ -29,6 +28,7 @@ export abstract class Sheet {
 
     constructor(defaultScope: string = "GCSJSON") {
         this.#currentScope = defaultScope;
+        this.hooks.callAll("init", this);
     }
 
     static registerSerializer(serializer: Serializer) {
@@ -36,6 +36,7 @@ export abstract class Sheet {
     }
 
     void() {
+        this.hooks.callAll("before void sheet", this);
         this.#elements.clear();
         return this
     }
@@ -55,8 +56,9 @@ export abstract class Sheet {
     }
 
     removeElement(element: CharacterElement<Featurable>) {
+        this.hooks.callAll(`before remove element ${element.uuid}`, element)
         this.#elements.delete(element);
-        this.hooks.callAll("element_removed", element);
+        this.hooks.callAll(`removed element ${element.uuid}`, this);
     }
 
     getGroupNamed(name: string) {
@@ -120,6 +122,7 @@ export class Character extends Sheet {
     getSwingDamage(strength?: number) {
         return getSwing(strength || this.attributeList.getAttribute(Signature.ST).calculateLevel())
     }
+
     getThrustDamage(strength?: number) {
         return getThrust(strength || this.attributeList.getAttribute(Signature.ST).calculateLevel())
     }
@@ -211,15 +214,22 @@ export class Character extends Sheet {
     }
 
     load(data: any, scope?: string) {
+        this.hooks.callAll("before unload", this);
         this.void();
-        return this.getSerializer(scope).load(this, data)
+        this.getSerializer(scope).load(this, data);
+        this.hooks.callAll("after load", this);
+        return this
     }
 
     save(scope: string, target: any) {
-        return this.getSerializer(scope).save(this, target);
+        this.hooks.callAll("before save", this);
+        this.getSerializer(scope).save(this, target);
+        this.hooks.callAll("after save", this);
+        return this
     }
 
     void() {
+        super.void();
         this.featureList.empty();
         this.traitList.empty();
         this.skillList.empty();
@@ -227,11 +237,7 @@ export class Character extends Sheet {
         this.equipmentList.empty();
         this.otherEquipmentList.empty();
         this.spellList.empty();
-        return super.void();
-    }
-
-    toR20() {
-        return exportR20(this)
+        return this
     }
 }
 

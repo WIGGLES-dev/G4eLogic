@@ -42,22 +42,6 @@ export declare class Equipment extends ListItem<Equipment> {
     private static processNonCFStep;
     adjustedWeight(): number;
     private static processMultiplyAddWeightStep;
-    toR20(): {
-        key: string;
-        row_id: string;
-        data: {
-            name: string;
-            tl: string;
-            ref: string;
-            legality_class: string;
-            count: number;
-            cost: number;
-            weight: number;
-            costtotal: number;
-            weighttotal: number;
-            notes: string;
-        };
-    };
 }
 export declare class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
     static keys: string[];

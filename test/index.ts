@@ -10,18 +10,28 @@ const testSubject: Character = new Character("GCSJSON").load(testSubjectData);
 
 console.log(testSubject);
 
-testSubject.techniqueList.iter().forEach(skill => {
+testSubject.skillList.iter().forEach(skill => {
     try {
-        console.log(
-            skill.calculateLevel(),
-            skill.name,
-            skill.getBestDefault()?.getHighestMatchLevel(),
-            skill.getBestDefault()?.name,
-            skill.getBestDefault()?.specialization,
-            skill.getBestDefault()?.getMatches()
-        );
+        let bestDefault = skill.getBestDefaultWithPoints();
+        console.log(skill.calculateLevel(), skill.name, skill.specialization, skill.defaultedFrom, skill.getModList());
     } catch (err) {
         console.log(err);
-        console.log(skill)
+        console.log(skill.name, skill.specialization, skill, skill.getBestDefault());
     }
 })
+
+// testSubject.techniqueList.iter().forEach(skill => {
+//     try {
+//         console.log(
+//             skill.calculateLevel(),
+//             skill.name,
+//             skill.getBestDefault()?.getHighestMatchLevel(),
+//             skill.getBestDefault()?.name,
+//             skill.getBestDefault()?.specialization,
+//             skill.getBestDefault()?.getMatches()
+//         );
+//     } catch (err) {
+//         console.log(err);
+//         console.log(skill)
+//     }
+// })

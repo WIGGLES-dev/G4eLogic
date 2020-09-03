@@ -67,10 +67,9 @@ export declare class Character extends Sheet {
     encumberedMove(): number;
     dodgeScore(): number;
     encumberedDodgeScore(): number;
-    load(data: any, scope?: string): Character;
-    save(scope: string, target: any): any;
+    load(data: any, scope?: string): this;
+    save(scope: string, target: any): this;
     void(): this;
-    toR20(): string;
 }
 export declare enum Signature {
     ST = "ST",

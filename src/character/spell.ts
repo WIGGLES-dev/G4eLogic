@@ -52,7 +52,7 @@ export class Spell extends SkillLike<Spell> {
     difficulty: Difficulty = Difficulty.hard
 
     signature: Signature = Signature.IQ
-    defaults: Set<SkillDefault<SkillLike<any>>>
+    defaults: Set<SkillDefault<SkillLike<any>>> = new Set()
     defaultedFrom: SkillDefault<SkillLike<any>> = null
     encumbrancePenaltyMultiple: number = null;
 

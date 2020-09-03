@@ -22,7 +22,6 @@ export declare class Technique extends Skill {
     getBonus(): number;
     calculateLevel(): number;
     getBestDefault(): SkillDefault<any>;
-    getBaseLevel(requirePoints: boolean): number;
+    getBaseLevel(): number;
     getRelativeLevel(): number;
-    toR20(): any;
 }

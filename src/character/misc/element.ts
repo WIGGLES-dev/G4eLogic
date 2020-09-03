@@ -17,7 +17,6 @@ export abstract class CharacterElement<T extends CharacterElement<T>> {
     data: any
 
     uuid: string = generateUUID().toString()
-    r20rowID: string = generateRowID()
     foundryID: string
 
     reference: string

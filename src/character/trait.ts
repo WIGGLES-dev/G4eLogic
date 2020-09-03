@@ -251,64 +251,6 @@ export class Trait extends ListItem<Trait> {
         this.modifiers.add(modifier);
         return modifier
     }
-
-    toR20() {
-        let key;
-        const traitTemplate = {
-            name: this.name,
-            points: this.adjustedPoints(),
-            ref: this.reference,
-            notes: this.notes
-        }
-        const categories = this.categories;
-        const activeModifiers = Array.from(this.modifiers);
-        const perkFlag = categories.has("Perk") || this.adjustedPoints() === 1;
-        const quirkFlag = categories.has("Quirk") || this.adjustedPoints() === -1;
-        const advantageFlag = categories.has("Advantage") || this.adjustedPoints() >= 0;
-        const disadvantageFlag = categories.has("Disadvantage") || this.adjustedPoints() < 0;
-        const languageFlag = categories.has("Language");
-        const nativeLanguageFlag = categories.has("Language") && activeModifiers.some(modifier => modifier.name === "Native");
-        const racialFlag = this.isRacial();
-        const cultureFlag = this.name.includes("Cultural Familiarity");
-        if (nativeLanguageFlag) {
-
-        } else if (languageFlag) {
-
-        }
-        else if (cultureFlag) {
-
-        } else if (racialFlag) {
-            key = "repeating_racial";
-            Object.assign(traitTemplate, {
-                cr: this.controlRating
-            });
-        } else if (quirkFlag) {
-            key = "repeating_quirks";
-            Object.assign(traitTemplate, {
-                cr: this.controlRating
-            });
-        } else if (disadvantageFlag) {
-            key = "repeating_disadvantages";
-            Object.assign(traitTemplate, {
-                cr: this.controlRating
-            });
-        } else if (perkFlag) {
-            key = "repeating_perk";
-            Object.assign(traitTemplate, {
-                foa: this.controlRating
-            });
-        } else if (advantageFlag) {
-            key = "repeating_traits";
-            Object.assign(traitTemplate, {
-                foa: this.controlRating
-            });
-        }
-        return {
-            key,
-            row_id: this.r20rowID,
-            data: traitTemplate
-        }
-    }
 }
 
 export class TraitModifier extends Modifier<Trait> {

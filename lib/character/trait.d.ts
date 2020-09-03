@@ -53,22 +53,12 @@ export declare class Trait extends ListItem<Trait> {
     getLevel(): number;
     isRacial(): Boolean;
     childrenPoints(): number;
-    static getCRMultipland(cr: ControlRollMultiplier): 1 | 2.5 | 2 | 1.5 | 0.5;
+    static getCRMultipland(cr: ControlRollMultiplier): 1 | 2 | 2.5 | 1.5 | 0.5;
     adjustedPoints(): number;
     disable(): void;
     enable(): void;
     static getAdjustedPoints(modifiers: Set<TraitModifier>, trait: Trait): number;
     addModifier(): TraitModifier;
-    toR20(): {
-        key: any;
-        row_id: string;
-        data: {
-            name: string;
-            points: number;
-            ref: string;
-            notes: string;
-        };
-    };
 }
 export declare class TraitModifier extends Modifier<Trait> {
     static keys: string[];

@@ -5,7 +5,6 @@ export declare abstract class CharacterElement<T extends CharacterElement<T>> {
     subscriptions: Set<(store: any) => void>;
     data: any;
     uuid: string;
-    r20rowID: string;
     foundryID: string;
     reference: string;
     userDescription: string;

@@ -26,17 +26,17 @@ export declare abstract class SkillLike<T extends SkillLike<T>> extends ListItem
     getAttribute(): import("../attribute").Attribute;
     getRelativeLevel(): number;
     getBaseRelativeLevel(): 0 | -1 | -2 | -3;
-    static getBaseRelativeLevel(difficulty: Difficulty): 0 | -1 | -2 | -3;
-    static calculateRelativeLevel(points: number, relativeLevel: number): number;
-    calculateLevel({ withBonuses, considerDefaults }?: {
+    calculateRelativeLevel(relativeLevel?: number): number;
+    calculateLevel({ withBonuses, considerDefaults, buyLevelFromDefault }?: {
         withBonuses?: boolean;
         considerDefaults?: boolean;
+        buyLevelFromDefault?: boolean;
     }): number;
-    static getBestDefaultWithPoints<T extends SkillLike<T>>(character: Character, skill: T, defaults: Set<SkillDefault<T>>): SkillDefault<any>;
+    getBestDefaultWithPoints<T extends SkillLike<T>>(): SkillDefault<any>;
     getBestDefault<T extends SkillLike<T>>(): SkillDefault<SkillLike<T>>;
-    canSwapDefaults(skill: SkillLike<T>, defaults: Set<SkillDefault<T>>): boolean;
-    hasDefaultTo(skill: SkillLike<T>, defaults: Set<SkillDefault<T>>): boolean;
-    swapDefault(skill: SkillLike<T>, defaults: Set<SkillDefault<T>>): number;
+    isInDefaultChain(skillLike: SkillLike<any>, skillDefault: Default<SkillLike<any>>, lookedAt?: Set<unknown>): boolean;
+    canSwapDefault(skill: Skill): boolean;
+    hasDefaultTo(skill: SkillLike<any>): boolean;
 }
 export declare class Skill extends SkillLike<Skill> {
     static keys: string[];
@@ -55,23 +55,6 @@ export declare class Skill extends SkillLike<Skill> {
     getBonus(): number;
     getModList(): SkillBonus<any>[];
     addDefault(): SkillDefault<Skill>;
-    toR20(): {
-        key: string;
-        row_id: string;
-        data: {
-            name: string;
-            base: string | number;
-            difficulty: string | number;
-            bonus: number;
-            points: number;
-            wildcard_skill_points: number;
-            use_wildcard_points: number;
-            use_normal_points: number;
-            skill_points: number;
-            ref: string;
-            notes: string;
-        };
-    };
 }
 export declare class SkillDefault<T extends SkillLike<any>> extends Default<T> {
     static keys: string[];
@@ -80,6 +63,7 @@ export declare class SkillDefault<T extends SkillLike<any>> extends Default<T> {
     adjustedLevel: number;
     points: number;
     constructor(skill: T, keys?: string[]);
+    getLookupList(): SkillList;
     save(): any;
     load(data: any): any;
 }

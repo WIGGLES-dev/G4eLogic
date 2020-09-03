@@ -43,7 +43,7 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
     abstract isActive(): boolean
 
     addFeature() {
-        
+
     }
 
     addWeapon(type: string = "melee_weapon") {
@@ -97,7 +97,6 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
         }
         child.delete();
     }
-
     getRecursiveChildren() {
         if (this.canContainChildren) {
 
@@ -105,7 +104,6 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
 
         }
     }
-
     findSelf(): T {
         return this.list.getByUUID(this.uuid);
     }
@@ -212,7 +210,9 @@ export abstract class List<T extends Featurable> {
         return this.character.getSerializer().saveList(this);
     }
     load(data: string | json) {
-        return this.character.getSerializer().loadList(this, data as any[])
+        this.character.getSerializer().loadList(this, data as any[]);
+        this.generate();
+        return this
     }
     empty() {
         this.#contents.clear();

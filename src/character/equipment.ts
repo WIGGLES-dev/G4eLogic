@@ -247,24 +247,6 @@ export class Equipment extends ListItem<Equipment> {
         weight += sum;
         return weight
     }
-    toR20() {
-        return {
-            key: "repeating_item",
-            row_id: this.r20rowID,
-            data: {
-                name: this.description,
-                tl: this.techLevel,
-                ref: this.reference,
-                legality_class: this.legalityClass,
-                count: this.quantity,
-                cost: this.value,
-                weight: this.weight,
-                costtotal: this.extendedValue(),
-                weighttotal: this.extendedWeight(),
-                notes: this.notes
-            }
-        }
-    }
 }
 
 export class EquipmentModifier<T extends Modifiable> extends Modifier<T> {

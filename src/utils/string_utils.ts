@@ -14,11 +14,9 @@ function iterableCompare(compare: string, compareTo: string | string[] | Set<str
 
 }
 
-export function stringCompare(defaultQuery: string, skillQuery: string | string[] | Set<string>, type: StringCompare): boolean {
-    defaultQuery = defaultQuery?.toLowerCase();
-    skillQuery = skillQuery?.toString()?.toLowerCase();
-
-    //if (defaultQuery === "fast-draw") console.log(skillQuery, type, defaultQuery);
+export function stringCompare(defaultQuery: string, skillQuery: string, type: StringCompare): boolean {
+    defaultQuery = defaultQuery?.toLowerCase() ?? null;
+    skillQuery = skillQuery?.toLowerCase() ?? null;
 
     switch (type) {
         case StringCompare.isAnything: return true

@@ -145,12 +145,14 @@ export class SkillBonus<T extends Featurable> extends Feature<T> {
     }
 
     isApplicableTo(skill: SkillLike<any>): boolean {
-        let result = false;
+        let nameCompare = true;
+        let specializationCompare = true;
+        let categoryCompare = true;
 
-        if (this.nameCompareType) result = stringCompare(this.name, skill.name, this.nameCompareType);
-        if (this.specializationCompareType) result = stringCompare(this.specialization, skill.specialization, this.specializationCompareType);
+        if (this.nameCompareType) nameCompare = stringCompare(this.name, skill.name, this.nameCompareType);
+        if (this.specializationCompareType) specializationCompare = stringCompare(this.specialization, skill.specialization, this.specializationCompareType);
 
-        return result
+        return nameCompare && specializationCompare && categoryCompare
     }
 }
 

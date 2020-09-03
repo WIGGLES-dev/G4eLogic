@@ -13,6 +13,8 @@ class WeaponDefault<T extends Weapon<any>> extends Default<any> {
         super(owner, [...keys, ...WeaponDefault.keys]);
         this.owner.defaults.add(this);
     }
+
+    getLookupList() { return this.owner.owner.list.character.skillList }
 }
 
 export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
@@ -57,8 +59,8 @@ export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
         this.owner.getCharacter().featureList.removeWeapon(this.uuid);
     }
 
-    getBestAttackLevel({ inferUsagePenalties = false }) {
-        let bestBaseLevel = this.getBestDefault().getHighestMatchLevel();
+    getBestAttackLevel({ inferUsagePenalties = false } = {}) {
+        let bestBaseLevel = this.getBestDefault()?.getHighestMatchLevel() ?? null;
         return inferUsagePenalties ? bestBaseLevel : bestBaseLevel + this.calculateWeaponUsePenalty()
     }
 

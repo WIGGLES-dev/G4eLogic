@@ -104,8 +104,12 @@ export class GCSJSON extends Serializer {
         skill.techLevel = data.tech_level ?? "";
         skill.specialization = data.specialization;
         if (data.encumbrance_penalty_multiplier) skill.encumbrancePenaltyMultiple = data.encumbrance_penalty_multiplier;
-        if (data.defaulted_from) skill.defaultedFrom = new SkillDefault<Skill>(skill).load(data.defaulted_from);
+        //if (data.defaulted_from) skill.defaultedFrom = new SkillDefault<Skill>(skill).load(data.defaulted_from);
         data.defaults?.forEach((skillDefault: json) => skill.addDefault().load(skillDefault));
+
+        data.weapons?.forEach((weapon: json) => {
+            skill.addWeapon(weapon.type).load(weapon);
+        });
 
         if (data && data.type?.includes("_container")) {
             return data.children as gcs.Skill[]
@@ -128,7 +132,10 @@ export class GCSJSON extends Serializer {
         GCSJSON.mapSkill(technique, data)
         technique.limit = data.limit;
         technique.difficulty = data.difficulty as TehchniqueDifficulty;
-        technique.default = new SkillDefault<Technique>(technique).load(data.default) as SkillDefault<Technique>;
+        technique.default.load(data.default)
+        data.weapons?.forEach((weapon: json) => {
+            technique.addWeapon(weapon.type).load(weapon);
+        });
         return null
     }
     saveTechnique(technique: Technique): any {
@@ -144,7 +151,9 @@ export class GCSJSON extends Serializer {
         spell.maintenanceCost = data.maintenance_cost;
         spell.castingTime = data.casting_time;
         spell.duration = data.duration;
-
+        data.weapons?.forEach((weapon: json) => {
+            spell.addWeapon(weapon.type).load(weapon);
+        });
         if (data && data.type?.includes("_container")) {
             return data.children as json[]
         }
@@ -161,7 +170,7 @@ export class GCSJSON extends Serializer {
         equipment.weight = parseFloat(data?.weight?.split(" ")[0] ?? "0");
         equipment.techLevel = data.tech_level;
         equipment.legalityClass = data.legality_class;
-        equipment.containedWeightReduction = isArray(data?.features)?.find(feature => feature.type === "contained_weight_reduction")?.reduction ?? null;
+        // equipment.containedWeightReduction = isArray(data?.features)?.find(feature => feature.type === "contained_weight_reduction")?.reduction ?? null;
 
         equipment.reference = data.reference;
 
@@ -169,9 +178,9 @@ export class GCSJSON extends Serializer {
             Feature.loadFeature<Equipment>(equipment, feature.type)?.load(feature)
         });
 
-        data.modifiers?.forEach((modifier: json) => {
-            equipment.addModifier().load(modifier);
-        });
+        // data.modifiers?.forEach((modifier: json) => {
+        //     equipment.addModifier().load(modifier);
+        // });
 
         data.weapons?.forEach((weapon: any) => {
             equipment.addWeapon(weapon.type).load(weapon);
@@ -208,7 +217,7 @@ export class GCSJSON extends Serializer {
         trait.hasHalfLevel = data.has_half_level;
         trait.roundDown = data.round_down;
         trait.controlRating = data.cr;
-        data.types?.forEach((type: TraitType) => trait.types.add(type));
+        //data.types?.forEach((type: TraitType) => trait.types.add(type));
         trait.pointsPerLevel = data.points_per_level;
         trait.disabled = data.disabled;
         trait.hasLevels = trait.levels ? true : false;
@@ -218,6 +227,14 @@ export class GCSJSON extends Serializer {
         data.features?.forEach((feature: json) => {
             Feature.loadFeature<Trait>(trait, feature.type)?.load(feature)
         });
+
+        data.weapons?.forEach((weapon: json) => {
+            trait.addWeapon(weapon.type).load(weapon);
+        })
+
+        data.categories?.forEach((category: string) => {
+            trait.categories.add(category);
+        })
 
         if (data && data.type?.includes("_container")) {
             return data.children as json[]
@@ -351,6 +368,7 @@ export class GCSJSON extends Serializer {
                 if (weapon instanceof MeleeWeapon) {
                     weapon.reach = data.reach;
                     weapon.parry = data.parry;
+                    weapon.block = data.block
                 }
             case "ranged_weapon":
                 if (weapon instanceof RangedWeapon) {

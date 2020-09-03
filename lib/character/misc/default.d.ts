@@ -1,7 +1,7 @@
-import { Skill } from "@character/skill/skill";
+import { SkillLike } from "@character/skill/skill";
 import { CharacterElement } from "./element";
 import { Signature } from "@character/character";
-import { ListItem } from "./list";
+import { ListItem, List } from "./list";
 export declare enum DefaultType {
     skill = "Skill",
     parry = "Parry",
@@ -18,12 +18,13 @@ export declare abstract class Default<T extends ListItem<any>> extends Character
     specialization?: string;
     owner: T;
     constructor(owner: T, keys: string[]);
+    abstract getLookupList(): List<SkillLike<any>>;
     isSkillBased(): boolean;
     getHighestMatchLevel({ withBonuses }?: {
         withBonuses?: boolean;
     }): number;
     getMatches(): {
-        skills: Skill[];
-        highest: Skill;
+        skills: SkillLike<any>[];
+        highest: SkillLike<any>;
     };
 }

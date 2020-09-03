@@ -4,6 +4,7 @@ import { CharacterElement } from "./misc/element";
 declare class WeaponDefault<T extends Weapon<any>> extends Default<any> {
     static keys: any[];
     constructor(owner: T, keys?: string[]);
+    getLookupList(): any;
 }
 export declare abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
     static keys: string[];
@@ -23,7 +24,7 @@ export declare abstract class Weapon<T extends Featurable> extends CharacterElem
     load(data: any): any;
     save(): any;
     onDestroy(): void;
-    getBestAttackLevel({ inferUsagePenalties }: {
+    getBestAttackLevel({ inferUsagePenalties }?: {
         inferUsagePenalties?: boolean;
     }): number;
     getBestDefault(): WeaponDefault<any>;

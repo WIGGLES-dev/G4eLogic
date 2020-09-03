@@ -39,16 +39,17 @@ export class Technique extends Skill {
         this.default = new SkillDefault(this);
     }
 
-    get signature(): Signature { return null }
+    get signature(): Signature { return this.default.isSkillBased() ? null : this.default.type as Signature }
 
     getBonus() {
         return 0
     }
 
     calculateLevel(): number {
+        if (this.default.getMatches()?.highest?.points === 0) return NaN
         let points = this.points;
-        let relativeLevel;
-        let level = this.getBaseLevel(false);
+        let relativeLevel = 0;
+        let level = this.getBaseLevel();
         if (level) {
             let baseLevel = level;
             level += this.default?.modifier;
@@ -59,10 +60,10 @@ export class Technique extends Skill {
                 relativeLevel = points
             }
             if (level) {
-                // level += this.getBonus();
+                level += this.getBonus();
                 level += relativeLevel;
             }
-            if (this.limit) {
+            if (typeof this.limit === "number") {
                 let max = baseLevel + this.limit;
                 if (level > max) {
                     relativeLevel -= level - max;
@@ -79,13 +80,9 @@ export class Technique extends Skill {
         return this.default
     }
 
-    getBaseLevel(requirePoints: boolean) {
+    getBaseLevel() {
         try {
-            return this.default.getHighestMatchLevel()
-            if (this.default.type === "Skill") {
-                let skill = this.default.getMatches().highest;
-                return skill !== null ? skill.calculateLevel() : Number.NEGATIVE_INFINITY
-            }
+            return this.default.getHighestMatchLevel() + Math.abs(this.default.modifier)
         } catch (err) {
             return NaN
         }
@@ -93,29 +90,10 @@ export class Technique extends Skill {
 
     getRelativeLevel() {
         try {
-            return this.calculateLevel() - this.default.getHighestMatchLevel()
+            return this.calculateLevel() - this.getBaseLevel();
         }
         catch (err) {
             return NaN;
-        }
-    }
-
-    toR20(): any {
-        const link = this.default.isSkillBased() ? this.default.getMatches().highest : null
-        return {
-            key: "repeating_techniquesrevised",
-            row_id: this.r20rowID,
-            data: {
-                name: this.name,
-                parent: this.default.name,
-                default: this.default.modifier,
-                skill_modifier: 0,
-                points: this.points,
-                ref: this.reference,
-                notes: this.notes,
-                technique_row_type: link ? "Skill" : "10",
-                technique_skill_row_id: link ? link.uuid : "",
-            }
         }
     }
 }
