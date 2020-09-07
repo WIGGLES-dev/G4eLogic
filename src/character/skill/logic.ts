@@ -50,6 +50,7 @@ export function calculateSkillLevel(
     encumbranceLevel = 0,
     encPenaltyMult = 1,
     gMod = 0,
+    bestDefaultLevel = Number.NEGATIVE_INFINITY
 ) {
     let relativeLevel = getBaseRelativeLevel(difficulty);
     let level = base;
@@ -76,11 +77,11 @@ export function calculateSkillLevel(
                 }
             }
         }
-
     }
 
     const encumbrancePenalty = encumbranceLevel * encPenaltyMult;
     const preliminaryLevel = level + relativeLevel + encumbrancePenalty;
+
     const defaultLevel = defaultedFrom ? defaultedFrom.getHighestMatchLevel({ withBonuses: false }) : Number.NEGATIVE_INFINITY;
 
     return Math.max(defaultLevel + gMod + bonus, preliminaryLevel + gMod + bonus)

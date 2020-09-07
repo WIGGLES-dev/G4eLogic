@@ -40,7 +40,7 @@ export abstract class Default<T extends ListItem<any>> extends CharacterElement<
     getHighestMatchLevel({ withBonuses = true } = {}) {
         if (this.isSkillBased()) {
             let skill = this.getMatches().highest
-            return skill?.calculateLevel() + (this.modifier || 0) ?? Number.NEGATIVE_INFINITY
+            return skill?.calculateLevel({ withBonuses, considerDefaults: false }) + (this.modifier || 0) ?? Number.NEGATIVE_INFINITY
         } else {
             return this.owner.character.getAttribute(this.type as Signature).calculateLevel() + (this.modifier || 0)
         }

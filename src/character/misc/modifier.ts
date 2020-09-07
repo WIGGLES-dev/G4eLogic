@@ -1,5 +1,5 @@
-import { Trait } from "../trait"
-import { Equipment } from "../equipment"
+import { Trait } from "../trait/trait"
+import { Equipment } from "../equipment/equipment"
 import { objectify, json } from "@utils/json_utils"
 import { CharacterElement } from "./element"
 import { Constructor } from "@character/serialization/serializer"
@@ -29,7 +29,6 @@ export abstract class Modifier<T extends Modifiable> extends CharacterElement<T>
      * Utility function for extract numbers from strings with non numerical characters
      * @param value String from which a number is to be extracted.
      */
-
     static extractValue(value: string) {
         if (typeof value === "string") {
             let numArr = value.match(/(\d+)/);

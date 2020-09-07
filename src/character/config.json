@@ -1,0 +1,163 @@
+{
+    "attributes": [
+        {
+            "signature": "ST",
+            "cost_per_level": 10,
+            "default_level": 10
+        },
+        {
+            "signature": "DX",
+            "cost_per_level": 20,
+            "default_level": 10
+        },
+        {
+            "signature": "IQ",
+            "cost_per_level": 20,
+            "default_level": 10
+        },
+        {
+            "signature": "HT",
+            "cost_per_level": 10,
+            "default_level": 10
+        },
+        {
+            "signature": "Speed",
+            "cost_per_level": 20,
+            "increment": 0.25,
+            "based_on": "return (this.getAttribute('DX').calculateLevel() + this.getAttribute('HT').calculateLevel()) / 4"
+        },
+        {
+            "signature": "Move",
+            "cost_per_level": 5,
+            "based_on": "return Math.floor(this.getAttribute('Speed').calculateLevel())"
+        },
+        {
+            "signature": "Per",
+            "cost_per_level": 5,
+            "based_on": "return this.getAttribute('IQ').calculateLevel()"
+        },
+        {
+            "signature": "Will",
+            "cost_per_level": 5,
+            "based_on": "return this.getAttribute('ST').calculateLevel()"
+        },
+        {
+            "signature": "HP",
+            "cost_per_level": 2,
+            "based_on": "return this.getAttribute('ST').calculateLevel()"
+        },
+        {
+            "signature": "FP",
+            "cost_per_level": 2,
+            "based_on": "return this.getAttribute('HT').calculateLevel()"
+        }
+    ],
+    "locations": [
+        {
+            "location": "Eyes",
+            "hit_range": [],
+            "hit_penalty": -9,
+            "cripple_ratio": 10,
+            "cripples_on": "return damageTaken > maxHP / 10"
+        },
+        {
+            "location": "Skull",
+            "hit_range": [
+                3,
+                4
+            ],
+            "hit_penalty": -7
+        },
+        {
+            "location": "Face",
+            "hit_range": [
+                5
+            ],
+            "hit_penalty": -5
+        },
+        {
+            "location": "Right Leg",
+            "hit_range": [
+                6,
+                7
+            ],
+            "hit_penalty": -2,
+            "cripple_ratio": 2,
+            "cripples_on": "return damageTaken > maxHP / 2"
+        },
+        {
+            "location": "Right Arm",
+            "hit_range": [
+                8
+            ],
+            "hit_penalty": -2,
+            "cripple_ratio": 2,
+            "cripples_on": "return damageTaken > maxHP / 2"
+        },
+        {
+            "location": "Torso",
+            "hit_range": [
+                9,
+                10
+            ],
+            "hit_penalty": 0
+        },
+        {
+            "location": "Groin",
+            "hit_range": [
+                11
+            ],
+            "hit_penalty": -3
+        },
+        {
+            "location": "Left Arm",
+            "hit_range": [
+                12
+            ],
+            "hit_penalty": -2,
+            "cripple_ratio": 2,
+            "cripples_on": "return damageTaken > maxHP / 2"
+        },
+        {
+            "location": "Left Leg",
+            "hit_range": [
+                13,
+                14
+            ],
+            "hit_penalty": -2,
+            "cripple_ratio": 2,
+            "cripples_on": "return damageTaken > maxHP / 2"
+        },
+        {
+            "location": "Hand",
+            "hit_range": [
+                15
+            ],
+            "hit_penalty": -4,
+            "cripple_ratio": 3,
+            "cripples_on": "return damageTaken > maxHP / 3"
+        },
+        {
+            "location": "Foot",
+            "hit_range": [
+                16
+            ],
+            "hit_penalty": -4,
+            "cripple_ratio": 3,
+            "cripples_on": "return damageTaken > maxHP / 3"
+        },
+        {
+            "location": "Neck",
+            "hit_range": [
+                17,
+                18
+            ],
+            "hit_penalty": -5
+        },
+        {
+            "location": "Vitals",
+            "hit_range": [],
+            "hit_penalty": -3
+        }
+    ]
+}

@@ -1,7 +1,7 @@
 import { Skill } from "../skill/skill";
 import { Spell } from "../spell";
-import { Equipment } from "../equipment";
-import { Trait } from "../trait";
+import { Equipment } from "../equipment/equipment";
+import { Trait } from "../trait/trait";
 import { Character, Feature, SkillDefault } from "index";
 import { List } from "@character/misc/list";
 import { Featurable } from "@gcs/gcs";

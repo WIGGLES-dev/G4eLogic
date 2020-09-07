@@ -1,9 +1,10 @@
-import { Modifier } from "./misc/modifier";
-import { List, ListItem } from "./misc/list";
-import { Character } from "./character";
+import { Modifier } from "../misc/modifier";
+import { List, ListItem } from "../misc/list";
+import { Character } from "../character";
 import { json, objectify } from "@utils/json_utils";
-import { Feature } from "./misc/feature";
+import { Feature } from "../misc/feature";
 import * as gcs from "@gcs/gcs";
+import { getAdjustedPoints } from "./logic";
 
 
 export class TraitList extends List<Trait> {
@@ -154,98 +155,13 @@ export class Trait extends ListItem<Trait> {
         if (this.isContainer()) {
             return 0
         } else {
-            return Trait.getAdjustedPoints(this.modifiers, this)
+            return getAdjustedPoints(this.modifiers, this.basePoints, this.hasLevels, this.hasHalfLevel, this.pointsPerLevel, this.levels, this.roundDown)
         }
     }
 
     disable() { this.disabled = true; }
     enable() { this.disabled = false; }
 
-    static getAdjustedPoints(modifiers: Set<TraitModifier>, trait: Trait): number {
-        let basePoints = trait.basePoints || 0;
-        let pointsPerLevel = trait.pointsPerLevel || 0;
-
-        let levels = trait.hasLevels ? trait.levels : 0;
-
-        let baseEnh = 0;
-        let levelEnh = 0;
-        let baseLim = 0;
-        let levelLim = 0;
-        let multiplier = 1;
-
-        modifiers?.forEach(modifier => {
-            if (modifier.enabled) {
-                let mod = modifier.costModifier();
-                console.log(mod);
-                switch (modifier.type) {
-                    case TraitModifierType.percentage:
-                    default:
-                        switch (modifier.affects) {
-                            case TraitModifierAffects.total:
-                            default:
-                                if (mod < 0) {
-                                    baseLim += mod;
-                                    levelLim += mod;
-                                } else {
-                                    baseEnh += mod;
-                                    levelEnh += mod;
-                                }
-                                break
-                            case TraitModifierAffects.base:
-                                if (mod < 0) {
-                                    baseLim += mod;
-                                } else {
-                                    baseEnh += mod;
-                                }
-                                break
-                            case TraitModifierAffects.levels:
-                                if (mod < 0) {
-                                    levelLim += mod;
-                                } else {
-                                    levelEnh += mod;
-                                }
-                                break
-                        }
-                        break
-                    case TraitModifierType.points:
-                        switch (modifier.affects) {
-                            case TraitModifierAffects.total:
-                            case TraitModifierAffects.base:
-                            default:
-                                basePoints += mod;
-                                break
-                            case TraitModifierAffects.levels:
-                                pointsPerLevel += mod;
-                                break
-                        }
-                        break
-                    case TraitModifierType.multiplier:
-                        multiplier *= mod;
-                        break
-                }
-            }
-        });
-
-        let modifiedBasePoints = basePoints;
-
-        let leveledPoints = pointsPerLevel * (levels + (trait.hasHalfLevel ? .5 : 0)) || 0;
-        if (baseEnh !== 0 || baseLim !== 0 || levelEnh !== 0 || levelLim !== 0) {
-            if (false) {
-                //TODO multiplicative modifiers
-            } else {
-                let baseMod = Math.max(baseEnh + baseLim, -80);
-                let levelMod = Math.max(levelEnh + levelLim, -80);
-
-                modifiedBasePoints = baseMod === levelMod ?
-                    TraitModifier.modifyPoints((modifiedBasePoints + leveledPoints), baseMod) :
-                    TraitModifier.modifyPoints(modifiedBasePoints, baseMod) + TraitModifier.modifyPoints(leveledPoints, levelMod);
-            }
-
-        } else {
-            modifiedBasePoints += (leveledPoints);
-        }
-        return TraitModifier.applyRounding((modifiedBasePoints * multiplier), Boolean(trait.roundDown))
-    }
     addModifier(): TraitModifier {
         const modifier = new TraitModifier(this);
         this.modifiers.add(modifier);
@@ -284,13 +200,13 @@ export class TraitModifier extends Modifier<Trait> {
     }
 }
 
-enum TraitModifierType {
+export enum TraitModifierType {
     percentage = "percentage",
     points = "points",
     multiplier = "multiplier",
 }
 
-enum TraitModifierAffects {
+export enum TraitModifierAffects {
     base = "base_only",
     levels = "levels_only",
     total = "total"

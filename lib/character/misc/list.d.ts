@@ -20,13 +20,13 @@ export declare abstract class ListItem<T extends Featurable> extends CharacterEl
     abstract isActive(): boolean;
     addFeature(): void;
     addWeapon(type?: string): Weapon<T>;
-    getListDepth(): number;
     getCharacter(): Character;
     isContainer(): boolean;
     iterChildren(): ListItem<T>[];
     addChild(child?: T): T;
     removeChild(child: string | T): void;
-    getRecursiveChildren(): void;
+    getRecursiveChildren(collection?: Set<unknown>): Set<unknown>;
+    getRecursiveOwners(collection?: Set<unknown>): Set<unknown>;
     findSelf(): T;
     delete(): void;
     private loadChildren;
@@ -51,6 +51,6 @@ export declare abstract class List<T extends Featurable> {
     iterTop(): T[];
     keys(): T[];
     save(): any;
-    load(data: string | json): List<any>;
+    load(data: string | json): this;
     empty(): void;
 }

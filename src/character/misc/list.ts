@@ -34,18 +34,13 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
         this.list = list;
         list.addListItem(this);
     }
-
     /**
      * Abstract method that all list items must impliment in order for features to
      * determine whether or not to apply their bonus based on whatever information they
      * might have available
      */
     abstract isActive(): boolean
-
-    addFeature() {
-
-    }
-
+    addFeature() { }
     addWeapon(type: string = "melee_weapon") {
         let weapon: Weapon<T>;
         switch (type) {
@@ -59,21 +54,9 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
         }
         return weapon || null
     }
-
-    getListDepth(): number {
-        let x = 0;
-        let listItem = this.findSelf();
-        while (listItem = listItem.containedBy) {
-            x++
-        }
-        return x
-    }
-
     getCharacter(): Character { return this.list.character }
-
     isContainer() { return this.canContainChildren }
     iterChildren() { return Array.from(this.children) }
-
     addChild(child?: T) {
         if (this.isContainer()) {
             if (child) {
@@ -97,16 +80,23 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
         }
         child.delete();
     }
-    getRecursiveChildren() {
-        if (this.canContainChildren) {
-
-        } else {
-
+    getRecursiveChildren(collection = new Set()) {
+        if (!this.canContainChildren) return collection
+        this.children.forEach(child => {
+            collection.add(child);
+            if (child.children.size > 0) child.getRecursiveChildren(collection);
+        });
+        return collection
+    }
+    getRecursiveOwners(collection = new Set()) {
+        if (!this.containedBy) return collection
+        if (this.containedBy.containedBy) {
+            collection.add(this.containedBy);
+            this.containedBy.getRecursiveOwners(collection)
         }
+        return collection
     }
-    findSelf(): T {
-        return this.list.getByUUID(this.uuid);
-    }
+    findSelf(): T { return this.list.getByUUID(this.uuid) }
     delete() {
         this.children.forEach(child => {
             child.delete();
@@ -117,12 +107,13 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
         super.delete();
     }
     private loadChildren<U>(children: U[], parent: T, loader: (subject: T, data: U) => U[]) {
+        if (children.length > 0) this.canContainChildren = true;
         children.forEach(child => {
             const subElement = parent.list.addListItem();
             const children = loader(subElement, child);
             subElement.containedBy = parent;
             parent.children.add(subElement);
-            subElement.loadChildren(isArray(children), subElement, loader)
+            subElement.loadChildren(isArray(children), subElement, loader);
         });
     }
     load<U>(data): T {
@@ -134,26 +125,15 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
         }
         return this.findSelf()
     }
-    save() {
-        return this.getSerializer().transformers.get(this.constructor as Constructor).save(this);
-    }
+    save() { return this.getSerializer().transformers.get(this.constructor as Constructor).save(this) }
 }
 
 export abstract class List<T extends Featurable> {
-    #contents: Collection<string, T>
-    contents: Set<T>
-
-    //loader: (list: List<any>, data: any) => List<any>
-    //serializer: (list: List<T>) => any
-
+    #contents: Collection<string, T> = new Collection()
+    contents: Set<T> = new Set()
     character: Character
-
     constructor(character: Character) {
         this.character = character;
-        this.#contents = new Collection();
-        this.contents = new Set();
-        //this.loader = character.getSerializer().loadList;
-        //this.serializer = character.getSerializer().saveList;
     }
 
     get length() { return this.#contents.size }
@@ -186,15 +166,9 @@ export abstract class List<T extends Featurable> {
         this.generate();
     }
 
-    getByIndex(index: number) {
-        return Array.from(this.contents.values())[index]
-    }
-    getByUUID(uuid: string) {
-        return this.#contents.get(uuid);
-    }
-    getSize() {
-        return this.#contents.size
-    }
+    getByIndex(index: number) { return Array.from(this.contents.values())[index] }
+    getByUUID(uuid: string) { return this.#contents.get(uuid); }
+    getSize() { return this.#contents.size }
     iter() {
         const contents = this.#contents.iter();
         return contents
@@ -203,12 +177,8 @@ export abstract class List<T extends Featurable> {
         this.generate();
         return Array.from(this.contents);
     }
-    keys() {
-        return Array.from(this.contents.keys());
-    }
-    save() {
-        return this.character.getSerializer().saveList(this);
-    }
+    keys() { return Array.from(this.contents.keys()); }
+    save() { return this.character.getSerializer().saveList(this); }
     load(data: string | json) {
         this.character.getSerializer().loadList(this, data as any[]);
         this.generate();

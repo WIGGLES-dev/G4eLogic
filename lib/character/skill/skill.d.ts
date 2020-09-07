@@ -25,7 +25,7 @@ export declare abstract class SkillLike<T extends SkillLike<T>> extends ListItem
     getLevel(): number;
     getAttribute(): import("../attribute").Attribute;
     getRelativeLevel(): number;
-    getBaseRelativeLevel(): 0 | -1 | -2 | -3;
+    getBaseRelativeLevel(): -2 | 0 | -3 | -1;
     calculateRelativeLevel(relativeLevel?: number): number;
     calculateLevel({ withBonuses, considerDefaults, buyLevelFromDefault }?: {
         withBonuses?: boolean;

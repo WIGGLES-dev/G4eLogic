@@ -1,8 +1,8 @@
 import { Serializer, registerSerializer } from "./serializer";
 import { Skill, Difficulty, SkillDefault, SkillLike } from "../../character/skill/skill";
 import { Spell } from "../../character/spell";
-import { Equipment, EquipmentModifier } from "../../character/equipment";
-import { Trait, TraitType, TraitModifier } from "../../character/trait";
+import { Equipment, EquipmentModifier } from "../equipment/equipment";
+import { Trait, TraitType, TraitModifier } from "../trait/trait";
 import * as gcs from "@gcs/gcs";
 import { isArray, json, objectify } from "@utils/json_utils";
 import { Signature, Character, Featurable } from "@character/character";

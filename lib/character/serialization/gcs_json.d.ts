@@ -1,8 +1,8 @@
 import { Serializer } from "./serializer";
 import { Skill, SkillDefault } from "../../character/skill/skill";
 import { Spell } from "../../character/spell";
-import { Equipment } from "../../character/equipment";
-import { Trait } from "../../character/trait";
+import { Equipment } from "../equipment/equipment";
+import { Trait } from "../trait/trait";
 import * as gcs from "@gcs/gcs";
 import { json } from "@utils/json_utils";
 import { Character, Featurable } from "@character/character";

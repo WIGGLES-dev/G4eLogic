@@ -1,9 +1,10 @@
-import { List, ListItem } from "./misc/list";
-import { Modifier, Modifiable } from "./misc/modifier";
-import { Character } from "./character";
+import { List, ListItem } from "../misc/list";
+import { Modifier, Modifiable } from "../misc/modifier";
+import { Character } from "../character";
+import { HitLocation } from "../locations";
 import { objectify, json, isArray } from "@utils/json_utils";
 import * as gcs from "@gcs/gcs";
-import { Feature } from "./misc/feature";
+import { Feature } from "../misc/feature";
 
 export class EquipmentList extends List<Equipment> {
 
@@ -52,6 +53,7 @@ export class Equipment extends ListItem<Equipment> {
 
     description: string
     equipped: boolean = true
+    boundLocation: HitLocation
     techLevel: string
     legalityClass: string
     quantity: number = 1
@@ -123,9 +125,13 @@ export class Equipment extends ListItem<Equipment> {
             return adjustedValue * this.quantity
         }
     }
-
     getModifiers() { }
-
+    delete() {
+        if (this.boundLocation instanceof HitLocation) {
+            this.boundLocation.equippedItems.delete(this);
+        }
+        super.delete()
+    }
     adjustedValue() {
         let modifiers = this.modifiers;
         let value = this.value;

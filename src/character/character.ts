@@ -1,8 +1,8 @@
 import { List, ListItem } from "./misc/list";
 import { Attribute, AttributeList } from "./attribute";
 import { SkillList } from "./skill/skill";
-import { TraitList } from "./trait";
-import { Equipment, EquipmentList } from "./equipment";
+import { TraitList } from "./trait/trait";
+import { Equipment, EquipmentList } from "./equipment/equipment";
 import { FeatureList } from "./misc/feature";
 import { Profile } from "./profile";
 import { SpellList } from "./spell";
@@ -18,16 +18,21 @@ import { Hooks } from "../hooks/hooks";
 import { getThrust, getSwing } from "../damage/damage";
 import { TechniqueList } from "./technique";
 import { Group } from "./misc/group";
+import defaultConfig from "./config.json";
 
 export abstract class Sheet {
     hooks: Hooks = new Hooks()
     serializer = Serializer
 
-    #currentScope
+    defaultConfig: any
+    config: any
+
+    #currentScope = "GCSJSON"
     #elements: Set<CharacterElement<Featurable>> = new Set();
 
-    constructor(defaultScope: string = "GCSJSON") {
-        this.#currentScope = defaultScope;
+    constructor(config?: any) {
+        this.defaultConfig = defaultConfig;
+        this.config = config || defaultConfig;
         this.hooks.callAll("init", this);
     }
 
@@ -76,6 +81,11 @@ export abstract class Sheet {
         })
         return result || null
     }
+
+    reconfigure(config: any) {
+        this.config = config;
+        this.hooks.callAll("reconfigure", this);
+    }
 }
 
 export interface Featurable extends ListItem<any> {
@@ -85,8 +95,6 @@ export interface Featurable extends ListItem<any> {
 
 export class Character extends Sheet {
     gCalcID: string
-
-    attributes: Collection<Signature, Attribute> = new Collection()
 
     missingHP: number
     missingFP: number
@@ -103,9 +111,8 @@ export class Character extends Sheet {
     locationList: LocationList
     attributeList: AttributeList
 
-    constructor(defaultScope: string) {
-        super(defaultScope);
-
+    constructor(config?: any) {
+        super(config);
         this.profile = new Profile();
         this.equipmentList = new EquipmentList(this);
         this.otherEquipmentList = new EquipmentList(this);
@@ -113,7 +120,6 @@ export class Character extends Sheet {
         this.techniqueList = new TechniqueList(this);
         this.traitList = new TraitList(this);
         this.spellList = new SpellList(this);
-
         this.featureList = new FeatureList(this);
         this.locationList = new LocationList(this);
         this.attributeList = new AttributeList(this);
@@ -213,7 +219,7 @@ export class Character extends Sheet {
         }
     }
 
-    load(data: any, scope?: string) {
+    load(data: any, scope: string) {
         this.hooks.callAll("before unload", this);
         this.void();
         this.getSerializer(scope).load(this, data);

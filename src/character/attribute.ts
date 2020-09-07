@@ -12,87 +12,22 @@ export class AttributeList {
 
     constructor(character: Character, keys: string[] = []) {
         this.character = character
+        this.configureAttributes();
+        this.character.hooks.on("reconfigure", this.configureAttributes);
+    }
 
-        this.attributes.set(
-            Signature.ST,
-            new Attribute(
-                Signature.ST,
-                character,
-                10,
-                { defaultLevel: 10 }
-            ));
-        this.attributes.set(
-            Signature.DX,
-            new Attribute(
-                Signature.DX,
-                character,
-                20,
-                { defaultLevel: 10 }
-            ));
-        this.attributes.set(
-            Signature.IQ,
-            new Attribute(
-                Signature.IQ,
-                character,
-                20,
-                { defaultLevel: 10 }
-            ));
-        this.attributes.set(
-            Signature.HT,
-            new Attribute(
-                Signature.HT,
-                character,
-                10,
-                { defaultLevel: 10 }
-            ));
-        this.attributes.set(
-            Signature.Will,
-            new Attribute(
-                Signature.Will,
-                character,
-                5,
-                { basedOn: () => this.getAttribute(Signature.IQ).calculateLevel() }
-            ));
-        this.attributes.set(
-            Signature.Speed,
-            new Attribute(
-                Signature.Speed,
-                character,
-                20,
-                { basedOn: () => (this.getAttribute(Signature.DX).calculateLevel() + this.getAttribute(Signature.HT).calculateLevel()) / 4 }
-            ));
-        this.attributes.set(
-            Signature.Move,
-            new Attribute(
-                Signature.Move,
-                character,
-                5,
-                { basedOn: () => Math.floor(this.getAttribute(Signature.Speed).calculateLevel()) }
-            ));
-        this.attributes.set(
-            Signature.Per,
-            new Attribute(
-                Signature.Per,
-                character,
-                5,
-                { basedOn: () => this.getAttribute(Signature.IQ).calculateLevel() }
-            ));
-        this.attributes.set(
-            Signature.HP,
-            new Attribute(
-                Signature.HP,
-                character,
-                2,
-                { basedOn: () => this.getAttribute(Signature.ST).calculateLevel() }
-            ));
-        this.attributes.set(
-            Signature.FP,
-            new Attribute(
-                Signature.FP,
-                character,
-                3,
-                { basedOn: () => this.getAttribute(Signature.HT).calculateLevel() }
-            ));
+    private configureAttributes() {
+        const CONFIG = this.character.config;
+        this.attributes.clear();
+        CONFIG.attributes.forEach(attribute => {
+            const basedOn = new Function(attribute.based_on).bind(this);
+            this.addAttribute({
+                signature: attribute.signature,
+                costPerLevel: attribute.cost_per_level,
+                defaultLevel: attribute.default_level,
+                basedOn: attribute.basedOn === undefined ? () => null : basedOn
+            })
+        });
     }
 
     signatureOptions() { return Array.from(this.attributes).map(attribute => attribute.name) }
@@ -101,9 +36,10 @@ export class AttributeList {
         return this.attributes.get(attribute)
     }
 
-    addAttribute({ signature = "", costPerLevel = 0, defaultLevel = 0, basedOn = () => null }): Attribute {
+    addAttribute({ signature, costPerLevel = 0, defaultLevel = 0, basedOn = () => null }): Attribute {
         if (typeof signature === "string") {
-            const attribute = new Attribute(signature, this.character, costPerLevel, { defaultLevel, basedOn })
+            const attribute = new Attribute(signature, this.character, costPerLevel, { defaultLevel, basedOn });
+            this.attributes.set(signature as Signature, attribute);
             return attribute
         }
     }

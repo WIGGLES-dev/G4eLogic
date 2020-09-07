@@ -1,22 +1,23 @@
 import { ListItem } from "./misc/list";
 import { Attribute, AttributeList } from "./attribute";
 import { SkillList } from "./skill/skill";
-import { TraitList } from "./trait";
-import { Equipment, EquipmentList } from "./equipment";
+import { TraitList } from "./trait/trait";
+import { Equipment, EquipmentList } from "./equipment/equipment";
 import { FeatureList } from "./misc/feature";
 import { Profile } from "./profile";
 import { SpellList } from "./spell";
 import { Serializer } from "./serialization/serializer";
 import { CharacterElement } from "./misc/element";
 import { LocationList } from "./locations";
-import { Collection } from "./misc/collection";
 import { Hooks } from "../hooks/hooks";
 import { TechniqueList } from "./technique";
 export declare abstract class Sheet {
     #private;
     hooks: Hooks;
     serializer: typeof Serializer;
-    constructor(defaultScope?: string);
+    defaultConfig: any;
+    config: any;
+    constructor(config?: any);
     static registerSerializer(serializer: Serializer): void;
     void(): this;
     getSerializer(scope?: string): Serializer;
@@ -24,6 +25,7 @@ export declare abstract class Sheet {
     removeElement(element: CharacterElement<Featurable>): void;
     getGroupNamed(name: string): any;
     getElementById(type: string, id: string): any;
+    reconfigure(config: any): void;
 }
 export interface Featurable extends ListItem<any> {
     hasLevels: boolean;
@@ -31,7 +33,6 @@ export interface Featurable extends ListItem<any> {
 }
 export declare class Character extends Sheet {
     gCalcID: string;
-    attributes: Collection<Signature, Attribute>;
     missingHP: number;
     missingFP: number;
     profile: Profile;
@@ -44,7 +45,7 @@ export declare class Character extends Sheet {
     featureList: FeatureList;
     locationList: LocationList;
     attributeList: AttributeList;
-    constructor(defaultScope: string);
+    constructor(config: any);
     getSwingDamage(strength?: number): string;
     getThrustDamage(strength?: number): string;
     totalAttributesCost(): number;
@@ -63,11 +64,11 @@ export declare class Character extends Sheet {
     basicLift(): number;
     encumbranceLevel({ forSkillEncumbrance }?: {
         forSkillEncumbrance?: boolean;
-    }): 0 | -1 | -2 | -3 | -4 | -5;
+    }): -5 | -2 | 0 | -3 | -4 | -1;
     encumberedMove(): number;
     dodgeScore(): number;
     encumberedDodgeScore(): number;
-    load(data: any, scope?: string): this;
+    load(data: any, scope: string): this;
     save(scope: string, target: any): this;
     void(): this;
 }

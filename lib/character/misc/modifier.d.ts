@@ -1,5 +1,5 @@
-import { Trait } from "../trait";
-import { Equipment } from "../equipment";
+import { Trait } from "../trait/trait";
+import { Equipment } from "../equipment/equipment";
 import { CharacterElement } from "./element";
 export declare type Modifiable = Trait | Equipment;
 export declare abstract class Modifier<T extends Modifiable> extends CharacterElement<T> {

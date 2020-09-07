@@ -1,43 +1,90 @@
-import { Character } from "./character";
+import { Character, Signature } from "./character";
 import { CharacterElement } from "./misc/element";
 import { FeatureType } from "@gcs/gcs";
 import { Collection } from "./misc/collection";
 import { DRBonus } from "./misc/feature";
 import { Featurable } from "index";
+import { Equipment } from "./equipment/equipment";
 
 export class LocationList {
     character: Character
-    #locations: Collection<string, HitLocation> = new Collection()
+    locations: Collection<string, HitLocation> = new Collection()
 
     constructor(character: Character) {
         this.character = character
-
-        Object.values(Locations).forEach(location => {
-            this.addLocation(new HitLocation(character, location));
-        });
+        this.configureLocations();
+        this.character.hooks.on("reconfigure", this.configureLocations);
     }
 
+    private configureLocations() {
+        const CONFIG = this.character.config;
+        this.locations.clear()
+        CONFIG.locations.forEach(location => {
+            const cripplesOn = new Function(location.cripples_on) as (damageTaken, maxHP) => boolean;
+            this.addLocation({
+                location: location.location,
+                hitsOn: location.hits_on,
+                hitPenalty: location.hit_penalty,
+                crippleRatio: location.cripple_ratio,
+                cripplesOn: location.cripples_on === undefined ? (damageTaken, maxHP) => false : cripplesOn
+            })
+        });
+    }
     getLocation(location: string) {
-        let targetLocation = this.#locations.get(location);
+        let targetLocation = this.locations.get(location);
         if (targetLocation && targetLocation instanceof HitLocation) {
             return targetLocation
         } else {
 
         }
     }
-
-    addLocation(location: HitLocation) {
-        this.#locations.set(location.name, location);
+    addLocation({ location, crippleRatio = null, hitsOn = [], hitPenalty = 0, cripplesOn = (damageTaken, maxHP) => false }) {
+        const hitLocation = new HitLocation(
+            this.character,
+            location,
+            crippleRatio,
+            hitPenalty,
+            hitsOn,
+            cripplesOn
+        )
+        this.locations.set(location.name, hitLocation);
     }
 }
 
-class HitLocation extends CharacterElement<HitLocation> {
-    static keys = []
-    name: string
+export class HitLocation extends CharacterElement<HitLocation> {
+    static keys = ["crippleThreshold", "damageTaken"]
+    damageTaken = 0
 
-    constructor(character: Character, name: string, keys: string[] = []) {
+    equippedItems: Set<Equipment> = new Set()
+    name: string
+    crippleThresholdFormula: (damageTaken: number, maxHP: number) => boolean
+    crippleRatio
+    hitPenalty
+    hitsOn: number[]
+
+    constructor(character: Character, name: string, crippleRatio = null, hitPenalty: number = 0, hitsOn: number[] = [], cripplesOn = (damageTaken: number, maxHP: number) => false, keys: string[] = []) {
         super(character, [...keys, ...HitLocation.keys]);
         this.name = name;
+        this.crippleRatio = crippleRatio
+        this.crippleThresholdFormula = cripplesOn
+        this.hitPenalty = hitPenalty;
+        this.hitsOn = hitsOn;
+    }
+    equip(equipment: Equipment) {
+        if (equipment.boundLocation instanceof HitLocation) return false
+        equipment.boundLocation = this;
+        this.equippedItems.add(equipment);
+    }
+    /**
+     * Tests if this limb is crippled based on the formula provided in character
+     * configuration. If the function fails will return false
+     */
+    isLimbCrippled() {
+        try {
+            return this.crippleThresholdFormula(this.damageTaken, this.character.getAttribute(Signature.HP).calculateLevel());
+        } catch (err) {
+            return false
+        }
     }
     /**
      * Looks at all the DRBonus features on the character that match the locations name and sums them up.
@@ -46,33 +93,15 @@ class HitLocation extends CharacterElement<HitLocation> {
         return this.getArmorFeatures().reduce((prev, cur) => {
             if (cur instanceof DRBonus) {
                 if (cur.location.toLowerCase() === this.name.toLowerCase()) prev += cur.getBonus();
-                if (cur.location.toLowerCase() === Locations.full_body.toLowerCase()) prev += cur.getBonus();
             }
             return prev
         }, 0);
     }
-    
     getArmorFeatures(): DRBonus<Featurable>[] {
         return this.character.featureList.getFeaturesByType(FeatureType.damageResistanceBonus).filter(feature => {
             if (feature instanceof DRBonus) {
                 if (feature.location.toLowerCase() === this.name.toLowerCase()) return true
-                if (feature.location.toLowerCase() === Locations.full_body.toLowerCase()) return true
             }
         }) as DRBonus<Featurable>[];
     }
-}
-
-enum Locations {
-    skull = "Skull",
-    face = "Face",
-    eyes = "Eyes",
-    neck = "Neck",
-    arms = "Arms",
-    hands = "Hands",
-    torso = "Torso",
-    vitals = "Vitals",
-    groin = "Groin",
-    legs = "Legs",
-    feet = "Feet",
-    full_body = "Full_Body",
 }

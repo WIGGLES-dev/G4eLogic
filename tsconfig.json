@@ -11,10 +11,10 @@
         "emitDecoratorMetadata": true,
         "forceConsistentCasingInFileNames": true,
         "outDir": "lib",
+        "resolveJsonModule": true,
         "declaration": true,
         "lib": [
             "ES2015",
-            "DOM"
         ],
         "types": [
             "webpack",

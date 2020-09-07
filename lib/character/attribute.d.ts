@@ -9,10 +9,11 @@ export declare class AttributeList {
     character: Character;
     attributes: Collection<Signature, Attribute>;
     constructor(character: Character, keys?: string[]);
+    private configureAttributes;
     signatureOptions(): string[];
     getAttribute(attribute: Signature): Attribute;
     addAttribute({ signature, costPerLevel, defaultLevel, basedOn }: {
-        signature?: string;
+        signature: any;
         costPerLevel?: number;
         defaultLevel?: number;
         basedOn?: () => any;
