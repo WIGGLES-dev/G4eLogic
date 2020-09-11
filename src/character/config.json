@@ -3,28 +3,62 @@
         {
             "signature": "ST",
             "cost_per_level": 10,
-            "default_level": 10
+            "default_level": 10,
+            "can_be_signature": true
+        },
+        {
+            "signature": "SS",
+            "cost_per_level": 5
+        },
+        {
+            "signature": "LS",
+            "cost_per_level": 3
+        },
+        {
+            "signature": "HP",
+            "cost_per_level": 2,
+            "based_on": "return this.getAttribute('ST').calculateLevel()"
         },
         {
             "signature": "DX",
             "cost_per_level": 20,
-            "default_level": 10
+            "default_level": 10,
+            "can_be_signature": true
         },
         {
             "signature": "IQ",
             "cost_per_level": 20,
-            "default_level": 10
+            "default_level": 10,
+            "can_be_signature": true
         },
         {
             "signature": "HT",
             "cost_per_level": 10,
-            "default_level": 10
+            "default_level": 10,
+            "can_be_signature": true
+        },
+        {
+            "signature": "FP",
+            "cost_per_level": 2,
+            "based_on": "return this.getAttribute('HT').calculateLevel()"
+        },
+        {
+            "signature": "QT",
+            "cost_per_level": 10,
+            "default_level": 10,
+            "can_be_signature": true
+        },
+        {
+            "siganture": "QP",
+            "cost_per_level": 3,
+            "based_on": "return this.getAttribute('QP').calculateLevel()"
         },
         {
             "signature": "Speed",
             "cost_per_level": 20,
             "increment": 0.25,
-            "based_on": "return (this.getAttribute('DX').calculateLevel() + this.getAttribute('HT').calculateLevel()) / 4"
+            "based_on": "return (this.getAttribute('DX').calculateLevel() + this.getAttribute('HT').calculateLevel()) / 4",
+            "can_be_signature": true
         },
         {
             "signature": "Move",
@@ -34,22 +68,14 @@
         {
             "signature": "Per",
             "cost_per_level": 5,
-            "based_on": "return this.getAttribute('IQ').calculateLevel()"
+            "based_on": "return this.getAttribute('IQ').calculateLevel()",
+            "can_be_signature": true
         },
         {
             "signature": "Will",
             "cost_per_level": 5,
-            "based_on": "return this.getAttribute('ST').calculateLevel()"
-        },
-        {
-            "signature": "HP",
-            "cost_per_level": 2,
-            "based_on": "return this.getAttribute('ST').calculateLevel()"
-        },
-        {
-            "signature": "FP",
-            "cost_per_level": 2,
-            "based_on": "return this.getAttribute('HT').calculateLevel()"
+            "based_on": "return this.getAttribute('ST').calculateLevel()",
+            "can_be_signature": true
         }
     ],
     "locations": [

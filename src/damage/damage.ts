@@ -1,14 +1,3 @@
-export class Damage {
-
-    static getThrust(strength: number) {
-
-    }
-
-    static getSwing(strength: number) {
-
-    }
-}
-
 export function getThrust(strength: number) {
     let value = strength;
     if (strength < 19) {

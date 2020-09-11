@@ -18,21 +18,40 @@ class WeaponDefault<T extends Weapon<any>> extends Default<any> {
 }
 
 export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
-    static keys = ["type", "damageType", "damageBase", "damageMod", "armorDivisor", "strength", "usage", "defaults"]
+    static keys = [
+        "usage",
+        "strength",
+        "damageStrength",
+        "damageBase",
+        "damageType",
+        "damagePerDieBonus",
+        "armorDivisor",
+        "fDamage",
+        "fArmorDivisor",
+        "fDamageType",
+        "attackBonus"
+    ]
+
     tag: string = "weapon"
     static type: string
     owner: T
 
+    usage: string
+    strength: string = "10"
 
-    damageType: DamageType
     damageStrength: BaseDamage
     damageBase: string
+    damageType: DamageType
+    damagePerDieBonus: number
 
     armorDivisor: number
 
-    strength: string = "10"
+    fDamage: string
+    fArmorDivisor: number
+    fDamageType: string
 
-    usage: string
+    attackBonus: number = null
+
     defaults: Set<WeaponDefault<Weapon<T>>> = new Set
 
     constructor(owner: T, keys: string[]) {
@@ -52,15 +71,15 @@ export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
         return this.constructor.type
     }
 
-    load(data: any) { return this.getSerializer().transformers.get(this.tag).load(this, data) }
-    save() { return this.getSerializer().transformers.get(this.tag).save(this) }
+    load(data: any, ...args) { return this.getSerializer().transformers.get(this.tag).load(this, data, ...args) }
+    save(...args) { return this.getSerializer().transformers.get(this.tag).save(this, ...args) }
 
     onDestroy() {
         this.owner.getCharacter().featureList.removeWeapon(this.uuid);
     }
 
     getBestAttackLevel({ inferUsagePenalties = false } = {}) {
-        let bestBaseLevel = this.getBestDefault()?.getHighestMatchLevel() ?? null;
+        let bestBaseLevel = (this.getBestDefault()?.getHighestMatchLevel() ?? null) + this.attackBonus;
         return inferUsagePenalties ? bestBaseLevel : bestBaseLevel + this.calculateWeaponUsePenalty()
     }
 
@@ -76,6 +95,9 @@ export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
         return bestDefault
     }
 
+    abstract getParryLevel()
+    abstract getBlockLevel()
+
     calculateWeaponUsePenalty(): number {
         const userStrength = this.owner.getCharacter().getAttribute(Signature.ST).calculateLevel();
         const weaponRequirement = Modifier.extractValue(this.strength.toString());
@@ -86,6 +108,15 @@ export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
             return 0
         }
     }
+
+    getAmmoSources() {
+        try {
+            //@ts-ignore
+            this.owner.getAmmoSources();
+        } catch (err) {
+            return []
+        }
+    }
 }
 
 export class MeleeWeapon<T extends Featurable> extends Weapon<T> {
@@ -94,13 +125,16 @@ export class MeleeWeapon<T extends Featurable> extends Weapon<T> {
 
     reach: string
     parry: number
-    block: number | false
+    block: number
     unbalanced: boolean = false
     unwieldy: boolean = false
 
     constructor(owner: T, keys: string[] = []) {
         super(owner, [...keys, ...MeleeWeapon.keys]);
     }
+
+    getParryLevel(bonus: number = 0) { return Math.floor(this.getBestAttackLevel() / 2 + 3) + bonus }
+    getBlockLevel(bonus: number = 0) { return Math.floor(this.getBestAttackLevel() / 2 + 3) + bonus }
 }
 
 export class RangedWeapon<T extends Featurable> extends Weapon<T> {
@@ -116,6 +150,9 @@ export class RangedWeapon<T extends Featurable> extends Weapon<T> {
     constructor(owner: T, keys: string[] = []) {
         super(owner, [...keys, ...RangedWeapon.keys]);
     }
+
+    getParryLevel() { return null }
+    getBlockLevel() { return null }
 }
 
 enum BaseDamage {

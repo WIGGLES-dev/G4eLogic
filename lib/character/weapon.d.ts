@@ -11,34 +11,44 @@ export declare abstract class Weapon<T extends Featurable> extends CharacterElem
     tag: string;
     static type: string;
     owner: T;
-    damageType: DamageType;
+    usage: string;
+    strength: string;
     damageStrength: BaseDamage;
     damageBase: string;
+    damageType: DamageType;
+    damagePerDieBonus: number;
     armorDivisor: number;
-    strength: string;
-    usage: string;
+    fDamage: string;
+    fArmorDivisor: number;
+    fDamageType: string;
+    attackBonus: number;
     defaults: Set<WeaponDefault<Weapon<T>>>;
     constructor(owner: T, keys: string[]);
     addDefault(): WeaponDefault<this>;
     getType(): any;
-    load(data: any): any;
-    save(): any;
+    load(data: any, ...args: any[]): any;
+    save(...args: any[]): any;
     onDestroy(): void;
     getBestAttackLevel({ inferUsagePenalties }?: {
         inferUsagePenalties?: boolean;
     }): number;
     getBestDefault(): WeaponDefault<any>;
+    abstract getParryLevel(): any;
+    abstract getBlockLevel(): any;
     calculateWeaponUsePenalty(): number;
+    getAmmoSources(): any[];
 }
 export declare class MeleeWeapon<T extends Featurable> extends Weapon<T> {
     static keys: string[];
     static type: string;
     reach: string;
     parry: number;
-    block: number | false;
+    block: number;
     unbalanced: boolean;
     unwieldy: boolean;
     constructor(owner: T, keys?: string[]);
+    getParryLevel(bonus?: number): number;
+    getBlockLevel(bonus?: number): number;
 }
 export declare class RangedWeapon<T extends Featurable> extends Weapon<T> {
     static keys: string[];
@@ -49,6 +59,8 @@ export declare class RangedWeapon<T extends Featurable> extends Weapon<T> {
     shots: string;
     bulk: string;
     constructor(owner: T, keys?: string[]);
+    getParryLevel(): any;
+    getBlockLevel(): any;
 }
 declare enum BaseDamage {
     swing = "sw",

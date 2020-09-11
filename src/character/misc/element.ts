@@ -125,7 +125,7 @@ export abstract class CharacterElement<T extends CharacterElement<T>> {
 
     subscribe(subscription: (store: any) => void) {
         this.subscriptions.add(subscription);
-        subscription(this);
+        // subscription(this);
         return () => this.unsubscribe(subscription)
     }
 

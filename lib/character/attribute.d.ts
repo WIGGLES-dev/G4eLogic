@@ -1,5 +1,5 @@
 import { Feature } from "./misc/feature";
-import { Character, Signature } from "./character";
+import { Character } from "./character";
 import { FeatureType } from "@gcs/gcs";
 import { Featurable } from "@character/character";
 import { CharacterElement } from "./misc/element";
@@ -7,11 +7,11 @@ import { Collection } from "./misc/collection";
 export declare class AttributeList {
     static keys: any[];
     character: Character;
-    attributes: Collection<Signature, Attribute>;
+    attributes: Collection<string, Attribute>;
     constructor(character: Character, keys?: string[]);
     private configureAttributes;
     signatureOptions(): string[];
-    getAttribute(attribute: Signature): Attribute;
+    getAttribute(attribute: string): Attribute;
     addAttribute({ signature, costPerLevel, defaultLevel, basedOn }: {
         signature: any;
         costPerLevel?: number;
@@ -29,7 +29,7 @@ export declare class Attribute extends CharacterElement<Attribute> {
     basedOn: () => number;
     constructor(name: string, character: Character, costPerLevel: number, { defaultLevel, basedOn }: {
         defaultLevel?: number;
-        basedOn?: () => number;
+        basedOn?: () => any;
     }, keys?: string[]);
     setLevel(level: number): number;
     setLevelDelta(): void;

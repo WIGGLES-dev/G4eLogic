@@ -7,6 +7,69 @@ import * as gcs from "@gcs/gcs";
 import { Constructor } from "@character/serialization/serializer";
 import { Collection } from "./collection";
 
+
+export abstract class List<T extends Featurable> {
+    #contents: Collection<string, T> = new Collection()
+    contents: Set<T> = new Set()
+    character: Character
+    constructor(character: Character) {
+        this.character = character;
+    }
+
+    get length() { return this.#contents.size }
+    get [Symbol.iterator]() { return this.#contents[Symbol.iterator] }
+
+    abstract populator(data: any): T
+
+    generate() {
+        this.contents.clear();
+        this.iter().reduce((prev, cur) => {
+            if (!cur.containedBy) prev.add(cur);
+            return prev
+        }, this.contents);
+    }
+
+    addListItem(item?: T | ListItem<T>, data: any = {}): T {
+        let listItem: T;
+        if (item) {
+            this.#contents.set(item.uuid, item as T);
+            listItem = item.findSelf();
+        } else {
+            listItem = this.populator(data);
+        }
+        this.generate();
+        return listItem
+    }
+
+    removeListItem(item: T) {
+        this.#contents.delete(item.uuid);
+        this.generate();
+    }
+
+    getByIndex(index: number) { return Array.from(this.contents.values())[index] }
+    getByUUID(uuid: string) { return this.#contents.get(uuid); }
+    getSize() { return this.#contents.size }
+    iter() {
+        const contents = this.#contents.iter();
+        return contents
+    }
+    iterTop() {
+        this.generate();
+        return Array.from(this.contents);
+    }
+    keys() { return Array.from(this.contents.keys()); }
+    save() { return this.character.getSerializer().saveList(this); }
+    load(data: string | json) {
+        this.character.getSerializer().loadList(this, data as any[]);
+        this.generate();
+        return this
+    }
+    empty() {
+        this.#contents.clear();
+        this.generate();
+    }
+}
+
 export abstract class ListItem<T extends Featurable> extends CharacterElement<T> {
     static keys = []
 
@@ -80,21 +143,21 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
         }
         child.delete();
     }
-    getRecursiveChildren(collection = new Set()) {
+    getRecursiveChildren(collection: Set<T> = new Set()): Set<T> {
         if (!this.canContainChildren) return collection
         this.children.forEach(child => {
-            collection.add(child);
+            collection.add(child.findSelf());
             if (child.children.size > 0) child.getRecursiveChildren(collection);
         });
-        return collection
+        return collection as Set<T>
     }
-    getRecursiveOwners(collection = new Set()) {
+    getRecursiveOwners(collection: Set<T> = new Set()): Set<T> {
         if (!this.containedBy) return collection
         if (this.containedBy.containedBy) {
             collection.add(this.containedBy);
             this.containedBy.getRecursiveOwners(collection)
         }
-        return collection
+        return collection as Set<T>
     }
     findSelf(): T { return this.list.getByUUID(this.uuid) }
     delete() {
@@ -106,86 +169,22 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
         this.list.removeListItem(this.findSelf());
         super.delete();
     }
-    private loadChildren<U>(children: U[], parent: T, loader: (subject: T, data: U) => U[]) {
-        if (children.length > 0) this.canContainChildren = true;
+    private loadChildren<U>(children: U[], parent: T, ...args) {
         children.forEach(child => {
-            const subElement = parent.list.addListItem();
-            const children = loader(subElement, child);
+            const subElement = parent.list.addListItem();;
             subElement.containedBy = parent;
             parent.children.add(subElement);
-            subElement.loadChildren(isArray(children), subElement, loader);
+            subElement.load(child, ...args);
         });
     }
-    load<U>(data): T {
+    load<U>(data, ...args): T {
         const loader = this.getSerializer().transformers.get(this.constructor as Constructor).load;
-        const children: U[] = loader(this.findSelf(), data);
+        const children: U[] = loader(this.findSelf(), data, ...args);
         if (children && children.length > 0) {
             this.canContainChildren = true;
-            this.loadChildren(children, this.findSelf(), loader)
+            this.loadChildren(children, this.findSelf(), ...args)
         }
         return this.findSelf()
     }
-    save() { return this.getSerializer().transformers.get(this.constructor as Constructor).save(this) }
-}
-
-export abstract class List<T extends Featurable> {
-    #contents: Collection<string, T> = new Collection()
-    contents: Set<T> = new Set()
-    character: Character
-    constructor(character: Character) {
-        this.character = character;
-    }
-
-    get length() { return this.#contents.size }
-    get [Symbol.iterator]() { return this.#contents[Symbol.iterator] }
-
-    abstract populator(data: any): T
-
-    generate() {
-        this.contents.clear();
-        this.iter().reduce((prev, cur) => {
-            if (!cur.containedBy) prev.add(cur);
-            return prev
-        }, this.contents);
-    }
-
-    addListItem(item?: T | ListItem<T>, data: any = {}): T {
-        let listItem: T;
-        if (item) {
-            this.#contents.set(item.uuid, item as T);
-            listItem = item.findSelf();
-        } else {
-            listItem = this.populator(data);
-        }
-        this.generate();
-        return listItem
-    }
-
-    removeListItem(item: T) {
-        this.#contents.delete(item.uuid);
-        this.generate();
-    }
-
-    getByIndex(index: number) { return Array.from(this.contents.values())[index] }
-    getByUUID(uuid: string) { return this.#contents.get(uuid); }
-    getSize() { return this.#contents.size }
-    iter() {
-        const contents = this.#contents.iter();
-        return contents
-    }
-    iterTop() {
-        this.generate();
-        return Array.from(this.contents);
-    }
-    keys() { return Array.from(this.contents.keys()); }
-    save() { return this.character.getSerializer().saveList(this); }
-    load(data: string | json) {
-        this.character.getSerializer().loadList(this, data as any[]);
-        this.generate();
-        return this
-    }
-    empty() {
-        this.#contents.clear();
-        this.generate();
-    }
+    save(...args) { return this.getSerializer().transformers.get(this.constructor as Constructor).save(this, ...args) }
 }

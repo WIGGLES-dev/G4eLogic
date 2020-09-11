@@ -32,8 +32,8 @@ export declare abstract class Feature<T extends Featurable> extends CharacterEle
     ownerIsActive(): boolean;
     getBonus(): number;
     unregister(): void;
-    save(): any;
-    load(data: any): any;
+    save(...args: any[]): any;
+    load(data: any, ...args: any[]): any;
     static loadFeature<T extends Featurable>(owner: T, featureType: FeatureType): Feature<T>;
 }
 declare enum SkillBonusSelectionType {

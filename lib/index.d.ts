@@ -11,7 +11,6 @@ import { List, ListItem } from "@character/misc/list";
 import { AttributeBonus, Attribute } from "@character/attribute";
 import { FeatureType } from "@gcs/gcs";
 import { GCSJSON } from "@character/serialization/gcs_json";
-import { Group } from "@character/misc/group";
 import { TehchniqueDifficulty, Technique } from "@character/technique";
 import defaultConfig from "@character/config.json";
-export { Attribute, AttributeBonus, Weapon, MeleeWeapon, RangedWeapon, Character, Signature, Skill, Difficulty, SkillDefault, SkillLike, SkillList, SkillBonus, Trait, TraitType, TraitList, TraitModifier, Spell, SpellList, Technique, TehchniqueDifficulty, Equipment, DRBonus, EquipmentList, EquipmentModifier, Serializer, registerSerializer, isArray, json, Feature, FeatureType, Featurable, List, ListItem, GCSJSON, Group, defaultConfig };
+export { Attribute, AttributeBonus, Weapon, MeleeWeapon, RangedWeapon, Character, Signature, Skill, Difficulty, SkillDefault, SkillLike, SkillList, SkillBonus, Trait, TraitType, TraitList, TraitModifier, Spell, SpellList, Technique, TehchniqueDifficulty, Equipment, DRBonus, EquipmentList, EquipmentModifier, Serializer, registerSerializer, isArray, json, Feature, FeatureType, Featurable, List, ListItem, GCSJSON, defaultConfig };

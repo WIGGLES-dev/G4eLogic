@@ -260,8 +260,8 @@ export class SkillDefault<T extends SkillLike<any>> extends Default<T> {
 
     getLookupList() { return this.owner.list.character.skillList }
 
-    save() { return this.getSerializer().transformers.get(this.constructor as Constructor).save(this) }
-    load(data: any) { return this.getSerializer().transformers.get(this.constructor as Constructor).load(this, data) }
+    save(...args) { return this.getSerializer().transformers.get(this.constructor as Constructor).save(this, ...args) }
+    load(data: any, ...args) { return this.getSerializer().transformers.get(this.constructor as Constructor).load(this, data, ...args) }
 }
 
 export enum Difficulty {

@@ -3,6 +3,27 @@ import { CharacterElement } from "./element";
 import { Feature } from "./feature";
 import { Weapon } from "../weapon";
 import { json } from "@utils/json_utils";
+export declare abstract class List<T extends Featurable> {
+    #private;
+    contents: Set<T>;
+    character: Character;
+    constructor(character: Character);
+    get length(): number;
+    get [Symbol.iterator](): () => IterableIterator<T>;
+    abstract populator(data: any): T;
+    generate(): void;
+    addListItem(item?: T | ListItem<T>, data?: any): T;
+    removeListItem(item: T): void;
+    getByIndex(index: number): T;
+    getByUUID(uuid: string): T;
+    getSize(): number;
+    iter(): T[];
+    iterTop(): T[];
+    keys(): T[];
+    save(): any;
+    load(data: string | json): this;
+    empty(): void;
+}
 export declare abstract class ListItem<T extends Featurable> extends CharacterElement<T> {
     #private;
     static keys: any[];
@@ -25,32 +46,11 @@ export declare abstract class ListItem<T extends Featurable> extends CharacterEl
     iterChildren(): ListItem<T>[];
     addChild(child?: T): T;
     removeChild(child: string | T): void;
-    getRecursiveChildren(collection?: Set<unknown>): Set<unknown>;
-    getRecursiveOwners(collection?: Set<unknown>): Set<unknown>;
+    getRecursiveChildren(collection?: Set<T>): Set<T>;
+    getRecursiveOwners(collection?: Set<T>): Set<T>;
     findSelf(): T;
     delete(): void;
     private loadChildren;
-    load<U>(data: any): T;
-    save(): any;
-}
-export declare abstract class List<T extends Featurable> {
-    #private;
-    contents: Set<T>;
-    character: Character;
-    constructor(character: Character);
-    get length(): number;
-    get [Symbol.iterator](): () => IterableIterator<T>;
-    abstract populator(data: any): T;
-    generate(): void;
-    addListItem(item?: T | ListItem<T>, data?: any): T;
-    removeListItem(item: T): void;
-    getByIndex(index: number): T;
-    getByUUID(uuid: string): T;
-    getSize(): number;
-    iter(): T[];
-    iterTop(): T[];
-    keys(): T[];
-    save(): any;
-    load(data: string | json): this;
-    empty(): void;
+    load<U>(data: any, ...args: any[]): T;
+    save(...args: any[]): any;
 }

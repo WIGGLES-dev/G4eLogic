@@ -12,7 +12,6 @@ import { List, ListItem } from "@character/misc/list";
 import { AttributeBonus, Attribute } from "@character/attribute";
 import { FeatureType } from "@gcs/gcs";
 import { GCSJSON } from "@character/serialization/gcs_json";
-import { Group } from "@character/misc/group";
 import { TehchniqueDifficulty, Technique } from "@character/technique";
 
 import defaultConfig from "@character/config.json";
@@ -53,6 +52,5 @@ export {
     List,
     ListItem,
     GCSJSON,
-    Group,
     defaultConfig
 }

@@ -17,7 +17,6 @@ import { Collection } from "./misc/collection";
 import { Hooks } from "../hooks/hooks";
 import { getThrust, getSwing } from "../damage/damage";
 import { TechniqueList } from "./technique";
-import { Group } from "./misc/group";
 import defaultConfig from "./config.json";
 
 export abstract class Sheet {
@@ -64,14 +63,6 @@ export abstract class Sheet {
         this.hooks.callAll(`before remove element ${element.uuid}`, element)
         this.#elements.delete(element);
         this.hooks.callAll(`removed element ${element.uuid}`, this);
-    }
-
-    getGroupNamed(name: string) {
-        let result;
-        this.#elements.forEach(element => {
-            if (element instanceof Group && element.name === name) result = element
-        });
-        return result || null
     }
 
     getElementById(type: string, id: string) {
@@ -123,14 +114,28 @@ export class Character extends Sheet {
         this.featureList = new FeatureList(this);
         this.locationList = new LocationList(this);
         this.attributeList = new AttributeList(this);
+
     }
 
-    getSwingDamage(strength?: number) {
-        return getSwing(strength || this.attributeList.getAttribute(Signature.ST).calculateLevel())
+    isReeling(ratio = 3) {
+        let maxHP = this.getAttribute(Signature.HP).calculateLevel();
+        let currentHP = maxHP - this.missingFP;
+        return maxHP / ratio > currentHP
+    }
+    isExhausted(ratio = 3) {
+        let maxFP = this.getAttribute(Signature.FP).calculateLevel();
+        let currentFP = maxFP - this.missingFP;
+        return maxFP / ratio > currentFP
     }
 
-    getThrustDamage(strength?: number) {
-        return getThrust(strength || this.attributeList.getAttribute(Signature.ST).calculateLevel())
+    getSwingDamage() {
+        const strikingStrength = this.getAttribute("SS").calculateLevel();
+        return getSwing(this.attributeList.getAttribute(Signature.ST).calculateLevel() + strikingStrength)
+    }
+
+    getThrustDamage() {
+        const strikingStrength = this.getAttribute("SS").calculateLevel();
+        return getThrust(this.attributeList.getAttribute(Signature.ST).calculateLevel() + strikingStrength)
     }
 
     totalAttributesCost() {
@@ -143,7 +148,7 @@ export class Character extends Sheet {
         }, 0)
     }
 
-    getAttribute(attribute: Signature) {
+    getAttribute(attribute: string) {
         return this.attributeList.getAttribute(attribute)
     }
 
@@ -176,7 +181,8 @@ export class Character extends Sheet {
     }
 
     basicLift() {
-        const ST = this.getAttribute(Signature.ST).calculateLevel();
+        const LS = this.getAttribute("LS").calculateLevel();
+        const ST = this.getAttribute(Signature.ST).calculateLevel() + LS;
         return Math.round(ST * ST / 5)
     }
 
@@ -256,7 +262,7 @@ export enum Signature {
     HP = "HP",
     Per = "Per",
     Will = "Will",
-    Base = 10,
+    Base = "10",
     Quint = "QT",
     Speed = "Speed",
     Move = "Move",

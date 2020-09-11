@@ -1,14 +1,11 @@
 import { CharacterElement } from "./element";
 import { Featurable, Character } from "../character";
-import { objectify, json } from "@utils/json_utils";
 import { FeatureType } from "@gcs/gcs";
 import { SkillLike } from "@character/skill/skill";
 import { AttributeBonus } from "@character/attribute";
 import { Weapon } from "@character/weapon";
 import { StringCompare, stringCompare } from "@utils/string_utils";
-import * as gcs from "@gcs/gcs";
 import { Collection } from "./collection";
-import { List } from "./list";
 
 export class FeatureList {
     character: Character
@@ -92,11 +89,11 @@ export abstract class Feature<T extends Featurable> extends CharacterElement<T> 
     unregister() {
         this.owner.list.character.featureList.removeFeature(this.uuid);
     }
-    save() {
-        return this.getSerializer().transformers.get(this.tag).save(this)
+    save(...args) {
+        return this.getSerializer().transformers.get(this.tag).save(this, ...args)
     }
-    load(data: any) {
-        return this.getSerializer().transformers.get(this.tag).load(this, data)
+    load(data: any, ...args) {
+        return this.getSerializer().transformers.get(this.tag).load(this, data, ...args)
     }
 
     static loadFeature<T extends Featurable>(owner: T, featureType: FeatureType): Feature<T> {

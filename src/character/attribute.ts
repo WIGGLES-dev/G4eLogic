@@ -8,7 +8,7 @@ import { Collection } from "./misc/collection";
 export class AttributeList {
     static keys = []
     character: Character
-    attributes: Collection<Signature, Attribute> = new Collection
+    attributes: Collection<string, Attribute> = new Collection
 
     constructor(character: Character, keys: string[] = []) {
         this.character = character
@@ -25,21 +25,21 @@ export class AttributeList {
                 signature: attribute.signature,
                 costPerLevel: attribute.cost_per_level,
                 defaultLevel: attribute.default_level,
-                basedOn: attribute.basedOn === undefined ? () => null : basedOn
+                basedOn: attribute.based_on === undefined ? () => null : basedOn
             })
         });
     }
 
     signatureOptions() { return Array.from(this.attributes).map(attribute => attribute.name) }
 
-    getAttribute(attribute: Signature) {
+    getAttribute(attribute: string) {
         return this.attributes.get(attribute)
     }
 
     addAttribute({ signature, costPerLevel = 0, defaultLevel = 0, basedOn = () => null }): Attribute {
         if (typeof signature === "string") {
             const attribute = new Attribute(signature, this.character, costPerLevel, { defaultLevel, basedOn });
-            this.attributes.set(signature as Signature, attribute);
+            this.attributes.set(signature, attribute);
             return attribute
         }
     }
@@ -60,7 +60,7 @@ export class Attribute extends CharacterElement<Attribute> {
         costPerLevel: number,
         {
             defaultLevel = 0,
-            basedOn = () => 0
+            basedOn = () => null
         },
         keys: string[] = []
     ) {
@@ -86,7 +86,7 @@ export class Attribute extends CharacterElement<Attribute> {
 
     pointsSpent() { return this.levelsIncreased() * this.costPerLevel }
     levelsIncreased() { return this.level - this.defaultLevel }
-    calculateLevel() { return this.level + this.getMod() + this.basedOn() }
+    calculateLevel() { return this.level + this.getMod() || 0 + this.basedOn() }
 
     get displayLevel() { return this.calculateLevel() }
     set displayLevel(level) {

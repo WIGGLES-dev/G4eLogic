@@ -23,7 +23,6 @@ export declare abstract class Sheet {
     getSerializer(scope?: string): Serializer;
     registerElement(element: CharacterElement<Featurable>): void;
     removeElement(element: CharacterElement<Featurable>): void;
-    getGroupNamed(name: string): any;
     getElementById(type: string, id: string): any;
     reconfigure(config: any): void;
 }
@@ -45,11 +44,13 @@ export declare class Character extends Sheet {
     featureList: FeatureList;
     locationList: LocationList;
     attributeList: AttributeList;
-    constructor(config: any);
-    getSwingDamage(strength?: number): string;
-    getThrustDamage(strength?: number): string;
+    constructor(config?: any);
+    isReeling(ratio?: number): boolean;
+    isExhausted(ratio?: number): boolean;
+    getSwingDamage(): string;
+    getThrustDamage(): string;
     totalAttributesCost(): number;
-    getAttribute(attribute: Signature): Attribute;
+    getAttribute(attribute: string): Attribute;
     pointTotals(): {
         racialPoints: number;
         attributePoints: number;
@@ -81,7 +82,7 @@ export declare enum Signature {
     HP = "HP",
     Per = "Per",
     Will = "Will",
-    Base = 10,
+    Base = "10",
     Quint = "QT",
     Speed = "Speed",
     Move = "Move",

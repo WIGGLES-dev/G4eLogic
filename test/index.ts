@@ -5,34 +5,8 @@ const config = require("../src/character/config.json");
 
 registerSerializer(GCSJSON);
 
-const testSubjectData = require("./subjects/Jack_Fanning.json");
+const testSubjectData = require("./subjects/Carson.json");
 
 const testSubject: Character = new Character(config).load(testSubjectData, "GCSJSON");
 
 console.log(testSubject);
-
-testSubject.skillList.iter().forEach(skill => {
-    try {
-        let bestDefault = skill.getBestDefaultWithPoints();
-        console.log(skill.calculateLevel(), skill.name, skill.specialization, skill.defaultedFrom, skill.getModList());
-    } catch (err) {
-        console.log(err);
-        console.log(skill.name, skill.specialization, skill, skill.getBestDefault());
-    }
-})
-
-// testSubject.techniqueList.iter().forEach(skill => {
-//     try {
-//         console.log(
-//             skill.calculateLevel(),
-//             skill.name,
-//             skill.getBestDefault()?.getHighestMatchLevel(),
-//             skill.getBestDefault()?.name,
-//             skill.getBestDefault()?.specialization,
-//             skill.getBestDefault()?.getMatches()
-//         );
-//     } catch (err) {
-//         console.log(err);
-//         console.log(skill)
-//     }
-// })

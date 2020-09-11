@@ -64,8 +64,8 @@ export declare class SkillDefault<T extends SkillLike<any>> extends Default<T> {
     points: number;
     constructor(skill: T, keys?: string[]);
     getLookupList(): SkillList;
-    save(): any;
-    load(data: any): any;
+    save(...args: any[]): any;
+    load(data: any, ...args: any[]): any;
 }
 export declare enum Difficulty {
     easy = "E",

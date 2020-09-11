@@ -70,11 +70,13 @@ export class HitLocation extends CharacterElement<HitLocation> {
         this.hitPenalty = hitPenalty;
         this.hitsOn = hitsOn;
     }
+
     equip(equipment: Equipment) {
         if (equipment.boundLocation instanceof HitLocation) return false
         equipment.boundLocation = this;
         this.equippedItems.add(equipment);
     }
+
     /**
      * Tests if this limb is crippled based on the formula provided in character
      * configuration. If the function fails will return false
