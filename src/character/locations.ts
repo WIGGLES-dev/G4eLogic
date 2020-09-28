@@ -1,19 +1,18 @@
 import { Character, Signature } from "./character";
 import { CharacterElement } from "./misc/element";
-import { FeatureType } from "@gcs/gcs";
 import { Collection } from "./misc/collection";
-import { DRBonus } from "./misc/feature";
+import { DRBonus, FeatureType } from "./misc/feature";
 import { Featurable } from "index";
 import { Equipment } from "./equipment/equipment";
 
 export class LocationList {
     character: Character
-    locations: Collection<string, HitLocation> = new Collection()
+    locations: Map<string, HitLocation> = new Map()
 
     constructor(character: Character) {
         this.character = character
         this.configureLocations();
-        this.character.hooks.on("reconfigure", this.configureLocations);
+        this.character.Hooks.on("reconfigure", this.configureLocations);
     }
 
     private configureLocations() {
@@ -47,7 +46,7 @@ export class LocationList {
             hitsOn,
             cripplesOn
         )
-        this.locations.set(location.name, hitLocation);
+        this.locations.set(location, hitLocation);
     }
 }
 

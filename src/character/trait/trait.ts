@@ -1,83 +1,49 @@
 import { Modifier } from "../misc/modifier";
 import { List, ListItem } from "../misc/list";
 import { Character } from "../character";
-import { json, objectify } from "@utils/json_utils";
 import { Feature } from "../misc/feature";
-import * as gcs from "@gcs/gcs";
 import { getAdjustedPoints } from "./logic";
 
 
 export class TraitList extends List<Trait> {
     constructor(character: Character) {
-        super(character);
+        super(character, "trait");
     }
 
     populator(data: any) {
         return new Trait(this)
     }
 
-    sumRacials({ activeOnly = true } = {}) {
+    private sumMatching(match: (trait: Trait) => boolean, { activeOnly = true }) {
         return this.iter().reduce((prev, cur) => {
-            if (cur.isRacial()) {
-                if (activeOnly) {
-                    if (!cur.disabled) prev += cur.adjustedPoints();
-                } else {
-                    prev += cur.adjustedPoints();
-                }
-            }
+            if (match(cur) && activeOnly) prev += cur.adjustedPoints()
             return prev
         }, 0)
+    }
+
+    sumRacials({ activeOnly = true } = {}) {
+        return this.sumMatching(
+            (trait) => trait.isRacial(),
+            { activeOnly })
     }
     sumAdvantages({ activeOnly = true } = {}) {
-        return this.iter().reduce((prev, cur) => {
-            if (cur.isRacial()) return prev
-
-            if (cur.categories.has("Advantage") || cur.categories.has("Perk") || cur.adjustedPoints() >= 1) {
-                if (activeOnly) {
-                    if (!cur.disabled) prev += cur.adjustedPoints();
-                } else {
-                    prev += cur.adjustedPoints();
-                }
-            }
-            return prev
-        }, 0)
+        return this.sumMatching(
+            (trait: Trait) =>
+                !trait.isRacial() &&
+                trait.adjustedPoints() > 1,
+            { activeOnly })
     }
     sumDisadvantages({ activeOnly = true } = {}) {
-        return this.iter().reduce((prev, cur) => {
-            if (cur.isRacial()) return prev
-            if (cur.categories.has("Disadvantage") || cur.adjustedPoints() < -1) {
-                if (activeOnly) {
-                    if (!cur.disabled) prev += cur.adjustedPoints();
-                } else {
-                    prev += cur.adjustedPoints();
-                }
-            }
-            return prev
-        }, 0);
+        return this.sumMatching(
+            (trait: Trait) =>
+                !trait.isRacial() &&
+                trait.adjustedPoints() < -1,
+            { activeOnly })
     }
     sumQuirks({ activeOnly = true } = {}) {
-        return this.iter().reduce((prev, cur) => {
-            if (cur.isRacial()) return prev
-            if (cur.categories.has("Quirk") || cur.adjustedPoints() === -1) {
-                if (activeOnly) {
-                    if (!cur.disabled) prev += cur.adjustedPoints();
-                } else {
-                    prev += cur.adjustedPoints();
-                }
-            }
-            return prev
-        }, 0);
-    }
-
-    splitByType() {
-        return {
-            advantages: this.iter().filter(trait => trait.categories.has("Advantage") || trait.adjustedPoints() > 1),
-            perks: this.iter().filter(trait => trait.categories.has("Perk") || trait.adjustedPoints() === 1),
-            disadvantages: this.iter().filter(trait => trait.categories.has("Disadvantage") || trait.adjustedPoints() < -1),
-            quirks: this.iter().filter(trait => trait.categories.has("Quirk") || trait.adjustedPoints() === -1),
-            languages: this.iter().filter(trait => trait.categories.has("Language")),
-            racial: this.iter().filter(trait => trait.isRacial())
-        }
+        return this.sumMatching(
+            (trait: Trait) => !trait.isRacial() && trait.adjustedPoints() === -1,
+            { activeOnly })
     }
 }
 
@@ -89,25 +55,26 @@ enum ContainerType {
 }
 
 export class Trait extends ListItem<Trait> {
-    static keys = ["name", "basePoints", "levels", "allowHalfLevels", "hasHalfLevel", "roundDown", "controlRating", "types", ""]
+    static keys = ["name", "basePoints", "hasLevels", "levels", "allowHalfLevels", "hasHalfLevel", "roundDown", "controlRating", "types", "disabled", "pointsPerLevel", "containerType"]
     version = 1
     tag = "trait"
 
-    name: string
-    basePoints: number
+    name: string = ""
+    basePoints: number = 0
 
     hasLevels: boolean = false
-    levels: number = 0
+    levels: number = null
     allowHalfLevels: boolean = false
     hasHalfLevel: boolean = false
-    roundDown: boolean
-    controlRating: ControlRollMultiplier
+    roundDown: boolean = false
+
+    controlRating: ControlRollMultiplier = ControlRollMultiplier.noneRequired
 
     types: Set<TraitType> = new Set()
 
-    pointsPerLevel: number
-    disabled: boolean = false
-    containerType: ContainerType
+    pointsPerLevel: number = null
+
+    containerType: ContainerType = null
 
     modifiers: Set<TraitModifier> = new Set()
 
@@ -118,7 +85,7 @@ export class Trait extends ListItem<Trait> {
     isActive() { return !this.disabled }
     getLevel() { return this.levels }
 
-    isRacial(): Boolean {
+    isRacial(): boolean {
         if (!this.containedBy) {
             return false
         }
@@ -127,17 +94,6 @@ export class Trait extends ListItem<Trait> {
         } else {
             return this.containedBy.isRacial();
         }
-    }
-
-    childrenPoints(): number {
-        return this.iterChildren().reduce((prev, cur) => {
-            if (cur.canContainChildren) {
-                prev += cur.findSelf().childrenPoints();
-            } else {
-                prev += cur.findSelf().adjustedPoints();
-            }
-            return prev
-        }, 0)
     }
 
     static getCRMultipland(cr: ControlRollMultiplier) {
@@ -153,14 +109,11 @@ export class Trait extends ListItem<Trait> {
 
     adjustedPoints() {
         if (this.isContainer()) {
-            return 0
+            return [...this.children].reduce((prev, cur) => prev + cur.findSelf().adjustedPoints(), 0)
         } else {
-            return getAdjustedPoints(this.modifiers, this.basePoints, this.hasLevels, this.hasHalfLevel, this.pointsPerLevel, this.levels, this.roundDown)
+            return getAdjustedPoints(this.modifiers, this.basePoints, this.hasLevels, this.hasHalfLevel, this.pointsPerLevel, this.levels, this.roundDown, Trait.getCRMultipland(this.controlRating))
         }
     }
-
-    disable() { this.disabled = true; }
-    enable() { this.disabled = false; }
 
     addModifier(): TraitModifier {
         const modifier = new TraitModifier(this);
@@ -219,11 +172,11 @@ export enum TraitType {
     exotic = "Exotic",
 }
 
-enum ControlRollMultiplier {
-    cannotResist = "0",
+export enum ControlRollMultiplier {
+    cannotResist = "none",
     resistRarely = "6",
     resistFairlyOften = "9",
     resistQuiteOften = "12",
     resistAlmostAlway = "15",
-    noneRequired = ""
+    noneRequired = "n/a"
 }

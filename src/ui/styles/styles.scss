@@ -1,0 +1,29 @@
+@import "./tabs";
+@import "./form";
+@import "./lists";
+
+body {
+}
+
+table {
+    border-collapse: collapse;
+
+    caption,
+    th {
+        background-color: black;
+        color: white;
+    }
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.hide {
+    display: none;
+}

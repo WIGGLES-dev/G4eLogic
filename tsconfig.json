@@ -14,11 +14,13 @@
         "resolveJsonModule": true,
         "declaration": true,
         "lib": [
-            "ES2015"
+            "DOM",
+            "ES2019"
         ],
         "types": [
             "webpack",
-            "webpack-dev-server"
+            "webpack-dev-server",
+            "svelte"
         ],
         "baseUrl": "./src",
         "paths": {
@@ -28,15 +30,19 @@
             "@utils/*": [
                 "utils/*"
             ],
-            "@gcs/*": [
-                "gcs/*"
+            "@externals/*": [
+                "externals/*"
+            ],
+            "@ui/*": [
+                "ui/*"
             ]
         },
         "target": "ES2015",
         "allowJs": false
     },
     "include": [
-        "src"
+        "src",
+        "../foundryVTT/GURPS/src/svelte/tabs"
     ],
     "exclude": [
         "node_modules",

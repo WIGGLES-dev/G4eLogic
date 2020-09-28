@@ -1,6 +1,5 @@
-import { Feature } from "./misc/feature";
+import { Feature, FeatureType } from "./misc/feature";
 import { Character, Signature } from "./character";
-import { FeatureType } from "@gcs/gcs";
 import { Featurable } from "@character/character";
 import { CharacterElement } from "./misc/element";
 import { Collection } from "./misc/collection";
@@ -8,12 +7,12 @@ import { Collection } from "./misc/collection";
 export class AttributeList {
     static keys = []
     character: Character
-    attributes: Collection<string, Attribute> = new Collection
+    attributes: Map<string, Attribute> = new Map()
 
     constructor(character: Character, keys: string[] = []) {
         this.character = character
         this.configureAttributes();
-        this.character.hooks.on("reconfigure", this.configureAttributes);
+        this.character.Hooks.on("reconfigure", this.configureAttributes);
     }
 
     private configureAttributes() {
@@ -30,7 +29,7 @@ export class AttributeList {
         });
     }
 
-    signatureOptions() { return Array.from(this.attributes).map(attribute => attribute.name) }
+    signatureOptions() { return Array.from(this.attributes.values()).map(attribute => attribute.name) }
 
     getAttribute(attribute: string) {
         return this.attributes.get(attribute)
@@ -73,10 +72,13 @@ export class Attribute extends CharacterElement<Attribute> {
         this.basedOn = basedOn;
     }
 
-    setLevel(level: number) { if (level || level === 0) this.level = level; return level }
+    setLevel(level: number) { this.setValue({ level }, { update: false }); return level }
     setLevelDelta() { }
 
-    getMod() { return this.getModList().reduce((prev, cur) => prev + cur.getBonus(), 0) }
+    getMod() {
+        return this.getModList().reduce((prev, cur) => prev + cur.getBonus(), 0)
+    }
+
     getModList(): AttributeBonus<any>[] {
         const attributeName = this.name;
         return this.character.featureList.getFeaturesByType(FeatureType.attributeBonus).filter(
@@ -86,7 +88,7 @@ export class Attribute extends CharacterElement<Attribute> {
 
     pointsSpent() { return this.levelsIncreased() * this.costPerLevel }
     levelsIncreased() { return this.level - this.defaultLevel }
-    calculateLevel() { return this.level + this.getMod() || 0 + this.basedOn() }
+    calculateLevel() { return this.level + (this.getMod() || 0) + this.basedOn() }
 
     get displayLevel() { return this.calculateLevel() }
     set displayLevel(level) {
@@ -103,7 +105,7 @@ export class AttributeBonus<T extends Featurable> extends Feature<T> {
     static type = FeatureType.attributeBonus
     static keys = ["attribute"]
 
-    attribute: string
+    attribute: string = Signature.ST
     constructor(owner: T, keys: string[] = []) {
         super(owner, [...keys, ...AttributeBonus.keys]);
     }

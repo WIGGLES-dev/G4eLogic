@@ -36,7 +36,7 @@ function diceString(count: number, modifier: number = 0, sides: number = 6, mult
     let string = "";
     count = Math.floor(Math.max(count, 0));
     sides = Math.max(sides, 0);
-    modifier = Math.ceil(modifier);
+    modifier = Math.floor(modifier);
     if (count > 0 && sides > 0) {
         string += count;
         string += "d";

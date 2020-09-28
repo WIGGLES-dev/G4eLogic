@@ -4,22 +4,18 @@ import { Character } from "../character";
 import { HitLocation } from "../locations";
 
 export class EquipmentList extends List<Equipment> {
-
-    constructor(character: Character) {
-        super(character);
+    constructor(character: Character, name = "equipment") {
+        super(character, name);
     }
-
     populator(data: any) {
         return new Equipment(this)
     }
-
     forSkillEncumbrancePenalty() {
         return this.iterTop().reduce((prev, cur) => {
             if (cur.equipped && cur.applySkillEncumbrancePenalty) prev += cur.extendedWeight();
             return prev
         }, 0)
     }
-
     totalWeight({ carriedOnly = true } = {}) {
         return this.iterTop().reduce((prev, cur) => {
             if (carriedOnly) {
@@ -30,7 +26,6 @@ export class EquipmentList extends List<Equipment> {
             return prev
         }, 0)
     }
-
     totalValue({ carriedOnly = true } = {}) {
         return this.iterTop().reduce((prev, cur) => {
             if (carriedOnly) {
@@ -44,14 +39,21 @@ export class EquipmentList extends List<Equipment> {
 }
 
 export class Equipment extends ListItem<Equipment> {
-    static keys = ["description", "equipped", "techLevel", "legalityClass", "quantity", "weight", "value", "containedWeightReduction"]
+    static keys = [
+        "description", "techLevel", "legalityClass", "quantity", "uses",
+        "weight", "value", "containedWeightReduction", "applySkillEncumbrancePenalty",
+        "isAmmunition", "storeLocation"
+    ]
     version = 1
     tag = "equipment"
 
-    description: string
-    equipped: boolean = true
+    description: string = ""
     boundLocation: HitLocation
-    techLevel: string
+
+    storedLocation = "carried"
+
+    uses: number = 0
+    techLevel: string = ""
     legalityClass: string
     quantity: number = 1
     weight: number = 0
@@ -59,6 +61,7 @@ export class Equipment extends ListItem<Equipment> {
     containedWeightReduction: string
 
     applySkillEncumbrancePenalty: boolean = true
+    isAmmunition: boolean = false
 
     modifiers: Set<EquipmentModifier<Equipment>> = new Set()
 
@@ -68,6 +71,9 @@ export class Equipment extends ListItem<Equipment> {
         super(list, [...keys, ...Equipment.keys]);
     }
 
+    get equipped() { return !this.disabled }
+    set equipped(value) { this.disabled = !value }
+
     addModifier() {
         const modifier = new EquipmentModifier<Equipment>(this);
         this.modifiers.add(modifier)
@@ -75,25 +81,18 @@ export class Equipment extends ListItem<Equipment> {
     }
 
     get name() { return this.description }
+    set name(name) { this.description = name }
+
     isActive() { return this.equipped }
     getLevel(): number { return null }
 
     getAmmoSources() {
         return Array.from(this.getRecursiveChildren()).reduce((prev: Equipment[], cur: Equipment) => {
-            if (cur.categories.has("Ammunition")) {
+            if (cur.isAmmunition) {
                 prev = [...prev, cur]
             }
             return prev
         }, []);
-    }
-
-    private childrenWeight(): number | null {
-        return Array.from(this.children).reduce((prev, cur) => {
-            return prev += cur.findSelf().extendedWeight()
-        }, 0)
-    }
-    private childrenValue(): number | null {
-        return 0
     }
 
     private reduceContainedWeight(weight: number) {
@@ -112,23 +111,18 @@ export class Equipment extends ListItem<Equipment> {
     extendedWeight() {
         const adjustedWeight = this.adjustedWeight();
         if (this.isContainer()) {
-            return this.childrenWeight() + this.weight
-            return this.reduceContainedWeight((this.childrenWeight() + adjustedWeight))
+            return Array.from(this.getRecursiveChildren()).reduce((prev, cur) => prev + cur.weight * cur.quantity, 0) + this.weight
         } else {
             return this.weight * this.quantity
-            return adjustedWeight * this.quantity
         }
     }
 
     extendedValue() {
         const adjustedValue = this.adjustedValue();
-
         if (this.isContainer()) {
-            return this.childrenValue()
-            // + adjustedValue
+            return Array.from(this.getRecursiveChildren()).reduce((prev, cur) => prev + cur.value * cur.quantity, 0) + this.value
         } else {
             return this.value * this.quantity
-            return adjustedValue * this.quantity
         }
     }
     getModifiers() { }

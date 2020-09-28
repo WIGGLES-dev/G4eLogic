@@ -1,5 +1,4 @@
-import { objectify, json } from "@utils/json_utils"
-import * as gcs from "@gcs/gcs";
+import { objectify } from "@utils/json_utils"
 
 export class Profile {
     tag = "profile"
@@ -44,8 +43,8 @@ export class Profile {
         return data
     }
 
-    load(object: json) {
-        object = objectify<gcs.Profile>(object);
+    load(object: any) {
+        object = objectify(object);
         this.sizeModifier = object?.size_modifier ?? "";
         this.techLevel = object?.tech_level ?? "";
         this.birthday = object?.birthday ?? "";
@@ -60,7 +59,7 @@ export class Profile {
         this.race = object?.race ?? "";
         this.bodyType = object?.bodyType ?? "";
         this.age = object?.age ?? "";
-        this.portrait = object?.portait ?? "";
+        this.portrait = object?.portrait ?? "";
         return this
     }
 }

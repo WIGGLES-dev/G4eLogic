@@ -5,7 +5,7 @@ import { Character } from "index";
 
 export class TechniqueList extends SkillList {
     constructor(character: Character) {
-        super(character);
+        super(character, "technique");
     }
 
     populator() {
@@ -39,6 +39,7 @@ export class Technique extends Skill {
         this.default = new SkillDefault(this);
     }
 
+    //@ts-ignore
     get signature(): Signature { return this.default.isSkillBased() ? null : this.default.type as Signature }
 
     getBonus() {

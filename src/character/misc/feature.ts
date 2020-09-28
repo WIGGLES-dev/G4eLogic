@@ -1,17 +1,27 @@
 import { CharacterElement } from "./element";
 import { Featurable, Character } from "../character";
-import { FeatureType } from "@gcs/gcs";
 import { SkillLike } from "@character/skill/skill";
 import { AttributeBonus } from "@character/attribute";
 import { Weapon } from "@character/weapon";
 import { StringCompare, stringCompare } from "@utils/string_utils";
 import { Collection } from "./collection";
 
+export enum FeatureType {
+    attributeBonus = "attribute_bonus",
+    damageResistanceBonus = "dr_bonus",
+    skillBonus = "skill_bonus",
+    weaponDamageBonus = "weapon_bonus",
+    reactionBonus = "reaction_bonus",
+    spellBonus = "spell_bonus",
+    containedWeightReduction = "contained_weight_reduction",
+    costReduction = "cost_reduction"
+}
+
 export class FeatureList {
     character: Character
 
-    features: Collection<string, Feature<Featurable>> = new Collection()
-    weapons: Collection<string, Weapon<Featurable>> = new Collection()
+    features: Map<string, Feature<Featurable>> = new Map()
+    weapons: Map<string, Weapon<Featurable>> = new Map()
 
     constructor(character: Character) {
         this.character = character
@@ -40,7 +50,7 @@ export class FeatureList {
     }
 
     getFeaturesByType<T extends FeatureType>(type: T) {
-        return this.features.filter(feature => feature.type === type)
+        return Array.from(this.features.values()).filter(feature => feature.type === type)
     }
 
     empty() {
@@ -49,31 +59,44 @@ export class FeatureList {
     }
 }
 
-export abstract class Feature<T extends Featurable> extends CharacterElement<T> {
-    static keys = ["amount", "leveled", "limitation", "type"]
+export class Feature<T extends Featurable> extends CharacterElement<T> {
+    static keys = ["amount", "leveled"]
 
     tag = "feature"
 
-    amount: number
-    leveled: boolean
-    limitation: false | string
-    type: FeatureType
+    amount: number = 0
+    leveled: boolean = false
+    static type: FeatureType
+
+    Feature: typeof Feature = AttributeBonus
 
     owner: T
     registered: boolean
 
-    constructor(owner: T, keys: string[]) {
+    constructor(owner: T, keys: string[] = []) {
         super(owner.character, [...keys, ...Feature.keys]);
         this.owner = owner;
         owner.features.add(this);
         this.owner.list.character.featureList.registerFeature(this);
     }
-    /**
-     * Returns the type of the feature based on it's constructing class. This is a string that is a member of @enum FeatureType.
-     */
-    getType(): string {
-        //@ts-ignore
-        return this.constructor.type
+
+    get type() { return (this.constructor as typeof Feature).type }
+    set type(type: FeatureType) {
+        if (this.type === type) return
+        Feature.loadFeature(this.owner, type).setValue(this);
+        this.delete();
+    }
+
+    dispatch() {
+        this.owner.dispatch();
+        super.dispatch();
+    }
+
+    delete() {
+        this.owner.list.character.featureList.removeFeature(this.uuid);
+        this.owner.features.delete(this);
+        this.owner.dispatch();
+        super.delete();
     }
 
     ownerIsActive(): boolean {
@@ -86,17 +109,14 @@ export abstract class Feature<T extends Featurable> extends CharacterElement<T> 
      */
     getBonus(): number { return this.leveled && this.owner.hasLevels ? this.amount * this.owner.getLevel() : this.amount }
 
-    unregister() {
-        this.owner.list.character.featureList.removeFeature(this.uuid);
-    }
-    save(...args) {
-        return this.getSerializer().transformers.get(this.tag).save(this, ...args)
-    }
     load(data: any, ...args) {
-        return this.getSerializer().transformers.get(this.tag).load(this, data, ...args)
+        return this.getSerializer().transform(this.tag, "load")(this, data, ...args)
+    }
+    save(data: any, ...args) {
+        return this.getSerializer().transform(this.tag, "save")(this, data, ...args)
     }
 
-    static loadFeature<T extends Featurable>(owner: T, featureType: FeatureType): Feature<T> {
+    static loadFeature<T extends Featurable>(owner: T, featureType: FeatureType = FeatureType.attributeBonus): Feature<T> {
         switch (featureType) {
             case FeatureType.attributeBonus:
                 return new AttributeBonus(owner)

@@ -17,18 +17,21 @@ function iterableCompare(compare: string, compareTo: string | string[] | Set<str
 export function stringCompare(defaultQuery: string, skillQuery: string, type: StringCompare): boolean {
     defaultQuery = defaultQuery?.toLowerCase() ?? null;
     skillQuery = skillQuery?.toLowerCase() ?? null;
-
-    switch (type) {
-        case StringCompare.isAnything: return true
-        case StringCompare.is: return skillQuery === defaultQuery
-        case StringCompare.isNot: return skillQuery !== defaultQuery
-        case StringCompare.contains: return skillQuery.includes(defaultQuery)
-        case StringCompare.doesNotContain: return !skillQuery.includes(defaultQuery)
-        case StringCompare.startsWith: return skillQuery.startsWith(defaultQuery)
-        case StringCompare.doesNotStartWith: return !skillQuery.startsWith(defaultQuery)
-        case StringCompare.endsWith: return skillQuery.endsWith(defaultQuery)
-        case StringCompare.doesNotEndWith: return !skillQuery.endsWith(defaultQuery)
-        default: return false
+    try {
+        switch (type) {
+            case StringCompare.isAnything: return true
+            case StringCompare.is: return skillQuery === defaultQuery
+            case StringCompare.isNot: return skillQuery !== defaultQuery
+            case StringCompare.contains: return skillQuery.includes(defaultQuery)
+            case StringCompare.doesNotContain: return !skillQuery.includes(defaultQuery)
+            case StringCompare.startsWith: return skillQuery.startsWith(defaultQuery)
+            case StringCompare.doesNotStartWith: return !skillQuery.startsWith(defaultQuery)
+            case StringCompare.endsWith: return skillQuery.endsWith(defaultQuery)
+            case StringCompare.doesNotEndWith: return !skillQuery.endsWith(defaultQuery)
+            default: return false
+        }
+    } catch (err) {
+        return false
     }
 }
 

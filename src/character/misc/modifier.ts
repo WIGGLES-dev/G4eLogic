@@ -1,8 +1,6 @@
 import { Trait } from "../trait/trait"
 import { Equipment } from "../equipment/equipment"
-import { objectify, json } from "@utils/json_utils"
 import { CharacterElement } from "./element"
-import { Constructor } from "@character/serialization/serializer"
 
 export type Modifiable = Trait | Equipment
 export abstract class Modifier<T extends Modifiable> extends CharacterElement<T> {
@@ -10,7 +8,7 @@ export abstract class Modifier<T extends Modifiable> extends CharacterElement<T>
     abstract version: number
     abstract tag: string
 
-    enabled: boolean = true
+    enabled: boolean = false
     name: string
     owner: T
 
@@ -18,11 +16,17 @@ export abstract class Modifier<T extends Modifiable> extends CharacterElement<T>
         super(owner.character, [...keys, ...Modifier.keys]);
         this.owner = owner
     }
-    save() {
-        return this.getSerializer().transformers.get(this.constructor as Constructor).save(this)
+
+    dispatch() {
+        this.owner.dispatch();
+        super.dispatch();
     }
-    load(data: any) {
-        return this.getSerializer().transformers.get(this.constructor as Constructor).load(this, data)
+
+    load(data: any, ...args) {
+        return this.getSerializer().transform(this.constructor, "load")(this, data, ...args)
+    }
+    save(data: any, ...args) {
+        return this.getSerializer().transform(this.constructor, "save")(this, data, ...args)
     }
 
     /**

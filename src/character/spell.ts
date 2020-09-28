@@ -5,7 +5,7 @@ import { objectify, json } from "@utils/json_utils";
 
 export class SpellList extends List<Spell> {
     constructor(character: Character) {
-        super(character);
+        super(character, "spell");
     }
 
     populator(data: any) {

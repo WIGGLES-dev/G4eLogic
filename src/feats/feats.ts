@@ -1,3 +1,7 @@
-class Feat {
+abstract class Feat {
+    constructor() {
 
+    }
+
+    abstract execute()
 }

@@ -1,0 +1,19 @@
+.tabs {
+    .panel {
+    }
+
+    button[data-tab] {
+        padding: 10px;
+        user-select: none;
+
+        &.selected {
+            background-color: black;
+            color: white;
+        }
+
+        &:not(.selected):hover {
+            border: 1px solid black;
+            margin: -1px;
+        }
+    }
+}

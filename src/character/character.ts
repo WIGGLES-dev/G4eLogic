@@ -1,4 +1,4 @@
-import { List, ListItem } from "./misc/list";
+import { ListItem } from "./misc/list";
 import { Attribute, AttributeList } from "./attribute";
 import { SkillList } from "./skill/skill";
 import { TraitList } from "./trait/trait";
@@ -6,33 +6,51 @@ import { Equipment, EquipmentList } from "./equipment/equipment";
 import { FeatureList } from "./misc/feature";
 import { Profile } from "./profile";
 import { SpellList } from "./spell";
-import { json, objectify } from "@utils/json_utils";
-import { Weapon } from "./weapon";
-import { FeatureType } from "@gcs/gcs";
-import { Serializer, registerSerializer } from "./serialization/serializer";
-import { GCSJSON } from "./serialization/gcs_json";
+import { Serializer, registerSerializer } from "../externals/serializer";
 import { CharacterElement } from "./misc/element";
 import { LocationList } from "./locations";
-import { Collection } from "./misc/collection";
 import { Hooks } from "../hooks/hooks";
+import { State } from "state/state";
 import { getThrust, getSwing } from "../damage/damage";
 import { TechniqueList } from "./technique";
 import defaultConfig from "./config.json";
+import JsonQuery from "json-query";
+import { Plugin } from "../externals/plugin";
 
-export abstract class Sheet {
-    hooks: Hooks = new Hooks()
+
+
+export abstract class Sheet<T extends Sheet<T>> {
+    Hooks: Hooks = new Hooks()
+    State: State = new State()
     serializer = Serializer
 
     defaultConfig: any
     config: any
 
+    plugins: Map<string, Plugin<T>>
+
     #currentScope = "GCSJSON"
     #elements: Set<CharacterElement<Featurable>> = new Set();
 
-    constructor(config?: any) {
+    constructor({
+        config,
+        plugins = []
+    }:
+        {
+            config: any,
+            plugins: Plugin<T>[]
+        }
+    ) {
         this.defaultConfig = defaultConfig;
         this.config = config || defaultConfig;
-        this.hooks.callAll("init", this);
+
+        plugins.forEach(plugin => this.registerPlugin(plugin.scope, plugin));
+
+        this.Hooks.callAll("init", this);
+    }
+
+    registerPlugin(scope: string, plugin: Plugin<T>) {
+        this.plugins.set(scope, plugin.init(this));
     }
 
     static registerSerializer(serializer: Serializer) {
@@ -40,8 +58,9 @@ export abstract class Sheet {
     }
 
     void() {
-        this.hooks.callAll("before void sheet", this);
+        this.Hooks.callAll("before void sheet", this);
         this.#elements.clear();
+        this.Hooks.callAll("after void sheet", this);
         return this
     }
 
@@ -56,13 +75,13 @@ export abstract class Sheet {
 
     registerElement(element: CharacterElement<Featurable>) {
         this.#elements.add(element);
-        this.hooks.callAll("element_added", element);
+        this.Hooks.callAll("element_added", element);
     }
 
     removeElement(element: CharacterElement<Featurable>) {
-        this.hooks.callAll(`before remove element ${element.uuid}`, element)
+        this.Hooks.callAll(`before remove element ${element.uuid}`, element)
         this.#elements.delete(element);
-        this.hooks.callAll(`removed element ${element.uuid}`, this);
+        this.Hooks.callAll(`removed element ${element.uuid}`, this);
     }
 
     getElementById(type: string, id: string) {
@@ -73,9 +92,32 @@ export abstract class Sheet {
         return result || null
     }
 
+    private defaultQueryLocals() {
+        return {
+
+        }
+    }
+
+    query(
+        query: string,
+        locals: { [key: string]: (this: { data: T }, input: any, ...args) => any } = {}
+    ) {
+        return JsonQuery(query, {
+            data: this,
+            locals: Object.assign(this.defaultQueryLocals(), locals)
+        })
+    }
+
     reconfigure(config: any) {
         this.config = config;
-        this.hooks.callAll("reconfigure", this);
+        this.Hooks.callAll("reconfigure", this);
+    }
+}
+
+export class SheetData<T> {
+    data: T
+    constructor() {
+
     }
 }
 
@@ -84,8 +126,10 @@ export interface Featurable extends ListItem<any> {
     getLevel: () => number
 }
 
-export class Character extends Sheet {
+export class Character extends Sheet<Character> {
     gCalcID: string
+
+    totalPoints: number
 
     missingHP: number
     missingFP: number
@@ -106,7 +150,7 @@ export class Character extends Sheet {
         super(config);
         this.profile = new Profile();
         this.equipmentList = new EquipmentList(this);
-        this.otherEquipmentList = new EquipmentList(this);
+        this.otherEquipmentList = new EquipmentList(this, "other equipment");
         this.skillList = new SkillList(this);
         this.techniqueList = new TechniqueList(this);
         this.traitList = new TraitList(this);
@@ -153,6 +197,7 @@ export class Character extends Sheet {
     }
 
     pointTotals() {
+        const totalPoints = this.totalPoints;
         const racialPoints = this.traitList.sumRacials();
         const attributePoints = this.totalAttributesCost();
         const advantages = this.traitList.sumAdvantages();
@@ -168,7 +213,8 @@ export class Character extends Sheet {
             quirks,
             skills,
             spells,
-            total: racialPoints + attributePoints + advantages + disadvantages + quirks + skills + spells
+            spent: racialPoints + attributePoints + advantages + disadvantages + quirks + skills + spells,
+            total: totalPoints
         }
     }
 
@@ -225,18 +271,18 @@ export class Character extends Sheet {
         }
     }
 
-    load(data: any, scope: string) {
-        this.hooks.callAll("before unload", this);
+    load(data: any, scope: string, ...args) {
+        this.Hooks.callAll("before unload", this);
         this.void();
-        this.getSerializer(scope).load(this, data);
-        this.hooks.callAll("after load", this);
+        this.getSerializer(scope).load(this, data, ...args);
+        this.Hooks.callAll("after load", this);
         return this
     }
 
-    save(scope: string, target: any) {
-        this.hooks.callAll("before save", this);
-        this.getSerializer(scope).save(this, target);
-        this.hooks.callAll("after save", this);
+    save(scope: string, target: any, ...args) {
+        this.Hooks.callAll("before save", this);
+        this.getSerializer(scope).save(this, target, ...args);
+        this.Hooks.callAll("after save", this);
         return this
     }
 

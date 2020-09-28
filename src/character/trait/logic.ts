@@ -7,18 +7,18 @@ export function getAdjustedPoints(
     hasHalfLevel: boolean = false,
     pointsPerLevel: number = 0,
     levels: number = 0,
-    roundDown: boolean = false
+    roundDown: boolean = false,
+    controlMultipler = 1
 ) {
     let baseEnh = 0;
     let levelEnh = 0;
     let baseLim = 0;
     let levelLim = 0;
-    let multiplier = 1;
+    let multiplier = controlMultipler;
 
     modifiers?.forEach(modifier => {
         if (modifier.enabled) {
             let mod = modifier.costModifier();
-            console.log(mod);
             switch (modifier.type) {
                 case TraitModifierType.percentage:
                 default:
@@ -70,7 +70,10 @@ export function getAdjustedPoints(
 
     let modifiedBasePoints = basePoints;
 
-    let leveledPoints = pointsPerLevel * (levels + (hasHalfLevel ? .5 : 0)) || 0;
+    let leveledPoints =
+        hasLevels ?
+            pointsPerLevel * (levels + (hasHalfLevel ? .5 : 0)) || 0
+            : 0;
     if (baseEnh !== 0 || baseLim !== 0 || levelEnh !== 0 || levelLim !== 0) {
         if (false) {
             //TODO multiplicative modifiers
@@ -82,7 +85,6 @@ export function getAdjustedPoints(
                 TraitModifier.modifyPoints((modifiedBasePoints + leveledPoints), baseMod) :
                 TraitModifier.modifyPoints(modifiedBasePoints, baseMod) + TraitModifier.modifyPoints(leveledPoints, levelMod);
         }
-
     } else {
         modifiedBasePoints += (leveledPoints);
     }

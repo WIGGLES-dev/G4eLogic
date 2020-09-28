@@ -1,20 +1,16 @@
-import { Signature, Character, Featurable } from "../character";
+import { Signature, Character } from "../character";
 import { List, ListItem } from "../misc/list";
-import { Feature, SkillBonus } from "../misc/feature";
-import { StringCompare, stringCompare } from "utils/string_utils";
-import { objectify, json, isArray } from "@utils/json_utils";
-import { Default, DefaultType } from "../misc/default";
-import * as gcs from "@gcs/gcs";
-import { Constructor } from "../serialization/serializer";
+import { SkillBonus, FeatureType } from "../misc/feature";
+import { Default } from "../misc/default";
 import { calculateSkillLevel, calculateRelativeLevel, getBaseRelativeLevel } from "./logic";
 
 export class SkillList extends List<Skill> {
-    constructor(character: Character) {
-        super(character);
+    constructor(character: Character, name: string = "skill") {
+        super(character, name);
     }
 
     populator() {
-        return new Skill(this, []);
+        return new Skill(this);
     }
 
     sumSkills() {
@@ -202,12 +198,13 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
 }
 
 export class Skill extends SkillLike<Skill> {
-    static keys = ["signature", "techLevel", "defaults", "defaultedFrom", "encumbrancePenaltyMultiple"]
+    static keys = ["signature", "hasTechLevel", "techLevel", /* "defaults", */ "defaultedFrom", "encumbrancePenaltyMultiple"]
     version = 1
     tag = "skill"
     type: "skill" | "skill_container"
 
     signature: Signature
+    hasTechLevel = false
     techLevel: string
     defaults: Set<SkillDefault<SkillLike<any>>> = new Set()
     defaultedFrom: SkillDefault<SkillLike<any>>
@@ -234,8 +231,8 @@ export class Skill extends SkillLike<Skill> {
     getBonus(): number { return this.getModList().reduce((prev, cur) => prev + cur.getBonus(), 0) }
     getModList(): SkillBonus<any>[] {
         const skill = this;
-        return this.list.character.featureList.getFeaturesByType(gcs.FeatureType.skillBonus).filter(bonus =>
-            bonus instanceof SkillBonus && bonus.type === gcs.FeatureType.skillBonus && bonus.isApplicableTo(skill) && bonus.ownerIsActive()
+        return this.list.character.featureList.getFeaturesByType(FeatureType.skillBonus).filter(bonus =>
+            bonus instanceof SkillBonus && bonus.type === FeatureType.skillBonus && bonus.isApplicableTo(skill) && bonus.ownerIsActive()
         ) as SkillBonus<any>[]
     }
 
@@ -246,7 +243,8 @@ export class Skill extends SkillLike<Skill> {
 }
 
 export class SkillDefault<T extends SkillLike<any>> extends Default<T> {
-    static keys = ["level", "adjustedLevel", "points"]
+    //static keys = ["level", "adjustedLevel", "points"]
+    static keys = []
     tag = "default"
 
     level: number = 0
@@ -260,8 +258,8 @@ export class SkillDefault<T extends SkillLike<any>> extends Default<T> {
 
     getLookupList() { return this.owner.list.character.skillList }
 
-    save(...args) { return this.getSerializer().transformers.get(this.constructor as Constructor).save(this, ...args) }
-    load(data: any, ...args) { return this.getSerializer().transformers.get(this.constructor as Constructor).load(this, data, ...args) }
+    load(data: any, ...args) { return this.getSerializer().transform(this.constructor, "load")(this, data, ...args) }
+    save(data: any, ...args) { return this.getSerializer().transform(this.constructor, "save")(this, data, ...args) }
 }
 
 export enum Difficulty {

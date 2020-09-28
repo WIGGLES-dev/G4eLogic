@@ -36,7 +36,7 @@ export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
     static type: string
     owner: T
 
-    usage: string
+    usage: string = "attack"
     strength: string = "10"
 
     damageStrength: BaseDamage
@@ -61,7 +61,7 @@ export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
         this.owner.getCharacter().featureList.registerWeapon(this);
     }
 
-    addDefault() {
+    addDefault(): WeaponDefault<any> {
         const newDefault = new WeaponDefault(this);
         return newDefault
     }
@@ -71,8 +71,8 @@ export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
         return this.constructor.type
     }
 
-    load(data: any, ...args) { return this.getSerializer().transformers.get(this.tag).load(this, data, ...args) }
-    save(...args) { return this.getSerializer().transformers.get(this.tag).save(this, ...args) }
+    load(data: any, ...args) { return this.getSerializer().transform(this.tag, "load")(this, data, ...args) }
+    save(data: any, ...args) { return this.getSerializer().transform(this.tag, "save")(this, data, ...args) }
 
     onDestroy() {
         this.owner.getCharacter().featureList.removeWeapon(this.uuid);
@@ -112,7 +112,7 @@ export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
     getAmmoSources() {
         try {
             //@ts-ignore
-            this.owner.getAmmoSources();
+            return this.owner.getAmmoSources();
         } catch (err) {
             return []
         }

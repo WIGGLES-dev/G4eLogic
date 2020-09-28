@@ -1,4 +1,8 @@
 {
+    "use_multiplicative_modifiers": false,
+    "use_knowing_your_own_strength": false,
+    "use_reduced_swing_damage": false,
+    "use_no_school_grognard_reduced_swing_damage": false,
     "attributes": [
         {
             "signature": "ST",
@@ -49,9 +53,9 @@
             "can_be_signature": true
         },
         {
-            "siganture": "QP",
+            "signature": "QP",
             "cost_per_level": 3,
-            "based_on": "return this.getAttribute('QP').calculateLevel()"
+            "based_on": "return this.getAttribute('QT').calculateLevel()"
         },
         {
             "signature": "Speed",
@@ -74,7 +78,7 @@
         {
             "signature": "Will",
             "cost_per_level": 5,
-            "based_on": "return this.getAttribute('ST').calculateLevel()",
+            "based_on": "return this.getAttribute('IQ').calculateLevel()",
             "can_be_signature": true
         }
     ],

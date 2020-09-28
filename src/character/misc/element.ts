@@ -1,135 +1,73 @@
 import {
-    generateRowID,
     generateUUID
 } from "@utils/2R20";
-import { objectify, json } from "@utils/json_utils";
 import { Character } from "@character/character";
-import { Featurable } from "@gcs/gcs";
 import { Collection } from "./collection";
 import { watch, rootWatcher } from "@character/general/decororators/dynaprops";
+import { Observable } from "@character/general/observable";
+
 
 // @watch("reference", "userDescription", "notes", "categories")
 // @rootWatcher
-export abstract class CharacterElement<T extends CharacterElement<T>> {
-    static keys = ["reference", "userDescription", "notes", "categories"]
-    subscriptions: Set<(store: any) => void> = new Set()
-
-    data: any
+export abstract class CharacterElement<T extends CharacterElement<T>> extends Observable {
+    static keys = ["reference", "userDescription", "notes", "disabled"]
 
     uuid: string = generateUUID().toString()
     foundryID: string
 
+    disabled: boolean
     reference: string
     userDescription: string
     notes: string
-    categories: Collection<string, string>
+    categories: Collection<string>
 
     character: Character
 
     constructor(character: Character, keys: string[]) {
-        this.createDataAccessors([...keys, ...CharacterElement.keys]);
-        this.data = this.proxy();
+        super([...keys, ...CharacterElement.keys]);
 
         this.character = character;
         this.character.registerElement(this);
 
+        this.disabled = false;
         this.reference = "";
         this.userDescription = "";
         this.notes = "";
         this.categories = new Collection();
     }
-    /**
-     * Creates a proxy object that dispatches change events whenever its fields are altered. Changes are only dispatched
-     * on assignment, however you can subscribe to collections individually
-     */
-    private proxy() {
-        const _this = this;
-        return new Proxy({}, {
-            get(target, prop, receiver) {
-                if (target[prop] instanceof Collection) {
-                    //return target[prop].iter()
-                }
-                return target[prop]
-            },
-            set(target, prop, value, receiver) {
-                if (target[prop] === undefined) {
-                    target[prop] = value
-                    return true
-                }
 
-                if (target[prop] instanceof Collection) {
-                    target[prop] = value;
-                } else if (target[prop] === value) {
+    get id() { return this.uuid }
 
-                } else if (target[prop] !== value) {
-                    target[prop] = value
-                    _this.dispatch();
-                }
+    disable() { this.disabled = true; }
+    enable() { this.disabled = false; }
 
-                return true
-            }
-        })
-    }
-    /**
-     * Use reflection to forward data accessors to the internal proxy.
-     * @keys A list of keys to forward
-     */
-    private createDataAccessors(keys: string[]) {
-        const props = keys.reduce((prev, cur) => {
-            if (!prev[cur]) {
-                prev[cur] = {
-                    set(val) {
-                        try {
-                            this.data[cur] = val
-                        } catch (err) {
-                            console.log(err);
-                        }
-                    },
-                    get() {
-                        try {
-                            return this.data[cur]
-                        } catch (err) {
-                            console.log(err);
-                            try {
-                                return this[cur]
-                            } catch (err) {
-                                console.log(err);
-                                return undefined
-                            }
-                        }
-                    }
-                }
-            }
-            return prev
-        }, {});
-        Object.defineProperties(this, props);
-    }
-
-    getClass() { return this.constructor }
-
-    delete() {
+    delete(): any {
         this.character.removeElement(this);
     }
 
     getSerializer(scope?: string) { return this.character.getSerializer(scope) }
 
-    private dispatch() {
-        this.subscriptions.forEach(subscription => {
-            subscription(this);
+    setState(oldV: any, newV: any, prop: string) {
+        this.character.State.addState({
+            undo: () => {
+                this.setValue({
+                    [prop]: oldV
+                });
+            },
+            redo: () => {
+                this.setValue({
+                    [prop]: newV
+                });
+            }
         });
     }
+}
 
-    private unsubscribe(subscribtion: (store: any) => void) {
-        this.subscriptions.delete(subscribtion)
-    }
+export abstract class OwnedElement<T extends CharacterElement<any>> extends CharacterElement<T> {
+    owner: T
 
-    subscribe(subscription: (store: any) => void) {
-        this.subscriptions.add(subscription);
-        // subscription(this);
-        return () => this.unsubscribe(subscription)
-    }
-
-    update(updater: (store: any) => any) {
-
+    constructor(character: Character, owner: T, keys = []) {
+        super(character, keys);
+        this.owner = owner;
     }
 }
