@@ -1,15 +1,15 @@
-import { Character, Sheet } from "@character/character";
+import { Character } from "@character/character";
 import { Plugin } from "@externals/plugin";
 
-class G4eUiPlugin extends Plugin<Character> {
+class G4eUiPlugin extends Plugin {
     scope: string = "UI"
 
     constructor() {
         super();
     }
 
-    init(character: Sheet<Character>) {
-
+    init<Character>(character: Character) {
+        
         return this
     }
 }

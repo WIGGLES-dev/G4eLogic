@@ -1,105 +1,117 @@
-import { Character, Featurable } from "../character";
+import { Character } from "../character";
 import { CharacterElement } from "./element";
 import { Feature } from "./feature";
 import { Weapon, MeleeWeapon, RangedWeapon } from "../weapon";
 import { Collection } from "./collection";
 import { AttributeBonus } from "index";
 
-export abstract class List<T extends ListItem<any>> {
+export abstract class List<T extends ListItem> {
     name: string
-    #contents: Map<string, T> = new Map()
-    contents: Collection<T> = new Collection()
+    collection: Collection<T> = new Collection()
     character: Character
 
-    constructor(character: Character, name: string) {
-        this.character = character;
-        this.name = name
-        let x = this.contents.subscribe(list => {
-            this.generate();
-        });
+    constructor(name: string) {
+        this.name = name;
     }
 
-    get size() { return this.#contents.size }
-    get length() { return this.#contents.size }
-    get [Symbol.iterator]() { return this.#contents[Symbol.iterator] }
-
-    abstract populator(data: any): T
-
-    generate() {
-        this.contents.arr = this.iter().filter(item => !item.containedBy);
-        this.character.Hooks.callAll(`generate ${this.name} list`, this);
+    attachCharacter(character: Character) { this.character = character; return this }
+    getCharacter() {
+        try {
+            return this.character
+        } catch (err) {
+            console.log("this list has no character");
+        }
     }
 
-    addListItem(item?: T | ListItem<any>, data: any = {}): T {
+    get size() { return this.collection.size }
+    get length() { return this.collection.size }
+    get [Symbol.iterator]() { return this.collection[Symbol.iterator] }
+
+    get contents() {
+        return {
+            arr: this.rootItems().arr,
+        }
+    }
+
+    abstract populator(data?: any): T
+
+    has(item: T) { return this.collection.has(item) }
+
+    addListItem(item?: T, data: any = {}): T {
         let listItem: T;
         if (item) {
-            this.#contents.set(item.uuid, item as T);
-            listItem = item.findSelf();
+            this.collection.add(item as T);
+            listItem = item;
         } else {
             listItem = this.populator(data);
         }
-        this.generate();
         return listItem
     }
     removeListItem(item: T) {
-        this.#contents.delete(item.uuid);
-        this.generate();
+        this.collection.delete(item);
     }
-    getByUUID(uuid: string) { return this.#contents.get(uuid); }
 
-    iter() { return [...this.#contents.values()] }
+    moveListItem(from: number, to: number) {
+        this.collection.move(from, to);
+        this.iter().forEach(item => item.dispatch());
+        this.callHook();
+    }
+
+    callHook() { this.getCharacter().Hooks.callAll(`generate ${this.name} list`, this) }
+
+    iter() { return this.collection.arr.sort((a, b) => a.listIndex - b.listIndex) }
+
     allContainers() { return this.iter().filter(item => item.isContainer()) }
-
-    keys() { return [...this.#contents.keys()] }
-    iterTop() {
-        this.generate();
-        return this.contents.arr
+    rootItems() {
+        return new Collection(this.iter().filter(item => !item.containedBy))
     }
 
     save(...args) { return this.character.getSerializer().saveList(this, ...args); }
     load(...args) {
         this.character.getSerializer().loadList(this, ...args);
-        this.generate();
         return this
     }
 
     empty() {
-        this.#contents.clear();
-        this.generate();
+        this.collection.clear();
     }
 }
 
-export abstract class ListItem<T extends Featurable> extends CharacterElement<T> {
+export interface Featurable extends ListItem {
+    hasLevels: boolean
+    getLevel: () => number
+}
+
+export abstract class ListItem extends CharacterElement implements Featurable {
     static keys = ["isOpen", "canContainChildren"]
 
     abstract version: number
     abstract tag: string
 
+    abstract hasLevels: boolean
     abstract name: string
 
-    list: List<T>
+    list: List<this>
 
     canContainChildren: boolean = false
     isOpen = true
-    listIndex: number
 
-    children: Collection<ListItem<T>> = new Collection()
+    containedBy: this
 
-    isContained: boolean
-    containedBy: T
+    features: Collection<Feature<this>> = new Collection();
+    weapons: Collection<Weapon<this>> = new Collection();
 
-    features: Collection<Feature<T>> = new Collection();
-    weapons: Collection<Weapon<T>> = new Collection();
-
-    constructor(list: List<T>, keys: string[]) {
+    constructor(list: List<any>, keys: string[]) {
         super(list.character, [...keys, ...ListItem.keys]);
         this.list = list;
         list.addListItem(this);
-        this.listIndex = this.list.size
-        this.children.subscribe((children) => {
-            this.list.generate();
-        });
     }
+
+    get children(): Collection<this> {
+        let children = this.getList().iter().filter(item => item.containedBy === this);
+        return new Collection(children);
+    }
+    get listIndex() { return this.getList().collection.indexOf(this) }
 
     /**
      * Abstract method that all list items must impliment in order for features to
@@ -108,62 +120,77 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
      */
     abstract isActive(): boolean
 
+
+    abstract getLevel(): number
+
     addFeature() {
-        let feature = Feature.loadFeature(this.findSelf());
+        let feature = Feature.loadFeature(this);
         this.dispatch();
         return feature
     }
     addWeapon(type: string = "melee_weapon") {
-        let weapon: Weapon<T>;
+        let weapon: Weapon<this>;
         switch (type) {
             case "melee_weapon":
-                weapon = new MeleeWeapon(this.findSelf());
+                weapon = new MeleeWeapon(this);
                 break
             case "ranged_weapon":
-                weapon = new RangedWeapon(this.findSelf());
+                weapon = new RangedWeapon(this);
                 break
             default:
         }
+        this.dispatch();
         return weapon || null
     }
 
-    getCharacter(): Character { return this.list.character }
-    isContainer() { return this.canContainChildren }
 
-    setContainedBy(parent: T) {
-        if (!parent.isContainer()) return
-        if (this.containedBy) {
-            this.containedBy.children.delete(this)
+    getList() { return this.list }
+    getCharacter(): Character { return this.getList().getCharacter() }
+
+    isContainer() { return this.canContainChildren }
+    isContained() { return this.containedBy }
+
+    setContainedBy(target?: this) {
+        if (!target) {
+            //this.containedBy?.children.delete(this);
+            this.containedBy = null;
+            return
         }
-        parent.children.add(this);
-        this.containedBy = parent;
-        this.list.generate();
+
+        if (target === this) return
+        if (target.getRecursiveOwners().has(this)) return
+        if (target.getRecursiveChildren().has(this)) return
+
+        if (this.isContained()) {
+            //this.containedBy.children.delete(this);
+        }
+        //target.children.add(this);
+        this.containedBy = target;
+    }
+    addAfter(target: this) {
+        if (target === this) return
+
+        const tContainer = target.containedBy;
+
+        if (!this.getList().has(target)) return;
+
+        this.setContainedBy(tContainer);
+
+        let from = this.listIndex;
+        let to = target.listIndex;
+
+        this.getList().moveListItem(from, to);
+
+        this.getList().getCharacter().dispatch();
     }
 
-    addChild(child?: T) {
+    addChild(child?: this) {
         if (!this.isContainer()) return null
         if (!(child instanceof ListItem)) {
             child = this.list.addListItem();
         }
         child.containedBy = this;
         return child
-    }
-
-    moveTo(i: number) {
-        const list = this.list.iter();
-        const targetListItem = list[i];
-
-        let thisIndex = this.listIndex;
-        let isInPlace = list[thisIndex] === this.findSelf();
-        if (!isInPlace) { }
-
-        if (!targetListItem) return
-
-        if (i > list.length) return
-        list.splice(i, 0, list.splice(this.listIndex, 1)[0])
-        list.forEach((item, i) => {
-            item.listIndex = i;
-        });
     }
 
     /* -------------------------------------------- */
@@ -192,7 +219,7 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
      * Get how many levels of containment until the bottommost container is reached
      */
     getDepthToBottom() {
-        return ([...this.getRecursiveChildren()].pop() || this.findSelf()).getDepth() - this.getItemDepth()
+        return ([...this.getRecursiveChildren()].pop() || this).getDepth() - this.getItemDepth()
     }
     /**
      * Get how many levels of containment until the topmost container is reached
@@ -204,68 +231,78 @@ export abstract class ListItem<T extends Featurable> extends CharacterElement<T>
     /* -------------------------------------------- */
 
     getSiblings() {
-        if (this.containedBy) return new Set(this.containedBy.children).delete(this);
+        return this.containedBy?.children.delete(this) ?? this.getList().rootItems();
     }
     getNextSibling() { }
     getPreviousSibling() { }
 
     /* -------------------------------------------- */
 
-    getRecursiveChildren(collection: Set<T> = new Set()): Set<T> {
+    getRecursiveChildren(collection: Set<this> = new Set()) {
         if (!this.canContainChildren) return collection
         this.children.forEach(child => {
-            collection.add(child.findSelf());
+            collection.add(child);
             if (child.children.size > 0) child.getRecursiveChildren(collection);
         });
-        return collection as Set<T>
+        return collection as Set<this>
     }
 
     /* -------------------------------------------- */
 
     getRootOwner() {
-        return Array.from(this.getRecursiveOwners()).pop() || this.findSelf()
+        return Array.from(this.getRecursiveOwners()).pop() || this
     }
-    getRecursiveOwners(collection: Set<T> = new Set()): Set<T> {
+
+    getRecursiveOwners(collection: Set<this> = new Set()) {
         if (!this.containedBy) return collection
         if (this.containedBy.containedBy) {
-            collection.add(this.containedBy.findSelf());
+            collection.add(this.containedBy);
             this.containedBy.getRecursiveOwners(collection)
         }
-        return collection as Set<T>
+        return collection.add(this.containedBy)
     }
 
     /* -------------------------------------------- */
 
-    iterChildren() { return [...this.children] }
-    findSelf(): T { return this.list.getByUUID(this.uuid) }
     delete(): any {
         this.containedBy?.children.delete(this);
         this.children.forEach(child => {
             child.delete();
         });
-        this.list.removeListItem(this.findSelf());
+        this.list.removeListItem(this);
         super.delete();
-        this.list.generate();
         return this.list
     }
-    private loadChildren<U>(children: U[], parent: T, ...args) {
+    private loadChildren<U>(children: U[], parent: this, ...args) {
         children.forEach(child => {
             const subElement = parent.list.addListItem();
             subElement.containedBy = parent;
-            parent.children.add(subElement);
+            //parent.children.add(subElement);
             subElement.load(child, ...args);
         });
     }
-    load<U>(data, ...args): T {
+    load<U>(data, ...args) {
         const loader = this.getSerializer().transform(this.constructor, "load");
-        const children: U[] = loader(this.findSelf(), data, ...args);
+        const children: U[] = loader(this, data, ...args);
         if (children && children.length > 0) {
             this.setValue({
                 canContainChildren: true
             }, { update: false });
-            this.loadChildren(children, this.findSelf(), ...args);
+            this.loadChildren(children, this, ...args);
         }
-        return this.findSelf()
+        return this
     }
     save(data, ...args) { return this.getSerializer().transform(this.constructor, "save")(this, data, ...args) }
+}
+
+interface derivedListOptions {
+    splitters: {
+        [key: string]: () => any
+    }
+}
+export function createDerivedList(list: List<any>, options: derivedListOptions) {
+    const itemInList = list.iter();
+    Object.entries(options.splitters).map(([splitter, callback]) => {
+
+    });
 }

@@ -11,15 +11,9 @@
 </script>
 
 <style>
-  .panel {
-    height: 100%;
-  }
-  .hide {
-    display: none;
-  }
 </style>
 
-<div class="panel" class:hide={!($selectedPanel === panel)}>
+<div class="flex flex-col h-full" class:hidden={!($selectedPanel === panel)}>
   {#if component}
     <svelte:component this={component} {...props} />
   {:else}

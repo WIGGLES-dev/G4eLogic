@@ -12,7 +12,8 @@ export function formatSkill(skill: Skill) {
     return name
 }
 
-export function formatRSL(skill: SkillLike<any>) {
+export function formatRSL(skill: SkillLike) {
+    if (skill.isContainer()) return ""
     let relativeLevel = skill.getRelativeLevel();
     let rsl = "";
     if (skill.signature) rsl += skill.signature;

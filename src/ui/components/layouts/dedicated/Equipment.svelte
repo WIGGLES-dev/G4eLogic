@@ -7,15 +7,15 @@
 
   const { character } = getContext("app");
 
-  let equipmentList = character.equipmentList;
-  let otherEquipmentList = character.otherEquipmentList;
+  $: equipmentList = $character.equipmentList;
+  $: otherEquipmentList = $character.otherEquipmentList;
 
-  character.Hooks.on(`generate equipment list`, (list) => {
-    equipmentList = list;
-  });
-  character.Hooks.on(`generate other equipment list`, (list) => {
-    otherEquipmentList = list;
-  });
+  // character.Hooks.on(`generate equipment list`, (list) => {
+  //   equipmentList = list;
+  // });
+  // character.Hooks.on(`generate other equipment list`, (list) => {
+  //   otherEquipmentList = list;
+  // });
 </script>
 
 <Tabs>
@@ -30,36 +30,49 @@
       editor={EquipmentEditor}
       list={equipmentList.contents.arr}
       display="table">
+      <colgroup slot="colgroup">
+        <col />
+        <col />
+        <col class="w-full" />
+        <col span="6" class="" />
+      </colgroup>
       <tr slot="header">
-        <th>E</th>
-        <th>#</th>
-        <th>Description</th>
-        <th>Uses</th>
-        <th>Value</th>
-        <th>Weight</th>
-        <th>EValue</th>
-        <th>EWeight</th>
-        <th>Ref</th>
+        <th scope="col">E</th>
+        <th scope="col">#</th>
+        <th scope="col">Description</th>
+        <th scope="col">Uses</th>
+        <th scope="col">Value</th>
+        <th scope="col">Weight</th>
+        <th scope="col">EValue</th>
+        <th scope="col">EWeight</th>
+        <th scope="col">Ref</th>
       </tr>
     </List>
   </TabPanel>
-  <List
-    title="Other Equipment"
-    component={Equipment}
-    editor={EquipmentEditor}
-    list={otherEquipmentList.contents.arr}
-    display="table">
-    <tr slot="header">
-      <th>E</th>
-      <th>#</th>
-      <th>Description</th>
-      <th>Uses</th>
-      <th>Value</th>
-      <th>Weight</th>
-      <th>EValue</th>
-      <th>EWeight</th>
-      <th>Ref</th>
-    </tr>
-  </List>
-  <TabPanel />
+  <TabPanel>
+    <List
+      title="Other Equipment"
+      component={Equipment}
+      editor={EquipmentEditor}
+      list={otherEquipmentList.contents.arr}
+      display="table">
+      <colgroup slot="colgroup">
+        <col />
+        <col />
+        <col class="w-full" />
+        <col span="6" />
+      </colgroup>
+      <tr slot="header">
+        <th scope="col">E</th>
+        <th scope="col">#</th>
+        <th scope="col">Description</th>
+        <th scope="col">Uses</th>
+        <th scope="col">Value</th>
+        <th scope="col">Weight</th>
+        <th scope="col">EValue</th>
+        <th scope="col">EWeight</th>
+        <th scope="col">Ref</th>
+      </tr>
+    </List>
+  </TabPanel>
 </Tabs>

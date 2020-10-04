@@ -5,6 +5,7 @@
   import { fixed6 } from "@ui/utils/formatting";
 
   export let entity = null;
+  export let depth;
 
   const { display, config } = getContext("list");
   const {
@@ -15,61 +16,38 @@
 </script>
 
 <style>
+  td {
+    @apply text-center;
+  }
 </style>
 
 {#if $display === 'table'}
-  <td>
-    <div class="table-cell-inner">
-      <Checkbox bind:checked={entity.equipped} />
-    </div>
+  <td><input type="checkbox" bind:checked={$entity.equipped} /></td>
+  <td><input class="w-10" type="number" bind:value={$entity.quantity} /></td>
+  <td class="w-full text-left">
+    <span class="h-full" style="padding-left:{depth * 2}rem;">&thinsp;</span>
+    <span
+      on:click={() => ($entity.isOpen = !$entity.isOpen)}
+      class="fas"
+      class:hidden={!$entity.isContainer()}
+      class:fa-angle-right={!$entity.isOpen}
+      class:fa-angle-down={$entity.isOpen} />
+    <input class="w-full" type="text" bind:value={$entity.name} />
   </td>
   <td>
-    <div class="table-cell-inner">
-      <Number bind:value={$entity.quantity} />
-    </div>
-  </td>
-  <td class="main-col">
-    <div
-      style="padding-left:{$entity.getItemDepth() * 20 + 10}px;"
-      class="table-cell-inner">
-      <slot name="toggle" />
-      <Text bind:value={$entity.name} />
-    </div>
+    <input class="w-10" type="number" bind:value={$entity.uses} min="0" />
   </td>
   <td>
-    <div class="table-cell-inner">
-      <Number bind:value={$entity.uses} min="0" />
-    </div>
+    <input type="number" class="w-12" min="0" bind:value={$entity.value} />
   </td>
   <td>
-    <div class="table-cell-inner">
-      <Number bind:value={$entity.value} step="1" min="0" />
-      <!-- {fixed6($entity.value)} -->
-    </div>
+    <input type="number" class="w-12" min="0" bind:value={$entity.weight} />
   </td>
-  <td>
-    <div class="table-cell-inner">
-      <Number bind:value={$entity.weight} step="1" min="0" />
-    </div>
-  </td>
-  <td>
-    <div class="table-cell-inner">${fixed6($entity.extendedValue())}</div>
-  </td>
-  <td>
-    <div class="table-cell-inner">{fixed6($entity.extendedWeight())} lb.</div>
-  </td>
-  <td>
-    <div class="table-cell-inner">
-      <Text bind:value={$entity.reference} />
-    </div>
-  </td>
+  <td>${fixed6($entity.extendedValue())}</td>
+  <td>{fixed6($entity.extendedWeight())} lb.</td>
+  <td><input class="w-12" type="text" bind:value={$entity.reference} /></td>
 {:else if $display === 'list'}
   <span>{$entity.name}</span>
 {:else if $display === 'grid'}
-  <div style="
-  flex: 1
-  padding-left:{$entity.getItemDepth() * 10}px
-  ">
-    {$entity.name}
-  </div>
+  <div style="padding-left:{$entity.getItemDepth() * 10}px">{$entity.name}</div>
 {/if}

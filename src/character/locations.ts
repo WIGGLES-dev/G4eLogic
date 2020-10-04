@@ -2,7 +2,6 @@ import { Character, Signature } from "./character";
 import { CharacterElement } from "./misc/element";
 import { Collection } from "./misc/collection";
 import { DRBonus, FeatureType } from "./misc/feature";
-import { Featurable } from "index";
 import { Equipment } from "./equipment/equipment";
 
 export class LocationList {
@@ -50,7 +49,7 @@ export class LocationList {
     }
 }
 
-export class HitLocation extends CharacterElement<HitLocation> {
+export class HitLocation extends CharacterElement {
     static keys = ["crippleThreshold", "damageTaken"]
     damageTaken = 0
 
@@ -98,11 +97,11 @@ export class HitLocation extends CharacterElement<HitLocation> {
             return prev
         }, 0);
     }
-    getArmorFeatures(): DRBonus<Featurable>[] {
+    getArmorFeatures(): DRBonus[] {
         return this.character.featureList.getFeaturesByType(FeatureType.damageResistanceBonus).filter(feature => {
             if (feature instanceof DRBonus) {
                 if (feature.location.toLowerCase() === this.name.toLowerCase()) return true
             }
-        }) as DRBonus<Featurable>[];
+        }) as DRBonus[];
     }
 }

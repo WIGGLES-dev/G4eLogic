@@ -6,24 +6,15 @@
   const tab = { index, identifier };
   const { registerTab, selectTab, selectedTab } = getContext(TABS);
   registerTab(tab);
+
+  $: selected = $selectedTab === tab;
 </script>
 
 <style>
-  button {
-    background: none;
-    border: none;
-    margin: 0;
-    color: black;
-    flex: 1;
-  }
-
-  .selected {
-    background-color: rgb(122, 121, 113);
-    color: white;
-  }
 </style>
 
-<button
+<div
+  class="text-center flex-1 select-none p-2 pt-0 pb-0 text-lg"
   data-tab="n/a"
   on:mouseover={(e) => {
     if (e.which == 1) {
@@ -33,8 +24,10 @@
   on:dragenter={(e) => {
     selectTab(tab);
   }}
-  type="button"
-  class:selected={$selectedTab === tab}
+  class:underline={selected}
+  class:text-red-700={selected}
+  class:hover:bg-gray-700={!selected}
+  class:hover:text-white={!selected}
   on:click={() => selectTab(tab)}>
   <slot />
-</button>
+</div>

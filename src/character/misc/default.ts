@@ -1,4 +1,3 @@
-import { json, objectify } from "@utils/json_utils"
 import { SkillLike, Skill } from "@character/skill/skill"
 import { CharacterElement } from "./element"
 import { Signature } from "@character/character"
@@ -14,7 +13,7 @@ export abstract class DefaultList {
 
 }
 
-export abstract class Default<T extends ListItem<any>> extends CharacterElement<T> {
+export abstract class Default<T extends ListItem> extends CharacterElement {
     static keys = ["type", "modifier", "name", "specialization"]
     tag = "default"
 
@@ -31,7 +30,7 @@ export abstract class Default<T extends ListItem<any>> extends CharacterElement<
         this.owner = owner;
     }
 
-    abstract getLookupList(): List<SkillLike<any>>
+    abstract getLookupList(): List<SkillLike>
 
     isSkillBased() {
         return Object.values(DefaultType).includes(this.type as DefaultType)
@@ -47,7 +46,7 @@ export abstract class Default<T extends ListItem<any>> extends CharacterElement<
     }
 
     getMatches() {
-        const skills: SkillLike<any>[] = this.getLookupList().iter().filter(skill => {
+        const skills: SkillLike[] = this.getLookupList().iter().filter(skill => {
             if (this.specialization) {
                 if (!skill.specialization) return false
                 return this.name === skill.name && this.specialization === skill.specialization
@@ -55,7 +54,7 @@ export abstract class Default<T extends ListItem<any>> extends CharacterElement<
                 return this.name === skill.name
             }
         }) || [];
-        let highest: SkillLike<any> = null
+        let highest: SkillLike = null
         if (skills.length > 0) {
             highest = skills.reduce((prev, cur) => {
                 if (prev.calculateRelativeLevel(10) > cur.calculateRelativeLevel(10)) {

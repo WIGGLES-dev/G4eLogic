@@ -9,22 +9,27 @@
     selected = Boolean(HTMLOptionElement.selected);
   }
 
-  onMount(() => {
-    HTMLOptionElement.closest("select").addEventListener("change", setSelected);
-  });
-  onDestroy(() => {
-    HTMLOptionElement.closest("select").removeEventListener(
-      "change",
-      setSelected
-    );
-  });
+  function listenForOptionSelect(node) {
+    node.closest("select").addEventListener("change", setSelected);
+    return {
+      destroy() {
+        node.closest("select").removeEventListener("change", setSelected);
+      },
+    };
+  }
 
+  let HTMLSelectELement;
   let HTMLOptionElement;
 </script>
 
 <style>
 </style>
 
-<option {value} {disabled} bind:this={HTMLOptionElement}>
+<option
+  use:listenForOptionSelect
+  {selected}
+  {value}
+  {disabled}
+  bind:this={HTMLOptionElement}>
   <slot />
 </option>

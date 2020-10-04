@@ -10,28 +10,12 @@
 </style>
 
 {#if $display === 'table'}
-  <td>
-    <div class="table-cell-inner">{$entity.owner.name}</div>
-  </td>
-  <td>
-    <div class="table-cell-inner">{$entity.usage}</div>
-  </td>
-  <td>
-    <div class="table-cell-inner">{$entity.getBestAttackLevel()}</div>
-  </td>
-  <td>
-    <div class="table-cell-inner">{$entity.block}</div>
-  </td>
-  <td>
-    <div class="table-cell-inner">{$entity.parry}</div>
-  </td>
-  <td>
-    <div class="table-cell-inner">{$entity.damage}</div>
-  </td>
-  <td>
-    <div class="table-cell-inner">{$entity.reach}</div>
-  </td>
-  <td>
-    <div class="table-cell-inner">{$entity.strength}</div>
-  </td>
+  <td>{$entity.owner.name}</td>
+  <td>{$entity.usage}</td>
+  <td>{$entity.getBestAttackLevel()}</td>
+  <td>{$entity.block}</td>
+  <td>{$entity.parry}</td>
+  <td>{$entity.damage}</td>
+  <td>{$entity.reach}</td>
+  <td>{$entity.strength}</td>
 {/if}

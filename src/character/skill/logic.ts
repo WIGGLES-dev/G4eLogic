@@ -45,11 +45,11 @@ export function calculateSkillLevel(
     difficulty: Difficulty,
     points: number,
     base: number = 10,
-    defaultedFrom?: SkillDefault<SkillLike<any>>,
+    defaultedFrom?: SkillDefault<SkillLike>,
     bonus = 0,
     encumbranceLevel = 0,
     encPenaltyMult = 1,
-    gMod = 0,
+    mod = 0,
     bestDefaultLevel = Number.NEGATIVE_INFINITY
 ) {
     let relativeLevel = getBaseRelativeLevel(difficulty);
@@ -84,5 +84,5 @@ export function calculateSkillLevel(
 
     const defaultLevel = defaultedFrom ? defaultedFrom.getHighestMatchLevel({ withBonuses: false }) : Number.NEGATIVE_INFINITY;
 
-    return Math.max(defaultLevel + gMod + bonus, preliminaryLevel + gMod + bonus)
+    return Math.max(defaultLevel + mod + bonus, preliminaryLevel + mod + bonus)
 }

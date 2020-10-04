@@ -4,16 +4,16 @@ import { SkillBonus, FeatureType } from "../misc/feature";
 import { Default } from "../misc/default";
 import { calculateSkillLevel, calculateRelativeLevel, getBaseRelativeLevel } from "./logic";
 
-export class SkillList extends List<Skill> {
-    constructor(character: Character, name: string = "skill") {
-        super(character, name);
+export class SkillList<T extends SkillLike = Skill> extends List<T> {
+    constructor(name: string = "skill") {
+        super(name);
     }
 
-    populator() {
+    populator(data?: any) {
         return new Skill(this);
     }
 
-    sumSkills() {
+    sumPoints() {
         return this.iter().reduce((prev, cur) => {
             return prev + cur.points
         }, 0);
@@ -35,31 +35,57 @@ export class SkillList extends List<Skill> {
  * 
  * @method getBonus
  */
-export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
-    abstract type: "skill" | "skill_container" | "spell" | "spell_container" | "technique"
-    static keys = ["name", "difficulty", "points", "specialization", "gMod"]
+export abstract class SkillLike extends ListItem {
+    static keys = [
+        "name", "difficulty", "points", "specialization", "mod", "signature",
+        "hasTechLevel", "techLevel", "defaults", "defaultedFrom",
+        "encumbrancePenaltyMultiple", "hasLevels"]
 
     name: string
     difficulty: Difficulty
     points: number
     specialization: string
-    gMod: number = 0
+    mod: number = 0
 
-    abstract defaults: Set<SkillDefault<SkillLike<any>>> = new Set()
-    abstract defaultedFrom: SkillDefault<SkillLike<any>>
-    abstract signature: Signature
-    abstract encumbrancePenaltyMultiple: number = 0
+    signature: Signature
+    hasTechLevel = false
+    techLevel: string
+    defaults: Set<SkillDefault<SkillLike>> = new Set()
+    defaultedFrom: SkillDefault<SkillLike>
+    encumbrancePenaltyMultiple: number = 0
 
     hasLevels = false
 
-    constructor(list: List<T>, keys: string[]) {
+    constructor(list: List<SkillLike>, keys: string[]) {
         super(list, [...keys, ...SkillLike.keys]);
     }
 
     /**
      * @returns A bonus to be applied to {@calculateLevel} that must be implemented by classes that inherit from this one.
      */
-    abstract getBonus(): number
+
+    getBonus(): number { return this.getModList().reduce((prev, cur) => prev + cur.getBonus(), 0) }
+    getModList(): SkillBonus<any>[] {
+        const skill = this;
+        return this.list.character.featureList.getFeaturesByType(FeatureType.skillBonus).filter(bonus =>
+            bonus instanceof SkillBonus && bonus.type === FeatureType.skillBonus && bonus.isApplicableTo(skill) && bonus.ownerIsActive()
+        ) as SkillBonus<any>[]
+    }
+
+    addDefault(): SkillDefault<Skill> {
+        return new SkillDefault(this);
+    }
+
+    childrenPoints() {
+        return this.children.reduce((prev, cur) => {
+            if (cur.canContainChildren) {
+                prev += cur.childrenPoints() as number;
+            } else {
+                prev += cur.points;
+            }
+            return prev
+        }, 0)
+    }
 
     /**
      * @override Skill-like entities do not provide leveled feature bonuses.
@@ -98,11 +124,11 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
             withBonuses ? this.getBonus() : 0,
             this.list.character.encumbranceLevel({ forSkillEncumbrance: true }),
             this.encumbrancePenaltyMultiple,
-            withBonuses ? this.gMod : 0,
+            withBonuses ? this.mod : 0,
         )
     }
 
-    getBestDefaultWithPoints<T extends SkillLike<T>>(): SkillDefault<any> {
+    getBestDefaultWithPoints<T extends SkillLike>(): SkillDefault<any> {
         const best = this.getBestDefault();
         if (best === this.defaultedFrom) return this.defaultedFrom
         if (best !== null) {
@@ -127,10 +153,10 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
         }
         return best
     }
-    getBestDefault<T extends SkillLike<T>>() {
+    getBestDefault<T extends SkillLike>() {
         if (this.defaults.size > 0) {
             let best: number = Number.NEGATIVE_INFINITY;
-            let bestSkill: SkillDefault<SkillLike<T>> = null;
+            let bestSkill: SkillDefault<SkillLike> = null;
             this.defaults.forEach(skillDefault => {
                 if (true) {
                     let level;
@@ -155,7 +181,7 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
         return null
     }
 
-    isInDefaultChain(skillLike: SkillLike<any>, skillDefault: Default<SkillLike<any>>, lookedAt = new Set()) {
+    isInDefaultChain(skillLike: SkillLike, skillDefault: Default<SkillLike>, lookedAt = new Set()) {
         const character = skillLike.list.character;
         let hadOne = false;
         if (character !== null && skillDefault !== null && skillDefault.isSkillBased()) {
@@ -185,7 +211,7 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
         return false
     }
 
-    hasDefaultTo(skill: SkillLike<any>) {
+    hasDefaultTo(skill: SkillLike) {
         let result = false;
         this.defaults.forEach(skillDefault => {
             let skillBased = skillDefault.isSkillBased();
@@ -197,52 +223,18 @@ export abstract class SkillLike<T extends SkillLike<T>> extends ListItem<T>  {
     }
 }
 
-export class Skill extends SkillLike<Skill> {
-    static keys = ["signature", "hasTechLevel", "techLevel", /* "defaults", */ "defaultedFrom", "encumbrancePenaltyMultiple"]
-    version = 1
+export class Skill extends SkillLike {
     tag = "skill"
-    type: "skill" | "skill_container"
-
-    signature: Signature
-    hasTechLevel = false
-    techLevel: string
-    defaults: Set<SkillDefault<SkillLike<any>>> = new Set()
-    defaultedFrom: SkillDefault<SkillLike<any>>
-    encumbrancePenaltyMultiple: number = 0
-
-    isTechnique: boolean = false
+    version = 1
 
     constructor(list: List<Skill>, keys: string[] = []) {
         super(list, [...keys, ...Skill.keys]);
     }
 
     isActive() { return true }
-    childrenPoints() {
-        return this.iterChildren().reduce((prev, cur) => {
-            if (cur.canContainChildren) {
-                prev += cur.findSelf().childrenPoints();
-            } else {
-                prev += cur.findSelf().points;
-            }
-            return prev
-        }, 0)
-    }
-
-    getBonus(): number { return this.getModList().reduce((prev, cur) => prev + cur.getBonus(), 0) }
-    getModList(): SkillBonus<any>[] {
-        const skill = this;
-        return this.list.character.featureList.getFeaturesByType(FeatureType.skillBonus).filter(bonus =>
-            bonus instanceof SkillBonus && bonus.type === FeatureType.skillBonus && bonus.isApplicableTo(skill) && bonus.ownerIsActive()
-        ) as SkillBonus<any>[]
-    }
-
-    addDefault(): SkillDefault<Skill> {
-        const newDefault = new SkillDefault(this);
-        return newDefault
-    }
 }
 
-export class SkillDefault<T extends SkillLike<any>> extends Default<T> {
+export class SkillDefault<T extends SkillLike = SkillLike> extends Default<T> {
     //static keys = ["level", "adjustedLevel", "points"]
     static keys = []
     tag = "default"

@@ -1,6 +1,6 @@
 import { Sheet } from "@character/character";
 
-export class Party<T extends Sheet<any>> {
+export class Party<T extends Sheet> {
     #members: Map<string, T>
 
     addMember(character: T) {

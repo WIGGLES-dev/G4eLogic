@@ -17,15 +17,15 @@
   <td>
     <Checkbox bind:checked={$entity.enabled} />
   </td>
+  <td>{$entity.name}</td>
   <td>
-    <div class="table-cell-inner">{$entity.name}</div>
+    {#if $entity.type === TraitModifierType.points}
+      +
+    {:else if $entity.type === TraitModifierType.multiplier}x{/if}
+    {$entity.costModifier()}
+    {#if $entity.type === TraitModifierType.percentage}%{/if}
   </td>
-  <td>
-    <div class="table-cell-inner">{$entity.costModifier()}</div>
-  </td>
-  <td>
-    <div class="table-cell-inner">
-      <Text bind:value={$entity.reference} />
-    </div>
+  <td class="w-full">
+    <Text bind:value={$entity.reference} />
   </td>
 {/if}

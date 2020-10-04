@@ -4,6 +4,7 @@ import CopyPlugin from "copy-webpack-plugin";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import { TsConfigPathsPlugin } from "awesome-typescript-loader";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
+import { postcss } from "svelte-preprocess";
 
 type mode = "development" | "production"
 const mode = process.argv[process.argv.indexOf("--mode") >= 0 ? process.argv.indexOf("--mode") + 1 : null] as mode || "development";
@@ -56,33 +57,32 @@ const config: webpack.Configuration = {
                     loader: 'svelte-loader',
                     options: {
                         emitCss: true,
+                        preprocess: [
+                            postcss({
+                                plugins: [
+                                    require("tailwindcss"),
+                                    require("autoprefixer")
+                                ]
+                            })
+                        ]
                     }
                 }
             },
             {
                 test: /\.css$/,
                 use: [
-                    /**
-                     * MiniCssExtractPlugin doesn't support HMR.
-                     * For developing, use 'style-loader' instead.
-                     * */
-                    prod ? MiniCssExtractPlugin.loader : 'style-loader',
-                    'css-loader'
-                ]
-            },
-            {
-                test: /\.s[ac]ss$/i,
-                use: [
-                    /**
-                     * MiniCssExtractPlugin doesn't support HMR.
-                     * For developing, use 'style-loader' instead.
-                     * */
                     prod ? MiniCssExtractPlugin.loader : 'style-loader',
                     'css-loader',
                     {
-                        loader: 'sass-loader',
+                        loader: "postcss-loader",
                         options: {
-                            sassOptions: {}
+                            postcssOptions: {
+                                ident: "postcss",
+                                plugins: [
+                                    require("tailwindcss"),
+                                    require("autoprefixer")
+                                ]
+                            }
                         }
                     }
                 ]
@@ -97,6 +97,7 @@ const config: webpack.Configuration = {
                 { from: 'src/test/public', to: "./test" }
             ]
         }),
+        new MiniCssExtractPlugin()
     ],
     devtool: prod ? false : 'source-map'
 }

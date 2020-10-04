@@ -1,4 +1,6 @@
-export class State {
+import { Observable } from "@character/general/observable";
+
+export class State extends Observable {
     stateStack: Set<stateChange> = new Set()
     currentState: stateChange = {
         undo() { },
@@ -6,10 +8,12 @@ export class State {
     }
 
     constructor() {
-
+        super(["currentState"]);
     }
 
     addState(state: stateChange) {
+        this.dispatch();
+        return
         this.stateStack.add(state);
         this.currentState = state;
     }
@@ -54,7 +58,7 @@ export class State {
 
     private undoOne() {
         this.currentState?.undo();
-        this.currentState = this.getPreviousState(this.currentState)
+        this.currentState = this.getPreviousState(this.currentState);
     }
     private redoOne() {
         this.currentState?.redo();

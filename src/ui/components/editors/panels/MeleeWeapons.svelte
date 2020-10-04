@@ -4,17 +4,22 @@
 
   export let entity = null;
 
-  let weapons = [...($entity.weapons || [])].filter(
+  $: weapons = [...($entity.weapons || [])].filter(
     (weapon) => weapon.getType() === "melee_weapon"
   );
 </script>
 
 <style>
+  
 </style>
 
-<List list={weapons} title="Melee Weapons" component={MeleeWeapon}>
+<List
+  list={weapons}
+  title="Melee Weapons"
+  component={MeleeWeapon}
+  on:additem={() => $entity.addWeapon('melee_weapon')}>
   <tr slot="header">
-    <th>Melee Weapons</th>
+    <th class="w-full">Melee Weapons</th>
     <th>Usage</th>
     <th>Lvl</th>
     <th>Parry</th>

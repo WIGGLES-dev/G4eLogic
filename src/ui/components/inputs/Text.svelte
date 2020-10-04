@@ -1,7 +1,7 @@
 <script>
   import { getContext, tick } from "svelte";
 
-  const { display } = getContext("list");
+  const { display } = getContext("list") || {};
   const modal = getContext("modal") || {};
 
   export let value;
@@ -17,13 +17,15 @@
     HTMLInputElement.focus();
   }
 
-  export let config = {};
+  export let config = {
+    clickToEdit: $display === "table" && !modal.isModal,
+  };
 </script>
 
 <style>
 </style>
 
-{#if editing || modal.isModal}
+{#if editing || !config.clickToEdit}
   <label for={name}>
     <slot />
     <input

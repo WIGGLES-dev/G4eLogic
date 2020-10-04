@@ -11,9 +11,13 @@
 <style>
 </style>
 
-<List list={weapons} title="Melee Weapons" component={RangedWeapon}>
-  <tr slot="head">
-    <th>Ranged Weapons</th>
+<List
+  list={weapons}
+  title="Ranged Weapons"
+  component={RangedWeapon}
+  on:additem={() => $entity.addWeapon('ranged_weapon')}>
+  <tr slot="header">
+    <th class="w-full">Ranged Weapons</th>
     <th>Usage</th>
     <th>Lvl</th>
     <th>Acc</th>

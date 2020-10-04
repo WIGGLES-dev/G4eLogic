@@ -16,7 +16,7 @@ export function getAdjustedPoints(
     let levelLim = 0;
     let multiplier = controlMultipler;
 
-    modifiers?.forEach(modifier => {
+    modifiers.forEach(modifier => {
         if (modifier.enabled) {
             let mod = modifier.costModifier();
             switch (modifier.type) {

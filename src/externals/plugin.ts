@@ -1,7 +1,7 @@
 import { Sheet } from "@character/character";
 
-export abstract class Plugin<T extends Sheet<T>> {
+export abstract class Plugin {
     abstract scope: string
 
-    abstract init(sheet: Sheet<T>): Plugin<T>
+    abstract init<T extends Sheet>(sheet: T): Plugin
 }

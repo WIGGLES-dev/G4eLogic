@@ -1,9 +1,9 @@
 import { Trait } from "../trait/trait"
 import { Equipment } from "../equipment/equipment"
 import { CharacterElement } from "./element"
+import { ListItem } from "./list"
 
-export type Modifiable = Trait | Equipment
-export abstract class Modifier<T extends Modifiable> extends CharacterElement<T> {
+export abstract class Modifier<T extends ListItem = ListItem> extends CharacterElement {
     static keys = ["enabled", "name"]
     abstract version: number
     abstract tag: string

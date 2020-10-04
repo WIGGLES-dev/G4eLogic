@@ -1,5 +1,3 @@
-import { objectify } from "@utils/json_utils"
-
 export class Profile {
     tag = "profile"
 
@@ -44,7 +42,6 @@ export class Profile {
     }
 
     load(object: any) {
-        object = objectify(object);
         this.sizeModifier = object?.size_modifier ?? "";
         this.techLevel = object?.tech_level ?? "";
         this.birthday = object?.birthday ?? "";

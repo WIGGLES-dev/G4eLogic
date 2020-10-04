@@ -4,26 +4,34 @@
     TraitModifierAffects,
     TraitModifierType,
   } from "@character/trait/trait";
+  import TraitModifier from "../entities/TraitModifier.svelte";
   export let entity = null;
 </script>
 
 <style>
 </style>
 
-<div class="flex-col">
-  <Text bind:value={$entity.name} />
-  <Checkbox bind:checked={$entity.enabled} />
-  <Number bind:value={$entity.cost} />
-  <Select bind:value={$entity.type}>
-    {#each Object.entries(TraitModifierType) as [key, value], i (i)}
-      <Option {value}>{key}</Option>
-    {/each}
-    <Option bind:selected={$entity.hasLevels}>% Per Level</Option>
-  </Select>
-  <Number bind:value={$entity.levels} disabled={!$entity.hasLevel} />
-  <Select bind:value={$entity.affects}>
-    {#each Object.entries(TraitModifierAffects) as [key, value], i (i)}
-      <Option {value}>{key}</Option>
-    {/each}
-  </Select>
-</div>
+<Text bind:value={$entity.name}>Name:</Text>
+<Checkbox bind:checked={$entity.enabled}>Enabled:</Checkbox>
+<Number bind:value={$entity.cost}>Cost:</Number>
+<Select bind:value={$entity.type}>
+  {#each Object.entries(TraitModifierType) as [key, value], i (i)}
+    <Option {value}>{key}</Option>
+  {/each}
+  <Option
+    value={TraitModifierType.leveledPercentage}
+    bind:selected={$entity.hasLevels}>
+    % Per Level
+  </Option>
+</Select>
+<Number bind:value={$entity.levels} disabled={!$entity.hasLevels}>
+  Levels:
+</Number>
+<Number disabled={true} value={$entity.costModifier()} />
+<Select bind:value={$entity.affects}>
+  {#each Object.entries(TraitModifierAffects) as [key, value], i (i)}
+    <Option {value}>{key}</Option>
+  {/each}
+</Select>
+<Text bind:value={$entity.notes}>Notes</Text>
+<Text bind:value={$entity.reference}>Ref</Text>

@@ -3,19 +3,13 @@ import { List } from "./misc/list"
 import { Signature } from "./character"
 import { Character } from "index";
 
-export class TechniqueList extends SkillList {
-    constructor(character: Character) {
-        super(character, "technique");
+export class TechniqueList extends SkillList<Technique> {
+    constructor() {
+        super("technique");
     }
 
     populator() {
-        return new Technique(this, [])
-    }
-
-    sumSkills() {
-        return this.iter().reduce((prev, cur) => {
-            return prev + cur.points
-        }, 0);
+        return new Technique(this)
     }
 }
 
@@ -27,10 +21,10 @@ export class Technique extends Skill {
     limit: number
     difficulty: TehchniqueDifficulty = Difficulty.average
 
-    defaults: Set<SkillDefault<SkillLike<any>>> = new Set()
+    defaults: Set<SkillDefault<SkillLike>> = new Set()
 
     default: SkillDefault<Skill>
-    defaultedFrom: SkillDefault<SkillLike<any>> = null
+    defaultedFrom: SkillDefault<SkillLike> = null
 
     isTechnique: boolean = true
 
@@ -71,7 +65,7 @@ export class Technique extends Skill {
                     level = max;
                 }
             }
-            return level + this.gMod
+            return level + this.mod
         } else {
             return NaN
         }

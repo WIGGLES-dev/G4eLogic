@@ -1,6 +1,9 @@
 <script>
-  import { onDestroy } from "svelte";
+  import { onMount, onDestroy, tick } from "svelte";
   import { createPopper } from "@popperjs/core";
+  import { popperVirtualElement } from "@ui/utils/popper";
+
+  import { slide } from "svelte/transition";
 
   import ContextMenuOption from "./ContextMenuOption.svelte";
 
@@ -14,64 +17,51 @@
     document.body.appendChild(node);
   }
 
-  function popperVirtualElement() {
-    return {
-      getBoundingClientRect() {
-        return this.generateGetBoundingClientRect();
-      },
-      generateGetBoundingClientRect(x = 0, y = 0) {
-        return () => ({
-          width: 0,
-          height: 0,
-          top: y,
-          right: x,
-          bottom: y,
-          left: x,
-        });
-      },
-      update(x, y) {
-        this.getBoundingClientRect = this.generateGetBoundingClientRect(x, y);
-      },
-    };
-  }
-
   let virtualElement = popperVirtualElement();
   let popper;
+
+  onMount(() => {});
 
   export async function render({
     contextMenuOptions = [],
     e: { clientX, clientY },
   } = {}) {
+    rendered = true;
+    await tick();
+    popper = createPopper(virtualElement, HTMLUListElement, {
+      placement: "bottom-start",
+      strategy: "fixed",
+    });
     virtualElement.update(clientX, clientY);
-    popper = createPopper(virtualElement, HTMLUListElement);
     await popper.update();
     options = contextMenuOptions;
-    rendered = true;
   }
-  export function close() {
+  export async function close() {
     rendered = false;
+    await tick();
+    await popper.destroy();
   }
 </script>
 
 <style>
   .context-menu {
-    user-select: none;
+    @apply list-none select-none bg-gray-700 rounded;
     z-index: 2000;
-    background-color: black;
   }
 </style>
 
 <svelte:window
+  on:scroll={() => {
+    if (rendered) close();
+  }}
   on:click={(e) => {
     if (rendered) close();
   }} />
 
-<ul
-  bind:this={HTMLUListElement}
-  use:moveToBody
-  class:hide={!rendered}
-  class="context-menu">
-  {#each options as option, i (i)}
-    <ContextMenuOption {...option} />
-  {/each}
-</ul>
+{#if rendered}
+  <ul use:moveToBody bind:this={HTMLUListElement} class="context-menu">
+    {#each options as option, i (i)}
+      <ContextMenuOption {...option} />
+    {/each}
+  </ul>
+{/if}

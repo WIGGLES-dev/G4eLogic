@@ -3,9 +3,10 @@ import { Collection } from "@character/misc/collection";
 type subscription = (store: any) => void
 type derivation = (store: any, set?: (value?: any) => void, initial_value?: any) => any
 
+
 export abstract class Observable {
     changeCount = 0
-    watching: any[];
+    watching: string[];
 
     subscriptions: Set<subscription> = new Set()
     derivations: Set<subscription> = new Set()
@@ -15,8 +16,8 @@ export abstract class Observable {
         local: {}
     }
 
-    constructor(watching: string[] = []) {
-        this.watching = watching;
+    constructor(...args) {
+        this.watching = args.pop() || [];
         this.createAccessors();
     }
 

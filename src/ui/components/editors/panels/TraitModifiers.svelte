@@ -30,6 +30,6 @@
     <th>Enabled</th>
     <th>Modifier</th>
     <th>Cost Modifier</th>
-    <th>Ref</th>
+    <th class="w-full">Ref</th>
   </tr>
 </List>

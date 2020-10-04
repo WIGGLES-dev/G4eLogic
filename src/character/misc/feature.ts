@@ -1,10 +1,11 @@
 import { CharacterElement } from "./element";
-import { Featurable, Character } from "../character";
+import { Character } from "../character";
 import { SkillLike } from "@character/skill/skill";
 import { AttributeBonus } from "@character/attribute";
 import { Weapon } from "@character/weapon";
 import { StringCompare, stringCompare } from "@utils/string_utils";
 import { Collection } from "./collection";
+import { ListItem } from "./list";
 
 export enum FeatureType {
     attributeBonus = "attribute_bonus",
@@ -20,20 +21,21 @@ export enum FeatureType {
 export class FeatureList {
     character: Character
 
-    features: Map<string, Feature<Featurable>> = new Map()
-    weapons: Map<string, Weapon<Featurable>> = new Map()
+    features: Map<string, Feature<any>> = new Map()
+    weapons: Map<string, Weapon<any>> = new Map()
 
     constructor(character: Character) {
         this.character = character
     }
 
-    registerFeature(feature: Feature<Featurable>) {
+    registerFeature(feature: Feature<any>) {
         this.features.set(feature.uuid, feature);
     }
+
     removeFeature(uuid: string) {
         this.features.delete(uuid);
     }
-    registerWeapon(weapon: Weapon<Featurable>) {
+    registerWeapon(weapon: Weapon<any>) {
         this.weapons.set(weapon.uuid, weapon);
     }
     removeWeapon(uuid: string) {
@@ -59,7 +61,7 @@ export class FeatureList {
     }
 }
 
-export class Feature<T extends Featurable> extends CharacterElement<T> {
+export class Feature<T extends ListItem = ListItem> extends CharacterElement {
     static keys = ["amount", "leveled"]
 
     tag = "feature"
@@ -116,7 +118,7 @@ export class Feature<T extends Featurable> extends CharacterElement<T> {
         return this.getSerializer().transform(this.tag, "save")(this, data, ...args)
     }
 
-    static loadFeature<T extends Featurable>(owner: T, featureType: FeatureType = FeatureType.attributeBonus): Feature<T> {
+    static loadFeature<T extends ListItem>(owner: T, featureType: FeatureType = FeatureType.attributeBonus): Feature<T> {
         switch (featureType) {
             case FeatureType.attributeBonus:
                 return new AttributeBonus(owner)
@@ -144,7 +146,7 @@ enum SkillBonusSelectionType {
 
 }
 
-export class SkillBonus<T extends Featurable> extends Feature<T> {
+export class SkillBonus<T extends ListItem = ListItem> extends Feature<T> {
     static keys = []
     static type = FeatureType.skillBonus
 
@@ -161,7 +163,7 @@ export class SkillBonus<T extends Featurable> extends Feature<T> {
         super(owner, [...keys, ...SkillBonus.keys]);
     }
 
-    isApplicableTo(skill: SkillLike<any>): boolean {
+    isApplicableTo(skill: SkillLike): boolean {
         let nameCompare = true;
         let specializationCompare = true;
         let categoryCompare = true;
@@ -173,7 +175,7 @@ export class SkillBonus<T extends Featurable> extends Feature<T> {
     }
 }
 
-export class DRBonus<T extends Featurable> extends Feature<T> {
+export class DRBonus<T extends ListItem = ListItem> extends Feature<T> {
     static keys = ["location"]
     static type = FeatureType.damageResistanceBonus
 

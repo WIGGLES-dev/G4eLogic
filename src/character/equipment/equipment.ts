@@ -1,23 +1,23 @@
 import { List, ListItem } from "../misc/list";
-import { Modifier, Modifiable } from "../misc/modifier";
+import { Modifier } from "../misc/modifier";
 import { Character } from "../character";
 import { HitLocation } from "../locations";
 
 export class EquipmentList extends List<Equipment> {
-    constructor(character: Character, name = "equipment") {
-        super(character, name);
+    constructor(name = "equipment") {
+        super(name);
     }
     populator(data: any) {
         return new Equipment(this)
     }
     forSkillEncumbrancePenalty() {
-        return this.iterTop().reduce((prev, cur) => {
+        return this.rootItems().reduce((prev, cur) => {
             if (cur.equipped && cur.applySkillEncumbrancePenalty) prev += cur.extendedWeight();
             return prev
         }, 0)
     }
     totalWeight({ carriedOnly = true } = {}) {
-        return this.iterTop().reduce((prev, cur) => {
+        return this.rootItems().reduce((prev, cur) => {
             if (carriedOnly) {
                 if (cur.equipped) prev += cur.extendedWeight();
             } else {
@@ -27,7 +27,7 @@ export class EquipmentList extends List<Equipment> {
         }, 0)
     }
     totalValue({ carriedOnly = true } = {}) {
-        return this.iterTop().reduce((prev, cur) => {
+        return this.rootItems().reduce((prev, cur) => {
             if (carriedOnly) {
                 if (cur.equipped) prev += cur.extendedValue();
             } else {
@@ -38,12 +38,13 @@ export class EquipmentList extends List<Equipment> {
     }
 }
 
-export class Equipment extends ListItem<Equipment> {
+export class Equipment extends ListItem {
     static keys = [
-        "description", "techLevel", "legalityClass", "quantity", "uses",
+        "description", "techLevel", "legalityClass", "quantity", "uses", "maxUses",
         "weight", "value", "containedWeightReduction", "applySkillEncumbrancePenalty",
         "isAmmunition", "storeLocation"
     ]
+
     version = 1
     tag = "equipment"
 
@@ -53,6 +54,8 @@ export class Equipment extends ListItem<Equipment> {
     storedLocation = "carried"
 
     uses: number = 0
+    maxUses: number = 0
+
     techLevel: string = ""
     legalityClass: string
     quantity: number = 1
@@ -111,7 +114,7 @@ export class Equipment extends ListItem<Equipment> {
     extendedWeight() {
         const adjustedWeight = this.adjustedWeight();
         if (this.isContainer()) {
-            return Array.from(this.getRecursiveChildren()).reduce((prev, cur) => prev + cur.weight * cur.quantity, 0) + this.weight
+            return Array.from(this.getRecursiveChildren()).reduce((prev, cur) => prev + cur.weight * cur.quantity, 0) + this.weight * this.quantity
         } else {
             return this.weight * this.quantity
         }
@@ -255,7 +258,7 @@ export class Equipment extends ListItem<Equipment> {
     }
 }
 
-export class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
+export class EquipmentModifier<T extends Equipment> extends Modifier<T> {
     static keys = ["cost", "costType", "weight", "weightType"]
     tag: string = "eqp_modifier"
     version: number = 1
@@ -265,6 +268,8 @@ export class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
     costType: EquipmentModifierValueType
     weight: string
     weightType: EquipmentModifierWeightType
+
+    techLevel = ""
 
     constructor(equipment: T, keys: string[] = []) {
         super(equipment, [...keys, ...EquipmentModifier.keys]);
@@ -299,28 +304,28 @@ export class EquipmentModifier<T extends Modifiable> extends Modifier<T> {
 
 }
 
-enum EquipmentModifierWeightType {
+export enum EquipmentModifierWeightType {
     originalWeight = "to_original_weight",
     baseWeight = "to_base_weight",
     finalBaseWeight = "to_final_base_weight",
     finalWeight = "to_final_weight",
 }
 
-enum EquipmentModifierWeightValueType {
+export enum EquipmentModifierWeightValueType {
     addition = "+",
     percentageAdder = "%",
     percentageMultiplier = 1,
     multiplier = 0
 }
 
-enum EquipmentModifierValueType {
+export enum EquipmentModifierValueType {
     originalCost = "to_original_cost",
     baseCost = "to_base_cost",
     finalBaseCost = "to_final_base_cost",
     finalCost = "to_final_cost",
 }
 
-enum EquipmentModifierCostValueType {
+export enum EquipmentModifierCostValueType {
     addition = "+",
     percentage = "%",
     multiplier = "x",

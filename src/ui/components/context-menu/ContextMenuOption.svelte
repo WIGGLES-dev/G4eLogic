@@ -6,17 +6,10 @@
 </script>
 
 <style>
-  .context-menu-option {
-    color: white;
-    padding: 5px;
-  }
-  .context-menu-option:hover {
-    background-color: gray;
-  }
 </style>
 
 {#if show()}
-  <li class="context-menu-option" on:click={callback}>
+  <li class="text-white p-3 hover:bg-white hover:text-black hover:shadow" on:click={callback}>
     {label}
     {#if options.length > 0}
       <ul>

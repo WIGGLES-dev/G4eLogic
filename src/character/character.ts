@@ -16,10 +16,12 @@ import { TechniqueList } from "./technique";
 import defaultConfig from "./config.json";
 import JsonQuery from "json-query";
 import { Plugin } from "../externals/plugin";
+import { Observable } from "./general/observable";
+import { isTemplateExpression } from "typescript";
 
 
 
-export abstract class Sheet<T extends Sheet<T>> {
+export abstract class Sheet extends Observable {
     Hooks: Hooks = new Hooks()
     State: State = new State()
     serializer = Serializer
@@ -27,10 +29,10 @@ export abstract class Sheet<T extends Sheet<T>> {
     defaultConfig: any
     config: any
 
-    plugins: Map<string, Plugin<T>>
+    plugins: Map<string, Plugin>
 
     #currentScope = "GCSJSON"
-    #elements: Set<CharacterElement<Featurable>> = new Set();
+    #elements: Set<CharacterElement> = new Set();
 
     constructor({
         config,
@@ -38,9 +40,13 @@ export abstract class Sheet<T extends Sheet<T>> {
     }:
         {
             config: any,
-            plugins: Plugin<T>[]
+            plugins: Plugin[]
         }
-    ) {
+        , keys = []) {
+        super([...keys]);
+        this.State.subscribe(state => {
+            this.dispatch();
+        });
         this.defaultConfig = defaultConfig;
         this.config = config || defaultConfig;
 
@@ -49,7 +55,7 @@ export abstract class Sheet<T extends Sheet<T>> {
         this.Hooks.callAll("init", this);
     }
 
-    registerPlugin(scope: string, plugin: Plugin<T>) {
+    registerPlugin(scope: string, plugin: Plugin) {
         this.plugins.set(scope, plugin.init(this));
     }
 
@@ -73,18 +79,20 @@ export abstract class Sheet<T extends Sheet<T>> {
         }
     }
 
-    registerElement(element: CharacterElement<Featurable>) {
+    registerElement(element: CharacterElement) {
         this.#elements.add(element);
         this.Hooks.callAll("element_added", element);
+        this.dispatch();
     }
 
-    removeElement(element: CharacterElement<Featurable>) {
+    removeElement(element: CharacterElement) {
         this.Hooks.callAll(`before remove element ${element.uuid}`, element)
         this.#elements.delete(element);
         this.Hooks.callAll(`removed element ${element.uuid}`, this);
+        this.dispatch();
     }
 
-    getElementById(type: string, id: string) {
+    getElement(id: string, type = "uuid") {
         let result;
         this.#elements.forEach(element => {
             if (element[type] === id) result = element;
@@ -100,7 +108,7 @@ export abstract class Sheet<T extends Sheet<T>> {
 
     query(
         query: string,
-        locals: { [key: string]: (this: { data: T }, input: any, ...args) => any } = {}
+        locals: { [key: string]: (this: { data: Sheet }, input: any, ...args) => any } = {}
     ) {
         return JsonQuery(query, {
             data: this,
@@ -121,12 +129,9 @@ export class SheetData<T> {
     }
 }
 
-export interface Featurable extends ListItem<any> {
-    hasLevels: boolean
-    getLevel: () => number
-}
+export class Character extends Sheet {
+    static keys = ["totalPoints", "missingHP", "missingFP"]
 
-export class Character extends Sheet<Character> {
     gCalcID: string
 
     totalPoints: number
@@ -147,18 +152,20 @@ export class Character extends Sheet<Character> {
     attributeList: AttributeList
 
     constructor(config?: any) {
-        super(config);
-        this.profile = new Profile();
-        this.equipmentList = new EquipmentList(this);
-        this.otherEquipmentList = new EquipmentList(this, "other equipment");
-        this.skillList = new SkillList(this);
-        this.techniqueList = new TechniqueList(this);
-        this.traitList = new TraitList(this);
-        this.spellList = new SpellList(this);
-        this.featureList = new FeatureList(this);
-        this.locationList = new LocationList(this);
-        this.attributeList = new AttributeList(this);
+        super({ config, plugins: [] }, [...Character.keys]);
 
+        this.profile = new Profile();
+
+        this.equipmentList = new EquipmentList().attachCharacter(this);
+        this.otherEquipmentList = new EquipmentList("other equipment").attachCharacter(this);
+        this.skillList = new SkillList().attachCharacter(this);
+        this.techniqueList = new TechniqueList().attachCharacter(this);
+        this.traitList = new TraitList().attachCharacter(this);
+        this.spellList = new SpellList().attachCharacter(this);
+
+        this.featureList = new FeatureList(this)
+        this.locationList = new LocationList(this)
+        this.attributeList = new AttributeList(this);
     }
 
     isReeling(ratio = 3) {
@@ -174,12 +181,12 @@ export class Character extends Sheet<Character> {
 
     getSwingDamage() {
         const strikingStrength = this.getAttribute("SS").calculateLevel();
-        return getSwing(this.attributeList.getAttribute(Signature.ST).calculateLevel() + strikingStrength)
+        return getSwing(strikingStrength)
     }
 
     getThrustDamage() {
         const strikingStrength = this.getAttribute("SS").calculateLevel();
-        return getThrust(this.attributeList.getAttribute(Signature.ST).calculateLevel() + strikingStrength)
+        return getThrust(strikingStrength)
     }
 
     totalAttributesCost() {
@@ -203,8 +210,8 @@ export class Character extends Sheet<Character> {
         const advantages = this.traitList.sumAdvantages();
         const disadvantages = this.traitList.sumDisadvantages();
         const quirks = this.traitList.sumQuirks();
-        const skills = this.skillList.sumSkills();
-        const spells = this.spellList.sumSpells();
+        const skills = this.skillList.sumPoints();
+        const spells = this.spellList.sumPoints() + this.techniqueList.sumPoints();
         return {
             racialPoints,
             attributePoints,
@@ -214,7 +221,8 @@ export class Character extends Sheet<Character> {
             skills,
             spells,
             spent: racialPoints + attributePoints + advantages + disadvantages + quirks + skills + spells,
-            total: totalPoints
+            total: totalPoints,
+            get unspent() { return this.total - this.spent }
         }
     }
 
@@ -226,10 +234,16 @@ export class Character extends Sheet<Character> {
             ])
     }
 
+    meleeWeapons() {
+        return [...this.featureList.weapons.values()].filter(item => item.getType() === "melee_weapon")
+    }
+    rangedWeapons() {
+        return [...this.featureList.weapons.values()].filter((item) => item.getType() === "ranged_weapon")
+    }
+
     basicLift() {
         const LS = this.getAttribute("LS").calculateLevel();
-        const ST = this.getAttribute(Signature.ST).calculateLevel() + LS;
-        return Math.round(ST * ST / 5)
+        return Math.round(LS * LS / 5)
     }
 
     encumbranceLevel({ forSkillEncumbrance = false } = {}) {

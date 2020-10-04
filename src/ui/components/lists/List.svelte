@@ -6,7 +6,9 @@
   import ListItem from "./ListItem";
 
   export let display = "table";
-  export let config = {};
+  export let config = {
+    flat: false,
+  };
   export let title = null;
 
   export let component = null;
@@ -21,97 +23,64 @@
     component: writable(component),
     editor: writable(editor),
     headers: writable(0),
+    length: writable(0),
     config: writable(config),
     selected,
   });
 </script>
 
 <style>
-  section {
-    user-select: none;
-  }
-  caption {
-    padding: 5px;
-    border-bottom: 2px solid white;
+  table :global(td) {
   }
   thead :global(th) {
-    padding: 3px;
+    @apply bg-gray-700 text-white text-lg px-3;
   }
-  :global(td) {
-    padding: 0px;
-  }
-  :global(.table-cell-inner) {
-    padding: 3px;
-  }
-  :global(.main-col) {
-    width: 100%;
-  }
-  :global(.table-cell-inner) {
-    display: flex;
-  }
-  .table-caption-inner {
-    position: relative;
-    display: flex;
-  }
-  .table-title {
-    text-align: center;
-    flex: 1;
-  }
-  .table-tools {
-    position: absolute;
-    max-width: 30%;
-    right: 0;
+  tbody :global(tr):nth-child(even) {
+    @apply bg-gray-100;
   }
 </style>
 
-{#if display === 'table'}
-  <section on:contextmenu={(e) => e.preventDefault()}>
-    <table>
+<section
+  class="select-none"
+  on:contextmenu={(e) => e.preventDefault()}
+  data-list-type={display}>
+  {#if display === 'table'}
+    <table class="text-sm whitespace-no-wrap text-left mx-4">
       <caption>
-        <div class="table-caption-inner">
-          <div class="table-title">{title}</div>
-          <div class="table-tools">
+        <div class="flex relative">
+          <div class="flex-1 text-center">&ThinSpace;</div>
+          <div class="absolute right-0 mr-2">
             <span
-              class="tool fas fa-plus"
+              class="fas fa-plus text-gray-700"
               on:click={() => dispatch('additem')} />
           </div>
         </div>
       </caption>
-      <colgroup>
-        <slot name="colgroup" />
-      </colgroup>
+      <slot name="colgroup" />
       <thead>
         <slot name="header" />
       </thead>
-      {#each list as entity, i (entity.id)}
-        <ListItem {entity} on:select={(e) => selected.set(e.detail)} />
-      {/each}
+      <tbody>
+        {#each list as entity, i (entity.id)}
+          <ListItem {entity} {i} on:select={(e) => selected.set(e.detail)} />
+        {/each}
+      </tbody>
       <tfoot>
         <slot name="footer" />
       </tfoot>
     </table>
-  </section>
-{:else if display === 'list'}
-  <section>
+  {:else if display === 'list'}
     <div>{title}</div>
     <ul>
       {#each list as entity, i (entity.id)}
         <ListItem {entity} />
       {/each}
     </ul>
-  </section>
-{:else if display === 'grid'}
-  <section>
-    <div>{title}</div>
-    <div
-      style="
-        display: grid;
-        grid-auto-flow: row dense;
-        grid-template-columns: repeat({config.templateColumns || '5'}, 1fr);
-      ">
-      {#each list as entity, i (entity.id)}
-        <ListItem {entity} />
-      {/each}
-    </div>
-  </section>
-{/if}
+  {:else if display === 'grid'}
+    <div class="w-full">{title}</div>
+    <slot />
+    {#each list as entity, i (entity.id)}
+      <ListItem {entity} />
+    {/each}
+  {/if}
+</section>

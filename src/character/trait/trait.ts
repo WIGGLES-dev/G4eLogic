@@ -6,8 +6,8 @@ import { getAdjustedPoints } from "./logic";
 
 
 export class TraitList extends List<Trait> {
-    constructor(character: Character) {
-        super(character, "trait");
+    constructor() {
+        super("trait");
     }
 
     populator(data: any) {
@@ -54,7 +54,7 @@ enum ContainerType {
     alternativeAbilities = "alternative abilities"
 }
 
-export class Trait extends ListItem<Trait> {
+export class Trait extends ListItem {
     static keys = ["name", "basePoints", "hasLevels", "levels", "allowHalfLevels", "hasHalfLevel", "roundDown", "controlRating", "types", "disabled", "pointsPerLevel", "containerType"]
     version = 1
     tag = "trait"
@@ -95,6 +95,11 @@ export class Trait extends ListItem<Trait> {
             return this.containedBy.isRacial();
         }
     }
+    isAdvantage() { return this.adjustedPoints() > 1 || this.categories.has("Advantage") }
+    isPerk() { return this.basePoints === 1 || this.pointsPerLevel === 1 || this.categories.has("Perk") }
+    isDisadvantage() { return this.adjustedPoints() < 1 || this.pointsPerLevel === -1 || this.categories.has("Disadvantage") }
+    isQuirk() { return this.basePoints === -1 || this.categories.has("Quirk") }
+    isFeature() { return this.basePoints === 0 || this.categories.has("Feature") }
 
     static getCRMultipland(cr: ControlRollMultiplier) {
         switch (cr) {
@@ -109,7 +114,7 @@ export class Trait extends ListItem<Trait> {
 
     adjustedPoints() {
         if (this.isContainer()) {
-            return [...this.children].reduce((prev, cur) => prev + cur.findSelf().adjustedPoints(), 0)
+            return [...this.children].reduce((prev, cur) => prev + cur.adjustedPoints(), 0)
         } else {
             return getAdjustedPoints(this.modifiers, this.basePoints, this.hasLevels, this.hasHalfLevel, this.pointsPerLevel, this.levels, this.roundDown, Trait.getCRMultipland(this.controlRating))
         }
@@ -123,7 +128,7 @@ export class Trait extends ListItem<Trait> {
 }
 
 export class TraitModifier extends Modifier<Trait> {
-    static keys = ["cost", "type", "levels", "affects"]
+    static keys = ["cost", "type", "levels", "hasLevels", "affects"]
     tag: string = "modifier"
     version: number = 1
 
@@ -139,7 +144,7 @@ export class TraitModifier extends Modifier<Trait> {
     }
 
     costModifier() {
-        return this.levels > 0 ? this.cost * this.levels : this.cost
+        return this.hasLevels && this.levels > 0 ? this.cost * this.levels : this.cost
     }
 
     static modifyPoints(points: number, modifier: number) {
@@ -155,6 +160,7 @@ export class TraitModifier extends Modifier<Trait> {
 
 export enum TraitModifierType {
     percentage = "percentage",
+    leveledPercentage = "leveled_percentage",
     points = "points",
     multiplier = "multiplier",
 }

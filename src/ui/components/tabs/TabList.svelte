@@ -1,9 +1,6 @@
 <style>
-  .tab-list {
-    display: flex;
-  }
 </style>
 
-<nav class="tab-list">
+<nav class="flex pt-2">
   <slot />
 </nav>

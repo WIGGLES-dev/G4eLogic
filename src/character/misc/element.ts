@@ -1,15 +1,14 @@
 import {
     generateUUID
-} from "@utils/2R20";
+} from "@utils/uuid";
 import { Character } from "@character/character";
 import { Collection } from "./collection";
-import { watch, rootWatcher } from "@character/general/decororators/dynaprops";
+import { watch } from "@character/general/propwatcher";
 import { Observable } from "@character/general/observable";
 
 
 // @watch("reference", "userDescription", "notes", "categories")
-// @rootWatcher
-export abstract class CharacterElement<T extends CharacterElement<T>> extends Observable {
+export abstract class CharacterElement extends Observable {
     static keys = ["reference", "userDescription", "notes", "disabled"]
 
     uuid: string = generateUUID().toString()
@@ -23,17 +22,21 @@ export abstract class CharacterElement<T extends CharacterElement<T>> extends Ob
 
     character: Character
 
-    constructor(character: Character, keys: string[]) {
+    constructor(character?: Character, keys: string[] = []) {
         super([...keys, ...CharacterElement.keys]);
-
         this.character = character;
-        this.character.registerElement(this);
 
         this.disabled = false;
         this.reference = "";
         this.userDescription = "";
         this.notes = "";
         this.categories = new Collection();
+
+        this.register();
+    }
+
+    addToCharacter(character: Character) {
+        this.character = character;
     }
 
     get id() { return this.uuid }
@@ -46,6 +49,10 @@ export abstract class CharacterElement<T extends CharacterElement<T>> extends Ob
     }
 
     getSerializer(scope?: string) { return this.character.getSerializer(scope) }
+
+    register() {
+        this.character.registerElement(this);
+    }
 
     setState(oldV: any, newV: any, prop: string) {
         this.character.State.addState({
@@ -63,7 +70,7 @@ export abstract class CharacterElement<T extends CharacterElement<T>> extends Ob
     }
 }
 
-export abstract class OwnedElement<T extends CharacterElement<any>> extends CharacterElement<T> {
+export abstract class OwnedElement<T extends CharacterElement> extends CharacterElement {
     owner: T
 
     constructor(character: Character, owner: T, keys = []) {

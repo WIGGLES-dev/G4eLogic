@@ -1,5 +1,4 @@
-import { Featurable, Signature } from "./character";
-import { objectify, json } from "@utils/json_utils";
+import { Signature } from "./character";
 import { ListItem } from "./misc/list";
 import { Default } from "./misc/default";
 import { CharacterElement } from "./misc/element";
@@ -17,7 +16,7 @@ class WeaponDefault<T extends Weapon<any>> extends Default<any> {
     getLookupList() { return this.owner.owner.list.character.skillList }
 }
 
-export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
+export abstract class Weapon<T extends ListItem> extends CharacterElement {
     static keys = [
         "usage",
         "strength",
@@ -74,13 +73,16 @@ export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
     load(data: any, ...args) { return this.getSerializer().transform(this.tag, "load")(this, data, ...args) }
     save(data: any, ...args) { return this.getSerializer().transform(this.tag, "save")(this, data, ...args) }
 
-    onDestroy() {
+    delete() {
+        this.owner.weapons.delete(this);
         this.owner.getCharacter().featureList.removeWeapon(this.uuid);
+        super.delete();
+        this.owner.dispatch();
     }
 
     getBestAttackLevel({ inferUsagePenalties = false } = {}) {
         let bestBaseLevel = (this.getBestDefault()?.getHighestMatchLevel() ?? null) + this.attackBonus;
-        return inferUsagePenalties ? bestBaseLevel : bestBaseLevel + this.calculateWeaponUsePenalty()
+        return !inferUsagePenalties ? bestBaseLevel : bestBaseLevel + this.calculateWeaponUsePenalty()
     }
 
     getBestDefault(): WeaponDefault<any> {
@@ -119,7 +121,7 @@ export abstract class Weapon<T extends Featurable> extends CharacterElement<T> {
     }
 }
 
-export class MeleeWeapon<T extends Featurable> extends Weapon<T> {
+export class MeleeWeapon<T extends ListItem> extends Weapon<T> {
     static keys = ["reach", "parry", "block", "unbalanced", "unwieldy"]
     static type = "melee_weapon"
 
@@ -137,7 +139,7 @@ export class MeleeWeapon<T extends Featurable> extends Weapon<T> {
     getBlockLevel(bonus: number = 0) { return Math.floor(this.getBestAttackLevel() / 2 + 3) + bonus }
 }
 
-export class RangedWeapon<T extends Featurable> extends Weapon<T> {
+export class RangedWeapon<T extends ListItem> extends Weapon<T> {
     static keys = ["accuracy", "range", "rateOfFire", "shots", "bulk"]
     static type = "ranged_weapon"
 

@@ -3,11 +3,10 @@ import { Skill, Difficulty, SkillDefault, SkillLike } from "@character/skill/ski
 import { Spell } from "@character/spell"
 import { Equipment, EquipmentModifier } from "@character/equipment/equipment";
 import { Trait, TraitModifier } from "@character/trait/trait";
-import { json, objectify } from "@utils/json_utils";
-import { Signature, Character, Featurable } from "@character/character";
+import { Signature, Character } from "@character/character";
 import { Feature, DRBonus, SkillBonus, FeatureType } from "@character/misc/feature";
 import { List, ListItem } from "@character/misc/list";
-import { Modifier, Modifiable } from "@character/misc/modifier";
+import { Modifier } from "@character/misc/modifier";
 import { AttributeBonus } from "@character/attribute";
 import { Weapon, MeleeWeapon, RangedWeapon } from "@character/weapon";
 import { Technique, TehchniqueDifficulty } from "@character/technique";
@@ -84,12 +83,12 @@ export class GCSJSON extends Serializer {
             techLevel: data.tech_level,
             specialization: data.specialization,
             encumbrancePenaltyMultiple: data.encumbrance_penalty_multiplier,
-            points: +data.points,
+            points: +data.points || 1,
             notes: data.notes,
             reference: data.reference
         }, { update: false });
         //if (data.defaulted_from) skill.defaultedFrom = new SkillDefault<Skill>(skill).load(data.defaulted_from);
-        data.defaults?.forEach((skillDefault: json) => skill.addDefault().load(skillDefault));
+        data.defaults?.forEach((skillDefault) => skill.addDefault().load(skillDefault));
         data.weapon?.forEach(weapon => skill.addWeapon(weapon.type).load(weapon));
         if (data && data.type?.includes("_container")) {
             return data.children as any[]
@@ -115,7 +114,7 @@ export class GCSJSON extends Serializer {
             points: +data.points,
         }, { update: false })
         technique.default.load(data.default)
-        data.weapons?.forEach((weapon: json) => {
+        data.weapons?.forEach((weapon) => {
             technique.addWeapon(weapon.type).load(weapon);
         });
         return null
@@ -124,10 +123,10 @@ export class GCSJSON extends Serializer {
     mapSpell(spell: Spell, data?: any) {
         spell.setValue({
             name: data.name,
-            points: +data.points,
+            points: +data.points || 1,
             reference: data.reference,
-            difficulty: data.difficulty.split("/")[1],
-            signature: data.difficulty.split("/")[0],
+            difficulty: data.difficulty?.split("/")[1],
+            signature: data.difficulty?.split("/")[0],
             college: data.college,
             powerSource: data.power_source,
             spellClass: data.spell_class,
@@ -136,11 +135,11 @@ export class GCSJSON extends Serializer {
             castingTime: data.castingTime,
             duration: data.duration
         }, { update: false })
-        data.weapons?.forEach((weapon: json) => {
+        data.weapons?.forEach((weapon) => {
             spell.addWeapon(weapon.type).load(weapon);
         });
         if (data && data.type?.includes("_container")) {
-            return data.children as json[]
+            return data.children
         }
     }
     saveSpell(): any { }
@@ -159,13 +158,13 @@ export class GCSJSON extends Serializer {
 
         // equipment.containedWeightReduction = isArray(data?.features)?.find(feature => feature.type === "contained_weight_reduction")?.reduction ?? null;
 
-        data.features?.forEach((feature: json) => {
+        data.features?.forEach((feature) => {
             Feature.loadFeature<Equipment>(equipment, feature.type)?.load(feature)
         });
 
-        // data.modifiers?.forEach((modifier: json) => {
-        //     equipment.addModifier().load(modifier);
-        // });
+        data.modifiers?.forEach((modifier) => {
+            equipment.addModifier().load(modifier);
+        });
 
         data.weapons?.forEach((weapon: any) => {
             equipment.addWeapon(weapon.type).load(weapon);
@@ -178,7 +177,7 @@ export class GCSJSON extends Serializer {
 
     saveEquipment(equipment: Equipment): any { }
 
-    mapTrait(trait: Trait, data?: json) {
+    mapTrait(trait: Trait, data?) {
         trait.setValue({
             name: data.name,
             basePoints: data.base_points,
@@ -194,15 +193,15 @@ export class GCSJSON extends Serializer {
             notes: data.notes
         }, { update: false });
 
-        data.modifiers?.forEach((modifier: json) => trait.addModifier().load(modifier));
+        data.modifiers?.forEach((modifier) => trait.addModifier().load(modifier));
 
         //data.types?.forEach((type: TraitType) => trait.types.add(type));
 
-        data.features?.forEach((feature: json) => {
+        data.features?.forEach((feature) => {
             Feature.loadFeature<Trait>(trait, feature.type)?.load(feature);
         });
 
-        data.weapons?.forEach((weapon: json) => {
+        data.weapons?.forEach((weapon) => {
             trait.addWeapon(weapon.type).load(weapon);
         })
 
@@ -211,12 +210,12 @@ export class GCSJSON extends Serializer {
         })
 
         if (data && data.type?.includes("_container")) {
-            return data.children as json[]
+            return data.children
         }
     }
     saveTrait(trait: Trait): any { }
 
-    mapFeature(feature: Feature<Featurable>, data: json) {
+    mapFeature(feature: Feature, data) {
         feature.setValue({
             type: data.type,
             leveled: data.per_level,
@@ -261,11 +260,11 @@ export class GCSJSON extends Serializer {
         return feature
     }
 
-    saveFeature(feature: Feature<Featurable>) {
+    saveFeature(feature: Feature) {
 
     }
 
-    mapModifier(modifier: Modifier<Modifiable>, data: json) {
+    mapModifier(modifier: Modifier, data) {
         modifier.setValue({
             enabled: !data.disabled,
             name: data.name,
@@ -286,8 +285,8 @@ export class GCSJSON extends Serializer {
                 if (modifier instanceof EquipmentModifier) {
                     modifier.setValue({
                         cost: data.cost,
-                        weight: data.weigth,
-                        costType: data.weight_type,
+                        weight: data.weight,
+                        costType: data.cost_type,
                         weightType: data.weight_type
                     }, { update: false });
                 }
@@ -295,7 +294,7 @@ export class GCSJSON extends Serializer {
         return modifier
     }
 
-    saveModifier(modifier: Modifier<Modifiable>) { }
+    saveModifier(modifier: Modifier) { }
 
     mapWeapon(weapon: Weapon<any>, data: any) {
         weapon.setValue({
@@ -335,34 +334,32 @@ export class GCSJSON extends Serializer {
     saveWeapon() { }
 
     loadList(list: List<any>, data: any[]) {
-        data = objectify<json[]>(data);
         if (data) {
             data?.forEach(listItem => {
                 const item = list.populator(data);
                 item.load(listItem);
             });
         }
-        list.generate();
         return list
     }
-    saveList(list: List<Featurable>, data) {
-        return list.iterTop().map(root => root.save(data))
+    saveList(list: List<ListItem>, data) {
+        return list.rootItems().map(root => root.save(data))
     }
 
     load(character: Character, data: any) {
-        data = objectify<json>(data);
         character.gCalcID = data.id;
 
         character.totalPoints = data.total_points;
 
         character.profile.load(data.profile);
+
         character.equipmentList.load(data.equipment);
         character.otherEquipmentList.load(data.other_equipment);
 
         const skills = jp.query(data, `$.skills..[?(@.type=='skill')]`);
         character.skillList.load(skills);
 
-        const techniques = jp.query(data, `$.skills..[?(@.type=="technique")]`);
+        const techniques = jp.query(data, `$.skills..[?(@.type=='technique')]`);
         character.techniqueList.load(techniques);
 
         character.traitList.load(data.advantages);
