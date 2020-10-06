@@ -26,8 +26,8 @@
   export let props = {};
 
   export let title = null;
-  export let height = 500;
-  export let width = 800;
+  export let height = 600;
+  export let width = 1200;
   export let zIndex = 200;
 
   let dragging = false;
@@ -35,8 +35,8 @@
   let dialog;
   let header;
 
-  let dLeft = innerWidth / 2 - height / 2;
-  let dTop = innerHeight / 2 - width / 2;
+  let dLeft = innerWidth / 2 - width / 2;
+  let dTop = innerHeight / 2 - height / 2;
 
   function moveToBody(node) {
     document.body.appendChild(node);
@@ -70,17 +70,13 @@
 
 <style>
   section::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    @apply w-2 h-2;
   }
   section::-webkit-scrollbar-thumb {
-    outline: none;
-    border-radius: 3px;
-    background: black;
+    @apply outline-none bg-gray-700;
   }
   section::-webkit-scrollbar-track {
     box-shadow: 0 0 1px #999 inset;
-    border-radius: 4px;
   }
 </style>
 

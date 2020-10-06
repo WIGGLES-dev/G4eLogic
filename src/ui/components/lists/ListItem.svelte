@@ -26,8 +26,8 @@
     components.contextMenu.render({ contextMenuOptions, e });
   }
 
-  function onDragstart() {
-    selected.set(entity);
+  function onDragstart(e) {
+    e.dataTransfer.setData("text/plain", entity.id);
   }
 
   function onDragenter(e) {
@@ -36,12 +36,13 @@
   }
 
   function onDrop(e) {
-    const { id, i } = e.target.closest("[data-id]").dataset;
-    let targetEntity = character.getElement(id);
+    const { id } = e.target.closest("[data-id]").dataset;
+    const selectedId = e.dataTransfer.getData("text/plain");
 
-    $selected.addAfter(targetEntity);
+    const selectedEntity = character.getElement(selectedId);
+    const targetEntity = character.getElement(id);
 
-    selected.set(null);
+    selectedEntity.addAfter(targetEntity);
   }
 
   function edit() {
@@ -85,7 +86,6 @@
   $: children = [...($entity.children || [])];
 
   export let depth = 0;
-  export let i = 0;
 </script>
 
 <style>
@@ -102,7 +102,7 @@
 {#if $display === 'table'}
   <tr
     data-id={$entity.id}
-    data-i={$entity.listIndex}
+    data-i={$entity.listWeight}
     draggable={true}
     on:dragstart={onDragstart}
     on:dragenter={onDragenter}
@@ -125,7 +125,7 @@
     {/each}
   {/if}
 {:else if $display === 'list'}
-  <li>
+  <li on:contextmenu={onContextMenu}>
     <svelte:component this={$component} {entity} {depth} />
     {#if children.length > 0 && entity.isOpen && !$config.flat}
       <ul>

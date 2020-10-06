@@ -11,14 +11,14 @@ export class AttributeList {
 
     constructor(character: Character, keys: string[] = []) {
         this.character = character
-        this.configureAttributes();
-        this.character.Hooks.on("reconfigure", this.configureAttributes);
+        this.configureAttributes(character);
+        this.character.Hooks.on("reconfigure", this.configureAttributes.bind(this));
     }
 
-    private configureAttributes() {
-        const CONFIG = this.character.config;
+    private configureAttributes(character) {
+        const CONFIG = character.config;
         this.attributes.clear();
-        CONFIG.attributes.forEach(attribute => {
+        Object.entries(CONFIG.attributes).forEach(([key, attribute]: [string, any]) => {
             const basedOn = new Function(attribute.based_on).bind(this);
             const attr = new Attribute(
                 attribute.name,

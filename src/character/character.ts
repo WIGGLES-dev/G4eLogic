@@ -1,7 +1,7 @@
 import { ListItem } from "./misc/list";
 import { Attribute, AttributeList } from "./attribute";
 import { SkillList } from "./skill/skill";
-import { TraitList } from "./trait/trait";
+import { Trait, TraitList } from "./trait/trait";
 import { Equipment, EquipmentList } from "./equipment/equipment";
 import { FeatureList } from "./misc/feature";
 import { Profile } from "./profile";
@@ -204,21 +204,35 @@ export class Character extends Sheet {
     }
 
     pointTotals() {
+        function sumActiveAdvantages(traits: Trait[]) {
+            return traits.reduce((total, trait) => {
+                if (trait.isActive() && !trait.isContained()) total += trait.adjustedPoints();
+                return total
+            }, 0)
+        }
+
         const totalPoints = this.totalPoints;
-        const racialPoints = this.traitList.sumRacials();
         const attributePoints = this.totalAttributesCost();
-        const advantages = this.traitList.sumAdvantages();
-        const disadvantages = this.traitList.sumDisadvantages();
-        const quirks = this.traitList.sumQuirks();
+
+        const traits = this.traitList.split();
+        const racialPoints = sumActiveAdvantages(traits.racial);
+        const advantages = sumActiveAdvantages(traits.advantages);
+        const perks = sumActiveAdvantages(traits.perks);
+        const disadvantages = sumActiveAdvantages(traits.disadvantages);
+        const quirks = sumActiveAdvantages(traits.quirks);
+
         const skills = this.skillList.sumPoints();
-        const spells = this.spellList.sumPoints() + this.techniqueList.sumPoints();
+        const techniques = this.techniqueList.sumPoints();
+        const spells = this.spellList.sumPoints();
+
         return {
             racialPoints,
             attributePoints,
-            advantages,
+            advantages: advantages + perks,
             disadvantages,
             quirks,
-            skills,
+
+            skills: skills + techniques,
             spells,
             spent: racialPoints + attributePoints + advantages + disadvantages + quirks + skills + spells,
             total: totalPoints,

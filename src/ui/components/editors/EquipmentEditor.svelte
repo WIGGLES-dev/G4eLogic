@@ -19,6 +19,27 @@
 </script>
 
 <style>
+  label {
+    @apply flex p-2;
+  }
+
+  div.flex label,
+  input {
+    @apply flex-1;
+  }
+
+  input,
+  select {
+    @apply border-b border-black border-solid outline-none ml-1;
+  }
+
+  input {
+    @apply h-full pl-1;
+  }
+
+  textarea {
+    @apply outline-none border border-black border-solid rounded mt-2 w-full;
+  }
 </style>
 
 <Tabs>
@@ -31,20 +52,56 @@
     <Tab>User Description</Tab>
   </TabList>
   <TabPanel>
-    <Text bind:value={$entity.name}>Name:</Text>
-    <Checkbox bind:checked={$entity.equipped}>Equipped:</Checkbox>
-    <Number bind:value={$entity.quantity}>Quantity:</Number>
-    <Text bind:value={$entity.techLevel}>Tech Level:</Text>
-    <Number bind:value={$entity.weight}>Weight:</Number>
-    <Number bind:value={$entity.value}>Value:</Number>
-    <Checkbox bind:value={$entity.applySkillEncumbrancePenalty}>
-      Ignore for Skills
-    </Checkbox>
-    <Text bind:value={$entity.notes}>Notes:</Text>
-    <Text bind:value={$entity.categories}>Categories:</Text>
-    <Number bind:value={$entity.uses}>Uses:</Number>
-    <Number bind:value={$entity.maxUses}>Max Uses:</Number>
-    <Text bind:value={$entity.reference}>Reference:</Text>
+    <form class="p-3">
+      <label for="">Name<input
+          class="flex-1"
+          type="text"
+          bind:value={$entity.name} /></label>
+
+      <div class="flex">
+        <label for="">Equipped<input
+            type="checkbox"
+            bind:checked={$entity.equipped} /></label>
+        <label for="">Ignore for Skills<input
+            type="checkbox"
+            bind:value={$entity.applySkillEncumbrancePenalty} /></label>
+      </div>
+
+      <div class="flex">
+        <label for="">Quantity<input
+            type="number"
+            bind:value={$entity.quantity} /></label>
+
+        <label for="">Weight
+          <input type="number" bind:value={$entity.weight} /></label>
+
+        <label for="">Value<input
+            type="number"
+            bind:value={$entity.value} /></label>
+
+        <label class="flex-1" for="">Tech Level
+          <input type="text" bind:value={$entity.techLevel} /></label>
+      </div>
+
+      <div class="flex">
+        <label for="">Uses
+          <input type="number" bind:value={$entity.uses} /></label>
+
+        <label for="">Max Uses
+          <input type="number" bind:value={$entity.maxUses} /></label>
+
+        <label for="">Categories
+          <input
+            type="text"
+            value={[...$entity.categories].join(', ')} /></label>
+
+        <label for="">Reference
+          <input type="number" bind:value={$entity.reference} /></label>
+      </div>
+
+      <label for="">Notes </label>
+      <textarea bind:value={$entity.notes} name="" id="" rows="3" />
+    </form>
   </TabPanel>
   <TabPanel component={Features} props={{ entity }} />
   <TabPanel component={EquipmentModifiers} props={{ entity }} />

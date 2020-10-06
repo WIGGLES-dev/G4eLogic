@@ -7,11 +7,7 @@
 
     const { character, components } = getContext("app");
 
-    let skillList = character.skillList;
-
-    character.Hooks.on(`generate skill list`, (list) => {
-        skillList = list;
-    });
+    $: skillList = $character.skillList;
 </script>
 
 <style>

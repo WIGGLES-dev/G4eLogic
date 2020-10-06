@@ -1,5 +1,6 @@
 <script>
     import { getContext } from "svelte";
+    import Cropper from "@ui/components/widgets/Cropper";
     const { character } = getContext("app");
 </script>
 
@@ -31,7 +32,6 @@
     }
 </style>
 
-<div class="p-2" />
 <section class="px-4">
     <div class="grid gap-2">
         <div class="flex flex-col">
@@ -55,10 +55,8 @@
                 <textarea name="" id="" rows="4" /></label>
         </div>
         <div class="row-span-2">
-            <img
-                class="m-auto"
-                src="data:image/png;base64,{character.profile.portrait}"
-                alt="" />
+            <Cropper
+                src={`data:image/png;base64,${character.profile.portrait}`} />
         </div>
         <div class="flex flex-col">
             <div class="section-header">PHYSICAL</div>

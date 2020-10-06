@@ -23,8 +23,8 @@
             "enabled": false
         }
     },
-    "attributes": [
-        {
+    "attributes": {
+        "strength": {
             "signature": "ST",
             "abbreviation": "st",
             "name": "strength",
@@ -41,7 +41,7 @@
                 "primary"
             ]
         },
-        {
+        "striking_strength": {
             "signature": "SS",
             "abbreviation": "ss",
             "name": "striking strength",
@@ -52,7 +52,7 @@
                 "sub-stat"
             ]
         },
-        {
+        "lifting_strength": {
             "signature": "LS",
             "abbreviation": "ls",
             "name": "lifting strength",
@@ -63,7 +63,7 @@
                 "sub-stat"
             ]
         },
-        {
+        "intelligence": {
             "signature": "IQ",
             "abbreviation": "iq",
             "name": "intelligence",
@@ -75,7 +75,7 @@
                 "primary"
             ]
         },
-        {
+        "perception": {
             "signature": "Per",
             "abbreviation": "per",
             "name": "perception",
@@ -94,7 +94,7 @@
                 "secondary"
             ]
         },
-        {
+        "vision": {
             "signature": "Vision",
             "abbreviation": "vis",
             "name": "vision",
@@ -105,7 +105,7 @@
                 "sub-stat"
             ]
         },
-        {
+        "hearing": {
             "signature": "Hearing",
             "abbreviation": "hr'g",
             "name": "hearing",
@@ -116,7 +116,7 @@
                 "sub-stat"
             ]
         },
-        {
+        "smell_taste": {
             "signature": "S&T",
             "abbreviation": "sml",
             "name": "smell and taste",
@@ -127,7 +127,7 @@
                 "sub-stat"
             ]
         },
-        {
+        "touch": {
             "signature": "Touch",
             "abbreviation": "tch",
             "name": "touch",
@@ -138,7 +138,7 @@
                 "sub-stat"
             ]
         },
-        {
+        "will": {
             "signature": "Will",
             "abbreviation": "will",
             "name": "will",
@@ -151,7 +151,7 @@
                 "secondary"
             ]
         },
-        {
+        "fright_check": {
             "signature": "FC",
             "abbreviation": "frgt",
             "name": "fright check",
@@ -162,7 +162,7 @@
                 "sub-stat"
             ]
         },
-        {
+        "fright_threshold": {
             "signature": "FCT",
             "abbreviation": "FCT",
             "name": "fright threshold",
@@ -172,7 +172,7 @@
                 "sub-stat"
             ]
         },
-        {
+        "dexterity": {
             "signature": "DX",
             "abbreviation": "dx",
             "name": "dexterity",
@@ -184,7 +184,7 @@
                 "primary"
             ]
         },
-        {
+        "speed": {
             "signature": "Speed",
             "abbreviation": "spd",
             "name": "basic speed",
@@ -198,7 +198,7 @@
                 "tertiary"
             ]
         },
-        {
+        "dodge": {
             "signature": "DG",
             "abbreviation": "dge",
             "name": "dodge",
@@ -210,7 +210,7 @@
                 "tertiary"
             ]
         },
-        {
+        "move": {
             "signature": "Move",
             "abbreviation": "move",
             "name": "move",
@@ -222,7 +222,7 @@
                 "tertiary"
             ]
         },
-        {
+        "health": {
             "signature": "HT",
             "abbreviation": "ht",
             "name": "health",
@@ -234,7 +234,7 @@
                 "primary"
             ]
         },
-        {
+        "unstun": {
             "signature": "US",
             "abbreviation": "Unst",
             "name": "unstun",
@@ -244,7 +244,7 @@
                 "sub-stat"
             ]
         },
-        {
+        "kcockdown": {
             "signature": "KD",
             "abbreviation": "kdwn",
             "name": "knockdown",
@@ -254,7 +254,7 @@
                 "sub-stat"
             ]
         },
-        {
+        "unconsciocsness": {
             "signature": "UC",
             "abbreviation": "unc",
             "name": "unconsciousness",
@@ -265,7 +265,7 @@
                 "sub-stat"
             ]
         },
-        {
+        "death": {
             "signature": "Death",
             "abbreviation": "dth",
             "name": "death",
@@ -276,7 +276,7 @@
                 "sub-stat"
             ]
         },
-        {
+        "quintessence": {
             "signature": "QN",
             "abbreviation": "qn",
             "name": "quintessence",
@@ -289,7 +289,7 @@
                 "optional"
             ]
         },
-        {
+        "hit_points": {
             "signature": "HP",
             "abbreviation": "hp",
             "name": "hit points",
@@ -302,7 +302,7 @@
                 "derived"
             ]
         },
-        {
+        "fatige_points": {
             "signature": "FP",
             "abbreviation": "fp",
             "name": "fatigue",
@@ -315,7 +315,7 @@
                 "derived"
             ]
         },
-        {
+        "quintessence_points": {
             "signature": "QP",
             "abbreviation": "qp",
             "name": "quintessence",
@@ -329,16 +329,16 @@
                 "optional"
             ]
         }
-    ],
-    "locations": [
-        {
+    },
+    "locations": {
+        "eyes": {
             "location": "Eyes",
             "hit_range": [],
             "hit_penalty": -9,
             "cripple_ratio": 10,
             "cripples_on": "return damageTaken > maxHP / 10"
         },
-        {
+        "skull": {
             "location": "Skull",
             "hit_range": [
                 3,
@@ -346,14 +346,14 @@
             ],
             "hit_penalty": -7
         },
-        {
+        "face": {
             "location": "Face",
             "hit_range": [
                 5
             ],
             "hit_penalty": -5
         },
-        {
+        "right_leg": {
             "location": "Right Leg",
             "hit_range": [
                 6,
@@ -363,7 +363,7 @@
             "cripple_ratio": 2,
             "cripples_on": "return damageTaken > maxHP / 2"
         },
-        {
+        "right_arm": {
             "location": "Right Arm",
             "hit_range": [
                 8
@@ -372,7 +372,7 @@
             "cripple_ratio": 2,
             "cripples_on": "return damageTaken > maxHP / 2"
         },
-        {
+        "torso": {
             "location": "Torso",
             "hit_range": [
                 9,
@@ -380,14 +380,14 @@
             ],
             "hit_penalty": 0
         },
-        {
+        "groin": {
             "location": "Groin",
             "hit_range": [
                 11
             ],
             "hit_penalty": -3
         },
-        {
+        "left_arm": {
             "location": "Left Arm",
             "hit_range": [
                 12
@@ -396,7 +396,7 @@
             "cripple_ratio": 2,
             "cripples_on": "return damageTaken > maxHP / 2"
         },
-        {
+        "left_leg": {
             "location": "Left Leg",
             "hit_range": [
                 13,
@@ -406,7 +406,7 @@
             "cripple_ratio": 2,
             "cripples_on": "return damageTaken > maxHP / 2"
         },
-        {
+        "hand": {
             "location": "Hand",
             "hit_range": [
                 15
@@ -415,7 +415,7 @@
             "cripple_ratio": 3,
             "cripples_on": "return damageTaken > maxHP / 3"
         },
-        {
+        "foot": {
             "location": "Foot",
             "hit_range": [
                 16
@@ -424,7 +424,7 @@
             "cripple_ratio": 3,
             "cripples_on": "return damageTaken > maxHP / 3"
         },
-        {
+        "neck": {
             "location": "Neck",
             "hit_range": [
                 17,
@@ -432,10 +432,10 @@
             ],
             "hit_penalty": -5
         },
-        {
+        "vitals": {
             "location": "Vitals",
             "hit_range": [],
             "hit_penalty": -3
         }
-    ]
+    }
 }

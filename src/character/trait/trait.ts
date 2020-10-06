@@ -1,9 +1,7 @@
 import { Modifier } from "../misc/modifier";
-import { List, ListItem } from "../misc/list";
-import { Character } from "../character";
-import { Feature } from "../misc/feature";
+import { List, ListItem, removeDuplicates } from "../misc/list";
 import { getAdjustedPoints } from "./logic";
-
+import { getTraitType, TraitCategory } from "./sorting";
 
 export class TraitList extends List<Trait> {
     constructor() {
@@ -14,36 +12,17 @@ export class TraitList extends List<Trait> {
         return new Trait(this)
     }
 
-    private sumMatching(match: (trait: Trait) => boolean, { activeOnly = true }) {
-        return this.iter().reduce((prev, cur) => {
-            if (match(cur) && activeOnly) prev += cur.adjustedPoints()
-            return prev
-        }, 0)
-    }
-
-    sumRacials({ activeOnly = true } = {}) {
-        return this.sumMatching(
-            (trait) => trait.isRacial(),
-            { activeOnly })
-    }
-    sumAdvantages({ activeOnly = true } = {}) {
-        return this.sumMatching(
-            (trait: Trait) =>
-                !trait.isRacial() &&
-                trait.adjustedPoints() > 1,
-            { activeOnly })
-    }
-    sumDisadvantages({ activeOnly = true } = {}) {
-        return this.sumMatching(
-            (trait: Trait) =>
-                !trait.isRacial() &&
-                trait.adjustedPoints() < -1,
-            { activeOnly })
-    }
-    sumQuirks({ activeOnly = true } = {}) {
-        return this.sumMatching(
-            (trait: Trait) => !trait.isRacial() && trait.adjustedPoints() === -1,
-            { activeOnly })
+    split() {
+        let root = this.rootItems().arr;
+        let splits = {
+            features: root.filter(trait => getTraitType(trait) === TraitCategory.Feature),
+            disadvantages: root.filter(trait => getTraitType(trait) === TraitCategory.Disadavantage),
+            quirks: root.filter(trait => getTraitType(trait) === TraitCategory.Quirk),
+            advantages: root.filter(trait => getTraitType(trait) === TraitCategory.Advantage),
+            perks: root.filter(trait => getTraitType(trait) === TraitCategory.Perk),
+            racial: root.filter(trait => getTraitType(trait) === TraitCategory.Racial)
+        }
+        return removeDuplicates(splits) as { [key: string]: Trait[] }
     }
 }
 
@@ -85,22 +64,6 @@ export class Trait extends ListItem {
     isActive() { return !this.disabled }
     getLevel() { return this.levels }
 
-    isRacial(): boolean {
-        if (!this.containedBy) {
-            return false
-        }
-        if (this.containedBy.containerType === ContainerType.race) {
-            return true
-        } else {
-            return this.containedBy.isRacial();
-        }
-    }
-    isAdvantage() { return this.adjustedPoints() > 1 || this.categories.has("Advantage") }
-    isPerk() { return this.basePoints === 1 || this.pointsPerLevel === 1 || this.categories.has("Perk") }
-    isDisadvantage() { return this.adjustedPoints() < 1 || this.pointsPerLevel === -1 || this.categories.has("Disadvantage") }
-    isQuirk() { return this.basePoints === -1 || this.categories.has("Quirk") }
-    isFeature() { return this.basePoints === 0 || this.categories.has("Feature") }
-
     static getCRMultipland(cr: ControlRollMultiplier) {
         switch (cr) {
             case ControlRollMultiplier.cannotResist: return 2.5
@@ -112,8 +75,8 @@ export class Trait extends ListItem {
         }
     }
 
-    adjustedPoints() {
-        if (this.isContainer()) {
+    adjustedPoints({ children = true } = {}) {
+        if (this.isContainer() && children) {
             return [...this.children].reduce((prev, cur) => prev + cur.adjustedPoints(), 0)
         } else {
             return getAdjustedPoints(this.modifiers, this.basePoints, this.hasLevels, this.hasHalfLevel, this.pointsPerLevel, this.levels, this.roundDown, Trait.getCRMultipland(this.controlRating))
@@ -147,20 +110,13 @@ export class TraitModifier extends Modifier<Trait> {
         return this.hasLevels && this.levels > 0 ? this.cost * this.levels : this.cost
     }
 
-    static modifyPoints(points: number, modifier: number) {
-        return points + TraitModifier.calculateModifierPoints(points, modifier);
-    }
-    static calculateModifierPoints(points: number, modifier: number) {
-        return points * (modifier / 100)
-    }
-    static applyRounding(value: number, roundCostDown: boolean) {
-        return roundCostDown ? Math.floor(value) : Math.ceil(value)
-    }
+    static modifyPoints(points: number, modifier: number) { return points + TraitModifier.calculateModifierPoints(points, modifier); }
+    static calculateModifierPoints(points: number, modifier: number) { return points * (modifier / 100) }
+    static applyRounding(value: number, roundCostDown: boolean) { return roundCostDown ? Math.floor(value) : Math.ceil(value) }
 }
 
 export enum TraitModifierType {
     percentage = "percentage",
-    leveledPercentage = "leveled_percentage",
     points = "points",
     multiplier = "multiplier",
 }

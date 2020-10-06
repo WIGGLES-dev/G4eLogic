@@ -18,7 +18,7 @@ export abstract class CharacterElement extends Observable {
     reference: string
     userDescription: string
     notes: string
-    categories: Collection<string>
+    #categories: Set<string> = new Set()
 
     character: Character
 
@@ -30,9 +30,13 @@ export abstract class CharacterElement extends Observable {
         this.reference = "";
         this.userDescription = "";
         this.notes = "";
-        this.categories = new Collection();
 
         this.register();
+    }
+
+    get categories() { return this.#categories }
+    set categories(value: Set<string>) {
+        this.#categories = Array.isArray(value) ? new Set(value) : value;
     }
 
     addToCharacter(character: Character) {

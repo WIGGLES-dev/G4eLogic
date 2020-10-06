@@ -18,4 +18,6 @@
   <td>{$entity.damage}</td>
   <td>{$entity.reach}</td>
   <td>{$entity.strength}</td>
+{:else if $display === 'list'}
+  <li class="text-sm italic hover:underline">{$entity.owner.name}</li>
 {/if}

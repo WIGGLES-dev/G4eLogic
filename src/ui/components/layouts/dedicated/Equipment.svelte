@@ -9,13 +9,6 @@
 
   $: equipmentList = $character.equipmentList;
   $: otherEquipmentList = $character.otherEquipmentList;
-
-  // character.Hooks.on(`generate equipment list`, (list) => {
-  //   equipmentList = list;
-  // });
-  // character.Hooks.on(`generate other equipment list`, (list) => {
-  //   otherEquipmentList = list;
-  // });
 </script>
 
 <Tabs>

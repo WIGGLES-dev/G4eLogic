@@ -1,6 +1,6 @@
 <style>
 </style>
 
-<nav class="flex pt-2">
+<nav class="flex p-2">
   <slot />
 </nav>

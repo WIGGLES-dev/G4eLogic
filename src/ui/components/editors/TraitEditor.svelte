@@ -15,6 +15,27 @@
 </script>
 
 <style>
+  label {
+    @apply flex p-2;
+  }
+
+  div.flex label,
+  input {
+    @apply flex-1;
+  }
+
+  input,
+  select {
+    @apply border-b border-black border-solid outline-none ml-1;
+  }
+
+  input {
+    @apply h-full pl-1;
+  }
+
+  textarea {
+    @apply outline-none border border-black border-solid rounded mt-2 w-full;
+  }
 </style>
 
 <Tabs>
@@ -29,39 +50,70 @@
     <Tab index={7}>User Description</Tab>
   </TabList>
   <TabPanel>
-    <Text bind:value={$entity.name}>Name:</Text>
-    <Checkbox bind:checked={$entity.disabled}>Disabled:</Checkbox>
-    <Number bind:value={$entity.basePoints}>Base Points Cost:</Number>
-    <Select bind:value={$entity.hasLevels}>
-      <Option value={false}>Has No Levels</Option>
-      <Option value={true}>Has Levels</Option>
-      <Option disabled={true}>Has Half Levels</Option>
-    </Select>
-    <Number bind:value={$entity.levels} disabled={!$entity.hasLevels}>
-      Level:
-    </Number>
-    <Checkbox bind:checked={$entity.hasHalfLevel} disabled={true}>
-      +1/2
-    </Checkbox>
-    <Number bind:value={$entity.pointsPerLevel} disabled={!$entity.hasLevels}>
-      Point Cost Per Level
-    </Number>
-    <Text bind:value={$entity.notes}>Notes:</Text>
-    <Text bind:value={$entity.categories}>Categories:</Text>
-    <Number value={$entity.adjustedPoints()} disabled={true}>
-      Final Cost:
-    </Number>
-    <Select bind:value={$entity.controlRating}>
-      {#each Object.entries(ControlRollMultiplier) as [key, value], i (i)}
-        <Option {value}>
-          CR:{value.toUpperCase()}({key
-            .split(/(?=[A-Z])/)
-            .join(' ')
-            .toLowerCase()})
-        </Option>
-      {/each}
-    </Select>
-    <Text bind:value={$entity.reference}>Reference:</Text>
+    <form action="" class="p-3">
+      <div class="flex">
+        <label for="">Points<input
+            type="number"
+            bind:value={$entity.basePoints} /></label>
+        <label for="">Disabled<input
+            type="checkbox"
+            bind:checked={$entity.disabled} /></label>
+
+        <label for="">
+          CR
+          <select bind:value={$entity.controlRating}>
+            {#each Object.entries(ControlRollMultiplier) as [key, value], i (i)}
+              <option {value}>
+                CR:{value.toUpperCase()}({key
+                  .split(/(?=[A-Z])/)
+                  .join(' ')
+                  .toLowerCase()})
+              </option>
+            {/each}
+          </select>
+        </label>
+      </div>
+
+      <div class="flex">
+        <select bind:value={$entity.hasLevels}>
+          <option value={false}>Has No Levels</option>
+          <option value={true}>Has Levels</option>
+          <option disabled={true}>Has Half Levels</option>
+        </select>
+        <label for="">Level<input
+            type="number"
+            bind:value={$entity.level}
+            disabled={!$entity.hasLevels} /></label>
+        <label for="">+1/2
+          <input
+            type="checkbox"
+            bind:checked={$entity.hasHalfLevel}
+            disabled /></label>
+
+        <label for="">Leveled Points
+          <input
+            type="number"
+            bind:value={$entity.pointsPerLevel}
+            disabled={!$entity.hasLevels} /></label>
+      </div>
+
+      <div class="flex">
+        <label for="">
+          Final Cost
+          <input type="number" value={$entity.adjustedPoints()} disabled />
+        </label>
+
+        <label for="">Categories
+          <input
+            type="text"
+            value={[...$entity.categories].join(', ')} /></label>
+
+        <label for="">Reference
+          <input type="number" bind:value={$entity.reference} /></label>
+      </div>
+      <label for="">Notes </label>
+      <textarea bind:value={$entity.notes} name="" id="" rows="3" />
+    </form>
   </TabPanel>
   <TabPanel />
   <TabPanel />

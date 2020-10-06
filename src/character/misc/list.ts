@@ -5,13 +5,14 @@ import { Weapon, MeleeWeapon, RangedWeapon } from "../weapon";
 import { Collection } from "./collection";
 import { AttributeBonus } from "index";
 
-export abstract class List<T extends ListItem> {
+export abstract class List<T extends ListItem = ListItem> {
     name: string
-    collection: Collection<T> = new Collection()
+    collection: Collection<T>
     character: Character
 
-    constructor(name: string) {
+    constructor(name: string, collection: Collection<T> = new Collection) {
         this.name = name;
+        this.collection = collection
     }
 
     attachCharacter(character: Character) { this.character = character; return this }
@@ -29,11 +30,12 @@ export abstract class List<T extends ListItem> {
 
     get contents() {
         return {
-            arr: this.rootItems().arr,
+            arr: this.rootItems().arr.sort((a, b) => a.listWeight - b.listWeight),
         }
     }
 
     abstract populator(data?: any): T
+    callHook() { this.getCharacter().Hooks.callAll(`generate ${this.name} list`, this) }
 
     has(item: T) { return this.collection.has(item) }
 
@@ -47,24 +49,10 @@ export abstract class List<T extends ListItem> {
         }
         return listItem
     }
-    removeListItem(item: T) {
-        this.collection.delete(item);
-    }
 
-    moveListItem(from: number, to: number) {
-        this.collection.move(from, to);
-        this.iter().forEach(item => item.dispatch());
-        this.callHook();
-    }
-
-    callHook() { this.getCharacter().Hooks.callAll(`generate ${this.name} list`, this) }
-
-    iter() { return this.collection.arr.sort((a, b) => a.listIndex - b.listIndex) }
-
+    iter() { return this.collection.arr.sort((a, b) => a.listWeight - b.listWeight) }
     allContainers() { return this.iter().filter(item => item.isContainer()) }
-    rootItems() {
-        return new Collection(this.iter().filter(item => !item.containedBy))
-    }
+    rootItems() { return new Collection(this.iter().filter(item => !item.containedBy)) }
 
     save(...args) { return this.character.getSerializer().saveList(this, ...args); }
     load(...args) {
@@ -72,9 +60,7 @@ export abstract class List<T extends ListItem> {
         return this
     }
 
-    empty() {
-        this.collection.clear();
-    }
+    empty() { this.collection.clear(); }
 }
 
 export interface Featurable extends ListItem {
@@ -83,7 +69,7 @@ export interface Featurable extends ListItem {
 }
 
 export abstract class ListItem extends CharacterElement implements Featurable {
-    static keys = ["isOpen", "canContainChildren"]
+    static keys = ["isOpen", "canContainChildren", "listWeight"]
 
     abstract version: number
     abstract tag: string
@@ -94,6 +80,7 @@ export abstract class ListItem extends CharacterElement implements Featurable {
     list: List<this>
 
     canContainChildren: boolean = false
+    listWeight: number
     isOpen = true
 
     containedBy: this
@@ -104,24 +91,30 @@ export abstract class ListItem extends CharacterElement implements Featurable {
     constructor(list: List<any>, keys: string[]) {
         super(list.character, [...keys, ...ListItem.keys]);
         this.list = list;
+        this.listWeight = this.list.size;
         list.addListItem(this);
     }
 
-    get children(): Collection<this> {
-        let children = this.getList().iter().filter(item => item.containedBy === this);
-        return new Collection(children);
-    }
-    get listIndex() { return this.getList().collection.indexOf(this) }
+    get children(): Collection<this> { return new Collection(this.getList().iter().filter(item => item.containedBy === this)) }
 
     /**
      * Abstract method that all list items must impliment in order for features to
      * determine whether or not to apply their bonus based on whatever information they
-     * might have available
+     * might have available.
      */
     abstract isActive(): boolean
-
-
+    /**
+     * Abstract method that all list items must impliment in order for features to determine their
+     * leveled effects.
+     */
     abstract getLevel(): number
+
+    dispatch() {
+        super.dispatch();
+        if (this.list) {
+            this.getCharacter().dispatch();
+        }
+    }
 
     addFeature() {
         let feature = Feature.loadFeature(this);
@@ -152,7 +145,6 @@ export abstract class ListItem extends CharacterElement implements Featurable {
 
     setContainedBy(target?: this) {
         if (!target) {
-            //this.containedBy?.children.delete(this);
             this.containedBy = null;
             return
         }
@@ -161,25 +153,16 @@ export abstract class ListItem extends CharacterElement implements Featurable {
         if (target.getRecursiveOwners().has(this)) return
         if (target.getRecursiveChildren().has(this)) return
 
-        if (this.isContained()) {
-            //this.containedBy.children.delete(this);
-        }
-        //target.children.add(this);
         this.containedBy = target;
     }
     addAfter(target: this) {
         if (target === this) return
-
         const tContainer = target.containedBy;
 
         if (!this.getList().has(target)) return;
-
         this.setContainedBy(tContainer);
 
-        let from = this.listIndex;
-        let to = target.listIndex;
-
-        this.getList().moveListItem(from, to);
+        resolveWeights(this.getList().iter(), this, target.listWeight);
 
         this.getList().getCharacter().dispatch();
     }
@@ -199,40 +182,28 @@ export abstract class ListItem extends CharacterElement implements Featurable {
      * Recursive helper to get the depth of this item;
      * @param depth recursive depth tracker
      */
-    private getDepth(depth = 0) {
-        return this.containedBy ? this.containedBy.getDepth(depth + 1) : depth;
-    }
+    private getDepth(depth = 0) { return this.containedBy ? this.containedBy.getDepth(depth + 1) : depth }
 
     /**
      * Get the depth of the deepest item relative to the root owner
      */
-    getRootDepth() {
-        this.getRootOwner().getItemDepth()
-    }
+    getRootDepth() { this.getRootOwner().getItemDepth() }
     /**
      * Get the depth of this item relative to the root owner
      */
-    getItemDepth() {
-        return this.getDepth();
-    }
+    getItemDepth() { return this.getDepth() }
     /**
      * Get how many levels of containment until the bottommost container is reached
      */
-    getDepthToBottom() {
-        return ([...this.getRecursiveChildren()].pop() || this).getDepth() - this.getItemDepth()
-    }
+    getDepthToBottom() { return ([...this.getRecursiveChildren()].pop() || this).getDepth() - this.getItemDepth() }
     /**
      * Get how many levels of containment until the topmost container is reached
      */
-    getDepthToTop() {
-        return this.getRootOwner().getDepth() - this.getItemDepth();
-    }
+    getDepthToTop() { return this.getRootOwner().getDepth() - this.getItemDepth() }
 
     /* -------------------------------------------- */
 
-    getSiblings() {
-        return this.containedBy?.children.delete(this) ?? this.getList().rootItems();
-    }
+    getSiblings() { return this.containedBy?.children.delete(this) ?? this.getList().rootItems() }
     getNextSibling() { }
     getPreviousSibling() { }
 
@@ -265,14 +236,15 @@ export abstract class ListItem extends CharacterElement implements Featurable {
     /* -------------------------------------------- */
 
     delete(): any {
-        this.containedBy?.children.delete(this);
         this.children.forEach(child => {
             child.delete();
         });
-        this.list.removeListItem(this);
+        this.list.collection.delete(this);
         super.delete();
+        //resolveWeights(this.list.iter())
         return this.list
     }
+
     private loadChildren<U>(children: U[], parent: this, ...args) {
         children.forEach(child => {
             const subElement = parent.list.addListItem();
@@ -295,14 +267,30 @@ export abstract class ListItem extends CharacterElement implements Featurable {
     save(data, ...args) { return this.getSerializer().transform(this.constructor, "save")(this, data, ...args) }
 }
 
-interface derivedListOptions {
-    splitters: {
-        [key: string]: () => any
-    }
+/**
+ * Reducing Algorithm to remove duplicates from derived lists. Any item that appears
+ * in the list later on, based on the order of the keys. Things earlier in the lists will
+ * be overridden by things later in the list. Be sure to account for that when using this function.
+ * @param lists A series of lists to remove the duplicates from
+ */
+export function removeDuplicates(lists: { [key: string]: ListItem[] }) {
+    const checked = new Set();
+    return Object.entries(lists).reduce((prev, [key, list]) => {
+        checked.add(key);
+        const checkAgainst = Object.entries(lists).filter(([key1, list]) => {
+            key !== key1 && !checked.has(key1)
+        }).map(values => values[1]).map(list => list).flat();
+        let newCollection = list.filter(item => !checkAgainst.includes(item));
+        lists[key] = newCollection;
+        return prev
+    }, lists)
 }
-export function createDerivedList(list: List<any>, options: derivedListOptions) {
-    const itemInList = list.iter();
-    Object.entries(options.splitters).map(([splitter, callback]) => {
 
-    });
+function resolveWeights(list: ListItem[], target?: ListItem, newWeight?: number) {
+    if (!list.includes(target)) return list
+    list = list.sort((a, b) => a.listWeight - b.listWeight);
+    if (target && newWeight) {
+        list.splice(newWeight, 0, list.splice(target.listWeight, 1)[0]);
+    }
+    list.forEach((item, i) => item.listWeight = i);
 }

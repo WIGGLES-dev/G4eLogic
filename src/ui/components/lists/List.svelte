@@ -6,9 +6,11 @@
   import ListItem from "./ListItem";
 
   export let display = "table";
-  export let config = {
-    flat: false,
-  };
+
+  let defaultConfig = { flat: false, addItem: true };
+  export let config = {};
+  config = Object.assign(defaultConfig, config);
+
   export let title = null;
 
   export let component = null;
@@ -41,21 +43,14 @@
 </style>
 
 <section
-  class="select-none"
+  class:mx-4={display === 'table'}
+  class="select-none mb-2 border-b border-gray-700 border-solid rounded-r-md"
+  class:border-red-700={config.addItem}
   on:contextmenu={(e) => e.preventDefault()}
   data-list-type={display}>
   {#if display === 'table'}
-    <table class="text-sm whitespace-no-wrap text-left mx-4">
-      <caption>
-        <div class="flex relative">
-          <div class="flex-1 text-center">&ThinSpace;</div>
-          <div class="absolute right-0 mr-2">
-            <span
-              class="fas fa-plus text-gray-700"
-              on:click={() => dispatch('additem')} />
-          </div>
-        </div>
-      </caption>
+    <table class="text-sm whitespace-no-wrap text-left">
+      <caption />
       <slot name="colgroup" />
       <thead>
         <slot name="header" />
@@ -70,8 +65,8 @@
       </tfoot>
     </table>
   {:else if display === 'list'}
-    <div>{title}</div>
-    <ul>
+    <div class="bg-gray-700 text-center text-white">{title}</div>
+    <ul class="pb-1">
       {#each list as entity, i (entity.id)}
         <ListItem {entity} />
       {/each}
@@ -82,5 +77,12 @@
     {#each list as entity, i (entity.id)}
       <ListItem {entity} />
     {/each}
+  {/if}
+  {#if config.addItem}
+    <div class="flex w-full relative">
+      <span
+        class="fas fa-plus text-red-700 hover:bg-red-700 hover:text-white p-1"
+        on:click={() => dispatch('additem')} />
+    </div>
   {/if}
 </section>

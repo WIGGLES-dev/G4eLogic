@@ -10,14 +10,14 @@ export class LocationList {
 
     constructor(character: Character) {
         this.character = character
-        this.configureLocations();
-        this.character.Hooks.on("reconfigure", this.configureLocations);
+        this.configureLocations(character);
+        this.character.Hooks.on("reconfigure", this.configureLocations.bind(this));
     }
 
-    private configureLocations() {
-        const CONFIG = this.character.config;
+    private configureLocations(character) {
+        const CONFIG = character.config;
         this.locations.clear()
-        CONFIG.locations.forEach(location => {
+        Object.entries(CONFIG.locations).forEach(([key, location]: [string, any]) => {
             const cripplesOn = new Function(location.cripples_on) as (damageTaken, maxHP) => boolean;
             this.addLocation({
                 location: location.location,

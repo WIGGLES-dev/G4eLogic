@@ -9,6 +9,12 @@
 </script>
 
 <style>
+  /* Chrome, Safari, Edge, Opera */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
 </style>
 
 {#if $display === 'table'}
@@ -20,12 +26,24 @@
       class:hidden={!$entity.isContainer()}
       class:fa-angle-right={!$entity.isOpen}
       class:fa-angle-down={$entity.isOpen} />
-    <Text bind:value={$entity.name} />
-    {#if $entity.hasLevels}&nbsp;{$entity.levels}{/if}
+    <input
+      type="text"
+      class="w-1/2 truncate border-b border-solid border-black"
+      bind:value={$entity.name} />
   </td>
-  <td>{$entity.adjustedPoints()}</td>
   <td>
-    <Text bind:value={$entity.reference} />
+    <input
+      type="number"
+      class="w-10 text-center"
+      bind:value={$entity.levels}
+      disabled={!$entity.hasLevels} />
+  </td>
+  <td class="text-center">{$entity.adjustedPoints()}</td>
+  <td>
+    <input
+      class="w-10 text-center truncate border-b border-solid border-black"
+      type="text"
+      bind:value={$entity.reference} />
   </td>
 {:else if $display === 'grid'}
   <div
