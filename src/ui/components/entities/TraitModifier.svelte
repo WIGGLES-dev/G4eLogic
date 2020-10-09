@@ -17,7 +17,10 @@
   <td>
     <Checkbox bind:checked={$entity.enabled} />
   </td>
-  <td>{$entity.name}</td>
+  <td>
+    <div>{$entity.name}</div>
+    <div>{$entity.notes}</div>
+  </td>
   <td>
     {#if $entity.type === TraitModifierType.points}
       +

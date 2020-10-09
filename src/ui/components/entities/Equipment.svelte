@@ -16,23 +16,22 @@
 </script>
 
 <style>
-  td {
-    @apply text-center;
-  }
 </style>
 
 {#if $display === 'table'}
   <td><input type="checkbox" bind:checked={$entity.equipped} /></td>
   <td><input class="w-10" type="number" bind:value={$entity.quantity} /></td>
-  <td class="w-full text-left">
-    <span class="h-full" style="padding-left:{depth * 2}rem;">&thinsp;</span>
-    <span
-      on:click={() => ($entity.isOpen = !$entity.isOpen)}
-      class="fas"
-      class:hidden={!$entity.isContainer()}
-      class:fa-angle-right={!$entity.isOpen}
-      class:fa-angle-down={$entity.isOpen} />
-    <input class="w-full" type="text" bind:value={$entity.name} />
+  <td class="w-full">
+    <div class="flex">
+      <span class="h-full" style="padding-left:{depth * 2}rem;">&thinsp;</span>
+      <span
+        on:click={() => ($entity.isOpen = !$entity.isOpen)}
+        class="fas"
+        class:hidden={!$entity.isContainer()}
+        class:fa-angle-right={!$entity.isOpen}
+        class:fa-angle-down={$entity.isOpen} />
+      <input class="flex-1" type="text" bind:value={$entity.name} />
+    </div>
   </td>
   <td>
     <input class="w-10" type="number" bind:value={$entity.uses} min="0" />

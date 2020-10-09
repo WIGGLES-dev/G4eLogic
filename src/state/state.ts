@@ -14,8 +14,8 @@ export class State extends Observable {
     addState(state: stateChange) {
         this.dispatch();
         return
-        this.stateStack.add(state);
-        this.currentState = state;
+        // this.stateStack.add(state);
+        // this.currentState = state;
     }
 
     iterStack() { return Array.from(this.stateStack) }

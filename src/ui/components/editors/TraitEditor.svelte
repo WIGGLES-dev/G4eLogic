@@ -11,7 +11,10 @@
 
   export let entity = null;
 
-  $: entityName = $entity.constructor.name;
+  function setCategories(e) {
+    entity.categories = new Set(e.target.value.split(","));
+    entity.dispatch();
+  }
 </script>
 
 <style>
@@ -40,7 +43,7 @@
 
 <Tabs>
   <TabList>
-    <Tab index={0}>{entityName} Data</Tab>
+    <Tab index={0}>Trait Data</Tab>
     <Tab index={1}>Defaults</Tab>
     <Tab index={2}>Prerequisites</Tab>
     <Tab index={3}>Features</Tab>
@@ -105,11 +108,12 @@
 
         <label for="">Categories
           <input
+            on:change={setCategories}
             type="text"
             value={[...$entity.categories].join(', ')} /></label>
 
         <label for="">Reference
-          <input type="number" bind:value={$entity.reference} /></label>
+          <input type="text" bind:value={$entity.reference} /></label>
       </div>
       <label for="">Notes </label>
       <textarea bind:value={$entity.notes} name="" id="" rows="3" />

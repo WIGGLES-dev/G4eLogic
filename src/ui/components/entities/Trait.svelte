@@ -2,6 +2,7 @@
   import { getContext } from "svelte";
   import {} from "@ui/utils/formatting";
   import { Number, Text, Select, Option, OptGroup, Checkbox } from "@ui/index";
+  import { Trait } from "index";
 
   export let entity = null;
   export let depth;
@@ -9,39 +10,35 @@
 </script>
 
 <style>
-  /* Chrome, Safari, Edge, Opera */
-  input::-webkit-outer-spin-button,
-  input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
 </style>
 
 {#if $display === 'table'}
-  <td class="w-full">
-    <span class="h-full" style="padding-left:{depth * 2}rem;">&thinsp;</span>
-    <span
-      on:click={() => ($entity.isOpen = !$entity.isOpen)}
-      class="fas"
-      class:hidden={!$entity.isContainer()}
-      class:fa-angle-right={!$entity.isOpen}
-      class:fa-angle-down={$entity.isOpen} />
-    <input
-      type="text"
-      class="w-1/2 truncate border-b border-solid border-black"
-      bind:value={$entity.name} />
+  <td>
+    <div class="flex">
+      <span class="h-full" style="padding-left:{depth * 2}rem;">&thinsp;</span>
+      <span
+        on:click={() => ($entity.isOpen = !$entity.isOpen)}
+        class="fas"
+        class:hidden={!$entity.isContainer()}
+        class:fa-angle-right={!$entity.isOpen}
+        class:fa-angle-down={$entity.isOpen} />
+      <input type="text" class="truncate flex-1" bind:value={$entity.name} />
+      {#if $entity.categories.size > 0}
+        <span class="fas fa-user-tag bg-g text-gray-700" />
+      {/if}
+    </div>
   </td>
   <td>
     <input
       type="number"
-      class="w-10 text-center"
+      class="w-6 text-center"
       bind:value={$entity.levels}
       disabled={!$entity.hasLevels} />
   </td>
   <td class="text-center">{$entity.adjustedPoints()}</td>
   <td>
     <input
-      class="w-10 text-center truncate border-b border-solid border-black"
+      class="w-10 text-center"
       type="text"
       bind:value={$entity.reference} />
   </td>

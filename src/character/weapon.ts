@@ -20,6 +20,7 @@ export abstract class Weapon<T extends ListItem> extends CharacterElement {
     static keys = [
         "usage",
         "strength",
+        'damage',
         "damageStrength",
         "damageBase",
         "damageType",
@@ -37,6 +38,8 @@ export abstract class Weapon<T extends ListItem> extends CharacterElement {
 
     usage: string = "attack"
     strength: string = "10"
+
+    damage = ""
 
     damageStrength: BaseDamage
     damageBase: string
@@ -140,13 +143,14 @@ export class MeleeWeapon<T extends ListItem> extends Weapon<T> {
 }
 
 export class RangedWeapon<T extends ListItem> extends Weapon<T> {
-    static keys = ["accuracy", "range", "rateOfFire", "shots", "bulk"]
+    static keys = ["accuracy", "range", "rateOfFire", "shots", "bulk", "recoil"]
     static type = "ranged_weapon"
 
     accuracy: string = ""
     range: string = ""
     rateOfFire: string = ""
     shots: string = ""
+    recoil = 0
     bulk: string = ""
 
     constructor(owner: T, keys: string[] = []) {

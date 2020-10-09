@@ -6,6 +6,7 @@
 
     let portrait;
     let cropper;
+    let circular = false;
     let filePicker;
 
     function getRoundedCanvas(sourceCanvas) {
@@ -36,10 +37,9 @@
             cropper = new Cropper(portrait);
         } else {
             const canvas = cropper.getCroppedCanvas();
-            const roundedCanvas = getRoundedCanvas(canvas);
-
-            src = roundedCanvas.toDataURL();
-
+            src = circular
+                ? getRoundedCanvas(canvas).toDataURL()
+                : canvas.toDataURL();
             cropper.destroy();
             cropper = null;
         }
@@ -57,12 +57,21 @@
 </script>
 
 <style>
+    :global(.cropper-view-box + .circular) {
+        box-shadow: 0 0 0 1px #39f;
+        border-radius: 50%;
+        outline: 0;
+        outline: inherit !important;
+    }
+    :global(.cropper-face + .circular) {
+        background-color: inherit !important;
+    }
 </style>
 
-<section class="h-full flex flex-col">
+<section class:circular class="flex flex-col">
     <img
-        crossorigin="use-credentials"
-        class="block max-w-full h-full object-cover"
+        class="object-contain"
+        style="max-height: 80vh;"
         {src}
         alt="profile"
         bind:this={portrait} />

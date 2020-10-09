@@ -12,42 +12,30 @@
 </style>
 
 {#if $display === 'table'}
-  <td class="w-full">
-    <span class="h-full" style="padding-left:{depth * 2}rem;">&thinsp;</span>
-    <span
-      on:click={() => ($entity.isOpen = !$entity.isOpen)}
-      class="fas"
-      class:hidden={!$entity.isContainer()}
-      class:fa-angle-right={!$entity.isOpen}
-      class:fa-angle-down={$entity.isOpen} />
-    <Text bind:value={$entity.name} />
-  </td>
   <td>
-    <Text bind:value={$entity.resist} />
+    <div class="flex">
+      <span class="h-full" style="padding-left:{depth * 2}rem;">&thinsp;</span>
+      <span
+        on:click={() => ($entity.isOpen = !$entity.isOpen)}
+        class="fas"
+        class:hidden={!$entity.isContainer()}
+        class:fa-angle-right={!$entity.isOpen}
+        class:fa-angle-down={$entity.isOpen} />
+      <input class="flex-1" type="text" bind:value={$entity.name} />
+    </div>
   </td>
-  <td>
-    <Text bind:value={$entity.class} />
-  </td>
-  <td>
-    <Text bind:value={$entity.castingCost} />
-  </td>
-  <td>
-    <Text bind:value={$entity.maintenanceCost} />
-  </td>
-  <td>
-    <Text bind:value={$entity.castingTime} />
-  </td>
-  <td>
-    <Text bind:value={$entity.duration} />
-  </td>
+  <td><input type="text" bind:value={$entity.resist} /></td>
+  <td><input type="text" bind:value={$entity.class} /></td>
+  <td><input type="text" bind:value={$entity.castingCost} /></td>
+  <td><input type="Text" bind:value={$entity.maintenanceCost} /></td>
+  <td><input type="text" bind:value={$entity.castingTime} /></td>
+  <td><input type="text" bind:value={$entity.duration} /></td>
   <td>{$entity.calculateLevel() || ''}</td>
   <td>{formatRSL($entity)}</td>
   <td>
     {#if !$entity.isContainer()}
-      <Number bind:value={$entity.points} />
+      <input class="w-10" type="number" bind:value={$entity.points} />
     {/if}
   </td>
-  <td>
-    <Text bind:value={$entity.reference} />
-  </td>
+  <td><input class="w-12" type="text" bind:value={$entity.reference} /></td>
 {/if}

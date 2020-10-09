@@ -4,6 +4,7 @@
 
   import TraitEditor from "@ui/components/editors/TraitEditor";
   import Trait from "@ui/components/entities/Trait";
+  import { strEncodeUTF16 } from "utils/string_utils";
 
   const { character } = getContext("app");
 
@@ -11,26 +12,144 @@
 
   $: splits = traitList.split();
 
+  $: languages = traitList
+    .iter()
+    .filter((trait) => trait.categories.has("Language"))
+    .sort((a, b) => strEncodeUTF16(b.name) - strEncodeUTF16(a.name));
+
+  $: cultures = traitList
+    .iter()
+    .filter((trait) => trait.categories.has("Culture"))
+    .sort((a, b) => strEncodeUTF16(b.name) - strEncodeUTF16(a.name));
+
   function addItem(categories) {
     traitList.addListItem().categories = categories;
   }
 </script>
 
-<List
-  on:additem={() => addItem(['Racial'])}
-  title="Racial"
-  component={Trait}
-  editor={TraitEditor}
-  list={splits.racial}
-  config={{ flat: false }}>
-  <tr slot="header">
-    <th class="w-full">Racial</th>
-    <th>Lvl</th>
-    <th>Pts</th>
-    <th>Ref</th>
-  </tr>
-</List>
-<div class="flex">
+<div class="lg:flex">
+  <div class="flex-1">
+    <List
+      on:additem={() => addItem(['Advantage'])}
+      title="Advantages"
+      component={Trait}
+      editor={TraitEditor}
+      list={splits.advantages}
+      config={{ flat: false }}>
+      <tr slot="header">
+        <th class="w-full">Advantages</th>
+        <th>Lvl</th>
+        <th>Pts</th>
+        <th>Ref</th>
+      </tr>
+    </List>
+  </div>
+  <div class="w-1/5">
+    <section class="mt-2 mb-2 mx-4 select-none">
+      <table class="white-space-no-wrap text-center">
+        <thead
+          class="text-sm text-gray-700 border-b border-solid border-gray-700">
+          <tr>
+            <th class="w-full">Language</th>
+            <th>Pts</th>
+            <th>Ref</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each languages as language, i (language.id)}
+            <tr>
+              <td class="text-left">
+                <div>{language.name}</div>
+                <div class="text-xs italic pl-2">
+                  {#each [...language.modifiers].filter((modifier) => modifier.enabled) as modifier, i (modifier.id)}
+                    {modifier.name}
+                    {#if modifier.notes}({modifier.notes}){/if};
+                  {/each}
+                </div>
+              </td>
+              <td>{language.adjustedPoints()}</td>
+              <td>{language.reference}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </section>
+    <section class="mt-2 mb-2 mx-4 select-none">
+      <table class="white-space-no-wrap text-center">
+        <thead
+          class="text-sm text-gray-700 border-b border-solid border-gray-700">
+          <tr>
+            <th class="w-full">Cultures</th>
+            <th>Pts</th>
+            <th>Ref</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each cultures as culture, i (culture.id)}
+            <tr>
+              <td class="text-left">{culture.name}</td>
+              <td>{culture.adjustedPoints()}</td>
+              <td>{culture.reference}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </section>
+  </div>
+  <div class="flex-1">
+    <List
+      on:additem={() => addItem(['Disadvantage'])}
+      title="Disadvantages"
+      component={Trait}
+      editor={TraitEditor}
+      list={splits.disadvantages}
+      config={{ flat: false }}>
+      <tr slot="header">
+        <th class="w-full">Disadvantages</th>
+        <th>Lvl</th>
+        <th>Pts</th>
+        <th>Ref</th>
+      </tr>
+    </List>
+  </div>
+</div>
+
+<div class="lg:flex">
+  <div class="lg:flex-1">
+    <List
+      on:additem={() => addItem(['Racial'])}
+      title="Racial"
+      component={Trait}
+      editor={TraitEditor}
+      list={splits.racial}
+      config={{ flat: false }}>
+      <tr slot="header">
+        <th class="w-full">Racial</th>
+        <th>Lvl</th>
+        <th>Pts</th>
+        <th>Ref</th>
+      </tr>
+    </List>
+  </div>
+
+  <div class="flex-1">
+    <List
+      on:additem={() => addItem(['Meta'])}
+      title="Meta"
+      component={Trait}
+      editor={TraitEditor}
+      list={splits.meta}
+      config={{ flat: false }}>
+      <tr slot="header">
+        <th class="w-full">Meta</th>
+        <th>Lvl</th>
+        <th>Pts</th>
+        <th>Ref</th>
+      </tr>
+    </List>
+  </div>
+</div>
+<div class="lg:flex">
   <div class="flex-1">
     <List
       on:additem={() => addItem(['Perk'])}
@@ -47,7 +166,7 @@
       </tr>
     </List>
   </div>
-  <div class="flex-1">
+  <div class="lg:flex-1">
     <List
       on:additem={() => addItem(['Quirk'])}
       title="Quirks"
@@ -79,47 +198,3 @@
     </List>
   </div>
 </div>
-<div class="flex">
-  <div class="flex-1">
-    <List
-      on:additem={() => addItem(['Advantage'])}
-      title="Advantages"
-      component={Trait}
-      editor={TraitEditor}
-      list={splits.advantages}
-      config={{ flat: false }}>
-      <tr slot="header">
-        <th class="w-full">Advantages</th>
-        <th>Lvl</th>
-        <th>Pts</th>
-        <th>Ref</th>
-      </tr>
-    </List>
-  </div>
-  <div class="flex-1">
-    <List
-      on:additem={() => addItem(['Disadvantage'])}
-      title="Disadvantages"
-      component={Trait}
-      editor={TraitEditor}
-      list={splits.disadvantages}
-      config={{ flat: false }}>
-      <tr slot="header">
-        <th class="w-full">Disadvantages</th>
-        <th>Lvl</th>
-        <th>Pts</th>
-        <th>Ref</th>
-      </tr>
-    </List>
-  </div>
-</div>
-
-<!-- <Tabs>
-  <TabList>
-    <Tab>Traits</Tab>
-    <Tab>Trait Overviews</Tab>
-  </TabList>
-  <TabPanel>
-  </TabPanel>
-  <TabPanel />
-</Tabs> -->

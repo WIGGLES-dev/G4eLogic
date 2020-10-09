@@ -1,10 +1,12 @@
 import { Collection } from "@character/misc/collection";
+import { debounce } from "@utils/debounce";
 
 type subscription = (store: any) => void
 type derivation = (store: any, set?: (value?: any) => void, initial_value?: any) => any
 
 
 export abstract class Observable {
+    dispatching = true;
     changeCount = 0
     watching: string[];
 
@@ -40,6 +42,14 @@ export abstract class Observable {
 
     private onUnobserved() {
         this.cleanups.forEach(callback => callback(this));
+    }
+
+    /**
+     * Returns the observable in a state where watched variable changes won't trigger dispatches
+     */
+    proxy() {
+        this.dispatching = false;
+        return this
     }
 
     update(updater: (store: any) => any) {
@@ -93,7 +103,7 @@ export abstract class Observable {
                     if (data[cur] !== val && data[cur] !== undefined) {
                         this.changeCount++;
                         this.setState(oldV, val, cur);
-                        this.dispatch();
+                        if (this.dispatching) this.dispatch();
                     }
                     data[cur] = val
                 },

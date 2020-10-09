@@ -7,10 +7,15 @@
   import LiftingTable from "@ui/components/widgets/LiftingTable";
   import PointTotals from "@ui/components/widgets/PointTotals";
   import Combat from "@ui/components/widgets/Combat";
+  import Silhouette from "@ui/components/widgets/Silhouette.svelte";
 
   import List from "@ui/components/lists/List";
+
   import MeleeWeapon from "@ui/components/entities/MeleeWeapon";
+  import MeleeWeaponEditor from "@ui/components/editors/MeleeWeaponEditor";
+
   import RangedWeapon from "@ui/components/entities/RangedWeapon";
+  import RangedWeaponEditor from "@ui/components/editors/RangedWeaponEditor";
 
   const { character, components } = getContext("app");
 </script>
@@ -41,29 +46,29 @@
       <LiftingTable />
     </div>
   </div>
-  <div class="lg:flex md:ml-4 md:flex-col lg:flex-row flex-1 h-full">
+  <div class="ml-4 flex-1 h-full lg:flex md:flex-col lg:flex-row ">
     <div class="order-2">
       <PointTotals />
     </div>
     <hr class="lg:hidden" />
-    <div class="flex flex-1">
+    <div class="flex flex-wrap  flex-1">
       <div>
+        <Silhouette />
         <List
           title="Ranged Weapons"
           display="list"
           component={RangedWeapon}
+          editor={RangedWeaponEditor}
           config={{ addItem: false }}
           list={$character.rangedWeapons()} />
         <List
           title="Melee Weapons"
           display="list"
           component={MeleeWeapon}
+          editor={MeleeWeaponEditor}
           config={{ addItem: false }}
           list={$character.meleeWeapons()} />
       </div>
-      <textarea
-        rows="25"
-        class="lg:mx-4 h-full flex-1 border-2 border-gray-700 border-solid outline-none" />
     </div>
   </div>
   <div class="lg:hidden p-1" />

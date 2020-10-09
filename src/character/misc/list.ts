@@ -3,7 +3,6 @@ import { CharacterElement } from "./element";
 import { Feature } from "./feature";
 import { Weapon, MeleeWeapon, RangedWeapon } from "../weapon";
 import { Collection } from "./collection";
-import { AttributeBonus } from "index";
 
 export abstract class List<T extends ListItem = ListItem> {
     name: string
@@ -116,8 +115,9 @@ export abstract class ListItem extends CharacterElement implements Featurable {
         }
     }
 
-    addFeature() {
-        let feature = Feature.loadFeature(this);
+    addFeature(type: string = "attribute_bonus") {
+        //@ts-ignore
+        let feature = Feature.loadFeature(this, type);
         this.dispatch();
         return feature
     }

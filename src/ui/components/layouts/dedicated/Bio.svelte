@@ -56,7 +56,7 @@
         </div>
         <div class="row-span-2">
             <Cropper
-                src={`data:image/png;base64,${character.profile.portrait}`} />
+                src={character.profile.portrait ? `data:image/png;base64,${character.profile.portrait}` : 'silhouette.png'} />
         </div>
         <div class="flex flex-col">
             <div class="section-header">PHYSICAL</div>

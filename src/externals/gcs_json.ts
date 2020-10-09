@@ -14,6 +14,10 @@ import { Technique, TehchniqueDifficulty } from "@character/technique";
 import jp from "jsonpath";
 
 export class GCSJSON extends Serializer {
+    static entities = {
+
+    }
+
     static scope = "GCSJSON"
 
     constructor() {
@@ -146,6 +150,7 @@ export class GCSJSON extends Serializer {
 
     mapEquipment(equipment: Equipment, data?: any) {
         equipment.setValue({
+            location: data.location,
             description: data.description,
             disabled: !data.equipped,
             quantity: data.quantity,
@@ -351,10 +356,17 @@ export class GCSJSON extends Serializer {
 
         character.totalPoints = data.total_points;
 
-        character.profile.load(data.profile);
-
-        character.equipmentList.load(data.equipment);
-        character.otherEquipmentList.load(data.other_equipment);
+        const items = (data.equipment || []).map(item => {
+            item.location = "carried";
+            return item
+        }).concat(
+            (data.other_equipment || []).map(item => {
+                item.location = "other";
+                return item
+            })
+        )
+        console.log(items);
+        character.equipmentList.load(items);
 
         const skills = jp.query(data, `$.skills..[?(@.type=='skill')]`);
         character.skillList.load(skills);

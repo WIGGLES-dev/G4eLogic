@@ -30,10 +30,12 @@
       class:fa-angle-right={!$entity.isOpen}
       class:fa-angle-down={$entity.isOpen} />
     <input type="text" bind:value={$entity.name} />
-    <!-- {#if $entity.hastechLevel}{`/TL${$entity.techLevel}`}{/if} -->
-    {#if $entity.hasTechLevel}<input type="text" bind:value={$entity.techLevel}/>{/if}
-    <!-- {#if $entity.specialization}&nbsp;{`(${$entity.specialization})`}{/if} -->
-    {#if $entity.specialization} <input type="text" bind:value={$entity.specialization}>{/if}
+    {#if $entity.hasTechLevel}
+      <input type="text" bind:value={$entity.techLevel} />
+    {/if}
+    {#if $entity.specialization}
+      <input type="text" bind:value={$entity.specialization} />
+    {/if}
   </td>
   <td class="text-center">{$entity.calculateLevel() || ''}</td>
   <td class="text-center">{formatRSL($entity)}</td>

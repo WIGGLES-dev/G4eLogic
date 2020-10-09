@@ -1,4 +1,5 @@
 import { createPopper } from "@popperjs/core";
+import { fade } from "svelte/transition";
 
 export function popperVirtualElement() {
     return {
@@ -43,22 +44,74 @@ function interpolate(input: string, context: any) {
 }
 
 export function createTooltip(node: HTMLElement, params: any) {
-    const tooltip = document.createElement("div");
-    tooltip.className = 'bg-black text-white rounded-lg p-2' + ' ' + params.tipclass || "";
-    tooltip.innerHTML = interpolate(params.tooltip, params.context);
+    let component;
+    let tooltip
 
-    const popper = createPopper(node, tooltip, {
-        placement: params.placement || "right",
-        strategy: "fixed"
+    if (params.component) {
+
+    } else if (params.tooltip) {
+        tooltip = document.createElement("div");
+        tooltip.className = 'bg-black text-white text-sm rounded-lg p-2' + ' ' + params.tipclass || "";
+        tooltip.innerHTML = interpolate(params.tooltip, params.context);
+    }
+
+    const virtualElement = popperVirtualElement();
+    const popper = createPopper(virtualElement, tooltip, {
+        placement: params.placement || "bottom-start",
+        strategy: "fixed",
+        modifiers: [
+            {
+                name: "offset",
+                options: {
+                    offset: [params.offsetX || 16, params.offsetY || 16]
+                }
+            }
+        ]
     });
 
-    node.addEventListener("mouseover", () => { document.body.appendChild(tooltip) });
-    node.addEventListener("mouseleave", () => { tooltip.remove() });
+    async function mousemove({ clientX, clientY }) {
+        if (params.component) {
+            new params.component({
+                target: document.body,
+                props: {
+                    ...params.props,
+                    context: params.context
+                }
+            });
+        } else if (tooltip) {
+            if (!document.body.contains(tooltip)) {
+                document.body.appendChild(tooltip);
+            }
+            virtualElement.update(clientX, clientY);
+            popper.update();
+        }
+    }
+    function mouseleave() {
+        if (component) {
+
+            component.$destroy();
+        } else if (tooltip) {
+            tooltip.remove();
+        }
+    }
+
+    node.addEventListener("mousemove", mousemove);
+    node.addEventListener("mouseleave", mouseleave);
 
     return {
-        update(params) { tooltip.innerHTML = interpolate(params.tooltip, params.context) },
+        update(params) {
+            if (params.component) {
+                component.$set({ ...params.props, context: params.context });
+            } else if (params.tooltip) {
+                tooltip.innerHTML = interpolate(params.tooltip, params.context)
+            };
+        },
         destroy() {
             popper.destroy();
+            document.removeEventListener("mousemove", mousemove);
+            document.removeEventListener("mouseleave", mouseleave);
+            if (tooltip) tooltip.remove();
+            if (component) component.$destroy();
         }
     }
 }

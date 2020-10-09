@@ -1,11 +1,16 @@
 <script context="module">
+  export function registerApplication() {}
+
   import { writable } from "svelte/store";
+
   export const APPS = writable(new Set());
 </script>
 
 <script>
   import { tick } from "svelte";
+
   import Modal from "./Modal";
+  import Notification from "./Notification";
 
   function cleanup(modal) {
     APPS.update((store) => {

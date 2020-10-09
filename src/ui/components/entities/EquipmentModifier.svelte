@@ -11,14 +11,10 @@
 </style>
 
 {#if $display === 'table'}
-  <td>
-    <Checkbox bind:checked={$entity.enabled} />
-  </td>
+  <td><input type="checkbox" bind:checked={$entity.enabled} /></td>
   <td>{$entity.name}</td>
   <td>{$entity.techLevel}</td>
   <td>{$entity.costType}</td>
   <td>{$entity.weightType}</td>
-  <td class="w-full">
-    <Text bind:value={$entity.reference} />
-  </td>
+  <td class="w-full"><input type="text" bind:value={$entity.reference} /></td>
 {/if}

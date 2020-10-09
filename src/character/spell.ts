@@ -23,11 +23,7 @@ export class Spell extends Skill {
         "maintenanceCost",
         "castingTime",
         "duration",
-        "difficulty",
-        "signature",
-        "defaults",
-        "defaultedFrom",
-        "encumbrancePenaltyMultiple"]
+    ]
     version = 1
     tag = "spell"
     type: "spell" | "spell_container"

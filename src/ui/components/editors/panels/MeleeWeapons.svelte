@@ -1,6 +1,8 @@
 <script>
   import { List } from "@ui/index";
+
   import { MeleeWeapon } from "@ui/index";
+  import MeleeWeaponEditor from "@ui/components/editors/MeleeWeaponEditor";
 
   export let entity = null;
 
@@ -10,12 +12,12 @@
 </script>
 
 <style>
-  
 </style>
 
 <List
   list={weapons}
   title="Melee Weapons"
+  editor={MeleeWeaponEditor}
   component={MeleeWeapon}
   on:additem={() => $entity.addWeapon('melee_weapon')}>
   <tr slot="header">

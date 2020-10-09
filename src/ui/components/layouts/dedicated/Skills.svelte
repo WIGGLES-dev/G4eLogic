@@ -8,12 +8,24 @@
     const { character, components } = getContext("app");
 
     $: skillList = $character.skillList;
+    $: techniqueList = $character.techniqueList;
+
+    function addSkill() {
+        skillList.addListItem();
+    }
+    function addTechnique() {
+        techniqueList.addListItem();
+    }
 </script>
 
 <style>
 </style>
 
-<List title="Techniques">
+<List
+    title="Techniques"
+    on:additem={addTechnique}
+    component={Skill}
+    list={techniqueList.contents.arr}>
     <tr slot="header">
         <th class="w-full">Techniques</th>
         <th>SL</th>
@@ -24,6 +36,7 @@
     </tr>
 </List>
 <List
+    on:additem={addSkill}
     title="Skill"
     component={Skill}
     editor={SkillEditor}

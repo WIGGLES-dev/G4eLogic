@@ -139,6 +139,9 @@ export class Character extends Sheet {
     missingHP: number
     missingFP: number
 
+    techLevel: string = "3";
+    sizeModifier: number = 0;
+
     profile: Profile
     skillList: SkillList
     techniqueList: TechniqueList
@@ -157,7 +160,7 @@ export class Character extends Sheet {
         this.profile = new Profile();
 
         this.equipmentList = new EquipmentList().attachCharacter(this);
-        this.otherEquipmentList = new EquipmentList("other equipment").attachCharacter(this);
+
         this.skillList = new SkillList().attachCharacter(this);
         this.techniqueList = new TechniqueList().attachCharacter(this);
         this.traitList = new TraitList().attachCharacter(this);
@@ -315,15 +318,18 @@ export class Character extends Sheet {
     }
 
     void() {
-        super.void();
-        this.featureList.empty();
-        this.traitList.empty();
-        this.skillList.empty();
-        this.techniqueList.empty();
-        this.equipmentList.empty();
-        this.otherEquipmentList.empty();
-        this.spellList.empty();
-        return this
+        try {
+            super.void();
+            this.featureList.empty();
+            this.traitList.empty();
+            this.skillList.empty();
+            this.techniqueList.empty();
+            this.equipmentList.empty();
+            this.spellList.empty();
+            return this
+        } catch (err) {
+            console.log("Failed the void sheet", err);
+        }
     }
 }
 

@@ -15,13 +15,15 @@
   import Combat from "@ui/components/layouts/dedicated/Combat";
 
   import ContextMenu from "@ui/components/context-menu/ContextMenu";
-  import Modals from "@ui/components/dialog/Modals.svelte";
+  import Tooltips from "@ui/components/tooltips/Tooltip";
+  import Applications from "@ui/components/applications/ApplicationManager.svelte";
 
   export let character = null;
   export let config = {};
 
   let contextMenu;
   let modals;
+  let tooltips;
 
   const components = {};
 
@@ -50,9 +52,10 @@
 </svelte:head>
 <template style="" />
 
-<main>
+<main class="bg-white">
   <ContextMenu bind:this={contextMenu} />
-  <Modals bind:this={modals} />
+  <Applications bind:this={modals} />
+  <Tooltips bind:this={tooltips} />
 
   <!-- <div class="flex" style="padding-bottom: 3px;">
       <span class="tool fas fa-undo" on:click={character.State.undo()} />

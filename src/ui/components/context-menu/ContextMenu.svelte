@@ -1,7 +1,9 @@
 <script>
   import { onMount, onDestroy, tick } from "svelte";
+
   import { createPopper } from "@popperjs/core";
   import { popperVirtualElement } from "@ui/utils/popper";
+  import { toTop } from "@ui/utils/use";
 
   import { slide } from "svelte/transition";
 
@@ -12,10 +14,6 @@
   export let rendered = false;
 
   let HTMLUListElement;
-
-  function moveToBody(node) {
-    document.body.appendChild(node);
-  }
 
   let virtualElement = popperVirtualElement();
   let popper;
@@ -59,7 +57,7 @@
   }} />
 
 {#if rendered}
-  <ul use:moveToBody bind:this={HTMLUListElement} class="context-menu">
+  <ul use:toTop bind:this={HTMLUListElement} class="context-menu">
     {#each options as option, i (i)}
       <ContextMenuOption {...option} />
     {/each}

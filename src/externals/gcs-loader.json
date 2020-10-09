@@ -1,0 +1,216 @@
+{
+    "schema": "gcs",
+    "templates": {
+        "character_element": {
+            "reference": "reference",
+            "notes": "notes"
+        },
+        "list_item": {
+            "features": {
+                "process": "array",
+                "constructor": {
+                    "key": "addFeature",
+                    "args": [
+                        "type"
+                    ]
+                },
+                "Entity": "Feature"
+            },
+            "weapons": {
+                "process": "array",
+                "constructor": {
+                    "key": "addWeapon",
+                    "args": [
+                        "type"
+                    ]
+                },
+                "Entity": "Weapon"
+            }
+        },
+        "modifiable": {
+            "modifiers": {
+                "process": "array",
+                "Entity": "Modifier"
+            }
+        },
+        "skill": {
+            "name": "name",
+            "difficulty": {
+                "transform": "return data.difficulty.split('/')[0]",
+                "revert": "return `${target.difficulty}/${target.signature}`"
+            },
+            "points": "points",
+            "specialization": "specialization",
+            "mod": null,
+            "signature": {
+                "transform": "return data.difficulty.split('/')[1]"
+            },
+            "hasTechLevel": {
+                "transform": ""
+            },
+            "techLevel": "tech_level",
+            "defaults": {
+                "process": "array",
+                "constructor": {
+                    "key": "addDefault"
+                },
+                "Entity": "Default"
+            },
+            "defaultedFrom": null,
+            "encumbrancePenaltyMultiple": "encumbrance_penalty_multiplier"
+        },
+        "default": {
+            "type": "type",
+            "modifier": "modifier",
+            "specialization": "specialization",
+            "name": "name"
+        },
+        "modifier": {
+            "enabled": "enabled",
+            "name": "name",
+            "cost": "cost",
+            "type": "cost_type",
+            "affects": "affects",
+            "levels": "levels",
+            "weight": "weight",
+            "costType": "cost_type",
+            "weightType": "weight_type"
+        }
+    },
+    "mappings": {
+        "Equipment": {
+            "templates": [
+                "character_element"
+            ],
+            "name": "description",
+            "techLevel": "tech_level",
+            "legalityClass": "legalityClass",
+            "quantity": "quantity",
+            "uses": "uses",
+            "maxUses": "max_uses",
+            "weight": "weight",
+            "value": "value",
+            "containedWeightReduction": "",
+            "applySkillEncumbrancePenalty": null,
+            "isAmmunition": null,
+            "storeLocation": null
+        },
+        "Trait": {
+            "templates": [
+                "character_element",
+                "list_item"
+            ],
+            "name": "name",
+            "basePoints": "base_points",
+            "hasLevels": {
+                "transform": "return +data.levels > -1"
+            },
+            "levels": "levels",
+            "allowHalfLevels": null,
+            "hasHalfLevel": "has_half_level",
+            "roundDown": "round_down",
+            "types": null,
+            "disabled": null,
+            "pointsPerLevel": "points_per_level",
+            "containerType": null,
+            "modifier": {
+                "process": "array",
+                "constructor": {
+                    "key": "addModifier"
+                },
+                "Entity": "Modifier"
+            }
+        },
+        "Skill": {
+            "templates": [
+                "skill",
+                "character_element",
+                "list_item"
+            ]
+        },
+        "Technique": {
+            "templates": [
+                "skill",
+                "character_element",
+                "list_item"
+            ],
+            "difficulty": "difficulty",
+            "limit": "limit",
+            "default": {
+                "Entity": "Default",
+                "constructor": {
+                    "key": "addDefault"
+                }
+            }
+        },
+        "Spell": {
+            "templates": [
+                "skill",
+                "character_element",
+                "list_item"
+            ],
+            "college": "college",
+            "class": "class",
+            "resist": "resist",
+            "powerSource": "power_source",
+            "spellClass": "spell_class",
+            "castingCost": "casting_cost",
+            "maintenanceCost": "maintenance_cost",
+            "castingTime": "castingTime",
+            "duration": "duration"
+        },
+        "feature": {
+            "type": "type",
+            "leveled": "per_level",
+            "amount": "amount",
+            "attribute": "attribute",
+            "location": "location",
+            "selectionType": "selection_type",
+            "nameCompareType": "name.compare",
+            "name": "name.qualifier",
+            "specializationCompareType": "specialization.compare",
+            "specialization": "specialization.qualifier",
+            "categoryCompareType": "category.compare",
+            "category": "category.qualifier"
+        },
+        "weapon": {
+            "usage": "usage",
+            "strength": "strength",
+            "damageStrength": "damage.st",
+            "damageBase": "damage.base",
+            "damageType": "damage.type",
+            "reach": "reach",
+            "parry": "parry",
+            "block": "block",
+            "accuracy": "accuracy",
+            "range": "range",
+            "rateOfFire": "rate_of_fire",
+            "shots": "shots",
+            "bulk": "bulk"
+        },
+        "Default": {
+            "templates": [],
+            "type": "type",
+            "modifier": "modifier",
+            "specialization": "specialization",
+            "name": "name"
+        },
+        "SkillDefault": {
+            "templates": [
+                "default"
+            ]
+        },
+        "EquipmentModifier": {
+            "templates": [
+                "character_element",
+                "modifier"
+            ]
+        },
+        "TraitModifier": {
+            "templates": [
+                "character_element",
+                "modifier"
+            ]
+        }
+    }
+}

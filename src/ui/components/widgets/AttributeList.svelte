@@ -51,7 +51,7 @@
   <div class="flex bg-gray-700 col-span-2">
     <span
       class="col-span-2 text-center m-auto text-white bg-gray-700"
-      use:createTooltip={{ tipclass: 'text-sm', placement: 'bottom-start', tooltip: `
+      use:createTooltip={{ placement: 'bottom-start', tooltip: `
       Attributes from the configuration panel. Clicking the dice will roll the styles number.<br/>
       The mod input will adjust the main attribute without adjusting point total.<br/>
       the number in brackets is the amount of points spent modifying the attribute.<br/>

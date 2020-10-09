@@ -1,6 +1,7 @@
 <script>
   import { List } from "@ui/index";
   import { RangedWeapon } from "@ui/index";
+  import RangedWeaponEditor from "@ui/components/editors/RangedWeaponEditor";
   export let entity = null;
 
   $: weapons = [...$entity.weapons].filter(
@@ -15,6 +16,7 @@
   list={weapons}
   title="Ranged Weapons"
   component={RangedWeapon}
+  editor={RangedWeaponEditor}
   on:additem={() => $entity.addWeapon('ranged_weapon')}>
   <tr slot="header">
     <th class="w-full">Ranged Weapons</th>

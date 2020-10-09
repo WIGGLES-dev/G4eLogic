@@ -2,8 +2,6 @@ import {
     generateUUID
 } from "@utils/uuid";
 import { Character } from "@character/character";
-import { Collection } from "./collection";
-import { watch } from "@character/general/propwatcher";
 import { Observable } from "@character/general/observable";
 
 

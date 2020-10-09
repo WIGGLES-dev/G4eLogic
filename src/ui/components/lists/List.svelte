@@ -32,19 +32,34 @@
 </script>
 
 <style>
-  table :global(td) {
+  table :global(td:not(:last-child)) {
+    @apply border-r border-gray-300 border-solid;
+  }
+  table :global(input) {
+    @apply bg-transparent outline-none;
+  }
+  table
+    :global(input::-webkit-outer-spin-button, input::-webkit-inner-spin-button) {
+    @apply m-0;
+    -webkit-appearance: none;
   }
   thead :global(th) {
-    @apply bg-gray-700 text-white text-lg px-3;
+    @apply text-gray-700 mr-2;
+  }
+  thead {
+    @apply border-b border-gray-700 border-solid rounded-r-md;
   }
   tbody :global(tr):nth-child(even) {
     @apply bg-gray-100;
+  }
+  tbody :global(tr:hover) {
+    @apply bg-gray-700 text-white;
   }
 </style>
 
 <section
   class:mx-4={display === 'table'}
-  class="select-none mb-2 border-b border-gray-700 border-solid rounded-r-md"
+  class="select-none mb-2 mt-2 border-b border-gray-700 border-solid rounded-r-md"
   class:border-red-700={config.addItem}
   on:contextmenu={(e) => e.preventDefault()}
   data-list-type={display}>

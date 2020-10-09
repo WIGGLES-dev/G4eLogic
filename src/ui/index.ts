@@ -10,7 +10,7 @@ export { default as Tab } from "@ui/components/tabs/Tab.svelte";
 export { default as TabList } from "@ui/components/tabs/TabList.svelte";
 export { default as TabPanel } from "@ui/components/tabs/TabPanel.svelte";
 
-export { default as Modal } from "@ui/components/dialog/Modal.svelte";
+export { default as Modal } from "@ui/components/applications/Modal.svelte";
 
 export { default as Box } from "@ui/components/semantic-boxes/Box.svelte";
 export { default as Boxes } from "@ui/components/semantic-boxes/Boxes.svelte";

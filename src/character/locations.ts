@@ -15,17 +15,20 @@ export class LocationList {
     }
 
     private configureLocations(character) {
+
         const CONFIG = character.config;
         this.locations.clear()
         Object.entries(CONFIG.locations).forEach(([key, location]: [string, any]) => {
-            const cripplesOn = new Function(location.cripples_on) as (damageTaken, maxHP) => boolean;
-            this.addLocation({
-                location: location.location,
-                hitsOn: location.hits_on,
-                hitPenalty: location.hit_penalty,
-                crippleRatio: location.cripple_ratio,
-                cripplesOn: location.cripples_on === undefined ? (damageTaken, maxHP) => false : cripplesOn
-            })
+            if (location.has) {
+                location.has.forEach(extraLocation => {
+                    let locationName = `${extraLocation} ${key}`;
+                    let newLocation = new HitLocation(this.character, locationName, location.cripple_ratio, location.hit_penalty, location.hit_range)
+                    this.locations.set(locationName, newLocation);
+                })
+            } else {
+                let newLocation = new HitLocation(this.character, key, location.cripple_ratio, location.hit_penalty, location.hit_range)
+                this.locations.set(key, newLocation);
+            }
         });
     }
     getLocation(location: string) {
@@ -36,35 +39,32 @@ export class LocationList {
 
         }
     }
-    addLocation({ location, crippleRatio = null, hitsOn = [], hitPenalty = 0, cripplesOn = (damageTaken, maxHP) => false }) {
+    addLocation({ location, crippleRatio = null, hitsOn = [], hitPenalty = 0 }) {
         const hitLocation = new HitLocation(
             this.character,
             location,
             crippleRatio,
             hitPenalty,
             hitsOn,
-            cripplesOn
         )
         this.locations.set(location, hitLocation);
     }
 }
 
 export class HitLocation extends CharacterElement {
-    static keys = ["crippleThreshold", "damageTaken"]
+    static keys = ["damageTaken"]
     damageTaken = 0
 
     equippedItems: Set<Equipment> = new Set()
     name: string
-    crippleThresholdFormula: (damageTaken: number, maxHP: number) => boolean
     crippleRatio
     hitPenalty
     hitsOn: number[]
 
-    constructor(character: Character, name: string, crippleRatio = null, hitPenalty: number = 0, hitsOn: number[] = [], cripplesOn = (damageTaken: number, maxHP: number) => false, keys: string[] = []) {
+    constructor(character: Character, name: string, crippleRatio = null, hitPenalty: number = 0, hitsOn: number[] = [], keys: string[] = []) {
         super(character, [...keys, ...HitLocation.keys]);
         this.name = name;
         this.crippleRatio = crippleRatio
-        this.crippleThresholdFormula = cripplesOn
         this.hitPenalty = hitPenalty;
         this.hitsOn = hitsOn;
     }
@@ -74,14 +74,14 @@ export class HitLocation extends CharacterElement {
         equipment.boundLocation = this;
         this.equippedItems.add(equipment);
     }
-
+    crippleThreshold() { return this.character.getAttribute(Signature.HP).calculateLevel() / this.crippleRatio }
     /**
      * Tests if this limb is crippled based on the formula provided in character
      * configuration. If the function fails will return false
      */
-    isLimbCrippled() {
+    isCrippled() {
         try {
-            return this.crippleThresholdFormula(this.damageTaken, this.character.getAttribute(Signature.HP).calculateLevel());
+            return this.damageTaken > this.crippleThreshold();
         } catch (err) {
             return false
         }

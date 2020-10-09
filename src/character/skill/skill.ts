@@ -39,12 +39,12 @@ export abstract class SkillLike extends ListItem {
     static keys = [
         "name", "difficulty", "points", "specialization", "mod", "signature",
         "hasTechLevel", "techLevel", "defaults", "defaultedFrom",
-        "encumbrancePenaltyMultiple", "hasLevels"]
+        "encumbrancePenaltyMultiple"]
 
-    name: string
-    difficulty: Difficulty
-    points: number
-    specialization: string
+    name: string = ""
+    difficulty: Difficulty = Difficulty.average
+    points: number = 1
+    specialization: string = null
     mod: number = 0
 
     signature: Signature
@@ -117,7 +117,7 @@ export abstract class SkillLike extends ListItem {
             buyLevelFromDefault,
             this.difficulty,
             this.points,
-            this.list.character.getAttribute(this.signature).calculateLevel(),
+            this.list.character.getAttribute(this.signature)?.calculateLevel() ?? 10,
             considerDefaults ?
                 this.getBestDefaultWithPoints()
                 : undefined,

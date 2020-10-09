@@ -1,8 +1,13 @@
 <script>
   import { getContext, createEventDispatcher } from "svelte";
-  import { Modal } from "@ui/index";
+  import { writable } from "svelte/store";
 
   export let entity = null;
+  const proxy = entity;
+
+  export let depth = 0;
+
+  $: children = [...(entity.children || [])];
 
   const dispatch = createEventDispatcher();
 
@@ -46,8 +51,8 @@
   }
 
   function edit() {
-    components.modals.render(`${$entity.constructor.name} Editor`, $editor, {
-      entity: $entity,
+    components.modals.render(`${entity.constructor.name} Editor`, $editor, {
+      entity: proxy,
     });
   }
 
@@ -82,10 +87,6 @@
       show: () => true,
     },
   ];
-
-  $: children = [...($entity.children || [])];
-
-  export let depth = 0;
 </script>
 
 <style>
@@ -97,12 +98,15 @@
     content: " ";
     top: 50%;
   }
+  tr :global(div.flex .fas) {
+    @apply self-center;
+  }
 </style>
 
 {#if $display === 'table'}
   <tr
-    data-id={$entity.id}
-    data-i={$entity.listWeight}
+    data-id={$proxy.id}
+    data-i={$proxy.listWeight}
     draggable={true}
     on:dragstart={onDragstart}
     on:dragenter={onDragenter}
@@ -115,18 +119,18 @@
     on:dblclick={() => dispatch('select', entity)}>
     <svelte:component
       this={$component}
-      {entity}
+      entity={proxy}
       {depth}
       selected={$selected === $entity} />
   </tr>
-  {#if $entity.isOpen && !$config.flat}
+  {#if $proxy.isOpen && !$config.flat}
     {#each children as entity, i (entity.id)}
       <svelte:self {entity} depth={depth + 1} on:select />
     {/each}
   {/if}
 {:else if $display === 'list'}
   <li on:contextmenu={onContextMenu}>
-    <svelte:component this={$component} {entity} {depth} />
+    <svelte:component this={$component} entity={proxy} {depth} />
     {#if children.length > 0 && entity.isOpen && !$config.flat}
       <ul>
         {#each children as entity, i (entity.id)}
@@ -137,7 +141,7 @@
   </li>
 {:else if $display === 'grid'}
   <div
-    data-id={$entity.id}
+    data-id={$proxy.id}
     draggable={true}
     on:dragstart={onDragstart}
     on:dragenter={onDragenter}
@@ -145,10 +149,10 @@
     on:dragover={onDragenter}
     on:drop={onDrop}
     on:contextmenu={onContextMenu}
-    class:disabled={$entity.disabled}
+    class:disabled={$proxy.disabled}
     class="flex border-solid border-black border-b hover:bg-black
       hover:text-white">
-    <svelte:component this={$component} {entity} {depth} />
+    <svelte:component this={$component} entity={proxy} {depth} />
   </div>
   {#if !$config.flat}
     {#each children as entity, i (entity.id)}

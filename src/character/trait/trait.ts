@@ -20,7 +20,8 @@ export class TraitList extends List<Trait> {
             quirks: root.filter(trait => getTraitType(trait) === TraitCategory.Quirk),
             advantages: root.filter(trait => getTraitType(trait) === TraitCategory.Advantage),
             perks: root.filter(trait => getTraitType(trait) === TraitCategory.Perk),
-            racial: root.filter(trait => getTraitType(trait) === TraitCategory.Racial)
+            meta: root.filter(trait => getTraitType(trait) === TraitCategory.Meta),
+            racial: root.filter(trait => getTraitType(trait) === TraitCategory.Racial),
         }
         return removeDuplicates(splits) as { [key: string]: Trait[] }
     }
@@ -34,7 +35,10 @@ enum ContainerType {
 }
 
 export class Trait extends ListItem {
-    static keys = ["name", "basePoints", "hasLevels", "levels", "allowHalfLevels", "hasHalfLevel", "roundDown", "controlRating", "types", "disabled", "pointsPerLevel", "containerType"]
+    static keys = [
+        "name", "basePoints", "hasLevels", "levels", "allowHalfLevels",
+        "hasHalfLevel", "roundDown", "controlRating", "types", "disabled",
+        "pointsPerLevel", "containerType"]
     version = 1
     tag = "trait"
 

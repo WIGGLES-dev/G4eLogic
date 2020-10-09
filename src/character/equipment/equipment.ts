@@ -4,12 +4,15 @@ import { Character } from "../character";
 import { HitLocation } from "../locations";
 
 export class EquipmentList extends List<Equipment> {
+    locations: Set<string> = new Set(["carried", "other"])
+
     constructor(name = "equipment") {
         super(name);
     }
     populator(data: any) {
         return new Equipment(this)
     }
+    itemsByLocation(location: string) { return this.rootItems().arr.filter(item => item.location === location) }
     forSkillEncumbrancePenalty() {
         return this.rootItems().reduce((prev, cur) => {
             if (cur.equipped && cur.applySkillEncumbrancePenalty) prev += cur.extendedWeight();
@@ -42,16 +45,16 @@ export class Equipment extends ListItem {
     static keys = [
         "description", "techLevel", "legalityClass", "quantity", "uses", "maxUses",
         "weight", "value", "containedWeightReduction", "applySkillEncumbrancePenalty",
-        "isAmmunition", "storeLocation"
+        "isAmmunition", "location"
     ]
 
     version = 1
-    tag = "equipment"
+    tag = "Equipment"
 
     description: string = ""
     boundLocation: HitLocation
 
-    storedLocation = "carried"
+    location = "carried"
 
     uses: number = 0
     maxUses: number = 0

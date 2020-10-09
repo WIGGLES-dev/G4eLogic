@@ -280,7 +280,7 @@
             "signature": "QN",
             "abbreviation": "qn",
             "name": "quintessence",
-            "tooltip": "Quintessence ([costPerLevel] points per level), ref. Pyramid #3/120, pg. 21.<br/>Modifies QN and all supernatural rolls.<br/>This trait is optional and not listed in Basic Set. See Pyramid #3/120 for more information.Unmodified ([unmodifiedLevel])<br/>",
+            "tooltip": "Quintessence ([costPerLevel] points per level), ref. Pyramid #3/120, pg. 21.<br/>Modifies QN and all supernatural rolls.<br/>This trait is optional and not listed in Basic Set. See Pyramid #3/120 for more information.)<br/>Unmodified ([unmodifiedLevel]",
             "cost_per_level": 10,
             "default_level": 10,
             "can_be_signature": true,
@@ -333,10 +333,8 @@
     "locations": {
         "eyes": {
             "location": "Eyes",
-            "hit_range": [],
             "hit_penalty": -9,
-            "cripple_ratio": 10,
-            "cripples_on": "return damageTaken > maxHP / 10"
+            "cripple_ratio": 10
         },
         "skull": {
             "location": "Skull",
@@ -353,25 +351,6 @@
             ],
             "hit_penalty": -5
         },
-        "right_leg": {
-            "location": "Right Leg",
-            "hit_range": [
-                6,
-                7
-            ],
-            "hit_penalty": -2,
-            "cripple_ratio": 2,
-            "cripples_on": "return damageTaken > maxHP / 2"
-        },
-        "right_arm": {
-            "location": "Right Arm",
-            "hit_range": [
-                8
-            ],
-            "hit_penalty": -2,
-            "cripple_ratio": 2,
-            "cripples_on": "return damageTaken > maxHP / 2"
-        },
         "torso": {
             "location": "Torso",
             "hit_range": [
@@ -380,6 +359,12 @@
             ],
             "hit_penalty": 0
         },
+        "chest": {
+            "hit_penalty": 0
+        },
+        "abdomen": {
+            "hit_penalty": -1
+        },
         "groin": {
             "location": "Groin",
             "hit_range": [
@@ -387,42 +372,110 @@
             ],
             "hit_penalty": -3
         },
-        "left_arm": {
-            "location": "Left Arm",
+        "arm": {
+            "has": [
+                "right",
+                "left"
+            ],
             "hit_range": [
                 12
             ],
             "hit_penalty": -2,
-            "cripple_ratio": 2,
-            "cripples_on": "return damageTaken > maxHP / 2"
+            "cripple_ratio": 2
         },
-        "left_leg": {
-            "location": "Left Leg",
+        "shoulder": {
+            "has": [
+                "right",
+                "left"
+            ],
+            "hit_penalty": -6,
+            "cripple_ratio": 2
+        },
+        "upperarm": {
+            "has": [
+                "right",
+                "left"
+            ],
+            "hit_penalty": -6,
+            "cripples_on": 2
+        },
+        "elbow": {
+            "has": [
+                "right",
+                "left"
+            ],
+            "hit_penalty": -5,
+            "cripple_ratio": 3
+        },
+        "forearm": {
+            "has": [
+                "right",
+                "left"
+            ],
+            "hit_penalty": -4,
+            "cripple_ratio": 2
+        },
+        "leg": {
+            "has": [
+                "right",
+                "left"
+            ],
             "hit_range": [
                 13,
                 14
             ],
             "hit_penalty": -2,
-            "cripple_ratio": 2,
-            "cripples_on": "return damageTaken > maxHP / 2"
+            "cripple_ratio": 2
+        },
+        "thigh": {
+            "child_of": "leg",
+            "has": [
+                "right",
+                "left"
+            ],
+            "hit_penalty": -5
+        },
+        "knee": {
+            "child_of": "leg",
+            "has": [
+                "right",
+                "left"
+            ],
+            "cripple_ratio": 3,
+            "hit_penalty": -5
+        },
+        "shin": {
+            "child_of": "leg",
+            "has": [
+                "right",
+                "left"
+            ],
+            "hit_penalty": -5,
+            "cripple_ratio": 2
         },
         "hand": {
+            "has": [
+                "right",
+                "left"
+            ],
             "location": "Hand",
             "hit_range": [
                 15
             ],
             "hit_penalty": -4,
-            "cripple_ratio": 3,
-            "cripples_on": "return damageTaken > maxHP / 3"
+            "cripple_ratio": 3
         },
         "foot": {
+            "has": [
+                "right",
+                "left"
+            ],
             "location": "Foot",
             "hit_range": [
                 16
             ],
             "hit_penalty": -4,
-            "cripple_ratio": 3,
-            "cripples_on": "return damageTaken > maxHP / 3"
+            "cripple_ratio": 3
         },
         "neck": {
             "location": "Neck",
@@ -434,7 +487,6 @@
         },
         "vitals": {
             "location": "Vitals",
-            "hit_range": [],
             "hit_penalty": -3
         }
     }

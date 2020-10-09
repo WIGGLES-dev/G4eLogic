@@ -38,3 +38,13 @@ export function stringCompare(defaultQuery: string, skillQuery: string, type: St
 export function insensitiveStringCompare(string1: string, string2: string): boolean {
     return string1.toLowerCase() === string2.toLowerCase()
 }
+
+export function capitalize(string) {
+    return string.split(" ").map(word => {
+        return word[0].toUpperCase() + word.slice(1);
+    }).join(' ');
+}
+
+export function strEncodeUTF16(str: string) {
+    return [...str].reduce((prev, cur) => prev + cur.charCodeAt(0), 0);
+}
