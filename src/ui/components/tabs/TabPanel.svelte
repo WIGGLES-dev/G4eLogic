@@ -13,10 +13,12 @@
 <style>
 </style>
 
-<div class="flex flex-col h-full" class:hidden={!($selectedPanel === panel)}>
-  {#if component}
-    <svelte:component this={component} {...props} />
-  {:else}
-    <slot />
-  {/if}
-</div>
+{#if $selectedPanel === panel}
+  <div class="flex flex-col h-full" class:hidden={!($selectedPanel === panel)}>
+    {#if component}
+      <svelte:component this={component} {...props} />
+    {:else}
+      <slot />
+    {/if}
+  </div>
+{/if}

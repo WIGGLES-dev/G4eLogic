@@ -8,5 +8,7 @@
   <div class="ml-3 mr-3 text-xl font-semibold">
     <slot name="title" />
   </div>
-  <slot />
+  <div class="flex-1">
+    <slot />
+  </div>
 </nav>

@@ -65,7 +65,7 @@
       </tr>
     </List>
   </div>
-  <div class="flex-1">
-    <Silhouette height="70vh" />
+  <div class="w-1/3">
+    <Silhouette />
   </div>
 </div>

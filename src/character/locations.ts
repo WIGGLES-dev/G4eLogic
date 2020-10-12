@@ -55,6 +55,7 @@ export class HitLocation extends CharacterElement {
     static keys = ["damageTaken"]
     damageTaken = 0
 
+
     equippedItems: Set<Equipment> = new Set()
     name: string
     crippleRatio
@@ -68,6 +69,8 @@ export class HitLocation extends CharacterElement {
         this.hitPenalty = hitPenalty;
         this.hitsOn = hitsOn;
     }
+
+    get key() { return this.name.split(" ").join("_") }
 
     equip(equipment: Equipment) {
         if (equipment.boundLocation instanceof HitLocation) return false

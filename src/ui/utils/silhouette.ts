@@ -17,7 +17,7 @@ export function center(node: SVGElement) {
  * @param param1 
  */
 
-export async function frameInViewbox(node: SVGElement, { scale = 0.7 } = {}) {
+export async function frameInViewbox(node: SVGElement, { scale = 1 } = {}) {
     const oldview = node.root().viewbox();
     const { cx, cy, h, w, x, x2, y, y2 } = node.bbox();
 
@@ -35,29 +35,4 @@ export async function frameInViewbox(node: SVGElement, { scale = 0.7 } = {}) {
     return new Promise((resolve, reject) => {
         node.root().animate(300).viewbox(xStart, yStart, width, height).after(resolve);
     });
-}
-
-/**
- * Determine the ideal popperoffset of the node based on available parent dimensions
- */
-function idealPopperOffset(node: SVGElement) {
-
-}
-
-export function positionField(node: HTMLElement, params) {
-    const popper = createPopper(params.reference, node, {
-        placement: "auto"
-    });
-
-    const interval = setInterval(async () => {
-        popper.update();
-    }, 300);
-
-    return {
-        update() { },
-        destroy() {
-            clearInterval(interval)
-            popper.destroy();
-        }
-    }
 }

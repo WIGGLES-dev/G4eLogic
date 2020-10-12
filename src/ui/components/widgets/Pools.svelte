@@ -1,6 +1,7 @@
 <script>
     import { getContext } from "svelte";
     import { createTooltip } from "@ui/utils/popper";
+    import Bar from "./Bar";
 
     const { character } = getContext("app");
 
@@ -21,8 +22,6 @@
         }
         return Math.max(cValue / mValue, 0) * 100;
     }
-
-    function transition() {}
 </script>
 
 <style>
@@ -67,11 +66,10 @@
             class="w-10 m-auto text-sm border-b border-gray-700 border-solid text-center outline-none" />
         <div
             class="col-span-4 relative h-3 rounded-r-md border-b border-solid border-gray-700">
-            <div
-                style="width: {percentage(attr)}%; background-color:{attr.color};"
-                class="absolute h-full max-w-full t-0 l-0 pointer-events-none rounded-r-md pool"
-                class:overflow={percentage(attr) > 100}
-                class:low={percentage(attr) < 33} />
+            <Bar
+                max={attr.tempValue > 0 ? attr.tempValue : attr.displayLevel}
+                current={attr.currentValue}
+                color={attr.color} />
         </div>
     {/each}
 </section>

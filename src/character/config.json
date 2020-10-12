@@ -332,12 +332,10 @@
     },
     "locations": {
         "eyes": {
-            "location": "Eyes",
             "hit_penalty": -9,
             "cripple_ratio": 10
         },
         "skull": {
-            "location": "Skull",
             "hit_range": [
                 3,
                 4
@@ -345,14 +343,12 @@
             "hit_penalty": -7
         },
         "face": {
-            "location": "Face",
             "hit_range": [
                 5
             ],
             "hit_penalty": -5
         },
         "torso": {
-            "location": "Torso",
             "hit_range": [
                 9,
                 10
@@ -360,9 +356,11 @@
             "hit_penalty": 0
         },
         "chest": {
+            "part_of": "torso",
             "hit_penalty": 0
         },
         "abdomen": {
+            "part_of": "torso",
             "hit_penalty": -1
         },
         "groin": {
@@ -384,6 +382,7 @@
             "cripple_ratio": 2
         },
         "shoulder": {
+            "part_of": "arm",
             "has": [
                 "right",
                 "left"
@@ -392,6 +391,7 @@
             "cripple_ratio": 2
         },
         "upperarm": {
+            "part_of": "arm",
             "has": [
                 "right",
                 "left"
@@ -400,6 +400,7 @@
             "cripples_on": 2
         },
         "elbow": {
+            "part_of": "arm",
             "has": [
                 "right",
                 "left"
@@ -408,6 +409,7 @@
             "cripple_ratio": 3
         },
         "forearm": {
+            "part_of": "arm",
             "has": [
                 "right",
                 "left"
@@ -428,7 +430,7 @@
             "cripple_ratio": 2
         },
         "thigh": {
-            "child_of": "leg",
+            "part_of": "leg",
             "has": [
                 "right",
                 "left"
@@ -436,7 +438,7 @@
             "hit_penalty": -5
         },
         "knee": {
-            "child_of": "leg",
+            "part_of": "leg",
             "has": [
                 "right",
                 "left"
@@ -445,7 +447,7 @@
             "hit_penalty": -5
         },
         "shin": {
-            "child_of": "leg",
+            "part_of": "leg",
             "has": [
                 "right",
                 "left"

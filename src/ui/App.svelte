@@ -27,6 +27,12 @@
 
   const components = {};
 
+  let filePicker;
+  async function loadCharacter(e) {
+    let file = e.target.files[0];
+    console.log(file);
+  }
+
   onMount(() => {
     Object.assign(components, {
       contextMenu,
@@ -64,8 +70,10 @@
 
   <TitleBar>
     <span slot="title">
-      <button on:click={() => console.log(character)}>Log Character</button>
+      <button class="outline-none" on:click={() => console.log(character)}>Log Character</button>
     </span>
+    <input on:change={loadCharacter} bind:this={filePicker} type="file" hidden />
+    <span on:click={() => filePicker.click()} class="fas fa-file-upload"></span>
   </TitleBar>
 
   <Tabs>

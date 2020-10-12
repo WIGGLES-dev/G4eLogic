@@ -109,13 +109,13 @@ export function getTraitType(trait: Trait) {
         const quirk = isQuirk(trait);
         const disadvantage = isDisadvantage(trait);
         const feature = isFeature(trait);
+
         if (racial) return TraitCategory.Racial;
-        if (feature) return TraitCategory.Feature;
-        if (meta) return TraitCategory.Meta;
         if (perk) return TraitCategory.Perk;
         if (advantage) return TraitCategory.Advantage;
         if (quirk) return TraitCategory.Quirk;
         if (disadvantage) return TraitCategory.Disadavantage;
+        if (feature) return TraitCategory.Feature;
 
         return TraitCategory.Meta
     }

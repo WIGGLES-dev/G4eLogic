@@ -377,9 +377,6 @@ export class GCSJSON extends Serializer {
         character.traitList.load(data.advantages);
         character.spellList.load(data.spells);
 
-        character.missingHP = data?.hp_damage ?? 0;
-        character.missingFP = data?.fp_damage ?? 0;
-
         character.getAttribute(Signature.DX).setLevel(data.DX);
         character.getAttribute(Signature.FP).setLevel(data.fp_adj);
         character.getAttribute(Signature.HP).setLevel(data.hp_adj);

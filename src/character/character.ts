@@ -134,10 +134,7 @@ export class Character extends Sheet {
 
     gCalcID: string
 
-    totalPoints: number
-
-    missingHP: number
-    missingFP: number
+    totalPoints: number = 150
 
     techLevel: string = "3";
     sizeModifier: number = 0;
@@ -171,15 +168,13 @@ export class Character extends Sheet {
         this.attributeList = new AttributeList(this);
     }
 
-    isReeling(ratio = 3) {
-        let maxHP = this.getAttribute(Signature.HP).calculateLevel();
-        let currentHP = maxHP - this.missingFP;
-        return maxHP / ratio > currentHP
-    }
-    isExhausted(ratio = 3) {
-        let maxFP = this.getAttribute(Signature.FP).calculateLevel();
-        let currentFP = maxFP - this.missingFP;
-        return maxFP / ratio > currentFP
+    status() {
+        const hp = this.getAttribute("HP");
+        const fp = this.getAttribute("FP");
+        return {
+            reeling: (hp.calculateLevel() / 3) > hp.currentValue,
+            exhausted: (fp.calculateLevel() / 3) > fp.currentValue
+        }
     }
 
     getSwingDamage() {

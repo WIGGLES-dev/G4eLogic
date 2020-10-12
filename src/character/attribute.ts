@@ -134,6 +134,12 @@ export class Attribute extends CharacterElement {
     }
 }
 
+// class Pool extends Attribute {
+//     constructor() {
+//         super();
+//     }
+// }
+
 export class AttributeBonus<T extends ListItem> extends Feature<T> {
     static type = FeatureType.attributeBonus
     static keys = ["attribute"]

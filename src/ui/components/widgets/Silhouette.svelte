@@ -1,9 +1,10 @@
 <script>
-    import { onMount, onDestroy } from "svelte";
+    import { onMount } from "svelte";
     import { getContext } from "svelte";
     import { createTooltip } from "@ui/utils/popper";
     import { hitLocationTemplate } from "@ui/components/tooltips/templates/HitLocation";
-    import { frameInViewbox, positionFields } from "@ui/utils/silhouette";
+    import { frameInViewbox } from "@ui/utils/silhouette";
+    import Bar from "./Bar";
 
     import {
         SVG,
@@ -74,6 +75,7 @@
             right: null,
         },
     };
+    const hud = {};
 
     let focusedLocation = null;
     let hiddenNodes = [];
@@ -111,14 +113,16 @@
     }
 
     function focusLocation(e) {
-        focusedLocation = e.target.closest("[data-location-group]").dataset
-            .locationGroup;
+        const locationGroup = e.target.closest("[data-location-group]");
+        if (!locationGroup) return;
+        focusedLocation = locationGroup.dataset.locationGroup;
         let node = draw.find(`[data-location-group="${focusedLocation}"]`)[0];
         node.addClass("focused");
         hideAllUnfocusedNodes();
-        frameInViewbox(node);
+        frameInViewbox(node, { scale: +locationGroup.dataset.scale || 0.7 });
     }
 
+    function allLocations() {}
     function allLocationGroups() {
         return draw.find(`[data-location-group]`);
     }
@@ -129,6 +133,35 @@
         });
     }
 
+    const lines = [];
+    function drawLines() {
+        lines.forEach((line) => line.remove());
+        allLocationGroups().forEach((group) => {
+            const svgBox = draw.node.getBoundingClientRect();
+            const location = group.node.dataset.locationGroup;
+            const hudItem = hud[location.split("-").join("_")];
+
+            if (!hudItem) return;
+
+            const hudBox = hudItem.getBoundingClientRect();
+
+            const isLeft = svgBox.left === hudBox.left;
+
+            let start = draw.point(
+                hudBox[isLeft ? "left" : "right"],
+                hudBox.bottom - hudBox.height / 2
+            );
+
+            let line = draw
+                .line(start.x, start.y, group.cx(), group.cy())
+                .stroke({
+                    width: 3,
+                    color: "black",
+                });
+            lines.push(line);
+        });
+    }
+
     function onClickSVG(e) {
         if (e.target.closest("[data-location-group],[data-location]")) {
         } else {
@@ -136,6 +169,7 @@
             showAllHiddenNodes();
             focusedLocation = null;
             revertViewbox();
+            drawLines();
         }
     }
 
@@ -150,24 +184,19 @@
     function createSVG() {
         draw = SVG(silhouette.total);
         originalView = draw.viewbox();
-        console.log(draw);
     }
 
     onMount(() => {
         createSVG();
         createTooltips();
-        locations = draw.find("[data-location]");
+        drawLines();
     });
 
-    let locationGroups = [];
-    let locations = [];
-    $: focusedLocations = locations.filter((svg) => {
-        return (
-            svg.node.closest("[data-location-group]") &&
-            svg.node.closest("[data-location-group]").dataset.locationGroup ===
-                focusedLocation
+    function getLocations(locations) {
+        return locations.map((location) =>
+            $character.locationList.getLocation(location)
         );
-    });
+    }
 </script>
 
 <style>
@@ -183,8 +212,67 @@
     }
 </style>
 
-<section>
-    {#each focusedLocations as location, i (i)}{/each}
+<svelte:window on:resize={drawLines} />
+
+<section class="relative">
+    <div
+        class="absolute top-0 left-0 flex flex-col bg-gray-700 text-white text-center text-xs">
+        {#each getLocations([
+            'skull',
+            'torso',
+            'left arm',
+            'left hand',
+            'left leg',
+            'left foot',
+        ]) as location, i (location.id)}
+            <div bind:this={hud[location.key]}>
+                <div>{location.name}</div>
+                <input
+                    type="number"
+                    class="w-5 outline-none text-black"
+                    bind:value={location.damageTaken} />
+                <input
+                    class="w-5 outline-none"
+                    type="number"
+                    disabled
+                    value={Math.ceil(location.crippleThreshold())} />
+                <div class="h-2">
+                    <Bar
+                        max={location.crippleThreshold()}
+                        current={location.damageTaken} />
+                </div>
+            </div>
+        {/each}
+    </div>
+    <div
+        class="absolute top-0 right-0 flex flex-col bg-gray-700 text-white text-center text-xs">
+        {#each getLocations([
+            'face',
+            'vitals',
+            'right arm',
+            'right hand',
+            'right leg',
+            'right foot',
+        ]) as location, i (location.id)}
+            <div bind:this={hud[location.key]}>
+                <div>{location.name}</div>
+                <input
+                    type="number"
+                    class="w-5 outline-none text-black"
+                    bind:value={location.damageTaken} />
+                <input
+                    class="w-5 outline-none"
+                    type="number"
+                    disabled
+                    value={Math.ceil(location.crippleThreshold())} />
+                <div class="h-2">
+                    <Bar
+                        max={location.crippleThreshold()}
+                        current={location.damageTaken} />
+                </div>
+            </div>
+        {/each}
+    </div>
     <svg
         on:click={onClickSVG}
         bind:this={silhouette.total}
@@ -377,7 +465,7 @@
                             c-0.03-1.76,2.86-7.46,4.79-13.6c1.93-6.14,1.84-15.1,2.02-16.67c0.18-1.58,0-3.25,0-3.25S273.27,380.51,253.44,379.46z" />
         </g>
 
-        <g on:click={focusLocation} data-location-group="head">
+        <g on:click={focusLocation} data-location-group="head" data-scale="0.5">
             <path
                 bind:this={silhouette.head.skull}
                 data-location="skull"
