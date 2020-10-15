@@ -85,7 +85,7 @@
         </select>
         <label for="">Level<input
             type="number"
-            bind:value={$entity.level}
+            bind:value={$entity.levels}
             disabled={!$entity.hasLevels} /></label>
         <label for="">+1/2
           <input

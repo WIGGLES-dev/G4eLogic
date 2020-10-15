@@ -1,7 +1,7 @@
-import { Feature, FeatureType } from "./misc/feature";
 import { Character, Signature } from "./character";
+import { Feature } from "./features/feature";
+import { AttributeBonus } from "./features/modules/AttributeBonus";
 import { CharacterElement } from "./misc/element";
-import { Collection } from "./misc/collection";
 import { ListItem } from "./misc/list";
 
 export class AttributeList {
@@ -16,7 +16,7 @@ export class AttributeList {
     }
 
     private configureAttributes(character) {
-        const CONFIG = character.config;
+        const CONFIG = character.config.getConfig();
         this.attributes.clear();
         Object.entries(CONFIG.attributes).forEach(([key, attribute]: [string, any]) => {
             const basedOn = new Function(attribute.based_on).bind(this);
@@ -87,6 +87,7 @@ export class Attribute extends CharacterElement {
     ) {
         super(character, [...keys, ...Attribute.keys]);
         this.name = name;
+        this.signature = signature;
         this.character = character;
         this.level = defaultLevel;
         this.costPerLevel = costPerLevel;
@@ -112,11 +113,11 @@ export class Attribute extends CharacterElement {
 
     hasTag(tag: string) { return this.tags.includes(tag) }
 
-    getModList(): AttributeBonus<any>[] {
-        const attributeName = this.name;
-        return this.character.featureList.getFeaturesByType(FeatureType.attributeBonus).filter(
-            feature => feature instanceof AttributeBonus && feature.ownerIsActive() && feature.attribute.toLowerCase() === attributeName.toLowerCase()
-        ) as AttributeBonus<any>[]
+    getModList() {
+        const attributeName = this.signature;
+        return this.character.featureList.getFeaturesByType(AttributeBonus).filter((feature) => {
+            return feature.type instanceof AttributeBonus && feature.ownerIsActive() && feature.type.attribute.toLowerCase() === attributeName.toLowerCase()
+        }) as Feature[]
     }
 
     pointsSpent() { return this.levelsIncreased() * this.costPerLevel }
@@ -140,12 +141,3 @@ export class Attribute extends CharacterElement {
 //     }
 // }
 
-export class AttributeBonus<T extends ListItem> extends Feature<T> {
-    static type = FeatureType.attributeBonus
-    static keys = ["attribute"]
-
-    attribute: string = Signature.ST
-    constructor(owner: T, keys: string[] = []) {
-        super(owner, [...keys, ...AttributeBonus.keys]);
-    }
-}

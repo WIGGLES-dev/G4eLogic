@@ -11,6 +11,7 @@
         extend as SVGextend,
         Element as SVGElement,
     } from "@svgdotjs/svg.js";
+    import Number from "../inputs/Number.svelte";
 
     const { character, components } = getContext("app");
 
@@ -76,13 +77,16 @@
         },
     };
     const hud = {};
+    const tooltips = {};
 
     let focusedLocation = null;
     let hiddenNodes = [];
 
     function hideAllUnfocusedNodes() {
         let nodes = draw.find(
-            `[data-location-group]:not([data-location-group="${focusedLocation}"])`
+            `[data-location-group]:not([data-location-group="${focusedLocation.name
+                .split(" ")
+                .join("-")}"])`
         );
         nodes.forEach((node) => {
             node.css("opacity", "0");
@@ -101,30 +105,42 @@
         hiddenNodes = [];
     }
 
+    function allLocations() {
+        return draw.find(`[data-location]`);
+    }
+    function allLocationGroups() {
+        return draw.find(`[data-location-group]`);
+    }
+
     function createTooltips() {
-        silhouette.total.querySelectorAll("[data-location]").forEach((node) => {
-            const name = node.dataset.location.split("-").join(" ");
+        allLocationGroups().forEach((svg) => {
+            const name = svg.node.dataset.locationGroup.split("-").join(" ");
             const location = character.locationList.getLocation(name);
             const tooltip = hitLocationTemplate(location);
-            const { update, destroy } = createTooltip(node, {
+            tooltips[location ? location.key : ""] = createTooltip(svg.node, {
                 tooltip,
             });
         });
     }
 
-    function focusLocation(e) {
+    async function focusLocation(e) {
         const locationGroup = e.target.closest("[data-location-group]");
         if (!locationGroup) return;
-        focusedLocation = locationGroup.dataset.locationGroup;
-        let node = draw.find(`[data-location-group="${focusedLocation}"]`)[0];
+        focusedLocation =
+            getLocations([
+                locationGroup.dataset.locationGroup.split("-").join(" "),
+            ])[0] || null;
+        let node = draw.find(
+            `[data-location-group="${focusedLocation.name
+                .split(" ")
+                .join("-")}"]`
+        )[0];
         node.addClass("focused");
         hideAllUnfocusedNodes();
-        frameInViewbox(node, { scale: +locationGroup.dataset.scale || 0.7 });
-    }
-
-    function allLocations() {}
-    function allLocationGroups() {
-        return draw.find(`[data-location-group]`);
+        await frameInViewbox(node, {
+            scale: +locationGroup.dataset.scale || 0.7,
+        });
+        drawLines();
     }
 
     function unfocusAll() {
@@ -135,6 +151,7 @@
 
     const lines = [];
     function drawLines() {
+        return;
         lines.forEach((line) => line.remove());
         allLocationGroups().forEach((group) => {
             const svgBox = draw.node.getBoundingClientRect();
@@ -162,20 +179,19 @@
         });
     }
 
-    function onClickSVG(e) {
+    async function onClickSVG(e) {
         if (e.target.closest("[data-location-group],[data-location]")) {
         } else {
             unfocusAll();
             showAllHiddenNodes();
             focusedLocation = null;
             revertViewbox();
-            drawLines();
         }
     }
 
     function revertViewbox() {
         const { x, y, width, height } = originalView;
-        draw.animate(300).viewbox(x, y, width, height);
+        draw.animate(300).viewbox(x, y, width, height).after(drawLines);
     }
 
     let draw;
@@ -192,15 +208,41 @@
         drawLines();
     });
 
-    function getLocations(locations) {
-        return locations.map((location) =>
-            $character.locationList.getLocation(location)
-        );
-    }
+    $: getLocations = () => {
+        const left = [
+            "skull",
+            "face",
+            "left arm",
+            "left hand",
+            "left leg",
+            "left foot",
+        ];
+        const right = [
+            "torso",
+            "vitals",
+            "right arm",
+            "right hand",
+            "right leg",
+            "right foot",
+        ];
+        const mapLocations = (list) => {
+            const locations = list.map((location) =>
+                $character.locationList.getLocation(location)
+            );
+            // if (focusedLocation == null)
+            return locations;
+            return locations.getSubLocations();
+        };
+        return {
+            left: mapLocations(left),
+            right: mapLocations(right),
+        };
+    };
 </script>
 
 <style>
     svg {
+        @apply flex-1;
         fill: #4a5568;
     }
     [data-location-group] {
@@ -214,47 +256,12 @@
 
 <svelte:window on:resize={drawLines} />
 
-<section class="relative">
-    <div
-        class="absolute top-0 left-0 flex flex-col bg-gray-700 text-white text-center text-xs">
-        {#each getLocations([
-            'skull',
-            'torso',
-            'left arm',
-            'left hand',
-            'left leg',
-            'left foot',
-        ]) as location, i (location.id)}
-            <div bind:this={hud[location.key]}>
-                <div>{location.name}</div>
-                <input
-                    type="number"
-                    class="w-5 outline-none text-black"
-                    bind:value={location.damageTaken} />
-                <input
-                    class="w-5 outline-none"
-                    type="number"
-                    disabled
-                    value={Math.ceil(location.crippleThreshold())} />
-                <div class="h-2">
-                    <Bar
-                        max={location.crippleThreshold()}
-                        current={location.damageTaken} />
-                </div>
-            </div>
-        {/each}
-    </div>
-    <div
-        class="absolute top-0 right-0 flex flex-col bg-gray-700 text-white text-center text-xs">
-        {#each getLocations([
-            'face',
-            'vitals',
-            'right arm',
-            'right hand',
-            'right leg',
-            'right foot',
-        ]) as location, i (location.id)}
-            <div bind:this={hud[location.key]}>
+<section class="relative flex">
+    <div class="flex flex-col flex-wrap max-h-full">
+        {#each getLocations().left as location, i (location.id)}
+            <div
+                class="bg-gray-700 text-white text-center text-xs"
+                bind:this={hud[location.key]}>
                 <div>{location.name}</div>
                 <input
                     type="number"
@@ -534,4 +541,27 @@
             </g>
         </g>
     </svg>
+    <div class="flex flex-col flex-wrap max-h-full">
+        {#each getLocations().right as location, i (location.id)}
+            <div
+                class="bg-gray-700 text-white text-center text-xs"
+                bind:this={hud[location.key]}>
+                <div>{location.name}</div>
+                <input
+                    type="number"
+                    class="w-5 outline-none text-black"
+                    bind:value={location.damageTaken} />
+                <input
+                    class="w-5 outline-none"
+                    type="number"
+                    disabled
+                    value={Math.ceil(location.crippleThreshold())} />
+                <div class="h-2">
+                    <Bar
+                        max={location.crippleThreshold()}
+                        current={location.damageTaken} />
+                </div>
+            </div>
+        {/each}
+    </div>
 </section>

@@ -15,7 +15,7 @@ export class TechniqueList extends SkillList<Technique> {
 
 export type TehchniqueDifficulty = Difficulty.average | Difficulty.hard
 export class Technique extends Skill {
-    static keys = ["limit", "default"]
+    static keys = ["limit"]
     tag = "technique"
 
     limit: number
@@ -34,7 +34,7 @@ export class Technique extends Skill {
     }
 
     //@ts-ignore
-    get signature(): Signature { return this.default.isSkillBased() ? null : this.default.type as Signature }
+    get signature(): Signature { return this.default?.isSkillBased() ? null : this.default?.type ?? null as Signature }
 
     getBonus() {
         return 0

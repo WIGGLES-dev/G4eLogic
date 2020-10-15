@@ -3,7 +3,10 @@
   import { List, Tabs, Tab, TabList, TabPanel } from "@ui/index";
 
   import TraitEditor from "@ui/components/editors/TraitEditor";
+
   import Trait from "@ui/components/entities/Trait";
+  import Language from "@ui/components/entities/Language";
+
   import { strEncodeUTF16 } from "utils/string_utils";
 
   const { character } = getContext("app");
@@ -45,56 +48,28 @@
     </List>
   </div>
   <div class="w-1/5">
-    <section class="mt-2 mb-2 mx-4 select-none">
-      <table class="white-space-no-wrap text-center">
-        <thead
-          class="text-sm text-gray-700 border-b border-solid border-gray-700">
-          <tr>
-            <th class="w-full">Language</th>
-            <th>Pts</th>
-            <th>Ref</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each languages as language, i (language.id)}
-            <tr>
-              <td class="text-left">
-                <div>{language.name}</div>
-                <div class="text-xs italic pl-2">
-                  {#each [...language.modifiers].filter((modifier) => modifier.enabled) as modifier, i (modifier.id)}
-                    {modifier.name}
-                    {#if modifier.notes}({modifier.notes}){/if};
-                  {/each}
-                </div>
-              </td>
-              <td>{language.adjustedPoints()}</td>
-              <td>{language.reference}</td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-    </section>
-    <section class="mt-2 mb-2 mx-4 select-none">
-      <table class="white-space-no-wrap text-center">
-        <thead
-          class="text-sm text-gray-700 border-b border-solid border-gray-700">
-          <tr>
-            <th class="w-full">Cultures</th>
-            <th>Pts</th>
-            <th>Ref</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each cultures as culture, i (culture.id)}
-            <tr>
-              <td class="text-left">{culture.name}</td>
-              <td>{culture.adjustedPoints()}</td>
-              <td>{culture.reference}</td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-    </section>
+    <List
+      config={{ addItem: false }}
+      list={languages}
+      component={Language}
+      editor={TraitEditor}>
+      <tr slot="header">
+        <th class="w-full">Languages</th>
+        <th>Pts</th>
+        <th>Ref</th>
+      </tr>
+    </List>
+    <List
+      config={{ addItem: false }}
+      list={cultures}
+      component={Trait}
+      editor={TraitEditor}>
+      <tr slot="header">
+        <th class="w-full">Cultures</th>
+        <th>Pts</th>
+        <th>Ref</th>
+      </tr>
+    </List>
   </div>
   <div class="flex-1">
     <List

@@ -8,6 +8,7 @@
   import PointTotals from "@ui/components/widgets/PointTotals";
   import Combat from "@ui/components/widgets/Combat";
   import Silhouette from "@ui/components/widgets/Silhouette.svelte";
+  import TinyMCE from "@ui/components/widgets/TinyMCE";
 
   import List from "@ui/components/lists/List";
 
@@ -28,12 +29,12 @@
 
 <div class="flex h-full">
   <div class="p-1" />
-  <div>
+  <div class="flex-shrink-0">
     <div class="pr-2" />
     <AttributeList />
   </div>
   <div class="p-2" />
-  <div>
+  <div class="flex-shrink-0">
     <Pools />
     <hr />
     <Combat />
@@ -46,30 +47,26 @@
       <LiftingTable />
     </div>
   </div>
-  <div class="ml-4 flex-1 h-full lg:flex md:flex-col lg:flex-row ">
-    <div class="order-2">
-      <PointTotals />
-    </div>
-    <hr class="lg:hidden" />
-    <div class="flex flex-wrap  flex-1">
-      <div>
-        <Silhouette />
-        <List
-          title="Ranged Weapons"
-          display="list"
-          component={RangedWeapon}
-          editor={RangedWeaponEditor}
-          config={{ addItem: false }}
-          list={$character.rangedWeapons()} />
-        <List
-          title="Melee Weapons"
-          display="list"
-          component={MeleeWeapon}
-          editor={MeleeWeaponEditor}
-          config={{ addItem: false }}
-          list={$character.meleeWeapons()} />
-      </div>
-    </div>
+  <div class="mx-4 flex-shrink-0">
+    <Silhouette />
+    <List
+      title="Ranged Weapons"
+      display="list"
+      component={RangedWeapon}
+      editor={RangedWeaponEditor}
+      config={{ addItem: false }}
+      list={$character.rangedWeapons()} />
+    <List
+      title="Melee Weapons"
+      display="list"
+      component={MeleeWeapon}
+      editor={MeleeWeaponEditor}
+      config={{ addItem: false }}
+      list={$character.meleeWeapons()} />
   </div>
-  <div class="lg:hidden p-1" />
+  <div class="flex-1 mx-6 hidden xl:block">
+    <TinyMCE />
+  </div>
+  <PointTotals />
+  <div class="p-1" />
 </div>

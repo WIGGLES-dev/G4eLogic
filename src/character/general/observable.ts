@@ -15,7 +15,8 @@ export abstract class Observable {
     cleanups: Set<subscription> = new Set()
 
     #data = {
-        local: {}
+        local: {},
+        roaming: {}
     }
 
     constructor(...args) {
@@ -94,11 +95,20 @@ export abstract class Observable {
         this.derivations.forEach(callback => callback(this));
     }
 
-    private createAccessors() {
-        Object.defineProperties(this, this.watching.reduce((prev, cur) => {
+    forwardAccessors(accessors: string[], target: any) {
+        try {
+            this.createAccessors(accessors, target);
+        } catch (err) {
+
+        }
+    }
+
+    private createAccessors(accessors?: string[], target?) {
+        Object.defineProperties(this, (accessors || this.watching).reduce((prev, cur) => {
+            if (prev[cur] || this[cur] !== undefined) return prev
+            const data = target || this.#data.local;
             prev[cur] = {
                 set(val) {
-                    const data = this.#data.local;
                     const oldV = data[cur];
                     if (data[cur] !== val && data[cur] !== undefined) {
                         this.changeCount++;
@@ -107,10 +117,7 @@ export abstract class Observable {
                     }
                     data[cur] = val
                 },
-                get() {
-                    const val = this.#data.local[cur]
-                    return val
-                }
+                get() { return data[cur] || null }
             }
             return prev
         }, {}));

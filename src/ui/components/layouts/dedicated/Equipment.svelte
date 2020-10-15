@@ -10,6 +10,7 @@
 
   $: equipmentList = $character.equipmentList;
   $: displayedItems = equipmentList.itemsByLocation(displayedLocation);
+  $: carriedWeight = equipmentList.totalWeight();
 
   let displayedLocation;
 
@@ -44,6 +45,8 @@
           <option value={location}>{capitalize(location)}</option>
         {/each}
       </select>
+      Carried Weight:
+      {carriedWeight}
     </th>
     <th scope="col">Uses</th>
     <th scope="col">Value</th>

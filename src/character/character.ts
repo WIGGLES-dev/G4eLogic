@@ -3,7 +3,7 @@ import { Attribute, AttributeList } from "./attribute";
 import { SkillList } from "./skill/skill";
 import { Trait, TraitList } from "./trait/trait";
 import { Equipment, EquipmentList } from "./equipment/equipment";
-import { FeatureList } from "./misc/feature";
+import { FeatureList } from "@character/features/feature";
 import { Profile } from "./profile";
 import { SpellList } from "./spell";
 import { Serializer, registerSerializer } from "../externals/serializer";
@@ -11,47 +11,32 @@ import { CharacterElement } from "./misc/element";
 import { LocationList } from "./locations";
 import { Hooks } from "../hooks/hooks";
 import { State } from "state/state";
+import { Configurer } from "./misc/config";
 import { getThrust, getSwing } from "../damage/damage";
 import { TechniqueList } from "./technique";
-import defaultConfig from "./config.json";
+
 import JsonQuery from "json-query";
 import { Plugin } from "../externals/plugin";
 import { Observable } from "./general/observable";
-import { isTemplateExpression } from "typescript";
-
-
 
 export abstract class Sheet extends Observable {
     Hooks: Hooks = new Hooks()
     State: State = new State()
     serializer = Serializer
 
-    defaultConfig: any
-    config: any
+    config: Configurer
 
     plugins: Map<string, Plugin>
 
     #currentScope = "GCSJSON"
     #elements: Set<CharacterElement> = new Set();
 
-    constructor({
-        config,
-        plugins = []
-    }:
-        {
-            config: any,
-            plugins: Plugin[]
-        }
-        , keys = []) {
+    constructor(keys = []) {
         super([...keys]);
+        this.config = new Configurer(this);
         this.State.subscribe(state => {
             this.dispatch();
         });
-        this.defaultConfig = defaultConfig;
-        this.config = config || defaultConfig;
-
-        plugins.forEach(plugin => this.registerPlugin(plugin.scope, plugin));
-
         this.Hooks.callAll("init", this);
     }
 
@@ -115,11 +100,6 @@ export abstract class Sheet extends Observable {
             locals: Object.assign(this.defaultQueryLocals(), locals)
         })
     }
-
-    reconfigure(config: any) {
-        this.config = config;
-        this.Hooks.callAll("reconfigure", this);
-    }
 }
 
 export class SheetData<T> {
@@ -151,8 +131,8 @@ export class Character extends Sheet {
     locationList: LocationList
     attributeList: AttributeList
 
-    constructor(config?: any) {
-        super({ config, plugins: [] }, [...Character.keys]);
+    constructor() {
+        super([...Character.keys]);
 
         this.profile = new Profile();
 

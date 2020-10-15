@@ -331,9 +331,30 @@
         }
     },
     "locations": {
-        "eyes": {
+        "head": {
+            "is_group": true,
+            "sub_locations": [
+                "left eye",
+                "right eye",
+                "skull",
+                "face",
+                "right ear",
+                "left ear"
+            ]
+        },
+        "eye": {
+            "has": [
+                "left",
+                "right"
+            ],
             "hit_penalty": -9,
             "cripple_ratio": 10
+        },
+        "ear": {
+            "has": [
+                "left",
+                "right"
+            ]
         },
         "skull": {
             "hit_range": [
@@ -349,28 +370,49 @@
             "hit_penalty": -5
         },
         "torso": {
+            "is_group": true,
+            "sub_locations": [
+                "neck",
+                "chest",
+                "abdomen",
+                "groin"
+            ],
             "hit_range": [
                 9,
                 10
             ],
             "hit_penalty": 0
         },
+        "neck": {
+            "hit_range": [
+                17,
+                18
+            ],
+            "hit_penalty": -5
+        },
         "chest": {
-            "part_of": "torso",
             "hit_penalty": 0
         },
+        "vitals": {
+            "hit_penalty": -3
+        },
         "abdomen": {
-            "part_of": "torso",
             "hit_penalty": -1
         },
         "groin": {
-            "location": "Groin",
             "hit_range": [
                 11
             ],
             "hit_penalty": -3
         },
         "arm": {
+            "is_group": true,
+            "sub_locations": [
+                "shoulder",
+                "upperarm",
+                "elbow",
+                "forearm"
+            ],
             "has": [
                 "right",
                 "left"
@@ -382,7 +424,6 @@
             "cripple_ratio": 2
         },
         "shoulder": {
-            "part_of": "arm",
             "has": [
                 "right",
                 "left"
@@ -391,7 +432,6 @@
             "cripple_ratio": 2
         },
         "upperarm": {
-            "part_of": "arm",
             "has": [
                 "right",
                 "left"
@@ -400,7 +440,6 @@
             "cripples_on": 2
         },
         "elbow": {
-            "part_of": "arm",
             "has": [
                 "right",
                 "left"
@@ -409,7 +448,6 @@
             "cripple_ratio": 3
         },
         "forearm": {
-            "part_of": "arm",
             "has": [
                 "right",
                 "left"
@@ -418,6 +456,12 @@
             "cripple_ratio": 2
         },
         "leg": {
+            "is_group": true,
+            "sub_locations": [
+                "thigh",
+                "knee",
+                "shin"
+            ],
             "has": [
                 "right",
                 "left"
@@ -430,7 +474,6 @@
             "cripple_ratio": 2
         },
         "thigh": {
-            "part_of": "leg",
             "has": [
                 "right",
                 "left"
@@ -438,7 +481,6 @@
             "hit_penalty": -5
         },
         "knee": {
-            "part_of": "leg",
             "has": [
                 "right",
                 "left"
@@ -447,7 +489,6 @@
             "hit_penalty": -5
         },
         "shin": {
-            "part_of": "leg",
             "has": [
                 "right",
                 "left"
@@ -478,18 +519,6 @@
             ],
             "hit_penalty": -4,
             "cripple_ratio": 3
-        },
-        "neck": {
-            "location": "Neck",
-            "hit_range": [
-                17,
-                18
-            ],
-            "hit_penalty": -5
-        },
-        "vitals": {
-            "location": "Vitals",
-            "hit_penalty": -3
         }
     }
 }

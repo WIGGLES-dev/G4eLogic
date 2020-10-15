@@ -1,8 +1,9 @@
 import { Character, Signature } from "./character";
 import { CharacterElement } from "./misc/element";
 import { Collection } from "./misc/collection";
-import { DRBonus, FeatureType } from "./misc/feature";
 import { Equipment } from "./equipment/equipment";
+import { DRBonus } from "./features/modules/DRBonus";
+import { Feature } from "./features/feature";
 
 export class LocationList {
     character: Character
@@ -15,18 +16,25 @@ export class LocationList {
     }
 
     private configureLocations(character) {
-
-        const CONFIG = character.config;
+        const CONFIG = character.config.getConfig();
         this.locations.clear()
         Object.entries(CONFIG.locations).forEach(([key, location]: [string, any]) => {
             if (location.has) {
                 location.has.forEach(extraLocation => {
-                    let locationName = `${extraLocation} ${key}`;
-                    let newLocation = new HitLocation(this.character, locationName, location.cripple_ratio, location.hit_penalty, location.hit_range)
+                    const locationName = `${extraLocation} ${key}`;
+                    const newLocation = new HitLocation(this.character, locationName, location.cripple_ratio, location.hit_penalty, location.hit_range);
+                    newLocation.has = location.has || null;
+                    newLocation.location = key
+                    newLocation.hasSubLocations = location.is_group;
+                    newLocation.subLocationNames = location.sub_locations?.map(location => `${extraLocation} ${location}`) ?? []
                     this.locations.set(locationName, newLocation);
-                })
+                });
             } else {
-                let newLocation = new HitLocation(this.character, key, location.cripple_ratio, location.hit_penalty, location.hit_range)
+                const newLocation = new HitLocation(this.character, key, location.cripple_ratio, location.hit_penalty, location.hit_range);
+                newLocation.has = location.has || null;
+                newLocation.location = key
+                newLocation.hasSubLocations = location.is_group;
+                newLocation.subLocationNames = location.sub_locations?.map(location => `${location}`) ?? []
                 this.locations.set(key, newLocation);
             }
         });
@@ -55,9 +63,15 @@ export class HitLocation extends CharacterElement {
     static keys = ["damageTaken"]
     damageTaken = 0
 
+    name: string
+    location: string
+
+    has: string[] = null
+    hasSubLocations = false;
+    subLocationNames: string[] = null
 
     equippedItems: Set<Equipment> = new Set()
-    name: string
+
     crippleRatio
     hitPenalty
     hitsOn: number[]
@@ -71,6 +85,13 @@ export class HitLocation extends CharacterElement {
     }
 
     get key() { return this.name.split(" ").join("_") }
+
+    getSubLocations() {
+        return this.subLocationNames.map(name => {
+            const location = this.character.locationList.getLocation(name);
+            return this.character.locationList.getLocation(name)
+        });
+    }
 
     equip(equipment: Equipment) {
         if (equipment.boundLocation instanceof HitLocation) return false
@@ -100,11 +121,11 @@ export class HitLocation extends CharacterElement {
             return prev
         }, 0);
     }
-    getArmorFeatures(): DRBonus[] {
-        return this.character.featureList.getFeaturesByType(FeatureType.damageResistanceBonus).filter(feature => {
-            if (feature instanceof DRBonus) {
-                if (feature.location.toLowerCase() === this.name.toLowerCase()) return true
+    getArmorFeatures() {
+        return this.character.featureList.getFeaturesByType(DRBonus).filter(feature => {
+            if (feature.type instanceof DRBonus) {
+                if (feature.type.location?.toLowerCase() === this.name?.toLowerCase()) return true
             }
-        }) as DRBonus[];
+        }) as Feature[];
     }
 }

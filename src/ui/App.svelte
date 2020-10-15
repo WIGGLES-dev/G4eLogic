@@ -28,10 +28,15 @@
   const components = {};
 
   let filePicker;
+
   async function loadCharacter(e) {
-    let file = e.target.files[0];
-    console.log(file);
+    const file = e.target.files[0];
+    const text = await file.text();
+    const object = JSON.parse(text);
+    character.load(object, "GCSJSON");
   }
+
+  function saveCharacter() {}
 
   onMount(() => {
     Object.assign(components, {

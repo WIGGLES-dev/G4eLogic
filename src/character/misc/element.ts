@@ -72,11 +72,16 @@ export abstract class CharacterElement extends Observable {
     }
 }
 
-export abstract class OwnedElement<T extends CharacterElement> extends CharacterElement {
+export abstract class OwnedElement<T extends CharacterElement = CharacterElement> extends CharacterElement {
     owner: T
 
-    constructor(character: Character, owner: T, keys = []) {
-        super(character, keys);
+    constructor(owner: T, keys = []) {
+        super(owner.character, keys);
         this.owner = owner;
+    }
+
+    dispatch() {
+        this.owner.dispatch();
+        super.dispatch();
     }
 }

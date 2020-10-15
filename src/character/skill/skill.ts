@@ -1,8 +1,9 @@
 import { Signature, Character } from "../character";
 import { List, ListItem } from "../misc/list";
-import { SkillBonus, FeatureType } from "../misc/feature";
 import { Default } from "../misc/default";
 import { calculateSkillLevel, calculateRelativeLevel, getBaseRelativeLevel } from "./logic";
+import { SkillBonus } from "@character/features/modules/SkillBonus";
+import { Feature } from "@character/features/feature";
 
 export class SkillList<T extends SkillLike = Skill> extends List<T> {
     constructor(name: string = "skill") {
@@ -65,11 +66,11 @@ export abstract class SkillLike extends ListItem {
      */
 
     getBonus(): number { return this.getModList().reduce((prev, cur) => prev + cur.getBonus(), 0) }
-    getModList(): SkillBonus<any>[] {
+    getModList(): Feature[] {
         const skill = this;
-        return this.list.character.featureList.getFeaturesByType(FeatureType.skillBonus).filter(bonus =>
-            bonus instanceof SkillBonus && bonus.type === FeatureType.skillBonus && bonus.isApplicableTo(skill) && bonus.ownerIsActive()
-        ) as SkillBonus<any>[]
+        return this.list.character.featureList.getFeaturesByType(SkillBonus).filter(bonus =>
+            bonus.type instanceof SkillBonus && bonus.validFor(skill) && bonus.ownerIsActive()
+        ) as Feature[]
     }
 
     addDefault(): SkillDefault<Skill> {

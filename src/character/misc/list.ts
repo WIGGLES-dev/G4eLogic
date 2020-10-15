@@ -1,8 +1,8 @@
 import { Character } from "../character";
 import { CharacterElement } from "./element";
-import { Feature } from "./feature";
 import { Weapon, MeleeWeapon, RangedWeapon } from "../weapon";
 import { Collection } from "./collection";
+import { Feature } from "@character/features/feature";
 
 export abstract class List<T extends ListItem = ListItem> {
     name: string
@@ -84,8 +84,8 @@ export abstract class ListItem extends CharacterElement implements Featurable {
 
     containedBy: this
 
-    features: Collection<Feature<this>> = new Collection();
-    weapons: Collection<Weapon<this>> = new Collection();
+    features: Set<Feature<this>> = new Set();
+    weapons: Set<Weapon<this>> = new Set();
 
     constructor(list: List<any>, keys: string[]) {
         super(list.character, [...keys, ...ListItem.keys]);
@@ -115,9 +115,8 @@ export abstract class ListItem extends CharacterElement implements Featurable {
         }
     }
 
-    addFeature(type: string = "attribute_bonus") {
-        //@ts-ignore
-        let feature = Feature.loadFeature(this, type);
+    addFeature() {
+        const feature = new Feature(this);
         this.dispatch();
         return feature
     }

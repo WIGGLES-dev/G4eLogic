@@ -4,14 +4,14 @@ import { Spell } from "@character/spell"
 import { Equipment, EquipmentModifier } from "@character/equipment/equipment";
 import { Trait, TraitModifier } from "@character/trait/trait";
 import { Signature, Character } from "@character/character";
-import { Feature, DRBonus, SkillBonus, FeatureType } from "@character/misc/feature";
 import { List, ListItem } from "@character/misc/list";
 import { Modifier } from "@character/misc/modifier";
-import { AttributeBonus } from "@character/attribute";
 import { Weapon, MeleeWeapon, RangedWeapon } from "@character/weapon";
 import { Technique, TehchniqueDifficulty } from "@character/technique";
 
 import jp from "jsonpath";
+import { Feature } from "@character/features/feature";
+import { AttributeBonus, DRBonus, SkillBonus } from "index";
 
 export class GCSJSON extends Serializer {
     static entities = {
@@ -112,6 +112,7 @@ export class GCSJSON extends Serializer {
 
     mapTechnique(technique: Technique, data?: any) {
         technique.setValue({
+            name: data.name,
             limit: data.limit,
             difficulty: data.difficulty,
             reference: data.reference,
@@ -164,7 +165,7 @@ export class GCSJSON extends Serializer {
         // equipment.containedWeightReduction = isArray(data?.features)?.find(feature => feature.type === "contained_weight_reduction")?.reduction ?? null;
 
         data.features?.forEach((feature) => {
-            Feature.loadFeature<Equipment>(equipment, feature.type)?.load(feature)
+            loadFeature(equipment, feature.type)?.load(feature)
         });
 
         data.modifiers?.forEach((modifier) => {
@@ -203,7 +204,7 @@ export class GCSJSON extends Serializer {
         //data.types?.forEach((type: TraitType) => trait.types.add(type));
 
         data.features?.forEach((feature) => {
-            Feature.loadFeature<Trait>(trait, feature.type)?.load(feature);
+            loadFeature(trait, feature.type)?.load(feature);
         });
 
         data.weapons?.forEach((weapon) => {
@@ -222,21 +223,20 @@ export class GCSJSON extends Serializer {
 
     mapFeature(feature: Feature, data) {
         feature.setValue({
-            type: data.type,
             leveled: data.per_level,
             amount: data.amount,
         }, { update: false });
         switch (data.type) {
             case FeatureType.attributeBonus:
-                if (feature instanceof AttributeBonus) {
-                    feature.setValue({
+                if (feature.type instanceof AttributeBonus) {
+                    feature.type.setValue({
                         attribute: data.attribute
                     }, { update: false });
                 }
                 break
-            case FeatureType.damageResistanceBonus:
-                if (feature instanceof DRBonus) {
-                    feature.setValue({
+            case FeatureType.DRBonus:
+                if (feature.type instanceof DRBonus) {
+                    feature.type.setValue({
                         location: data.location
                     }, { update: false })
                 }
@@ -244,9 +244,9 @@ export class GCSJSON extends Serializer {
             case FeatureType.reactionBonus:
                 break
             case FeatureType.skillBonus:
-                if (feature instanceof SkillBonus) {
-                    feature.setValue({
-                        selectionType: data.selection_type,
+                if (feature.type instanceof SkillBonus) {
+                    feature.type.setValue({
+                        //selectionType: data.selection_type,
                         nameCompareType: data.name?.compare,
                         name: data.name?.qualifier,
                         specializationCompareType: data.specialization?.compare,
@@ -365,7 +365,6 @@ export class GCSJSON extends Serializer {
                 return item
             })
         )
-        console.log(items);
         character.equipmentList.load(items);
 
         const skills = jp.query(data, `$.skills..[?(@.type=='skill')]`);
@@ -391,4 +390,32 @@ export class GCSJSON extends Serializer {
         return character
     }
     save(character: Character, target): any { }
+}
+
+enum FeatureType {
+    skillBonus = "skill_bonus",
+    DRBonus = "dr_bonus",
+    attributeBonus = "attribute_bonus",
+    reactionBonus = "reaction_bonus",
+    spellBonus = "spell_bonus",
+    weaponDamageBonus = "weapon_damage_bonus"
+}
+
+function loadFeature(owner: ListItem, type: string) {
+    const feature = new Feature(owner)
+    switch (type) {
+        case FeatureType.skillBonus:
+            feature.type = new SkillBonus(feature);
+            break;
+        case FeatureType.DRBonus:
+            feature.type = new DRBonus(feature);
+            break;
+        case FeatureType.attributeBonus:
+            feature.type = new AttributeBonus(feature);
+            break;
+        case FeatureType.reactionBonus:
+            feature.type = new AttributeBonus(feature);
+            break
+    }
+    return feature
 }

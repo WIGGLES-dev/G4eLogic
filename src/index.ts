@@ -5,17 +5,19 @@ import { Spell, SpellList } from "./character/spell";
 import { Equipment, EquipmentList, EquipmentModifier } from "./character/equipment/equipment";
 
 import { Serializer, registerSerializer } from "./externals/serializer"
-import { Feature, SkillBonus, DRBonus } from "@character/misc/feature";
 import { MeleeWeapon, RangedWeapon, Weapon } from "@character/weapon";
 import { List, ListItem } from "@character/misc/list";
-import { AttributeBonus, Attribute } from "@character/attribute";
-import { FeatureType } from "@character/misc/feature";
+import { Attribute } from "@character/attribute";
 import { GCSJSON } from "./externals/gcs_json"
 import { TehchniqueDifficulty, Technique } from "@character/technique";
 
 import defaultConfig from "@character/config.json";
 
 import App from "@ui/App.svelte";
+import { Feature } from "@character/features/feature";
+import { AttributeBonus } from "@character/features/modules/AttributeBonus";
+import { DRBonus } from "@character/features/modules/DRBonus";
+import { SkillBonus } from "@character/features/modules/SkillBonus";
 
 export {
     App,
@@ -50,7 +52,6 @@ export {
     GCSJSON,
 
     Feature,
-    FeatureType,
     List,
     ListItem,
 

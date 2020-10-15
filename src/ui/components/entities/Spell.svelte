@@ -24,12 +24,14 @@
       <input class="flex-1" type="text" bind:value={$entity.name} />
     </div>
   </td>
-  <td><input type="text" bind:value={$entity.resist} /></td>
-  <td><input type="text" bind:value={$entity.class} /></td>
-  <td><input type="text" bind:value={$entity.castingCost} /></td>
-  <td><input type="Text" bind:value={$entity.maintenanceCost} /></td>
-  <td><input type="text" bind:value={$entity.castingTime} /></td>
-  <td><input type="text" bind:value={$entity.duration} /></td>
+  <td><input type="text" class="w-24" bind:value={$entity.resist} /></td>
+  <td><input type="text" class="w-24" bind:value={$entity.class} /></td>
+  <td><input type="text" class="w-24" bind:value={$entity.castingCost} /></td>
+  <td>
+    <input type="Text" class="w-24" bind:value={$entity.maintenanceCost} />
+  </td>
+  <td><input type="text" class="w-24" bind:value={$entity.castingTime} /></td>
+  <td><input type="text" class="w-24" bind:value={$entity.duration} /></td>
   <td>{$entity.calculateLevel() || ''}</td>
   <td>{formatRSL($entity)}</td>
   <td>

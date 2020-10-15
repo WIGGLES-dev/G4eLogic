@@ -1,7 +1,7 @@
 import { Signature } from "./character";
 import { ListItem } from "./misc/list";
 import { Default } from "./misc/default";
-import { CharacterElement } from "./misc/element";
+import { CharacterElement, OwnedElement } from "./misc/element";
 import { Collection } from "./misc/collection";
 import { Modifier } from "./misc/modifier";
 
@@ -16,7 +16,7 @@ class WeaponDefault<T extends Weapon<any>> extends Default<any> {
     getLookupList() { return this.owner.owner.list.character.skillList }
 }
 
-export abstract class Weapon<T extends ListItem> extends CharacterElement {
+export abstract class Weapon<T extends ListItem = ListItem> extends OwnedElement<T> {
     static keys = [
         "usage",
         "strength",
@@ -57,7 +57,7 @@ export abstract class Weapon<T extends ListItem> extends CharacterElement {
     defaults: Set<WeaponDefault<Weapon<T>>> = new Set
 
     constructor(owner: T, keys: string[]) {
-        super(owner.getCharacter(), [...keys, ...Weapon.keys]);
+        super(owner, [...keys, ...Weapon.keys]);
         this.owner = owner;
         this.owner.weapons.add(this);
         this.owner.getCharacter().featureList.registerWeapon(this);

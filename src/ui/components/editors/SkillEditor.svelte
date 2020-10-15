@@ -5,6 +5,7 @@
   import Features from "./panels/Features";
   import MeleeWeapons from "./panels/MeleeWeapons.svelte";
   import RangedWeapons from "./panels/RangedWeapons.svelte";
+  import SkillDefaults from "./panels/SkillDefaults";
 
   export let entity = null;
 
@@ -60,7 +61,9 @@
         <label for="">
           Signature
           <select name="" id="" bind:value={$entity.signature}>
-            {#each Object.values($entity.getCharacter().config.attributes) as signature, i}
+            {#each Object.values($entity
+                .getCharacter()
+                .config.getConfig().attributes) as signature, i}
               {#if signature.can_be_signature}
                 <option value={signature.signature}>
                   {signature.signature}
@@ -127,7 +130,7 @@
       <textarea bind:value={$entity.notes} name="" id="" rows="3" />
     </form>
   </TabPanel>
-  <TabPanel />
+  <TabPanel component={SkillDefaults} props={{ entity }} />
   <TabPanel />
   <TabPanel component={Features} props={{ entity }} />
   <TabPanel component={MeleeWeapons} props={{ entity }} />
