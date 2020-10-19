@@ -13,7 +13,7 @@ import { TehchniqueDifficulty, Technique } from "@character/technique";
 
 import defaultConfig from "@character/config.json";
 
-import App from "@ui/App.svelte";
+import App from "@ui/Sheet.svelte";
 import { Feature } from "@character/features/feature";
 import { AttributeBonus } from "@character/features/modules/AttributeBonus";
 import { DRBonus } from "@character/features/modules/DRBonus";

@@ -60,7 +60,7 @@ function isRacial(trait: Trait) {
 
 function getContainerType(trait: Trait) {
     if (trait.isContainer()) {
-        const children = trait.children.arr;
+        const children = [...trait.children];
 
         let racial = false;
         let perk = false;
@@ -92,6 +92,8 @@ function getContainerType(trait: Trait) {
         if (!types.some(type => type !== TraitCategory.Feature)) return TraitCategory.Feature;
 
         // if we don't have a homogenous container put it into meta traits
+        if (!advantage && !perk && (disadvantage || quirk)) return TraitCategory.Disadavantage
+        if (!disadvantage && !quirk && (advantage || perk)) return TraitCategory.Advantage
         return TraitCategory.Meta;
     } else {
         return getTraitType(trait)
@@ -99,7 +101,7 @@ function getContainerType(trait: Trait) {
 }
 
 export function getTraitType(trait: Trait) {
-    if (trait.children.length > 0) {
+    if (trait.children.size > 0) {
         return getContainerType(trait)
     } else {
         const racial = isRacial(trait);

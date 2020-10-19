@@ -12,10 +12,10 @@ export abstract class CharacterElement extends Observable {
     uuid: string = generateUUID().toString()
     foundryID: string
 
-    disabled: boolean
-    reference: string
-    userDescription: string
-    notes: string
+    disabled: boolean = false
+    reference: string = ""
+    userDescription: string = ""
+    notes: string = ""
     #categories: Set<string> = new Set()
 
     character: Character
@@ -23,37 +23,39 @@ export abstract class CharacterElement extends Observable {
     constructor(character?: Character, keys: string[] = []) {
         super([...keys, ...CharacterElement.keys]);
         this.character = character;
-
-        this.disabled = false;
-        this.reference = "";
-        this.userDescription = "";
-        this.notes = "";
-
         this.register();
-    }
-
-    get categories() { return this.#categories }
-    set categories(value: Set<string>) {
-        this.#categories = Array.isArray(value) ? new Set(value) : value;
     }
 
     addToCharacter(character: Character) {
         this.character = character;
     }
 
+    get categories() { return this.#categories }
+    set categories(categories) {
+        this.#categories = new Set([...categories]);
+        this.dispatch()
+    }
     get id() { return this.uuid }
+
+    getCharacter() { return this.character }
 
     disable() { this.disabled = true; }
     enable() { this.disabled = false; }
 
-    delete(): any {
+    delete() {
         this.character.removeElement(this);
+        this.dispatch();
     }
 
     getSerializer(scope?: string) { return this.character.getSerializer(scope) }
 
     register() {
         this.character.registerElement(this);
+    }
+
+    dispatch() {
+        this.character?.dispatch();
+        super.dispatch();
     }
 
     setState(oldV: any, newV: any, prop: string) {
@@ -70,6 +72,9 @@ export abstract class CharacterElement extends Observable {
             }
         });
     }
+
+    load(data: any, ...args) { return this.getSerializer().transform(this.constructor, "load")(this, data, ...args) }
+    save(data: any, ...args) { return this.getSerializer().transform(this.constructor, "save")(this, data, ...args) }
 }
 
 export abstract class OwnedElement<T extends CharacterElement = CharacterElement> extends CharacterElement {
@@ -78,8 +83,9 @@ export abstract class OwnedElement<T extends CharacterElement = CharacterElement
     constructor(owner: T, keys = []) {
         super(owner.character, keys);
         this.owner = owner;
+        this.owner.dispatch();
     }
-
+    getCharacter(): Character { return this.owner.getCharacter() }
     dispatch() {
         this.owner.dispatch();
         super.dispatch();

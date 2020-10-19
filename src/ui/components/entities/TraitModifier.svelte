@@ -15,20 +15,20 @@
 
 {#if $display === 'table'}
   <td>
-    <Checkbox bind:checked={$entity.enabled} />
+    <Checkbox bind:checked={entity.enabled} />
   </td>
   <td>
-    <div>{$entity.name}</div>
-    <div>{$entity.notes}</div>
+    <div>{entity.name}</div>
+    <div>{entity.notes}</div>
   </td>
   <td>
-    {#if $entity.type === TraitModifierType.points}
+    {#if entity.type === TraitModifierType.points}
       +
-    {:else if $entity.type === TraitModifierType.multiplier}x{/if}
-    {$entity.costModifier()}
-    {#if $entity.type === TraitModifierType.percentage}%{/if}
+    {:else if entity.type === TraitModifierType.multiplier}x{/if}
+    {entity.costModifier()}
+    {#if entity.type === TraitModifierType.percentage}%{/if}
   </td>
   <td class="w-full">
-    <Text bind:value={$entity.reference} />
+    <Text bind:value={entity.reference} />
   </td>
 {/if}

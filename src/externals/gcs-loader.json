@@ -3,20 +3,25 @@
     "templates": {
         "character_element": {
             "reference": "reference",
-            "notes": "notes"
+            "notes": "notes",
+            "categories": {
+                "accessor": "categories",
+                "transform": "return new Set(data.categories || [])",
+                "revert": "return [...data.categories]"
+            }
         },
         "list_item": {
             "features": {
+                "accessor": "features",
                 "process": "array",
                 "constructor": {
                     "key": "addFeature",
-                    "args": [
-                        "type"
-                    ]
+                    "args": []
                 },
                 "Entity": "Feature"
             },
             "weapons": {
+                "accessor": "weapons",
                 "process": "array",
                 "constructor": {
                     "key": "addWeapon",
@@ -27,32 +32,30 @@
                 "Entity": "Weapon"
             }
         },
-        "modifiable": {
-            "modifiers": {
-                "process": "array",
-                "Entity": "Modifier"
-            }
-        },
         "skill": {
             "name": "name",
             "difficulty": {
-                "transform": "return data.difficulty.split('/')[0]",
-                "revert": "return `${target.difficulty}/${target.signature}`"
+                "accessor": "difficulty",
+                "transform": "return data.difficulty.split('/')[1]",
+                "revert": "return `${data.signature}/${data.difficulty}`"
             },
             "points": "points",
             "specialization": "specialization",
-            "mod": null,
+            "mod": "mod",
             "signature": {
-                "transform": "return data.difficulty.split('/')[1]"
+                "load_only": true,
+                "transform": "return data.difficulty.split('/')[0]"
             },
             "hasTechLevel": {
                 "transform": ""
             },
             "techLevel": "tech_level",
             "defaults": {
+                "accessor": "defaults",
                 "process": "array",
                 "constructor": {
-                    "key": "addDefault"
+                    "key": "addDefault",
+                    "args": []
                 },
                 "Entity": "Default"
             },
@@ -66,36 +69,66 @@
             "name": "name"
         },
         "modifier": {
-            "enabled": "enabled",
+            "enabled": {
+                "accessor": "disabled",
+                "transform": "return !Boolean(data.disabled)",
+                "revert": "return !data.enabled"
+            },
             "name": "name",
-            "cost": "cost",
-            "type": "cost_type",
-            "affects": "affects",
-            "levels": "levels",
-            "weight": "weight",
-            "costType": "cost_type",
-            "weightType": "weight_type"
+            "cost": "cost"
         }
     },
     "mappings": {
         "Equipment": {
+            "type": {
+                "save_only": true,
+                "accessor": "type",
+                "revert": "return data.canContainChildren === true ? 'equipment_container' : 'equipment'"
+            },
+            "equipped": "equipped",
+            "version": {
+                "save_only": true,
+                "accessor": "version",
+                "value": 1
+            },
             "templates": [
-                "character_element"
+                "character_element",
+                "list_item"
             ],
             "name": "description",
             "techLevel": "tech_level",
-            "legalityClass": "legalityClass",
+            "legalityClass": "legality_class",
             "quantity": "quantity",
             "uses": "uses",
             "maxUses": "max_uses",
-            "weight": "weight",
-            "value": "value",
-            "containedWeightReduction": "",
-            "applySkillEncumbrancePenalty": null,
-            "isAmmunition": null,
-            "storeLocation": null
+            "weight": {
+                "accessor": "weight",
+                "transform": "return +(data.weight ? data.weight.split(' ')[0] : 0)",
+                "revert": "return `${data.weight} lb`"
+            },
+            "value": {
+                "accessor": "value",
+                "transform": "return +data.value",
+                "revert": "return `${data.value}`"
+            },
+            "containedWeightReduction": {
+                "transform": "return null"
+            },
+            "applySkillEncumbrancePenalty": "ignore_weight_for_skills",
+            "isAmmunition": "isAmmunition",
+            "location": "location"
         },
         "Trait": {
+            "type": {
+                "save_only": true,
+                "accessor": "type",
+                "revert": "return data.canContainChildren === true ? 'advantage_container': 'advantage'"
+            },
+            "version": {
+                "save_only": true,
+                "accessor": "version",
+                "value": 1
+            },
             "templates": [
                 "character_element",
                 "list_item"
@@ -103,25 +136,42 @@
             "name": "name",
             "basePoints": "base_points",
             "hasLevels": {
+                "load_only": true,
                 "transform": "return +data.levels > -1"
             },
-            "levels": "levels",
+            "levels": {
+                "accessor": "levels",
+                "transform": "return +data.levels",
+                "revert": "return data.hasLevels && data.levels ? data.levels.toString() : undefined"
+            },
             "allowHalfLevels": null,
             "hasHalfLevel": "has_half_level",
             "roundDown": "round_down",
             "types": null,
-            "disabled": null,
+            "disabled": "disabled",
             "pointsPerLevel": "points_per_level",
             "containerType": null,
-            "modifier": {
+            "modifiers": {
+                "accessor": "modifiers",
                 "process": "array",
                 "constructor": {
-                    "key": "addModifier"
+                    "key": "addModifier",
+                    "args": []
                 },
                 "Entity": "Modifier"
             }
         },
         "Skill": {
+            "type": {
+                "save_only": true,
+                "accessor": "type",
+                "revert": "return data.canContainChildren === true ? 'skill_container': 'skill'"
+            },
+            "version": {
+                "save_only": true,
+                "accessor": "version",
+                "value": 1
+            },
             "templates": [
                 "skill",
                 "character_element",
@@ -129,6 +179,16 @@
             ]
         },
         "Technique": {
+            "type": {
+                "save_only": true,
+                "accessor": "type",
+                "value": "technique"
+            },
+            "version": {
+                "save_only": true,
+                "accessor": "version",
+                "value": 1
+            },
             "templates": [
                 "skill",
                 "character_element",
@@ -137,13 +197,24 @@
             "difficulty": "difficulty",
             "limit": "limit",
             "default": {
+                "accessor": "default",
                 "Entity": "Default",
                 "constructor": {
-                    "key": "addDefault"
+                    "key": "default"
                 }
             }
         },
         "Spell": {
+            "type": {
+                "save_only": true,
+                "accessor": "type",
+                "revert": "return data.canContainChildren === true ? 'spell_container' : 'spell'"
+            },
+            "version": {
+                "save_only": true,
+                "accessor": "version",
+                "value": 1
+            },
             "templates": [
                 "skill",
                 "character_element",
@@ -159,26 +230,46 @@
             "castingTime": "castingTime",
             "duration": "duration"
         },
-        "feature": {
-            "type": "type",
+        "Feature": {
+            "type": {
+                "accessor": "type",
+                "helper": {
+                    "key": "loadFeature",
+                    "args": [
+                        "type"
+                    ]
+                }
+            },
             "leveled": "per_level",
             "amount": "amount",
-            "attribute": "attribute",
-            "location": "location",
-            "selectionType": "selection_type",
-            "nameCompareType": "name.compare",
-            "name": "name.qualifier",
-            "specializationCompareType": "specialization.compare",
-            "specialization": "specialization.qualifier",
-            "categoryCompareType": "category.compare",
-            "category": "category.qualifier"
+            "core.attribute": "attribute",
+            "core.location": "location",
+            "core.selectionType": "selection_type",
+            "core.nameCompareType": "name.compare",
+            "core.name": "name.qualifier",
+            "core.specializationCompareType": "specialization.compare",
+            "core.specialization": "specialization.qualifier",
+            "core.categoryCompareType": "category.compare",
+            "core.category": "category.qualifier"
         },
         "weapon": {
             "usage": "usage",
             "strength": "strength",
+            "damage": {
+                "transform": "return data.damage.st || '' + `${data.damage.st ? ' + ' : ' '}` + data.damage.base || data.damage.type"
+            },
             "damageStrength": "damage.st",
             "damageBase": "damage.base",
             "damageType": "damage.type",
+            "defaults": {
+                "accessor": "defaults",
+                "process": "array",
+                "constructor": {
+                    "key": "addDefault",
+                    "args": []
+                },
+                "Entity": "Default"
+            },
             "reach": "reach",
             "parry": "parry",
             "block": "block",
@@ -188,29 +279,106 @@
             "shots": "shots",
             "bulk": "bulk"
         },
-        "Default": {
-            "templates": [],
-            "type": "type",
-            "modifier": "modifier",
-            "specialization": "specialization",
-            "name": "name"
-        },
         "SkillDefault": {
             "templates": [
                 "default"
             ]
         },
-        "EquipmentModifier": {
+        "WeaponDefault": {
             "templates": [
-                "character_element",
-                "modifier"
+                "default"
             ]
         },
-        "TraitModifier": {
+        "EquipmentModifier": {
+            "type": {
+                "save_only": true,
+                "accessor": "type",
+                "value": "eqp_modifier"
+            },
+            "version": {
+                "save_only": true,
+                "accessor": "version",
+                "value": 1
+            },
             "templates": [
                 "character_element",
                 "modifier"
-            ]
+            ],
+            "weight": "weight",
+            "costType": "cost_type",
+            "weightType": "weight_type"
+        },
+        "TraitModifier": {
+            "type": {
+                "save_only": true,
+                "accessor": "type",
+                "value": "modifier"
+            },
+            "version": {
+                "save_only": true,
+                "accessor": "version",
+                "value": 1
+            },
+            "templates": [
+                "character_element",
+                "modifier"
+            ],
+            "costType": "cost_type",
+            "affects": "affects",
+            "levels": "levels"
         }
-    }
+    },
+    "root": {
+        "totalPoints": "total_points",
+        "__STATIC__": {
+            "settings": {
+                "version": 1,
+                "default_length_units": "ft_in",
+                "default_weight_units": "lb",
+                "user_description_display": "tooltip",
+                "modifiers_display": "inline",
+                "notes_display": "inline_and_tooltip",
+                "base_will_and_per_on_10": false,
+                "use_multiplicative_modifiers": false,
+                "use_modifying_dice_plus_adds": false,
+                "use_know_your_own_strength": false,
+                "use_reduced_swing": true,
+                "use_thrust_equals_swing_minus_2": false,
+                "use_simple_metric_conversions": true,
+                "show_college_in_sheet_spells": false,
+                "use_title_in_footer": false,
+                "block_layout": [
+                    "reactions",
+                    "melee",
+                    "ranged",
+                    "advantages skills",
+                    "spells",
+                    "equipment",
+                    "other_equipment",
+                    "notes"
+                ]
+            }
+        },
+        "__REVERSE__": {
+            "ST": {
+                "transform": "return data.attributeList.getAttribute('ST').level"
+            },
+            "DX": {
+                "transform": "return data.attributeList.getAttribute('DX').level"
+            },
+            "IQ": {
+                "transform": "return data.attributeList.getAttribute('DX').level"
+            },
+            "HT": {
+                "transform": "return data.attributeList.getAttribute('HT').level"
+            },
+            "advantages": {},
+            "skills": {},
+            "equipment": {},
+            "other_equipment": {},
+            "third_party": {}
+        }
+    },
+    "on_save": {},
+    "on_load": {}
 }

@@ -50,6 +50,7 @@
     <div class="flex w-1/2">
       <input
         bind:value={$character.sizeModifier}
+        placeholder="0"
         class="w-12 outline-none border-b border-solid border-red-700 rounded-r-md text-center"
         type="number" />
     </div>

@@ -18,7 +18,6 @@ export class FeatureList {
     registerFeature(feature: Feature) {
         this.features.set(feature.uuid, feature);
     }
-
     removeFeature(feature: Feature) {
         this.features.delete(feature.uuid);
     }
@@ -28,20 +27,9 @@ export class FeatureList {
     removeWeapon(uuid: string) {
         this.weapons.delete(uuid);
     }
-    getFeaturesByUUID(id: string) {
-        return Array.from(this.features.values()).filter(feature => {
-            if (feature.owner.uuid = id) {
-                return true
-            } else {
-                return false
-            }
-        });
-    }
-
     getFeaturesByType(type: typeof FeatureCore) {
-        return Array.from(this.features.values()).filter(feature => feature.type instanceof type)
+        return Array.from(this.features.values()).filter(feature => feature.core instanceof type)
     }
-
     empty() {
         this.weapons.clear();
         this.features.clear();
@@ -51,32 +39,37 @@ export class FeatureList {
 export class Feature<T extends ListItem = ListItem> extends OwnedElement<T> {
     static keys = ["amount", "leveled"]
 
-    static tag = "feature"
     amount = 0
     leveled = false
 
-    #type: FeatureCore
+    #featureCore: FeatureCore
 
     constructor(owner: T) {
         super(owner, Feature.keys);
         this.owner.features.add(this);
         this.owner.character.featureList.registerFeature(this)
-        this.#type = new AttributeBonus(this);
+        this.#featureCore = new AttributeBonus(this);
     }
 
-    get type() { return this.#type }
+    get core() { return this.#featureCore }
+
+    get type() { return this.#featureCore.constructor as typeof FeatureCore }
     set type(type) {
-        try {
-            //@ts-ignore
-            this.#type = new type(this)
-        } catch (err) {
-            //@ts-ignore
-            this.#type = new type.constructor(this);
+        if (type instanceof FeatureCore) {
+            this.#featureCore = type
+        } else {
+            try {
+                //@ts-ignore
+                this.#featureCore = new type(this)
+            } catch (err) {
+                //@ts-ignore
+                this.#featureCore = new type.constructor(this);
+            }
         }
         this.dispatch();
     }
 
-    validFor(target: ListItem) { return this.type.validFor(target) }
+    validFor(target: ListItem) { return this.#featureCore.validFor(target) }
 
     ownerIsActive() { return this.owner.isActive() }
 
@@ -87,32 +80,19 @@ export class Feature<T extends ListItem = ListItem> extends OwnedElement<T> {
     getBonus(): number { return this.leveled && this.owner.hasLevels ? this.amount * this.owner.getLevel() : this.amount }
 
     delete() {
-        this.owner.list.character.featureList.removeFeature(this);
+        this.getCharacter().featureList.removeFeature(this);
         this.owner.features.delete(this);
-        this.owner.dispatch();
         super.delete();
-    }
-
-    load(data: any, ...args) {
-        return this.getSerializer().transform(Feature.tag, "load")(this, data, ...args)
-    }
-    save(data: any, ...args) {
-        return this.getSerializer().transform(Feature.tag, "save")(this, data, ...args)
     }
 }
 
-export abstract class FeatureCore extends Observable {
-    feature: Feature
+export abstract class FeatureCore extends OwnedElement {
 
     constructor(feature: Feature, keys = []) {
-        super(keys);
-        this.feature = feature;
+        super(feature, keys);
     }
 
-    dispatch() {
-        this.feature.dispatch();
-        super.dispatch();
-    }
+    get feature() { return this.owner }
 
     abstract validFor(target: ListItem): boolean
 }

@@ -14,9 +14,11 @@
     }
 </style>
 
-<Boxes>
+<Boxes on:addbox={() => entity.addDefault()}>
     {#each defaults as skillDefault, i (skillDefault.id)}
-        <Box>
+        <Box
+            on:addbox={() => entity.addDefault()}
+            on:deletebox={() => skillDefault.delete()}>
             <div class="flex topmost">
                 <select name="" id="" bind:value={skillDefault.type}>
                     {#each Object.values($entity

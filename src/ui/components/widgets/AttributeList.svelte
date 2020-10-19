@@ -8,9 +8,17 @@
   import { attr } from "svelte/internal";
   export let attributes = [];
 
-  const { character } = getContext("app");
+  const { character, components } = getContext("app");
 
   $: attributes = [...$character.attributeList.attributes.values()];
+
+  function roll(attr) {
+    let text;
+
+    text = `Rolling ${attr.calculateLevel()} against ${attr.name}`;
+
+    components.notifications.postMessage({ type: "message", text });
+  }
 
   function isPrimary(attr) {
     return attr.hasTag("primary");
@@ -41,6 +49,7 @@
     @apply text-lg font-semibold;
   }
   .tertiary {
+    
   }
   .sub-stat {
     @apply text-sm italic;
@@ -88,7 +97,9 @@
           step={attr.increment}
           type="number"
           bind:value={attr.displayLevel} />
-        <span class="fas fa-dice-d6 hover:text-red-700" />
+        <span
+          on:click={() => roll(attr)}
+          class="fas fa-dice-d6 hover:text-red-700" />
       </span>
       <input
         class="w-10 ml-2 border-b border-black border-solid m-auto text-sm outline-none text-center"

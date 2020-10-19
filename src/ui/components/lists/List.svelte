@@ -32,9 +32,6 @@
 </script>
 
 <style>
-  table :global(td:not(:last-child)) {
-    @apply border-r border-gray-300 border-solid;
-  }
   table :global(input) {
     @apply bg-transparent outline-none;
   }
@@ -58,6 +55,7 @@
 </style>
 
 <section
+  data-list
   class:mx-4={display === 'table'}
   class="select-none mb-2 mt-2 border-b border-gray-700 border-solid rounded-r-md"
   class:border-red-700={config.addItem}

@@ -1,16 +1,14 @@
 import { Signature } from "./character";
 import { ListItem } from "./misc/list";
 import { Default } from "./misc/default";
-import { CharacterElement, OwnedElement } from "./misc/element";
-import { Collection } from "./misc/collection";
+import { OwnedElement } from "./misc/element";
 import { Modifier } from "./misc/modifier";
 
-class WeaponDefault<T extends Weapon<any>> extends Default<any> {
+export class WeaponDefault<T extends Weapon<any>> extends Default<any> {
     static keys = []
 
     constructor(owner: T, keys: string[] = []) {
         super(owner, [...keys, ...WeaponDefault.keys]);
-        this.owner.defaults.add(this);
     }
 
     getLookupList() { return this.owner.owner.list.character.skillList }
@@ -20,6 +18,7 @@ export abstract class Weapon<T extends ListItem = ListItem> extends OwnedElement
     static keys = [
         "usage",
         "strength",
+        "info",
         'damage',
         "damageStrength",
         "damageBase",
@@ -38,13 +37,14 @@ export abstract class Weapon<T extends ListItem = ListItem> extends OwnedElement
 
     usage: string = "attack"
     strength: string = "10"
+    info: string = ""
 
-    damage = ""
+    damage = "1d6"
 
     damageStrength: BaseDamage
     damageBase: string
-    damageType: DamageType
-    damagePerDieBonus: number
+    damageType: DamageType = DamageType.crushing
+    damagePerDieBonus: number = 0
 
     armorDivisor: number
 
@@ -54,7 +54,7 @@ export abstract class Weapon<T extends ListItem = ListItem> extends OwnedElement
 
     attackBonus: number = null
 
-    defaults: Set<WeaponDefault<Weapon<T>>> = new Set
+    defaults: Set<WeaponDefault<Weapon<T>>> = new Set()
 
     constructor(owner: T, keys: string[]) {
         super(owner, [...keys, ...Weapon.keys]);
@@ -64,8 +64,7 @@ export abstract class Weapon<T extends ListItem = ListItem> extends OwnedElement
     }
 
     addDefault(): WeaponDefault<any> {
-        const newDefault = new WeaponDefault(this);
-        return newDefault
+        return new WeaponDefault(this);
     }
 
     getType() {
@@ -128,9 +127,9 @@ export class MeleeWeapon<T extends ListItem> extends Weapon<T> {
     static keys = ["reach", "parry", "block", "unbalanced", "unwieldy"]
     static type = "melee_weapon"
 
-    reach: string
-    parry: number
-    block: number
+    reach: string = "1"
+    parry: number = 0
+    block: number = 0
     unbalanced: boolean = false
     unwieldy: boolean = false
 

@@ -22,8 +22,8 @@
     <th class="w-full">Ranged Weapons</th>
     <th>Usage</th>
     <th>Lvl</th>
-    <th>Acc</th>
     <th>Damage</th>
+    <th>Acc</th>
     <th>Range</th>
     <th>RoF</th>
     <th>Shots</th>

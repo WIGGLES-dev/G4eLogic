@@ -35,5 +35,5 @@ export function formatEquipment() {
 }
 
 export function fixed6(number: number) {
-    return +number.toFixed(3) || 0
+    if (typeof +number === "number") return +number?.toFixed(3) ?? 0
 }

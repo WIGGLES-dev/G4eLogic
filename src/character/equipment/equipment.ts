@@ -1,6 +1,5 @@
 import { List, ListItem } from "../misc/list";
 import { Modifier } from "../misc/modifier";
-import { Character } from "../character";
 import { HitLocation } from "../locations";
 
 export class EquipmentList extends List<Equipment> {
@@ -12,7 +11,7 @@ export class EquipmentList extends List<Equipment> {
     populator(data: any) {
         return new Equipment(this)
     }
-    itemsByLocation(location: string) { return this.rootItems().arr.filter(item => item.location === location) }
+    itemsByLocation(location: string) { return this.rootItems().filter(item => item.location === location) }
     forSkillEncumbrancePenalty() {
         return this.rootItems().reduce((prev, cur) => {
             if (cur.equipped && cur.applySkillEncumbrancePenalty) prev += cur.extendedWeight();
@@ -21,12 +20,7 @@ export class EquipmentList extends List<Equipment> {
     }
     totalWeight({ carriedOnly = true } = {}) {
         return this.rootItems().reduce((prev, cur) => {
-            if (carriedOnly) {
-                if (cur.equipped) prev += cur.extendedWeight();
-            } else {
-                prev += cur.extendedWeight();
-            }
-            return prev
+            return prev + cur.extendedWeight({ equippedOnly: carriedOnly });
         }, 0)
     }
     totalValue({ carriedOnly = true } = {}) {
@@ -43,18 +37,16 @@ export class EquipmentList extends List<Equipment> {
 
 export class Equipment extends ListItem {
     static keys = [
-        "description", "techLevel", "legalityClass", "quantity", "uses", "maxUses",
+        "techLevel", "legalityClass", "quantity", "uses", "maxUses",
         "weight", "value", "containedWeightReduction", "applySkillEncumbrancePenalty",
-        "isAmmunition", "location"
+        "isAmmunition"
     ]
 
-    version = 1
-    tag = "Equipment"
+    disabled = true
 
-    description: string = ""
     boundLocation: HitLocation
 
-    location = "carried"
+    #location = "carried"
 
     uses: number = 0
     maxUses: number = 0
@@ -69,7 +61,7 @@ export class Equipment extends ListItem {
     applySkillEncumbrancePenalty: boolean = true
     isAmmunition: boolean = false
 
-    modifiers: Set<EquipmentModifier<Equipment>> = new Set()
+    modifiers: Set<EquipmentModifier> = new Set()
 
     hasLevels = false
 
@@ -77,17 +69,24 @@ export class Equipment extends ListItem {
         super(list, [...keys, ...Equipment.keys]);
     }
 
+    get location() { return this.#location }
+    set location(location) {
+        if (this.#location === location) return
+        this.containedBy = null;
+        this.#location = location;
+        this.getRecursiveChildren().forEach(child => child.#location = location);
+        this.dispatch();
+    }
+
     get equipped() { return !this.disabled }
     set equipped(value) { this.disabled = !value }
 
     addModifier() {
-        const modifier = new EquipmentModifier<Equipment>(this);
-        this.modifiers.add(modifier)
-        return modifier
+        return new EquipmentModifier(this);
     }
 
-    get name() { return this.description }
-    set name(name) { this.description = name }
+    get description() { return this.name }
+    set description(description) { this.name = description }
 
     isActive() { return this.equipped }
     getLevel(): number { return null }
@@ -114,15 +113,14 @@ export class Equipment extends ListItem {
         }
     }
 
-    extendedWeight() {
+    extendedWeight({ equippedOnly = false } = {}) {
         const adjustedWeight = this.adjustedWeight();
-        if (this.isContainer()) {
-            return Array.from(this.getRecursiveChildren()).reduce((prev, cur) => prev + cur.weight * cur.quantity, 0) + this.weight * this.quantity
-        } else {
-            return this.weight * this.quantity
-        }
+        const childrenWeight = [...this.children].reduce((prev, cur) => {
+            return prev + cur.extendedWeight({ equippedOnly });
+        }, 0);
+        if (equippedOnly && !this.equipped) return 0
+        return this.weight * this.quantity + childrenWeight
     }
-
     extendedValue() {
         const adjustedValue = this.adjustedValue();
         if (this.isContainer()) {
@@ -131,7 +129,9 @@ export class Equipment extends ListItem {
             return this.value * this.quantity
         }
     }
+
     getModifiers() { }
+
     delete() {
         if (this.boundLocation instanceof HitLocation) {
             this.boundLocation.equippedItems.delete(this);
@@ -170,7 +170,7 @@ export class Equipment extends ListItem {
         return cost > 0 ? cost : 0;
     }
 
-    private static processNonCFStep(costType: EquipmentModifierValueType, value: number, modifiers: Set<EquipmentModifier<Equipment>>) {
+    private static processNonCFStep(costType: EquipmentModifierValueType, value: number, modifiers: Set<EquipmentModifier>) {
         let percentages = 0;
         let additions = 0;
         let cost = value;
@@ -236,7 +236,7 @@ export class Equipment extends ListItem {
         return weight
     }
 
-    private static processMultiplyAddWeightStep(weightType: EquipmentModifierWeightType, weight: number, modifiers: Set<EquipmentModifier<Equipment>>) {
+    private static processMultiplyAddWeightStep(weightType: EquipmentModifierWeightType, weight: number, modifiers: Set<EquipmentModifier>) {
         let sum = 0;
         modifiers.forEach(modifier => {
             if (modifier.enabled && modifier.weightType === weightType) {
@@ -261,7 +261,7 @@ export class Equipment extends ListItem {
     }
 }
 
-export class EquipmentModifier<T extends Equipment> extends Modifier<T> {
+export class EquipmentModifier extends Modifier<Equipment> {
     static keys = ["cost", "costType", "weight", "weightType"]
     tag: string = "eqp_modifier"
     version: number = 1
@@ -274,7 +274,7 @@ export class EquipmentModifier<T extends Equipment> extends Modifier<T> {
 
     techLevel = ""
 
-    constructor(equipment: T, keys: string[] = []) {
+    constructor(equipment: Equipment, keys: string[] = []) {
         super(equipment, [...keys, ...EquipmentModifier.keys]);
     }
 

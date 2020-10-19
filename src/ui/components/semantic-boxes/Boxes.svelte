@@ -17,15 +17,13 @@
 
 <style>
   .semantic-boxes {
-    position: relative;
+    @apply relative;
   }
   .box-interface {
-    position: absolute;
-    top: 15px;
-    right: 15px;
+    @apply absolute top-0 right-0 pt-5 pr-5;
   }
   ul {
-    list-style-type: none;
+    @apply mx-4;
   }
 </style>
 

@@ -27,13 +27,8 @@
 </script>
 
 <style>
-    section {
-        height: 500px;
-    }
-    section :global(.jsoneditor-menu) {
-    }
 </style>
 
 <svelte:options accessors={true} />
 
-<section class="relative" data-json-editor bind:this={editorElement} />
+<section class="h-full" data-json-editor bind:this={editorElement} />

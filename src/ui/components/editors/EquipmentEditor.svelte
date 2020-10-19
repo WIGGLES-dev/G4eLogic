@@ -10,6 +10,8 @@
   } from "@ui/index";
   export let entity = null;
 
+  import TinyMCE from "@ui/components/widgets/TinyMCE";
+
   import Features from "./panels/Features";
   import MeleeWeapons from "./panels/MeleeWeapons.svelte";
   import RangedWeapons from "./panels/RangedWeapons.svelte";
@@ -44,12 +46,12 @@
 
 <Tabs>
   <TabList>
-    <Tab>{entityName} Data</Tab>
+    <Tab>Data</Tab>
     <Tab>Features</Tab>
-    <Tab>Modifiers</Tab>
-    <Tab>MeleeWeapons</Tab>
-    <Tab>RangedWeapons</Tab>
-    <Tab>User Description</Tab>
+    <Tab disabled={true}>Modifiers</Tab>
+    <Tab>Melee Weapons</Tab>
+    <Tab>Ranged Weapons</Tab>
+    <Tab disabled={true}>User Description</Tab>
   </TabList>
   <TabPanel>
     <form class="p-3">
@@ -92,8 +94,9 @@
 
         <label for="">Categories
           <input
+            on:change={(e) => (entity.categories = new Set(e.target.value.split(',')))}
             type="text"
-            value={[...$entity.categories].join(', ')} /></label>
+            value={[...$entity.categories].join(',')} /></label>
 
         <label for="">Reference
           <input type="number" bind:value={$entity.reference} /></label>
@@ -107,5 +110,5 @@
   <TabPanel component={EquipmentModifiers} props={{ entity }} />
   <TabPanel component={MeleeWeapons} props={{ entity }} />
   <TabPanel component={RangedWeapons} props={{ entity }} />
-  <TabPanel />
+  <TabPanel component={TinyMCE} props={{}} />
 </Tabs>

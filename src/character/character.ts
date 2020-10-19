@@ -1,11 +1,11 @@
 import { ListItem } from "./misc/list";
 import { Attribute, AttributeList } from "./attribute";
-import { SkillList } from "./skill/skill";
-import { Trait, TraitList } from "./trait/trait";
-import { Equipment, EquipmentList } from "./equipment/equipment";
-import { FeatureList } from "@character/features/feature";
+import { Skill, SkillDefault, SkillList } from "./skill/skill";
+import { Trait, TraitList, TraitModifier } from "./trait/trait";
+import { Equipment, EquipmentList, EquipmentModifier } from "./equipment/equipment";
+import { Feature, FeatureList } from "@character/features/feature";
 import { Profile } from "./profile";
-import { SpellList } from "./spell";
+import { Spell, SpellList } from "./spell";
 import { Serializer, registerSerializer } from "../externals/serializer";
 import { CharacterElement } from "./misc/element";
 import { LocationList } from "./locations";
@@ -13,20 +13,19 @@ import { Hooks } from "../hooks/hooks";
 import { State } from "state/state";
 import { Configurer } from "./misc/config";
 import { getThrust, getSwing } from "../damage/damage";
-import { TechniqueList } from "./technique";
+import { Technique, TechniqueList } from "./technique";
 
 import JsonQuery from "json-query";
-import { Plugin } from "../externals/plugin";
 import { Observable } from "./general/observable";
+import { WeaponDefault } from "./weapon";
 
 export abstract class Sheet extends Observable {
+    static Entities = {}
     Hooks: Hooks = new Hooks()
     State: State = new State()
     serializer = Serializer
 
     config: Configurer
-
-    plugins: Map<string, Plugin>
 
     #currentScope = "GCSJSON"
     #elements: Set<CharacterElement> = new Set();
@@ -40,18 +39,19 @@ export abstract class Sheet extends Observable {
         this.Hooks.callAll("init", this);
     }
 
-    registerPlugin(scope: string, plugin: Plugin) {
-        this.plugins.set(scope, plugin.init(this));
-    }
-
-    static registerSerializer(serializer: Serializer) {
+    static registerSerializer(serializer: any) {
         registerSerializer(serializer);
     }
 
     void() {
         this.Hooks.callAll("before void sheet", this);
+        this.#elements.forEach(element => {
+            element.delete();
+        })
         this.#elements.clear();
         this.Hooks.callAll("after void sheet", this);
+        this.config.setDefault();
+        this.dispatch();
         return this
     }
 
@@ -100,6 +100,23 @@ export abstract class Sheet extends Observable {
             locals: Object.assign(this.defaultQueryLocals(), locals)
         })
     }
+
+    load(data: any, scope: string, ...args) {
+        this.Hooks.callAll("before unload", this);
+        this.void();
+        this.getSerializer(scope).load(this, data, ...args);
+        this.Hooks.callAll("after load", this);
+        this.dispatch();
+        return this
+    }
+
+    save(scope: string, target: any, ...args) {
+        this.Hooks.callAll("before save", this);
+        let output = this.getSerializer(scope).save(this, target, ...args);
+        this.Hooks.callAll("after save", this);
+        this.dispatch();
+        return output;
+    }
 }
 
 export class SheetData<T> {
@@ -110,14 +127,25 @@ export class SheetData<T> {
 }
 
 export class Character extends Sheet {
-    static keys = ["totalPoints", "missingHP", "missingFP"]
+    static Entities = {
+        "Feature": Feature,
+        "SkillDefault": SkillDefault,
+        "WeaponDefault": WeaponDefault,
+        "Skill": Skill,
+        "Technique": Technique,
+        "Spell": Spell,
+        "Equipment": Equipment,
+        "Trait": Trait,
+        "TraitModifier": TraitModifier,
+        "EquipmentModifier": EquipmentModifier
+    }
 
-    gCalcID: string
+    static keys = ["totalPoints", "notes", "sizeModifier", "techLevel"]
 
     totalPoints: number = 150
-
     techLevel: string = "3";
     sizeModifier: number = 0;
+    notes: string = "<h1>Character Notes</h1>"
 
     profile: Profile
     skillList: SkillList
@@ -260,7 +288,7 @@ export class Character extends Sheet {
         return this.getAttribute(Signature.Move).calculateLevel() + this.encumbranceLevel()
     }
 
-    dodgeScore() { return Math.floor(this.getAttribute(Signature.Speed).calculateLevel() + 3) }
+    dodgeScore() { return Math.floor(this.getAttribute("DG").calculateLevel()) }
 
     encumberedDodgeScore() {
         switch (this.encumbranceLevel()) {
@@ -274,36 +302,6 @@ export class Character extends Sheet {
                 return Math.floor(this.dodgeScore() * .4)
             case -4:
                 return Math.floor(this.dodgeScore() * .2)
-        }
-    }
-
-    load(data: any, scope: string, ...args) {
-        this.Hooks.callAll("before unload", this);
-        this.void();
-        this.getSerializer(scope).load(this, data, ...args);
-        this.Hooks.callAll("after load", this);
-        return this
-    }
-
-    save(scope: string, target: any, ...args) {
-        this.Hooks.callAll("before save", this);
-        this.getSerializer(scope).save(this, target, ...args);
-        this.Hooks.callAll("after save", this);
-        return this
-    }
-
-    void() {
-        try {
-            super.void();
-            this.featureList.empty();
-            this.traitList.empty();
-            this.skillList.empty();
-            this.techniqueList.empty();
-            this.equipmentList.empty();
-            this.spellList.empty();
-            return this
-        } catch (err) {
-            console.log("Failed the void sheet", err);
         }
     }
 }

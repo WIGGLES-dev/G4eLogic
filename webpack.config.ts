@@ -4,20 +4,19 @@ import CopyPlugin from "copy-webpack-plugin";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import { TsConfigPathsPlugin } from "awesome-typescript-loader";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
+import { GenerateSW } from "workbox-webpack-plugin";
 import { postcss } from "svelte-preprocess";
 
-type mode = "development" | "production"
-const mode = process.argv[process.argv.indexOf("--mode") >= 0 ? process.argv.indexOf("--mode") + 1 : null] as mode || "development";
+const mode = "development" || "production";
 const prod = mode === 'production';
 
 const config: webpack.Configuration = {
     devServer: {
         writeToDisk: true,
-        open: 'chrome',
         contentBase: path.join(__dirname, "lib/test"),
         compress: false,
         port: 5000,
-        hot: true,
+        hot: false
     },
     entry: {
         'index': [path.resolve(__dirname, 'src/index.ts')],
@@ -35,11 +34,7 @@ const config: webpack.Configuration = {
     },
     output: {
         path: path.resolve(__dirname, 'lib'),
-        publicPath: 'lib/',
         filename: '[name].js',
-        libraryTarget: 'umd',
-        library: "lib",
-        umdNamedDefine: true,
     },
     module: {
         rules: [
@@ -98,6 +93,10 @@ const config: webpack.Configuration = {
     },
     mode,
     plugins: [
+        new webpack.ProvidePlugin({
+            tinymce: 'tinymce'
+        }),
+        new GenerateSW(),
         new CleanWebpackPlugin(),
         new CopyPlugin({
             patterns: [

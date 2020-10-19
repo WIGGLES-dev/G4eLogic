@@ -1,4 +1,3 @@
-import { Collection } from "@character/misc/collection";
 import { debounce } from "@utils/debounce";
 
 type subscription = (store: any) => void
@@ -11,8 +10,7 @@ export abstract class Observable {
     watching: string[];
 
     subscriptions: Set<subscription> = new Set()
-    derivations: Set<subscription> = new Set()
-    cleanups: Set<subscription> = new Set()
+    onUnobservedCallbacks: Set<subscription> = new Set()
 
     #data = {
         local: {},
@@ -42,30 +40,20 @@ export abstract class Observable {
     }
 
     private onUnobserved() {
-        this.cleanups.forEach(callback => callback(this));
-    }
-
-    /**
-     * Returns the observable in a state where watched variable changes won't trigger dispatches
-     */
-    proxy() {
-        this.dispatching = false;
-        return this
+        this.onUnobservedCallbacks.forEach(callback => callback(this));
     }
 
     update(updater: (store: any) => any) {
         updater(this);
     }
 
-    derive(callback: derivation = (store) => store) {
-        let returnValue = callback(this);
-        if (typeof returnValue === "function") { this.cleanups.add(returnValue) } else { returnValue = () => { } }
-        this.derivations.add(() => {
-            callback(this);
-            returnValue(this);
-        });
+    derive(callback: derivation = (store) => store, intial: any) {
+        const subscription = () => {
+
+        };
+        this.subscriptions.add(subscription);
         return {
-            unsubscribe: () => this.derivations.delete(callback),
+            unsubscribe: () => this.subscriptions.delete(subscription),
             update: this.update,
             set: this.set
         }
@@ -92,7 +80,6 @@ export abstract class Observable {
 
     dispatch() {
         this.subscriptions.forEach(callback => callback(this));
-        this.derivations.forEach(callback => callback(this));
     }
 
     forwardAccessors(accessors: string[], target: any) {

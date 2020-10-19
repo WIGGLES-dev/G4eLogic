@@ -5,13 +5,13 @@
 
 <style>
   .semantic-box {
-    position: relative;
+    @apply relative;
   }
   .box-interface {
     @apply absolute top-0 right-0 text-sm;
   }
   li {
-    padding: 5px;
+    @apply border-b border-black border-dotted pb-2;
   }
 </style>
 

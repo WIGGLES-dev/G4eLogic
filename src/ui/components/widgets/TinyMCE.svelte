@@ -1,17 +1,30 @@
 <script>
-    import { create } from "@svgdotjs/svg.js";
+    import { onMount, createEventDispatcher, afterUpdate } from "svelte";
+    const dispatch = createEventDispatcher();
 
-    import { onMount } from "svelte";
-    import tinymce from "tinymce";
+    export let options = {};
+    export let content = "";
 
     let textarea;
-    let tinyMCE;
+    export let tinyMCE;
 
     async function createTinyMCE() {
-        tinyMCE = await tinymce.init({
-            target: textarea,
+        if (!tinyMCE)
+            tinyMCE = await tinymce.init({
+                options,
+                target: textarea,
+                setup,
+            })[0];
+    }
+
+    function setup(editor) {
+        editor.on("change", (e) => {
+            content = e.target.getContent();
+            dispatch("change", e);
         });
-        console.log(tinyMCE);
+        editor.on("init", (e) => {
+            e.target.setContent(content);
+        });
     }
 
     onMount(createTinyMCE);

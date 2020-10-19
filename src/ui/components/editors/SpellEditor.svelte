@@ -9,6 +9,8 @@
     } from "@ui/index";
     import { Tabs, Tab, TabPanel, TabList } from "@ui/index";
 
+    import TinyMCE from "@ui/components/widgets/TinyMCE";
+
     import Features from "./panels/Features";
     import MeleeWeapons from "./panels/MeleeWeapons.svelte";
     import RangedWeapons from "./panels/RangedWeapons.svelte";
@@ -44,13 +46,13 @@
 
 <Tabs>
     <TabList>
-        <Tab index={0}>{entityName} Data</Tab>
-        <Tab index={1}>Defaults</Tab>
-        <Tab index={2}>Prerequisites</Tab>
-        <Tab index={3}>Features</Tab>
-        <Tab index={4}>MeleeWeapons</Tab>
-        <Tab index={5}>RangedWeapons</Tab>
-        <Tab index={6}>User Description</Tab>
+        <Tab>Data</Tab>
+        <Tab>Defaults</Tab>
+        <Tab disabled={true}>Prerequisites</Tab>
+        <Tab>Features</Tab>
+        <Tab>MeleeWeapons</Tab>
+        <Tab>RangedWeapons</Tab>
+        <Tab disabled={true}>User Description</Tab>
     </TabList>
     <TabPanel>
         <form action="" class="p-3">
@@ -67,7 +69,9 @@
                 <label for="">
                     Signature
                     <select name="" id="" bind:value={$entity.signature}>
-                        {#each Object.values($entity.getCharacter().config.attributes) as signature, i}
+                        {#each Object.values($entity
+                                .getCharacter()
+                                .config.getConfig().attributes) as signature, i}
                             {#if signature.can_be_signature}
                                 <option value={signature.signature}>
                                     {signature.signature}
@@ -126,18 +130,31 @@
                         bind:checked={$entity.disabled} /></label>
             </div> -->
 
-            <label for="">Resist<input type="text"></label>
-            <label for="">Class<input type="text" /></label>
-            <label for="">Cost<input type="text" /></label>
-            <label for="">Maintain<input type="text" /></label>
-            <label for="">Time<input type="text" /></label>
-            <label for="">Duration<input type="text" /></label>
+            <label for="">Resist<input
+                    type="text"
+                    bind:value={$entity.resist} /></label>
+            <label for="">Class<input
+                    type="text"
+                    bind:value={$entity.class} /></label>
+            <label for="">Cost<input
+                    type="text"
+                    bind:value={$entity.castingCost} /></label>
+            <label for="">Maintain<input
+                    type="text"
+                    bind:value={$entity.maintenanceCost} /></label>
+            <label for="">Time<input
+                    type="text"
+                    bind:value={$entity.castingTime} /></label>
+            <label for="">Duration<input
+                    type="text"
+                    bind:value={$entity.durations} /></label>
 
             <div class="flex">
                 <label for="">Categories
                     <input
+                        on:change={(e) => (entity.categories = new Set(e.target.value.split(',')))}
                         type="text"
-                        value={[...$entity.categories].join(', ')} /></label>
+                        value={[...$entity.categories].join(',')} /></label>
 
                 <label for="">Reference
                     <input
@@ -153,5 +170,5 @@
     <TabPanel component={Features} props={{ entity }} />
     <TabPanel component={MeleeWeapons} props={{ entity }} />
     <TabPanel component={RangedWeapons} props={{ entity }} />
-    <TabPanel />
+    <TabPanel component={TinyMCE} props={{}} />
 </Tabs>

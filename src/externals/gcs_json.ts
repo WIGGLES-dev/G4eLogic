@@ -1,23 +1,18 @@
 import { Serializer } from "./serializer";
-import { Skill, Difficulty, SkillDefault, SkillLike } from "@character/skill/skill"
-import { Spell } from "@character/spell"
-import { Equipment, EquipmentModifier } from "@character/equipment/equipment";
-import { Trait, TraitModifier } from "@character/trait/trait";
+
 import { Signature, Character } from "@character/character";
 import { List, ListItem } from "@character/misc/list";
-import { Modifier } from "@character/misc/modifier";
-import { Weapon, MeleeWeapon, RangedWeapon } from "@character/weapon";
-import { Technique, TehchniqueDifficulty } from "@character/technique";
+
+import GCSCONFIG from "./gcs-loader.json";
 
 import jp from "jsonpath";
+import { SkillBonus } from "@character/features/modules/SkillBonus";
+import { DRBonus } from "@character/features/modules/DRBonus";
+import { AttributeBonus } from "@character/features/modules/AttributeBonus";
 import { Feature } from "@character/features/feature";
-import { AttributeBonus, DRBonus, SkillBonus } from "index";
+import { ReactionBonus } from "@character/features/modules/ReactionBonus";
 
 export class GCSJSON extends Serializer {
-    static entities = {
-
-    }
-
     static scope = "GCSJSON"
 
     constructor() {
@@ -25,318 +20,39 @@ export class GCSJSON extends Serializer {
     }
 
     init() {
-        this.
-            register(SkillDefault, {
-                save: this.saveSkillDefault,
-                load: this.mapSkillDefault
-            })
-            .register(Skill, {
-                save: this.saveSkill,
-                load: GCSJSON.mapSkill
-            })
-            .register(Technique, {
-                save: this.saveTechnique,
-                load: this.mapTechnique
-            })
-            .register(Spell, {
-                save: this.saveSpell,
-                load: this.mapSpell
-            })
-            .register(Equipment, {
-                save: this.saveEquipment,
-                load: this.mapEquipment
-            })
-            .register(Trait, {
-                save: this.saveTrait,
-                load: this.mapTrait
-            })
-            .register("feature", {
-                save: this.saveFeature,
-                load: this.mapFeature
-            })
-            .register(TraitModifier, {
-                save: this.saveModifier,
-                load: this.mapModifier
-            })
-            .register(EquipmentModifier, {
-                save: this.saveModifier,
-                load: this.mapModifier
-            })
-            .register("weapon", {
-                save: this.saveWeapon,
-                load: this.mapWeapon
-            })
-    }
-    mapSkillDefault(skillDefault: SkillDefault<any>, data: any) {
-        skillDefault.setValue({
-            type: data.type,
-            modifier: data.modifier,
-            specialization: data.specialization,
-            name: data.name
-        }, { update: false })
-        return skillDefault
+        this.parseConfig(GCSCONFIG);
     }
 
-    saveSkillDefault() { }
+    loadFeature() {
+        return {
+            load: (feature: Feature, type: string) => {
+                switch (type) {
+                    case FeatureType.skillBonus:
+                        return new SkillBonus(feature);
+                    case FeatureType.DRBonus:
+                        return new DRBonus(feature);
+                    case FeatureType.reactionBonus:
+                        return new ReactionBonus(feature);
+                    default:
+                        return new AttributeBonus(feature);
+                }
+            },
+            save: (feature: Feature, type: string) => {
+                switch (feature.core.constructor) {
+                    case SkillBonus:
+                        return FeatureType.skillBonus
+                    case DRBonus:
+                        return FeatureType.DRBonus
+                    case ReactionBonus:
+                        return FeatureType.reactionBonus
+                    case AttributeBonus:
+                        return FeatureType.attributeBonus
+                    default:
 
-    static mapSkill(skill: Skill, data?: any) {
-        skill.setValue({
-            name: data.name,
-            difficulty: data.difficulty.split("/")[1],
-            signature: data.difficulty.split("/")[0],
-            techLevel: data.tech_level,
-            specialization: data.specialization,
-            encumbrancePenaltyMultiple: data.encumbrance_penalty_multiplier,
-            points: +data.points || 1,
-            notes: data.notes,
-            reference: data.reference
-        }, { update: false });
-        //if (data.defaulted_from) skill.defaultedFrom = new SkillDefault<Skill>(skill).load(data.defaulted_from);
-        data.defaults?.forEach((skillDefault) => skill.addDefault().load(skillDefault));
-        data.weapon?.forEach(weapon => skill.addWeapon(weapon.type).load(weapon));
-        if (data && data.type?.includes("_container")) {
-            return data.children as any[]
+                }
+            }
         }
     }
-    saveSkill(skill: Skill): any {
-        let data = {
-            type: "skill",
-            version: 1,
-            name: skill.name,
-            difficulty: skill.difficulty,
-            points: skill.points,
-            // prereqs: {},
-        };
-        return data
-    }
-
-    mapTechnique(technique: Technique, data?: any) {
-        technique.setValue({
-            name: data.name,
-            limit: data.limit,
-            difficulty: data.difficulty,
-            reference: data.reference,
-            points: +data.points,
-        }, { update: false })
-        technique.default.load(data.default)
-        data.weapons?.forEach((weapon) => {
-            technique.addWeapon(weapon.type).load(weapon);
-        });
-        return null
-    }
-    saveTechnique(): any { }
-    mapSpell(spell: Spell, data?: any) {
-        spell.setValue({
-            name: data.name,
-            points: +data.points || 1,
-            reference: data.reference,
-            difficulty: data.difficulty?.split("/")[1],
-            signature: data.difficulty?.split("/")[0],
-            college: data.college,
-            powerSource: data.power_source,
-            spellClass: data.spell_class,
-            castingCost: data.casting_cost,
-            maintenanceCost: data.maintenance_cost,
-            castingTime: data.castingTime,
-            duration: data.duration
-        }, { update: false })
-        data.weapons?.forEach((weapon) => {
-            spell.addWeapon(weapon.type).load(weapon);
-        });
-        if (data && data.type?.includes("_container")) {
-            return data.children
-        }
-    }
-    saveSpell(): any { }
-
-    mapEquipment(equipment: Equipment, data?: any) {
-        equipment.setValue({
-            location: data.location,
-            description: data.description,
-            disabled: !data.equipped,
-            quantity: data.quantity,
-            value: +data.value || 0,
-            weight: +(data.weight?.split(" ")[0] ?? "0"),
-            techLevel: data.tech_level,
-            legalityClass: data.legality_class,
-            reference: data.reference,
-        }, { update: false });
-
-        // equipment.containedWeightReduction = isArray(data?.features)?.find(feature => feature.type === "contained_weight_reduction")?.reduction ?? null;
-
-        data.features?.forEach((feature) => {
-            loadFeature(equipment, feature.type)?.load(feature)
-        });
-
-        data.modifiers?.forEach((modifier) => {
-            equipment.addModifier().load(modifier);
-        });
-
-        data.weapons?.forEach((weapon: any) => {
-            equipment.addWeapon(weapon.type).load(weapon);
-        });
-
-        if (data && data.type?.includes("_container")) {
-            return data?.children as any[] || null
-        }
-    }
-
-    saveEquipment(equipment: Equipment): any { }
-
-    mapTrait(trait: Trait, data?) {
-        trait.setValue({
-            name: data.name,
-            basePoints: data.base_points,
-            hasLevels: Boolean(data?.levels),
-            levels: data.levels ? +data.levels : undefined,
-            allowHalfLevels: data.allow_half_levels,
-            hasHalfLevel: data.has_half_level,
-            roundDown: data.round_down,
-            controlRating: data.cr === 0 ? "none" : data?.cr?.toString() ?? "n/a",
-            pointsPerLevel: data.points_per_level,
-            disabled: trait.disabled,
-            reference: data.reference,
-            notes: data.notes
-        }, { update: false });
-
-        data.modifiers?.forEach((modifier) => trait.addModifier().load(modifier));
-
-        //data.types?.forEach((type: TraitType) => trait.types.add(type));
-
-        data.features?.forEach((feature) => {
-            loadFeature(trait, feature.type)?.load(feature);
-        });
-
-        data.weapons?.forEach((weapon) => {
-            trait.addWeapon(weapon.type).load(weapon);
-        })
-
-        data.categories?.forEach((category: string) => {
-            trait.categories.add(category);
-        })
-
-        if (data && data.type?.includes("_container")) {
-            return data.children
-        }
-    }
-    saveTrait(trait: Trait): any { }
-
-    mapFeature(feature: Feature, data) {
-        feature.setValue({
-            leveled: data.per_level,
-            amount: data.amount,
-        }, { update: false });
-        switch (data.type) {
-            case FeatureType.attributeBonus:
-                if (feature.type instanceof AttributeBonus) {
-                    feature.type.setValue({
-                        attribute: data.attribute
-                    }, { update: false });
-                }
-                break
-            case FeatureType.DRBonus:
-                if (feature.type instanceof DRBonus) {
-                    feature.type.setValue({
-                        location: data.location
-                    }, { update: false })
-                }
-                break
-            case FeatureType.reactionBonus:
-                break
-            case FeatureType.skillBonus:
-                if (feature.type instanceof SkillBonus) {
-                    feature.type.setValue({
-                        //selectionType: data.selection_type,
-                        nameCompareType: data.name?.compare,
-                        name: data.name?.qualifier,
-                        specializationCompareType: data.specialization?.compare,
-                        specialization: data.specialization?.qualifier,
-                        categoryCompareType: data.category?.compare,
-                        category: data.category?.qualifier
-                    }, { update: false });
-                }
-                break
-            case FeatureType.spellBonus:
-                break
-            case FeatureType.weaponDamageBonus:
-                break
-            default:
-        }
-        return feature
-    }
-
-    saveFeature(feature: Feature) {
-
-    }
-
-    mapModifier(modifier: Modifier, data) {
-        modifier.setValue({
-            enabled: !data.disabled,
-            name: data.name,
-            notes: data.notes,
-            reference: data.reference
-        }, { update: false })
-        switch (modifier.tag) {
-            case "modifier":
-                if (modifier instanceof TraitModifier) {
-                    modifier.setValue({
-                        cost: data.cost,
-                        type: data.cost_type,
-                        affects: data.affects,
-                        levels: data.levels
-                    }, { update: false });
-                }
-            case "eqp_modifier":
-                if (modifier instanceof EquipmentModifier) {
-                    modifier.setValue({
-                        cost: data.cost,
-                        weight: data.weight,
-                        costType: data.cost_type,
-                        weightType: data.weight_type
-                    }, { update: false });
-                }
-        }
-        return modifier
-    }
-
-    saveModifier(modifier: Modifier) { }
-
-    mapWeapon(weapon: Weapon<any>, data: any) {
-        weapon.setValue({
-            usage: data.usage,
-            strength: data.strength,
-            damageStrength: data?.damage?.st,
-            damageBase: data?.damage?.base,
-            damageType: data?.damage?.type
-        }, { update: false })
-        switch (weapon.getType()) {
-            case "melee_weapon":
-                if (weapon instanceof MeleeWeapon) {
-                    weapon.setValue({
-                        reach: data.reach,
-                        parry: data.parry,
-                        block: data.block
-                    }, { update: false });
-                }
-            case "ranged_weapon":
-                if (weapon instanceof RangedWeapon) {
-                    weapon.setValue({
-                        accuracy: data.accuracy,
-                        range: data.range,
-                        rateOfFire: data.rate_of_fire,
-                        shots: data.shots,
-                        bulk: data.bulk
-                    }, { update: false });
-                }
-        }
-        data.defaults?.forEach(weaponDefault => {
-            let proxy = weapon.addDefault()
-            this.mapSkillDefault(proxy as SkillDefault<any>, weaponDefault);
-        });
-        return weapon
-    }
-
-    saveWeapon() { }
 
     loadList(list: List<any>, data: any[]) {
         if (data) {
@@ -352,16 +68,44 @@ export class GCSJSON extends Serializer {
     }
 
     load(character: Character, data: any) {
-        character.gCalcID = data.id;
+        const { third_party } = data;
+
+        if (third_party) {
+            const { config, attributes, pools, locations, notes, skills, techniques, equipment, traits } = third_party;
+
+            if (config) character.config.reconfigure(JSON.parse(data.third_party.config));
+            if (notes) character.notes = notes;
+
+            attributes?.forEach(attribute => {
+                const charAttribtue = character.getAttribute(attribute.name);
+                charAttribtue.level = attribute.level;
+                charAttribtue.modifier = attribute.mod
+            });
+            pools?.forEach(pool => {
+                const attribute = character.getAttribute(pool.name);
+                if (attribute) {
+                    attribute.currentValue = pool.current;
+                    attribute.modifier = pool.modifier;
+                }
+            });
+            locations?.forEach(location => {
+                const hitLocaiton = character.locationList.getLocation(location.name);
+                if (hitLocaiton) {
+                    hitLocaiton.damageTaken = location.injury;
+                }
+            });
+        }
 
         character.totalPoints = data.total_points;
+        character.sizeModifier = data.profile.size;
+        character.techLevel = data.profile.tech_level;
 
         const items = (data.equipment || []).map(item => {
-            item.location = "carried";
             return item
         }).concat(
             (data.other_equipment || []).map(item => {
                 item.location = "other";
+                item.equipped = false;
                 return item
             })
         )
@@ -387,9 +131,67 @@ export class GCSJSON extends Serializer {
         character.getAttribute(Signature.Speed).setLevel(data.speed_adj);
         character.getAttribute(Signature.Will).setLevel(data.will_adj);
 
+        Object.assign(character.profile, {
+            name: data.profile.name,
+            portrait: new URL('data:image/jpeg;base64,' + data.profile.portrait)
+        })
+
         return character
     }
-    save(character: Character, target): any { }
+    save(character: Character, target): any {
+        const attributes = [...character.attributeList.attributes.values()].map(attribute => {
+            return {
+                name: attribute.signature,
+                mod: attribute.modifier,
+                level: attribute.level
+            }
+        });
+        const pools = [...character.attributeList.attributes.values()].filter(attribute => attribute.hasTag("pool")).map(pool => {
+            return {
+                name: pool.signature,
+                current: pool.currentValue,
+                modifier: pool.modifier
+            }
+        });
+        const locations = [...character.locationList.locations.values()].map(location => {
+            return {
+                name: location.name,
+                injury: location.damageTaken
+            }
+        });
+        return {
+            type: "character",
+            profile: {
+                name: character.profile.name
+            },
+            total_points: character.totalPoints,
+            ST: character.getAttribute("ST").level,
+            DX: character.getAttribute("DX").level,
+            IQ: character.getAttribute("IQ").level,
+            HT: character.getAttribute("HT").level,
+            fp_adj: character.getAttribute("FP").level,
+            hp_adj: character.getAttribute("HP").level,
+            move_adj: character.getAttribute("Move").level,
+            per_adj: character.getAttribute("Per").level,
+            speed_adj: character.getAttribute("Speed").level,
+            will_adj: character.getAttribute("Will").level,
+            advantages: character.traitList.save(),
+            skills: [...character.skillList.save(), ...character.techniqueList.iter().map(technique => technique.save({}))],
+            equipment: character.equipmentList.itemsByLocation("carried").map(item => item.save({})),
+            other_equipment: character.equipmentList.itemsByLocation("other").map(item => item.save({})),
+            third_party: {
+                attributes,
+                pools,
+                locations,
+                notes: character.notes,
+                config: character.config.stringify(),
+                skills: character.skillList.save(),
+                techniques: character.techniqueList.save(),
+                equipment: character.equipmentList.save(),
+                traits: character.traitList.save(),
+            }
+        }
+    }
 }
 
 enum FeatureType {
@@ -399,23 +201,4 @@ enum FeatureType {
     reactionBonus = "reaction_bonus",
     spellBonus = "spell_bonus",
     weaponDamageBonus = "weapon_damage_bonus"
-}
-
-function loadFeature(owner: ListItem, type: string) {
-    const feature = new Feature(owner)
-    switch (type) {
-        case FeatureType.skillBonus:
-            feature.type = new SkillBonus(feature);
-            break;
-        case FeatureType.DRBonus:
-            feature.type = new DRBonus(feature);
-            break;
-        case FeatureType.attributeBonus:
-            feature.type = new AttributeBonus(feature);
-            break;
-        case FeatureType.reactionBonus:
-            feature.type = new AttributeBonus(feature);
-            break
-    }
-    return feature
 }

@@ -16,27 +16,31 @@ export class AttributeList {
     }
 
     private configureAttributes(character) {
-        const CONFIG = character.config.getConfig();
-        this.attributes.clear();
-        Object.entries(CONFIG.attributes).forEach(([key, attribute]: [string, any]) => {
-            const basedOn = new Function(attribute.based_on).bind(this);
-            const attr = new Attribute(
-                attribute.name,
-                attribute.signature,
-                this.character,
-                {
-                    costPerLevel: attribute.cost_per_level,
-                    defaultLevel: attribute.default_level,
-                    basedOn: attribute.based_on === undefined ? () => null : basedOn,
-                    tags: attribute.tags,
-                    increment: attribute.increment,
-                    abbreviation: attribute.abbreviation,
-                    color: attribute.color
-                },
-            );
-            attr.ui.tooltip = attribute.tooltip || "";
-            this.attributes.set(attribute.signature, attr);
-        });
+        try {
+            const CONFIG = character.config.getConfig();
+            this.attributes.clear();
+            Object.entries(CONFIG.attributes).forEach(([key, attribute]: [string, any]) => {
+                const basedOn = new Function(attribute.based_on).bind(this);
+                const attr = new Attribute(
+                    attribute.name,
+                    attribute.signature,
+                    this.character,
+                    {
+                        costPerLevel: attribute.cost_per_level,
+                        defaultLevel: attribute.default_level,
+                        basedOn: attribute.based_on === undefined ? () => null : basedOn,
+                        tags: attribute.tags,
+                        increment: attribute.increment,
+                        abbreviation: attribute.abbreviation,
+                        color: attribute.color
+                    },
+                );
+                attr.ui.tooltip = attribute.tooltip || "";
+                this.attributes.set(attribute.signature, attr);
+            });
+        } catch (err) {
+            console.log(`Failed to configure attribute`, err);
+        }
     }
 
     signatureOptions() { return Array.from(this.attributes.values()).map(attribute => attribute.name) }
@@ -57,7 +61,6 @@ export class Attribute extends CharacterElement {
     character: Character
     level: number
     currentValue: number
-    tempValue: number
     costPerLevel: number
     defaultLevel: number
     basedOn: () => number
@@ -97,32 +100,39 @@ export class Attribute extends CharacterElement {
         this.increment = increment;
         this.substats = substats;
         this.currentValue = currentValue || defaultLevel;
-        this.tempValue = tempValue;
         this.abbreviation = abbreviation || name
         this.color = color;
+        this.currentValue = currentValue || null;
     }
 
     get unmodifiedLevel() { return this.calculateLevel() - this.modifier }
 
     setLevel(level: number) { this.setValue({ level }, { update: false }); return level }
-    setLevelDelta() { }
 
     getMod() {
         return this.getModList().reduce((prev, cur) => prev + cur.getBonus(), 0)
     }
 
     hasTag(tag: string) { return this.tags.includes(tag) }
+    percentage() { return this.currentValue / this.calculateLevel() }
+    get missing() { return this.calculateLevel() - this.currentValue }
 
     getModList() {
         const attributeName = this.signature;
         return this.character.featureList.getFeaturesByType(AttributeBonus).filter((feature) => {
-            return feature.type instanceof AttributeBonus && feature.ownerIsActive() && feature.type.attribute.toLowerCase() === attributeName.toLowerCase()
+            return feature.core instanceof AttributeBonus && feature.ownerIsActive() && feature.core.attribute.toLowerCase() === attributeName.toLowerCase()
         }) as Feature[]
     }
 
     pointsSpent() { return this.levelsIncreased() * this.costPerLevel }
     levelsIncreased() { return this.level - this.defaultLevel }
-    calculateLevel() { return this.level + (this.getMod() || 0) + this.basedOn() + this.modifier }
+    calculateLevel() {
+        try {
+            return this.level + (this.getMod() || 0) + this.basedOn() + this.modifier
+        } catch (err) {
+            return NaN
+        }
+    }
 
     get displayLevel() { return this.calculateLevel() }
     set displayLevel(level) {
@@ -135,9 +145,15 @@ export class Attribute extends CharacterElement {
     }
 }
 
-// class Pool extends Attribute {
-//     constructor() {
-//         super();
-//     }
-// }
-
+class Pool extends Attribute {
+    constructor(
+        name: string,
+        signature: string,
+        character: Character,
+        data: any,
+        currentValue?: number,
+        tempValue: number = 0,
+        keys: string[] = []) {
+        super(name, signature, character, data, currentValue, tempValue, keys);
+    }
+}

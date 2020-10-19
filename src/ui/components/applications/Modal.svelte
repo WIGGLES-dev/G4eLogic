@@ -30,7 +30,10 @@
   export let width = 1200;
   export let zIndex = 200;
 
-  let dragDisabled;
+  height = Math.max(innerHeight / 2, height);
+  width = Math.max(innerWidth / 2, width);
+
+  let dragDisabled = false;
   let dragging = false;
 
   let minify = false;
@@ -49,23 +52,44 @@
     height = innerHeight;
   }
 
-  let dLeft = innerWidth / 2 - width / 2;
-  let dTop = innerHeight / 2 - height / 2;
+  let dLeft;
+  let dTop;
+
+  setCenter();
+
+  function handleScreenSize() {
+    if (innerWidth < 768) {
+      dragDisabled = true;
+      dLeft = 0;
+      dTop = 0;
+      height = innerHeight;
+      width = innerWidth;
+    } else {
+      dragDisabled = false;
+    }
+  }
 
   function onDrag({ movementX, movementY, which }) {
-    if (which != 1 || !dragging) return;
+    if (which != 1 || !dragging || dragDisabled) return onFailDrag();
     const { top, left, bottom, right } = dialog.getBoundingClientRect();
 
     if (
       (bottom + movementY > innerHeight && bottom > 0) ||
       (right + movementX > innerWidth && right > 0)
     ) {
-      return;
+      return onFailDrag();
     }
 
     dLeft = Math.max(0, left + movementX);
     dTop = Math.max(0, top + movementY);
   }
+
+  function setCenter() {
+    dLeft = innerWidth / 2 - width / 2;
+    dTop = innerHeight / 2 - height / 2;
+  }
+
+  function onFailDrag() {}
 
   function keyDown({ key }) {
     switch (key) {
@@ -105,17 +129,20 @@
 </style>
 
 <svelte:window
+  on:resize={handleScreenSize}
   on:mousemove={onDrag}
   on:mouseup={() => (dragging = false)}
   on:keydown={keyDown} />
 
 {#if rendered}
   <div
+    use:handleScreenSize
+    data-appid
     bind:offsetHeight={height}
     bind:offsetWidth={width}
     class:resize={!minify}
     on:mousedown={() => dispatch('focus')}
-    class="flex flex-col overflow-hidden absolute border border-gray-700 border-solid bg-white"
+    class="flex flex-col overflow-hidden fixed border border-gray-700 border-solid bg-white"
     bind:this={dialog}
     use:toTop
     style="

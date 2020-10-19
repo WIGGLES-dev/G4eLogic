@@ -1,8 +1,9 @@
-import { SkillLike, SkillDefault, Difficulty, Skill, SkillList } from "./skill/skill";
+import { SkillLike, SkillDefault, Difficulty, SkillList } from "./skill/skill";
 import { List } from "./misc/list";
 import { Character, Signature } from "./character";
 
 export class SpellList extends SkillList<Spell> {
+
     constructor() {
         super("spell");
     }
@@ -12,8 +13,10 @@ export class SpellList extends SkillList<Spell> {
     }
 }
 
-export class Spell extends Skill {
+export class Spell extends SkillLike {
     static keys = [
+        "active",
+        "concentration",
         "college",
         "class",
         "resist",
@@ -24,9 +27,9 @@ export class Spell extends Skill {
         "castingTime",
         "duration",
     ]
-    version = 1
-    tag = "spell"
-    type: "spell" | "spell_container"
+
+    active: boolean = false
+    concentration: boolean = false
 
     college: string = ""
     class: string = ""
@@ -49,8 +52,19 @@ export class Spell extends Skill {
         super(list, [...keys, ...Spell.keys])
     }
 
+    calculateLevel(...args) {
+        return this.calculateLevel(...args) - Math.abs(this.castingPenalty())
+    }
+
     isActive() { return true }
     getBonus() {
         return 0
+    }
+
+    castingPenalty() {
+        return this.list.iter().reduce((penalty, spell) => {
+            if (spell.active) return penalty + (spell.concentration ? 4 : 1)
+            return penalty
+        }, 0);
     }
 }

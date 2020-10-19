@@ -1,26 +1,35 @@
 {
-    "tags": {
-        "attributes": [
-            "primary",
-            "secondary",
-            "optional",
-            "derived",
-            "tertiary",
-            "sub-stat"
-        ]
+    "$schema": {
+        "tags": {
+            "attributes": [
+                "primary",
+                "secondary",
+                "optional",
+                "derived",
+                "tertiary",
+                "sub-stat"
+            ]
+        }
+    },
+    "UI": {
+        "rolling": true
     },
     "rulesets": {
         "use_multiplicative_modifiers": {
-            "enabled": false
+            "enabled": false,
+            "implemented": false
         },
         "use_knowing_your_own_strength": {
-            "enabled": false
+            "enabled": false,
+            "implemented": false
         },
         "use_reduced_swing_damage": {
-            "enabled": false
+            "enabled": false,
+            "implemented": false
         },
         "use_no_school_grognard_reduced_swing_damage": {
-            "enabled": false
+            "enabled": false,
+            "implemented": false
         }
     },
     "attributes": {
@@ -375,7 +384,8 @@
                 "neck",
                 "chest",
                 "abdomen",
-                "groin"
+                "groin",
+                "vitals"
             ],
             "hit_range": [
                 9,
@@ -411,7 +421,8 @@
                 "shoulder",
                 "upperarm",
                 "elbow",
-                "forearm"
+                "forearm",
+                "hand"
             ],
             "has": [
                 "right",
@@ -460,7 +471,8 @@
             "sub_locations": [
                 "thigh",
                 "knee",
-                "shin"
+                "shin",
+                "foot"
             ],
             "has": [
                 "right",

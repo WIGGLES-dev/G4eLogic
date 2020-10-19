@@ -18,7 +18,7 @@ export class Technique extends Skill {
     static keys = ["limit"]
     tag = "technique"
 
-    limit: number
+    limit: number = 0
     difficulty: TehchniqueDifficulty = Difficulty.average
 
     defaults: Set<SkillDefault<SkillLike>> = new Set()
@@ -35,6 +35,7 @@ export class Technique extends Skill {
 
     //@ts-ignore
     get signature(): Signature { return this.default?.isSkillBased() ? null : this.default?.type ?? null as Signature }
+    set signature(signature) { if (this.default) this.default.type = signature }
 
     getBonus() {
         return 0
@@ -47,7 +48,6 @@ export class Technique extends Skill {
         let level = this.getBaseLevel();
         if (level) {
             let baseLevel = level;
-            level += this.default?.modifier;
             if (this.difficulty === Difficulty.hard) {
                 points--;
             }
@@ -77,7 +77,7 @@ export class Technique extends Skill {
 
     getBaseLevel() {
         try {
-            return this.default.getHighestMatchLevel() + Math.abs(this.default.modifier)
+            return this.default.getHighestMatchLevel();
         } catch (err) {
             return NaN
         }

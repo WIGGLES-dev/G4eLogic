@@ -14,13 +14,14 @@
         "resolveJsonModule": true,
         "declaration": true,
         "lib": [
+            "WebWorker",
             "DOM",
             "ES2019"
         ],
         "types": [
             "webpack",
             "webpack-dev-server",
-            "svelte"
+            "svelte",
         ],
         "baseUrl": "./src",
         "paths": {
@@ -41,6 +42,7 @@
         "allowJs": false
     },
     "include": [
+        "types",
         "src",
         "../foundryVTT/GURPS/src/svelte/tabs"
     ],

@@ -1,32 +1,24 @@
 import { Trait } from "../trait/trait"
 import { Equipment } from "../equipment/equipment"
-import { CharacterElement } from "./element"
+import { CharacterElement, OwnedElement } from "./element"
 import { ListItem } from "./list"
 
-export abstract class Modifier<T extends ListItem = ListItem> extends CharacterElement {
+export abstract class Modifier<T extends Trait | Equipment> extends OwnedElement<T> {
     static keys = ["enabled", "name"]
-    abstract version: number
-    abstract tag: string
 
     enabled: boolean = false
     name: string
-    owner: T
 
     constructor(owner: T, keys: string[]) {
-        super(owner.character, [...keys, ...Modifier.keys]);
-        this.owner = owner
+        super(owner, [...keys, ...Modifier.keys]);
+        //@ts-ignore
+        this.owner.modifiers.add(this);
     }
 
-    dispatch() {
-        this.owner.dispatch();
-        super.dispatch();
-    }
-
-    load(data: any, ...args) {
-        return this.getSerializer().transform(this.constructor, "load")(this, data, ...args)
-    }
-    save(data: any, ...args) {
-        return this.getSerializer().transform(this.constructor, "save")(this, data, ...args)
+    delete() {
+        //@ts-ignore
+        this.owner.modifiers.delete(this);
+        super.delete();
     }
 
     /**

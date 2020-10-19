@@ -4,11 +4,14 @@
 <style>
 </style>
 
-<nav class="sticky flex bg-gray-700 text-white">
-  <div class="ml-3 mr-3 text-xl font-semibold">
-    <slot name="title" />
+<header class="p-3 sticky  bg-gray-700 text-white">
+  <div class="flex">
+    <div class="text-xl font-semibold">
+      <slot name="title" />
+    </div>
+    <div class="flex-1">
+      <slot />
+    </div>
   </div>
-  <div class="flex-1">
-    <slot />
-  </div>
-</nav>
+  <nav />
+</header>

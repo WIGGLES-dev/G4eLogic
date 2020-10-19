@@ -5,6 +5,8 @@
     import Skill from "@ui/components/entities/Skill";
     import SkillEditor from "@ui/components/editors/SkillEditor";
 
+    import TechniqueEditor from "@ui/components/editors/TechniqueEditor";
+
     const { character, components } = getContext("app");
 
     $: skillList = $character.skillList;
@@ -25,6 +27,7 @@
     title="Techniques"
     on:additem={addTechnique}
     component={Skill}
+    editor={TechniqueEditor}
     list={techniqueList.contents.arr}>
     <tr slot="header">
         <th class="w-full">Techniques</th>

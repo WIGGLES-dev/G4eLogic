@@ -12,21 +12,32 @@
 <style>
 </style>
 
-<div class="flex-col">
-  <Text bind:value={$entity.name}>Name:</Text>
-  <Text bind:value={$entity.techLevel}>Tech Level:</Text>
-  <Checkbox bind:checked={$entity.enabled}>Enabled:</Checkbox>
-  <Number bind:value={$entity.cost} />
-  <Select bind:value={$entity.costType}>
-    {#each Object.entries(EquipmentModifierCostValueType) as [key, value], i (i)}
-      <Option {value}>{key}</Option>
-    {/each}
-  </Select>
-  <Select bind:value={$entity.affects}>
-    {#each Object.entries(EquipmentModifierWeightValueType) as [key, value], i (i)}
-      <Option {value}>{key}</Option>
-    {/each}
-  </Select>
-  <Text bind:value={$entity.notes}>Notes</Text>
-  <Text bind:value={$entity.reference}>Ref</Text>
-</div>
+<form>
+  <label for="">Name<input type="text" bind:value={$entity.name} /></label>
+  <label for="">Tech Level<input
+      type="text"
+      bind:value={$entity.techLevel} /></label>
+  <label for="">Enabled<input
+      type="checkbox"
+      bind:value={$entity.enabled} /></label>
+  <label for="">Cost Modifier<input
+      type="number"
+      bind:value={$entity.cost} /></label>
+  <label for="">Cost Modifier Type
+    <select bind:value={$entity.costType}>
+      {#each Object.entries(EquipmentModifierCostValueType) as [key, value], i (i)}
+        <option {value}>{key}</option>
+      {/each}
+    </select>
+  </label>
+  <label for="">Weight Modifier Type
+    <select bind:value={$entity.affects}>
+      {#each Object.entries(EquipmentModifierWeightValueType) as [key, value], i (i)}
+        <option {value}>{key}</option>
+      {/each}
+    </select>
+  </label>
+  <label for="">Notes<textarea bind:value={$entity.notes} /></label>
+  <label for="">Reference
+    <input type="text" bind:value={$entity.reference} /></label>
+</form>

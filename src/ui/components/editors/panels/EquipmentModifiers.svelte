@@ -16,12 +16,16 @@
   export let entity = null;
 
   $: modifiers = [...$entity.modifiers];
+  function addModifier() {
+    entity.addModifier();
+  }
 </script>
 
 <style>
 </style>
 
 <List
+  on:additem={addModifier}
   title="Trait Modifier"
   list={modifiers}
   component={EquipmentModifier}

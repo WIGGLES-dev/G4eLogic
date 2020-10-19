@@ -1,20 +1,30 @@
 <script>
   import { getContext } from "svelte";
   import { TABS } from "./Tabs.svelte";
-  export let index = null;
+
+  export let disabled = false;
   export let identifier = null;
-  const tab = { index, identifier };
+  const tab = { identifier };
   const { registerTab, selectTab, selectedTab } = getContext(TABS);
   registerTab(tab);
 
-  $: selected = $selectedTab === tab;
+  $: selected = $selectedTab === tab && !disabled;
 </script>
 
 <style>
+  .disabled {
+    @apply text-red-700 line-through;
+  }
+  .selected {
+    @apply bg-gray-700 text-white;
+  }
+  .hovered:hover {
+    @apply bg-gray-300;
+  }
 </style>
 
 <div
-  class="text-center flex-1 select-none p-2 pt-0 pb-0 text-lg"
+  class="text-center flex-1 select-none p-2 pt-0 pb-0 text-lg mx-2"
   data-tab="n/a"
   on:mouseover={(e) => {
     if (e.which == 1) {
@@ -24,10 +34,11 @@
   on:dragenter={(e) => {
     selectTab(tab);
   }}
-  class:underline={selected}
-  class:text-red-700={selected}
-  class:hover:bg-gray-700={!selected}
-  class:hover:text-white={!selected}
-  on:click={() => selectTab(tab)}>
+  class:selected
+  class:disabled
+  class:hovered={!selected && !disabled}
+  on:click={() => {
+    if (!disabled) selectTab(tab);
+  }}>
   <slot />
 </div>

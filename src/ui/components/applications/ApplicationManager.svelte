@@ -10,7 +10,6 @@
   import { tick } from "svelte";
 
   import Modal from "./Modal";
-  import Notification from "./Notification";
 
   function cleanup(modal) {
     APPS.update((store) => {

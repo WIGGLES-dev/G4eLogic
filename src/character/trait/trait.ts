@@ -13,7 +13,7 @@ export class TraitList extends List<Trait> {
     }
 
     split() {
-        let root = this.rootItems().arr;
+        let root = this.rootItems();
         let splits = {
             features: root.filter(trait => getTraitType(trait) === TraitCategory.Feature),
             disadvantages: root.filter(trait => getTraitType(trait) === TraitCategory.Disadavantage),
@@ -27,37 +27,22 @@ export class TraitList extends List<Trait> {
     }
 }
 
-enum ContainerType {
-    group = "",
-    metaTrait = "meta trait",
-    race = "race",
-    alternativeAbilities = "alternative abilities"
-}
-
 export class Trait extends ListItem {
     static keys = [
-        "name", "basePoints", "hasLevels", "levels", "allowHalfLevels",
-        "hasHalfLevel", "roundDown", "controlRating", "types", "disabled",
-        "pointsPerLevel", "containerType"]
-    version = 1
-    tag = "trait"
+        "basePoints", "hasLevels", "levels", "allowHalfLevels",
+        "hasHalfLevel", "roundDown", "controlRating", "types",
+        "pointsPerLevel"]
 
-    name: string = ""
     basePoints: number = 0
-
     hasLevels: boolean = false
     levels: number = null
+    pointsPerLevel: number = null
     allowHalfLevels: boolean = false
     hasHalfLevel: boolean = false
     roundDown: boolean = false
 
     controlRating: ControlRollMultiplier = ControlRollMultiplier.noneRequired
-
     types: Set<TraitType> = new Set()
-
-    pointsPerLevel: number = null
-
-    containerType: ContainerType = null
 
     modifiers: Set<TraitModifier> = new Set()
 
@@ -88,19 +73,15 @@ export class Trait extends ListItem {
     }
 
     addModifier(): TraitModifier {
-        const modifier = new TraitModifier(this);
-        this.modifiers.add(modifier);
-        return modifier
+        return new TraitModifier(this);
     }
 }
 
 export class TraitModifier extends Modifier<Trait> {
     static keys = ["cost", "type", "levels", "hasLevels", "affects"]
-    tag: string = "modifier"
-    version: number = 1
 
     cost: number
-    type: TraitModifierType
+    costType: TraitModifierType
     levels: number
     affects: TraitModifierAffects
 

@@ -2,14 +2,14 @@
   import { Number, Text, Select, Option, OptGroup, Checkbox } from "@ui/index";
   import { Tabs, Tab, TabPanel, TabList } from "@ui/index";
 
+  import TinyMCE from "@ui/components/widgets/TinyMCE";
+
   import Features from "./panels/Features";
   import MeleeWeapons from "./panels/MeleeWeapons.svelte";
   import RangedWeapons from "./panels/RangedWeapons.svelte";
   import SkillDefaults from "./panels/SkillDefaults";
 
   export let entity = null;
-
-  $: entityName = $entity.constructor.name;
 </script>
 
 <style>
@@ -38,13 +38,13 @@
 
 <Tabs>
   <TabList>
-    <Tab index={0}>{entityName} Data</Tab>
-    <Tab index={1}>Defaults</Tab>
-    <Tab index={2}>Prerequisites</Tab>
-    <Tab index={3}>Features</Tab>
-    <Tab index={4}>MeleeWeapons</Tab>
-    <Tab index={5}>RangedWeapons</Tab>
-    <Tab index={6}>User Description</Tab>
+    <Tab>Data</Tab>
+    <Tab>Defaults</Tab>
+    <Tab disabled={true}>Prerequisites</Tab>
+    <Tab>Features</Tab>
+    <Tab>Melee Weapons</Tab>
+    <Tab>Ranged Weapons</Tab>
+    <Tab disabled={true}>User Description</Tab>
   </TabList>
   <TabPanel>
     <form action="" class="p-3">
@@ -120,8 +120,9 @@
       <div class="flex">
         <label for="">Categories
           <input
+            on:change={(e) => (entity.categories = new Set(e.target.value.split(',')))}
             type="text"
-            value={[...$entity.categories].join(', ')} /></label>
+            value={[...$entity.categories].join(',')} /></label>
 
         <label for="">Reference
           <input type="number" bind:value={$entity.reference} /></label>
@@ -135,5 +136,5 @@
   <TabPanel component={Features} props={{ entity }} />
   <TabPanel component={MeleeWeapons} props={{ entity }} />
   <TabPanel component={RangedWeapons} props={{ entity }} />
-  <TabPanel />
+  <TabPanel component={TinyMCE} props={{}} />
 </Tabs>

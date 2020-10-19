@@ -1,6 +1,7 @@
 <script>
-  import { Number, Text, Select, Option, OptGroup, Checkbox } from "@ui/index";
   import { Tabs, Tab, TabPanel, TabList } from "@ui/index";
+
+  import TinyMCE from "@ui/components/widgets/TinyMCE";
 
   import Features from "./panels/Features";
   import MeleeWeapons from "./panels/MeleeWeapons.svelte";
@@ -10,11 +11,6 @@
   import { ControlRollMultiplier } from "@character/trait/trait";
 
   export let entity = null;
-
-  function setCategories(e) {
-    entity.categories = new Set(e.target.value.split(","));
-    entity.dispatch();
-  }
 </script>
 
 <style>
@@ -43,14 +39,13 @@
 
 <Tabs>
   <TabList>
-    <Tab index={0}>Trait Data</Tab>
-    <Tab index={1}>Defaults</Tab>
-    <Tab index={2}>Prerequisites</Tab>
-    <Tab index={3}>Features</Tab>
-    <Tab index={4}>Modifiers</Tab>
-    <Tab index={5}>MeleeWeapons</Tab>
-    <Tab index={6}>RangedWeapons</Tab>
-    <Tab index={7}>User Description</Tab>
+    <Tab>Trait Data</Tab>
+    <Tab disabled={true}>Prerequisites</Tab>
+    <Tab>Features</Tab>
+    <Tab>Modifiers</Tab>
+    <Tab>MeleeWeapons</Tab>
+    <Tab>RangedWeapons</Tab>
+    <Tab disabled={true}>User Description</Tab>
   </TabList>
   <TabPanel>
     <form action="" class="p-3">
@@ -108,9 +103,9 @@
 
         <label for="">Categories
           <input
-            on:change={setCategories}
+            on:change={(e) => (entity.categories = new Set(e.target.value.split(',')))}
             type="text"
-            value={[...$entity.categories].join(', ')} /></label>
+            value={[...$entity.categories].join(',')} /></label>
 
         <label for="">Reference
           <input type="text" bind:value={$entity.reference} /></label>
@@ -120,10 +115,9 @@
     </form>
   </TabPanel>
   <TabPanel />
-  <TabPanel />
   <TabPanel component={Features} props={{ entity }} />
   <TabPanel component={TraitModifiers} props={{ entity }} />
   <TabPanel component={MeleeWeapons} props={{ entity }} />
   <TabPanel component={RangedWeapons} props={{ entity }} />
-  <TabPanel />
+  <TabPanel component={TinyMCE} props={{}} />
 </Tabs>

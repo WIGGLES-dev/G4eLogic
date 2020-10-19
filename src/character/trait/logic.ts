@@ -19,7 +19,7 @@ export function getAdjustedPoints(
     modifiers.forEach(modifier => {
         if (modifier.enabled) {
             let mod = modifier.costModifier();
-            switch (modifier.type) {
+            switch (modifier.costType) {
                 case TraitModifierType.percentage:
                 default:
                     switch (modifier.affects) {

@@ -1,6 +1,5 @@
 import { Character, Signature } from "./character";
 import { CharacterElement } from "./misc/element";
-import { Collection } from "./misc/collection";
 import { Equipment } from "./equipment/equipment";
 import { DRBonus } from "./features/modules/DRBonus";
 import { Feature } from "./features/feature";
@@ -115,16 +114,16 @@ export class HitLocation extends CharacterElement {
      */
     armorValue(): number {
         return this.getArmorFeatures().reduce((prev, cur) => {
-            if (cur instanceof DRBonus) {
-                if (cur.location.toLowerCase() === this.name.toLowerCase()) prev += cur.getBonus();
+            if (cur.core instanceof DRBonus) {
+                if (cur.core.location.toLowerCase() === this.name.toLowerCase()) prev += cur.getBonus();
             }
             return prev
         }, 0);
     }
     getArmorFeatures() {
         return this.character.featureList.getFeaturesByType(DRBonus).filter(feature => {
-            if (feature.type instanceof DRBonus) {
-                if (feature.type.location?.toLowerCase() === this.name?.toLowerCase()) return true
+            if (feature.core instanceof DRBonus) {
+                if (feature.core.location?.toLowerCase() === this.name?.toLowerCase()) return true
             }
         }) as Feature[];
     }

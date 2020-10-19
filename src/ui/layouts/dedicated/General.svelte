@@ -65,7 +65,7 @@
       list={$character.meleeWeapons()} />
   </div>
   <div class="flex-1 mx-6 hidden xl:block">
-    <TinyMCE />
+    <TinyMCE bind:content={character.notes} />
   </div>
   <PointTotals />
   <div class="p-1" />

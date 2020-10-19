@@ -1,5 +1,6 @@
 <script>
   import { getContext } from "svelte";
+  import { derived } from "svelte/store";
   import { List, Tabs, Tab, TabList, TabPanel } from "@ui/index";
 
   import EquipmentEditor from "@ui/components/editors/EquipmentEditor";
@@ -8,14 +9,15 @@
 
   const { character } = getContext("app");
 
-  $: equipmentList = $character.equipmentList;
-  $: displayedItems = equipmentList.itemsByLocation(displayedLocation);
-  $: carriedWeight = equipmentList.totalWeight();
+  $: displayedItems = $character.equipmentList.itemsByLocation(
+    displayedLocation
+  );
+  $: equippedWeight = $character.equipmentList.totalWeight();
 
   let displayedLocation;
 
   function createEquipment() {
-    equipmentList.addListItem().location = displayedLocation;
+    $character.equipmentList.addListItem().location = displayedLocation;
   }
 </script>
 
@@ -41,12 +43,12 @@
         name=""
         id=""
         bind:value={displayedLocation}>
-        {#each [...equipmentList.locations] as location, i (i)}
+        {#each [...$character.equipmentList.locations] as location, i (i)}
           <option value={location}>{capitalize(location)}</option>
         {/each}
       </select>
-      Carried Weight:
-      {carriedWeight}
+      Equipped Weight:
+      {equippedWeight}
     </th>
     <th scope="col">Uses</th>
     <th scope="col">Value</th>

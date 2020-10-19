@@ -12,12 +12,29 @@ export class Configurer {
         this.config = Configurer.defaultConfig;
     }
 
+    getStaticFields() { }
+
     registerFeature() { }
+    registerPlugin() { }
     registerAttribute() { }
+    registerLocation() { }
 
     getConfig() { return this.config }
+    setDefault() { return this.reconfigure(Configurer.defaultConfig) }
     reconfigure(config: any) {
-        this.config.config = config
+        this.config = config
         this.sheet.Hooks.callAll("reconfigure", this.sheet);
+        this.sheet.dispatch();
+        return this.config
     }
+
+    validate() {
+        try {
+
+        } catch (err) {
+
+        }
+    }
+
+    stringify() { return JSON.stringify(this.config) }
 }

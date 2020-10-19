@@ -1,6 +1,16 @@
-export class Profile {
-    tag = "profile"
+export enum Appearance {
+    Horrific,
+    Monstrous,
+    Hideous,
+    Unattractive,
+    Average,
+    Attractive,
+    Handsome_Beautiful,
+    Very_Handsome_Beautiful,
+    Transcendent
+}
 
+export class Profile {
     birthPlace = ""
     birthday = ""
     status = ""
@@ -8,6 +18,7 @@ export class Profile {
     income = ""
     expenses = ""
     base = ""
+    affiliation = ""
     family = ""
 
     name = ""
@@ -17,8 +28,11 @@ export class Profile {
     race = ""
     handedness = ""
 
+    reaction = ""
+    appearanceFeatures = ""
+
     age = ""
-    appearance = ""
+    appearance: Appearance = Appearance.Average
     eyes = ""
     skin = ""
     hair = ""
@@ -26,6 +40,15 @@ export class Profile {
     build = ""
     weight = ""
     height = ""
+
+    religion = ""
+    education = ""
+    citizenship = ""
+    orientation = ""
+
+    other = ""
+
+    portrait: URL
 
     constructor() {
 

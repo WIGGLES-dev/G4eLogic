@@ -1,27 +1,26 @@
 import { Character } from "../character";
 import { CharacterElement } from "./element";
 import { Weapon, MeleeWeapon, RangedWeapon } from "../weapon";
-import { Collection } from "./collection";
 import { Feature } from "@character/features/feature";
+import { Observable } from "@character/general/observable";
 
-export abstract class List<T extends ListItem = ListItem> {
+export abstract class List<T extends ListItem = ListItem> extends Observable {
     name: string
-    collection: Collection<T>
+    collection: Set<T>
     character: Character
 
-    constructor(name: string, collection: Collection<T> = new Collection) {
+    constructor(name: string, collection: Set<T> = new Set) {
+        super();
         this.name = name;
         this.collection = collection
     }
 
-    attachCharacter(character: Character) { this.character = character; return this }
-    getCharacter() {
-        try {
-            return this.character
-        } catch (err) {
-            console.log("this list has no character");
-        }
+    attachCharacter(character: Character) {
+        this.character = character
+        this.iter().forEach(item => item.character = character)
+        return this
     }
+    getCharacter() { return this.character }
 
     get size() { return this.collection.size }
     get length() { return this.collection.size }
@@ -29,7 +28,7 @@ export abstract class List<T extends ListItem = ListItem> {
 
     get contents() {
         return {
-            arr: this.rootItems().arr.sort((a, b) => a.listWeight - b.listWeight),
+            arr: this.rootItems().sort((a, b) => a.listWeight - b.listWeight),
         }
     }
 
@@ -49,9 +48,14 @@ export abstract class List<T extends ListItem = ListItem> {
         return listItem
     }
 
-    iter() { return this.collection.arr.sort((a, b) => a.listWeight - b.listWeight) }
+    iter() { return [...this.collection].sort((a, b) => a.listWeight - b.listWeight) }
     allContainers() { return this.iter().filter(item => item.isContainer()) }
-    rootItems() { return new Collection(this.iter().filter(item => !item.containedBy)) }
+    rootItems() { return this.iter().filter(item => !item.containedBy) }
+
+    dispatch() {
+        this.character?.dispatch();
+        super.dispatch();
+    }
 
     save(...args) { return this.character.getSerializer().saveList(this, ...args); }
     load(...args) {
@@ -62,20 +66,12 @@ export abstract class List<T extends ListItem = ListItem> {
     empty() { this.collection.clear(); }
 }
 
-export interface Featurable extends ListItem {
-    hasLevels: boolean
-    getLevel: () => number
-}
-
-export abstract class ListItem extends CharacterElement implements Featurable {
-    static keys = ["isOpen", "canContainChildren", "listWeight"]
-
-    abstract version: number
-    abstract tag: string
+export abstract class ListItem extends CharacterElement {
+    static keys = ["isOpen", "canContainChildren", "listWeight", "name"]
 
     abstract hasLevels: boolean
-    abstract name: string
 
+    name: string = ""
     list: List<this>
 
     canContainChildren: boolean = false
@@ -87,14 +83,15 @@ export abstract class ListItem extends CharacterElement implements Featurable {
     features: Set<Feature<this>> = new Set();
     weapons: Set<Weapon<this>> = new Set();
 
-    constructor(list: List<any>, keys: string[]) {
-        super(list.character, [...keys, ...ListItem.keys]);
+    constructor(list?: List<any>, keys: string[] = []) {
+        super(list?.character, [...keys, ...ListItem.keys]);
+        if (!list) return this
         this.list = list;
         this.listWeight = this.list.size;
         list.addListItem(this);
     }
 
-    get children(): Collection<this> { return new Collection(this.getList().iter().filter(item => item.containedBy === this)) }
+    get children(): Set<this> { return new Set(this.getList().iter().filter(item => item.containedBy === this)) }
 
     /**
      * Abstract method that all list items must impliment in order for features to
@@ -108,13 +105,6 @@ export abstract class ListItem extends CharacterElement implements Featurable {
      */
     abstract getLevel(): number
 
-    dispatch() {
-        super.dispatch();
-        if (this.list) {
-            this.getCharacter().dispatch();
-        }
-    }
-
     addFeature() {
         const feature = new Feature(this);
         this.dispatch();
@@ -123,35 +113,29 @@ export abstract class ListItem extends CharacterElement implements Featurable {
     addWeapon(type: string = "melee_weapon") {
         let weapon: Weapon<this>;
         switch (type) {
-            case "melee_weapon":
-                weapon = new MeleeWeapon(this);
-                break
             case "ranged_weapon":
                 weapon = new RangedWeapon(this);
                 break
             default:
+                weapon = new MeleeWeapon(this);
+                break
         }
         this.dispatch();
         return weapon || null
     }
 
-
     getList() { return this.list }
-    getCharacter(): Character { return this.getList().getCharacter() }
 
-    isContainer() { return this.canContainChildren }
+    isContainer() { return this.canContainChildren === true }
     isContained() { return this.containedBy }
-
     setContainedBy(target?: this) {
         if (!target) {
             this.containedBy = null;
             return
         }
-
         if (target === this) return
         if (target.getRecursiveOwners().has(this)) return
         if (target.getRecursiveChildren().has(this)) return
-
         this.containedBy = target;
     }
     addAfter(target: this) {
@@ -164,15 +148,6 @@ export abstract class ListItem extends CharacterElement implements Featurable {
         resolveWeights(this.getList().iter(), this, target.listWeight);
 
         this.getList().getCharacter().dispatch();
-    }
-
-    addChild(child?: this) {
-        if (!this.isContainer()) return null
-        if (!(child instanceof ListItem)) {
-            child = this.list.addListItem();
-        }
-        child.containedBy = this;
-        return child
     }
 
     /* -------------------------------------------- */
@@ -234,13 +209,17 @@ export abstract class ListItem extends CharacterElement implements Featurable {
 
     /* -------------------------------------------- */
 
+    dispatch() {
+        this.containedBy?.dispatch();
+        super.dispatch();
+    }
+
     delete(): any {
-        this.children.forEach(child => {
-            child.delete();
-        });
+        this.children.forEach(child => child.delete());
         this.list.collection.delete(this);
+        this.features.forEach(feature => feature.delete());
+        this.weapons.forEach(weapon => weapon.delete());
         super.delete();
-        //resolveWeights(this.list.iter())
         return this.list
     }
 
@@ -263,7 +242,6 @@ export abstract class ListItem extends CharacterElement implements Featurable {
         }
         return this
     }
-    save(data, ...args) { return this.getSerializer().transform(this.constructor, "save")(this, data, ...args) }
 }
 
 /**
@@ -288,7 +266,7 @@ export function removeDuplicates(lists: { [key: string]: ListItem[] }) {
 function resolveWeights(list: ListItem[], target?: ListItem, newWeight?: number) {
     if (!list.includes(target)) return list
     list = list.sort((a, b) => a.listWeight - b.listWeight);
-    if (target && newWeight) {
+    if (target && newWeight > -1) {
         list.splice(newWeight, 0, list.splice(target.listWeight, 1)[0]);
     }
     list.forEach((item, i) => item.listWeight = i);

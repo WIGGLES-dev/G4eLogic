@@ -1,5 +1,5 @@
 import { SkillLike, Skill } from "@character/skill/skill"
-import { CharacterElement } from "./element"
+import { OwnedElement } from "./element"
 import { Signature } from "@character/character"
 import { ListItem, List } from "./list"
 
@@ -13,11 +13,15 @@ export abstract class DefaultList {
 
 }
 
-export abstract class Default<T extends ListItem> extends CharacterElement {
+interface Defaultable extends ListItem {
+    defaults: Set<Default<any>>
+}
+
+export abstract class Default<T extends Defaultable> extends OwnedElement {
     static keys = ["type", "modifier", "name", "specialization"]
     tag = "default"
 
-    type: DefaultType | Signature
+    type: DefaultType | Signature = DefaultType.skill
     modifier: number = 0
 
     name?: string
@@ -26,8 +30,13 @@ export abstract class Default<T extends ListItem> extends CharacterElement {
     owner: T
 
     constructor(owner: T, keys: string[]) {
-        super(owner.character, [...keys, ...Default.keys])
-        this.owner = owner;
+        super(owner, [...keys, ...Default.keys]);
+        this.owner.defaults.add(this);
+    }
+
+    delete() {
+        this.owner.defaults.delete(this);
+        super.delete();
     }
 
     abstract getLookupList(): List<SkillLike>

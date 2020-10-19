@@ -1,6 +1,28 @@
+@import "jsoneditor/dist/jsoneditor.css";
+@import "cropperjs/dist/cropper.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import "jsoneditor/dist/jsoneditor.css";
-@import "cropperjs/dist/cropper.css";
+@layer utilities {
+    @responsive {
+        .screen-center {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .w-min {
+            width: min-content;
+        }
+        .h-min {
+            height: min-content;
+        }
+        .w-max {
+            width: min-content;
+        }
+        .h-max {
+            height: min-content;
+        }
+    }
+}
