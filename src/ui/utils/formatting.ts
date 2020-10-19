@@ -34,6 +34,15 @@ export function formatEquipment() {
 
 }
 
-export function fixed6(number: number) {
-    if (typeof +number === "number") return +number?.toFixed(3) ?? 0
+export function string(string, { beforeStart = "", afterEnd = "", fallback = "" } = {}) {
+    let output;
+    try {
+        if (string === null) return fallback
+        if (string === undefined) return fallback
+        if (+string > Number.NEGATIVE_INFINITY) output = +string?.toFixed(3) ?? 0
+        output = string;
+    } catch (err) {
+        output = fallback;
+    }
+    return beforeStart + output + afterEnd
 }

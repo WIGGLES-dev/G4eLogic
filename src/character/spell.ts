@@ -53,7 +53,7 @@ export class Spell extends SkillLike {
     }
 
     calculateLevel(...args) {
-        return this.calculateLevel(...args) - Math.abs(this.castingPenalty())
+        return super.calculateLevel(...args) - Math.abs(this.castingPenalty())
     }
 
     isActive() { return true }

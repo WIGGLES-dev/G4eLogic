@@ -1,12 +1,4 @@
 <script>
-    import {
-        Number,
-        Text,
-        Select,
-        Option,
-        OptGroup,
-        Checkbox,
-    } from "@ui/index";
     import { Tabs, Tab, TabPanel, TabList } from "@ui/index";
 
     import TinyMCE from "@ui/components/widgets/TinyMCE";
@@ -17,8 +9,6 @@
     import SkillDefaults from "./panels/SkillDefaults";
 
     export let entity = null;
-
-    $: entityName = $entity.constructor.name;
 </script>
 
 <style>
@@ -60,16 +50,16 @@
                 <label for="">Name<input
                         class="flex-1"
                         type="text"
-                        bind:value={$entity.name} /></label>
+                        bind:value={entity.name} /></label>
                 <label for="">Specialization<input
                         type="text"
-                        bind:value={$entity.specialization} /></label>
+                        bind:value={entity.specialization} /></label>
             </div>
             <div class="flex">
                 <label for="">
                     Defaults To
-                    <select name="" id="" bind:value={$entity.default.type}>
-                        {#each Object.values($entity
+                    <select name="" id="" bind:value={entity.default.type}>
+                        {#each Object.values(entity
                                 .getCharacter()
                                 .config.getConfig().attributes) as signature, i}
                             {#if signature.can_be_signature}
@@ -82,50 +72,50 @@
                     </select>
                 </label>
 
-                {#if $entity.default.type === 'Skill'}
+                {#if entity.default.type === 'Skill'}
                     <label for="">
                         <input
                             type="text"
-                            bind:value={$entity.default.name}
+                            bind:value={entity.default.name}
                             placeholder="name" />
                     </label>
                     <label for="">
                         <input
                             type="text"
-                            bind:value={$entity.default.specialization}
+                            bind:value={entity.default.specialization}
                             placeholder="Specialization" />
                     </label>
                 {/if}
                 <label for="">
                     <input
                         type="number"
-                        bind:value={$entity.default.modifier}
+                        bind:value={entity.default.modifier}
                         placeholder="Modifier" />
                 </label>
 
                 <label for="">Limit
-                    <input type="number" bind:value={$entity.limit} /></label>
+                    <input type="number" bind:value={entity.limit} /></label>
             </div>
 
             <div class="flex">
                 <label for="">
                     Difficulty
-                    <select bind:value={$entity.difficulty}>
+                    <select bind:value={entity.difficulty}>
                         <option value="A">A</option>
                         <option value="H">H</option>
                     </select>
                 </label>
                 <label for="">Points
-                    <input type="number" bind:value={$entity.points} />
+                    <input type="number" bind:value={entity.points} />
                 </label>
                 <label for="">Final Level
                     <input
                         type="number"
                         disabled
-                        value={$entity.calculateLevel()} /></label>
+                        value={entity.calculateLevel()} /></label>
                 <label for="">Disabled<input
                         type="checkbox"
-                        bind:checked={$entity.disabled} /></label>
+                        bind:checked={entity.disabled} /></label>
             </div>
 
             <div class="flex">
@@ -133,15 +123,15 @@
                     <input
                         on:change={(e) => (entity.categories = new Set(e.target.value.split(',')))}
                         type="text"
-                        value={[...$entity.categories].join(',')} /></label>
+                        value={[...entity.categories].join(',')} /></label>
 
                 <label for="">Reference
                     <input
                         type="number"
-                        bind:value={$entity.reference} /></label>
+                        bind:value={entity.reference} /></label>
             </div>
             <label for="">Notes </label>
-            <textarea bind:value={$entity.notes} name="" id="" rows="3" />
+            <textarea bind:value={entity.notes} name="" id="" rows="3" />
         </form>
     </TabPanel>
     <TabPanel />

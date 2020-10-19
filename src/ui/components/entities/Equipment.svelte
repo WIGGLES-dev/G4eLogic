@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte";
-  import { fixed6 } from "@ui/utils/formatting";
+  import { string } from "@ui/utils/formatting";
 
   export let entity = null;
   export let depth;
@@ -42,11 +42,13 @@
   <td>
     <input type="number" class="w-12" min="0" bind:value={entity.weight} />
   </td>
-  <td>${fixed6(entity.extendedValue())}</td>
-  <td>{fixed6(entity.extendedWeight())} lb.</td>
+  <td>{string(entity.extendedValue(), { beforeStart: '$' })}</td>
+  <td>{string(entity.extendedWeight(), { afterEnd: ' lb.' })}</td>
   <td><input class="w-12" type="text" bind:value={entity.reference} /></td>
 {:else if $display === 'list'}
   <span>{entity.name}</span>
 {:else if $display === 'grid'}
-  <div style="padding-left:{entity.getItemDepth() * 10}px">{entity.name}</div>
+  <div style="padding-left:{entity.getItemDepth() * 10}px">
+    {string(entity.name)}
+  </div>
 {/if}

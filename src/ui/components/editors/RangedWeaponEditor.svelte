@@ -40,29 +40,27 @@
     <TabPanel>
         <form action="">
             <label for="">Usage
-                <input type="text" bind:value={$entity.usage} /></label>
+                <input type="text" bind:value={entity.usage} /></label>
             <div class="flex">
                 <label for="">Damage
-                    <input type="text" bind:value={$entity.damage} /></label>
+                    <input type="text" bind:value={entity.damage} /></label>
                 <label for="">Damage Type <input type="text" /></label>
                 <label for="">AD<input type="number" min="0" /></label>
             </div>
             <label for="">ROF
-                <input type="text" bind:value={$entity.rateOfFire} /></label>
+                <input type="text" bind:value={entity.rateOfFire} /></label>
             <label for="">Range
-                <input type="text" bind:value={$entity.range} /></label>
-            <label>Acc<input
-                    type="text"
-                    bind:value={$entity.accuracy} /></label>
+                <input type="text" bind:value={entity.range} /></label>
+            <label>Acc<input type="text" bind:value={entity.accuracy} /></label>
             <label for="">Shots
-                <input type="text" bind:value={$entity.shots} /></label>
+                <input type="text" bind:value={entity.shots} /></label>
             <label for="">Bulk
-                <input type="number" bind:value={$entity.bulk} /></label>
+                <input type="number" bind:value={entity.bulk} /></label>
             <label for="">Recoil<input
                     type="text"
-                    bind:value={$entity.recoil} /></label>
+                    bind:value={entity.recoil} /></label>
             <label for="">Strength
-                <input type="text" bind:value={$entity.strength} /></label>
+                <input type="text" bind:value={entity.strength} /></label>
         </form>
     </TabPanel>
     <TabPanel component={SkillDefaults} props={{ entity }} />

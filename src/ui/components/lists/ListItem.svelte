@@ -75,7 +75,7 @@
 
   function edit() {
     components.modals.render(`Editor`, $editor, {
-      entity: proxy,
+      entity,
     });
   }
 
@@ -95,7 +95,7 @@
       label: `Move To ${entity.location === "carried" ? "Other" : "Carried"}`,
       callback: () => {
         entity.location = entity.location === "carried" ? "other" : "carried";
-      }, 
+      },
       show: () => entity instanceof Equipment,
     },
     {

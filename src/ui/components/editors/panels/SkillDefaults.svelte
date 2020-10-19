@@ -4,7 +4,7 @@
 
     export let entity = null;
 
-    $: defaults = [...$entity.defaults];
+    $: defaults = [...entity.defaults];
 </script>
 
 <style>
@@ -21,7 +21,7 @@
             on:deletebox={() => skillDefault.delete()}>
             <div class="flex topmost">
                 <select name="" id="" bind:value={skillDefault.type}>
-                    {#each Object.values($entity
+                    {#each Object.values(entity
                             .getCharacter()
                             .config.getConfig().attributes) as signature, i}
                         {#if signature.can_be_signature}

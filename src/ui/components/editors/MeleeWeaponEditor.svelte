@@ -40,23 +40,23 @@
     <TabPanel>
         <form action="">
             <label for="">Usage
-                <input type="text" bind:value={$entity.usage} /></label>
+                <input type="text" bind:value={entity.usage} /></label>
             <div class="flex">
                 <label for="">Damage
-                    <input type="text" bind:value={$entity.damage} /></label>
+                    <input type="text" bind:value={entity.damage} /></label>
                 <label for="">Damage Type <input type="text" /></label>
                 <label for="">AD<input type="number" min="0" /></label>
             </div>
             <div class="flex">
                 <label for="">Parry
-                    <input type="text" bind:value={$entity.parry} /></label>
+                    <input type="text" bind:value={entity.parry} /></label>
                 <label for="">Block
-                    <input type="text" bind:value={$entity.block} /></label>
+                    <input type="text" bind:value={entity.block} /></label>
             </div>
             <label for="">Reach
-                <input type="text" bind:value={$entity.reach} /></label>
+                <input type="text" bind:value={entity.reach} /></label>
             <label for="">Strength
-                <input type="text" bind:value={$entity.strength} /></label>
+                <input type="text" bind:value={entity.strength} /></label>
         </form>
     </TabPanel>
     <TabPanel component={SkillDefaults} props={{ entity }} />

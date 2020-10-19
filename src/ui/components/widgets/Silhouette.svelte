@@ -12,6 +12,7 @@
         Element as SVGElement,
     } from "@svgdotjs/svg.js";
     import Number from "../inputs/Number.svelte";
+    import { resolve } from "test/public/themes/silver/theme";
 
     const { character, components } = getContext("app");
 
@@ -105,15 +106,8 @@
         hiddenNodes = [];
     }
 
-    function allLocations() {
-        return draw.find(`[data-location]`);
-    }
-    function allLocationGroups() {
-        return draw.find(`[data-location-group]`);
-    }
-
     function createTooltips() {
-        allLocationGroups().forEach((svg) => {
+        draw.find(`[data-location-group]`).forEach((svg) => {
             const name = svg.node.dataset.locationGroup.split("-").join(" ");
             const location = $character.locationList.getLocation(name);
             const tooltip = hitLocationTemplate(location);
@@ -126,9 +120,11 @@
     async function focusLocation(e) {
         const locationGroup = e.target.closest("[data-location-group]");
         if (!locationGroup) return;
-        focusedLocation = $character.locationList.getLocation(
+        let newLocation = $character.locationList.getLocation(
             locationGroup.dataset.locationGroup.split("-").join(" ")
         );
+        if (focusedLocation === newLocation) return;
+        focusedLocation = newLocation;
         let node = draw.find(
             `[data-location-group="${focusedLocation.name
                 .split(" ")
@@ -136,32 +132,29 @@
         )[0];
         node.addClass("focused");
         hideAllUnfocusedNodes();
-        await frameInViewbox(node, {
+        frameInViewbox(node, {
             scale: +locationGroup.dataset.scale || 0.7,
         });
     }
 
     function unfocusAll() {
-        allLocationGroups().forEach((node) => {
+        draw.find(`[data-location-group]`).forEach((node) => {
             node.removeClass("focused");
         });
+        showAllHiddenNodes();
+        focusedLocation = null;
     }
-
-    const lines = [];
 
     async function onClickSVG(e) {
         if (e.target.closest("[data-location-group],[data-location]")) {
         } else {
-            unfocusAll();
-            showAllHiddenNodes();
-            focusedLocation = null;
             revertViewbox();
         }
     }
 
-    function revertViewbox() {
+    async function revertViewbox() {
         const { x, y, width, height } = originalView;
-        draw.animate(300).viewbox(x, y, width, height);
+        draw.animate(300).viewbox(x, y, width, height).after(unfocusAll);
     }
 
     let draw;
@@ -239,19 +232,23 @@
 <style>
     svg {
         @apply flex-1;
-        fill: #4a5568;
+        fill: white;
+        stroke: #4a5568;
+        stroke-width: 2;
     }
     [data-location-group] {
         @apply transition-opacity duration-300;
     }
     [data-location-group]:not(.focused):hover,
     :global([data-location-group].focused) [data-location]:hover {
-        fill: white;
-        stroke: black;
+        fill: #4a5568;
+        stroke: #4a5568;
     }
     :global([data-location-group].crippled, [data-location].crippled) {
-        fill: #c53030;
-        stroke: #c53030;
+        fill: red;
+        stroke: #4a5568;
+    }
+    [data-location-group]:not(.focused) [data-location="vitals"] {
     }
     .amputated {
     }

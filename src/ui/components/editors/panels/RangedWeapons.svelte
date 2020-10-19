@@ -4,7 +4,7 @@
   import RangedWeaponEditor from "@ui/components/editors/RangedWeaponEditor";
   export let entity = null;
 
-  $: weapons = [...$entity.weapons].filter(
+  $: weapons = [...entity.weapons].filter(
     (weapon) => weapon.getType() === "ranged_weapon"
   );
 </script>
@@ -17,7 +17,7 @@
   title="Ranged Weapons"
   component={RangedWeapon}
   editor={RangedWeaponEditor}
-  on:additem={() => $entity.addWeapon('ranged_weapon')}>
+  on:additem={() => entity.addWeapon('ranged_weapon')}>
   <tr slot="header">
     <th class="w-full">Ranged Weapons</th>
     <th>Usage</th>

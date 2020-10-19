@@ -15,7 +15,7 @@
 
   export let entity = null;
 
-  $: modifiers = [...$entity.modifiers];
+  $: modifiers = [...entity.modifiers];
 
   function addModifier() {
     entity.addModifier();

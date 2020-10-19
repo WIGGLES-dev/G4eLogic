@@ -7,7 +7,7 @@
 
   export let entity = null;
 
-  $: features = [...$entity.features];
+  $: features = [...entity.features];
 </script>
 
 <style>

@@ -115,20 +115,24 @@ export abstract class SkillLike extends ListItem {
     }
 
     calculateLevel({ withBonuses = true, considerDefaults = true, buyLevelFromDefault = false } = {}): number {
-        if (!this.getCharacter()) return null
-        return calculateSkillLevel(
-            buyLevelFromDefault,
-            this.difficulty,
-            this.points,
-            this.getCharacter().getAttribute(this.signature)?.calculateLevel() ?? 10,
-            considerDefaults ?
-                this.getBestDefaultWithPoints()
-                : undefined,
-            withBonuses ? this.getBonus() : 0,
-            this.getCharacter().encumbranceLevel({ forSkillEncumbrance: true }),
-            this.encumbrancePenaltyMultiple,
-            withBonuses ? this.mod : 0,
-        )
+        try {
+            if (!this.getCharacter()) return null
+            return calculateSkillLevel(
+                buyLevelFromDefault,
+                this.difficulty,
+                this.points,
+                this.getCharacter().getAttribute(this.signature)?.calculateLevel() ?? 10,
+                considerDefaults ?
+                    this.getBestDefaultWithPoints()
+                    : undefined,
+                withBonuses ? this.getBonus() : 0,
+                this.getCharacter().encumbranceLevel({ forSkillEncumbrance: true }),
+                this.encumbrancePenaltyMultiple,
+                withBonuses ? this.mod : 0,
+            )
+        } catch (err) {
+            return NaN
+        }
     }
 
     getBestDefaultWithPoints<T extends SkillLike>(): SkillDefault<any> {

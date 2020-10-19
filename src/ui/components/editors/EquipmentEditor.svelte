@@ -1,23 +1,13 @@
 <script>
-  import {
-    Tabs,
-    Tab,
-    TabPanel,
-    TabList,
-    Number,
-    Text,
-    Checkbox,
-  } from "@ui/index";
+  import { Tabs, Tab, TabPanel, TabList } from "@ui/index";
+
   export let entity = null;
 
   import TinyMCE from "@ui/components/widgets/TinyMCE";
-
   import Features from "./panels/Features";
   import MeleeWeapons from "./panels/MeleeWeapons.svelte";
   import RangedWeapons from "./panels/RangedWeapons.svelte";
   import EquipmentModifiers from "./panels/EquipmentModifiers.svelte";
-
-  let entityName = $entity.constructor.name;
 </script>
 
 <style>
@@ -58,57 +48,57 @@
       <label for="">Name<input
           class="flex-1"
           type="text"
-          bind:value={$entity.name} /></label>
+          bind:value={entity.name} /></label>
 
       <div class="flex">
         <label for="">Equipped<input
             type="checkbox"
-            bind:checked={$entity.equipped} /></label>
+            bind:checked={entity.equipped} /></label>
         <label for="">Ignore for Skills<input
             type="checkbox"
-            bind:value={$entity.applySkillEncumbrancePenalty} /></label>
+            bind:value={entity.applySkillEncumbrancePenalty} /></label>
       </div>
 
       <div class="flex">
         <label for="">Quantity<input
             type="number"
-            bind:value={$entity.quantity} /></label>
+            bind:value={entity.quantity} /></label>
 
         <label for="">Weight
-          <input type="number" bind:value={$entity.weight} /></label>
+          <input type="number" bind:value={entity.weight} /></label>
 
         <label for="">Value<input
             type="number"
-            bind:value={$entity.value} /></label>
+            bind:value={entity.value} /></label>
 
         <label class="flex-1" for="">Tech Level
-          <input type="text" bind:value={$entity.techLevel} /></label>
+          <input type="text" bind:value={entity.techLevel} /></label>
       </div>
 
       <div class="flex">
         <label for="">Uses
-          <input type="number" bind:value={$entity.uses} /></label>
+          <input type="number" bind:value={entity.uses} /></label>
 
         <label for="">Max Uses
-          <input type="number" bind:value={$entity.maxUses} /></label>
+          <input type="number" bind:value={entity.maxUses} /></label>
 
         <label for="">Categories
           <input
             on:change={(e) => (entity.categories = new Set(e.target.value.split(',')))}
             type="text"
-            value={[...$entity.categories].join(',')} /></label>
+            value={[...entity.categories].join(',')} /></label>
 
         <label for="">Reference
-          <input type="number" bind:value={$entity.reference} /></label>
+          <input type="number" bind:value={entity.reference} /></label>
       </div>
 
       <label for="">Notes </label>
-      <textarea bind:value={$entity.notes} name="" id="" rows="3" />
+      <textarea bind:value={entity.notes} name="" id="" rows="3" />
     </form>
   </TabPanel>
-  <TabPanel component={Features} props={{ entity }} />
-  <TabPanel component={EquipmentModifiers} props={{ entity }} />
-  <TabPanel component={MeleeWeapons} props={{ entity }} />
-  <TabPanel component={RangedWeapons} props={{ entity }} />
+  <TabPanel component={Features} props={{ entity: entity }} />
+  <TabPanel component={EquipmentModifiers} props={{ entity: entity }} />
+  <TabPanel component={MeleeWeapons} props={{ etity: entity }} />
+  <TabPanel component={RangedWeapons} props={{ entity: entity }} />
   <TabPanel component={TinyMCE} props={{}} />
 </Tabs>

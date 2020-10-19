@@ -52,14 +52,14 @@
       <div class="flex">
         <label for="">Points<input
             type="number"
-            bind:value={$entity.basePoints} /></label>
+            bind:value={entity.basePoints} /></label>
         <label for="">Disabled<input
             type="checkbox"
-            bind:checked={$entity.disabled} /></label>
+            bind:checked={entity.disabled} /></label>
 
         <label for="">
           CR
-          <select bind:value={$entity.controlRating}>
+          <select bind:value={entity.controlRating}>
             {#each Object.entries(ControlRollMultiplier) as [key, value], i (i)}
               <option {value}>
                 CR:{value.toUpperCase()}({key
@@ -73,45 +73,45 @@
       </div>
 
       <div class="flex">
-        <select bind:value={$entity.hasLevels}>
+        <select bind:value={entity.hasLevels}>
           <option value={false}>Has No Levels</option>
           <option value={true}>Has Levels</option>
           <option disabled={true}>Has Half Levels</option>
         </select>
         <label for="">Level<input
             type="number"
-            bind:value={$entity.levels}
-            disabled={!$entity.hasLevels} /></label>
+            bind:value={entity.levels}
+            disabled={!entity.hasLevels} /></label>
         <label for="">+1/2
           <input
             type="checkbox"
-            bind:checked={$entity.hasHalfLevel}
+            bind:checked={entity.hasHalfLevel}
             disabled /></label>
 
         <label for="">Leveled Points
           <input
             type="number"
-            bind:value={$entity.pointsPerLevel}
-            disabled={!$entity.hasLevels} /></label>
+            bind:value={entity.pointsPerLevel}
+            disabled={!entity.hasLevels} /></label>
       </div>
 
       <div class="flex">
         <label for="">
           Final Cost
-          <input type="number" value={$entity.adjustedPoints()} disabled />
+          <input type="number" value={entity.adjustedPoints()} disabled />
         </label>
 
         <label for="">Categories
           <input
             on:change={(e) => (entity.categories = new Set(e.target.value.split(',')))}
             type="text"
-            value={[...$entity.categories].join(',')} /></label>
+            value={[...entity.categories].join(',')} /></label>
 
         <label for="">Reference
-          <input type="text" bind:value={$entity.reference} /></label>
+          <input type="text" bind:value={entity.reference} /></label>
       </div>
       <label for="">Notes </label>
-      <textarea bind:value={$entity.notes} name="" id="" rows="3" />
+      <textarea bind:value={entity.notes} name="" id="" rows="3" />
     </form>
   </TabPanel>
   <TabPanel />
