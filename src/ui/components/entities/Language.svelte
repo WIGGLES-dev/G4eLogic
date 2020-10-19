@@ -1,5 +1,6 @@
 <script>
     export let entity;
+    import { string } from "@ui/utils/formatting";
 </script>
 
 <style>
@@ -9,10 +10,12 @@
     <div>{entity.name}</div>
     <div class="text-xs italic pl-2">
         {#each [...entity.modifiers].filter((modifier) => modifier.enabled) as modifier, i (modifier.id)}
-            {modifier.name}
-            {#if modifier.notes}({modifier.notes}){/if};
+            {string(modifier.name)}{string(modifier.notes, {
+                beforeStart: '(',
+                afterEnd: ')',
+            })}
         {/each}
     </div>
 </td>
-<td>{entity.adjustedPoints()}</td>
-<td>{entity.reference}</td>
+<td>{string(entity.adjustedPoints())}</td>
+<td>{string(entity.reference)}</td>

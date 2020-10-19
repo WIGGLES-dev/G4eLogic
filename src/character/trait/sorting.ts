@@ -1,3 +1,4 @@
+import { TraitType } from "index";
 import { Trait } from "./trait";
 
 export enum TraitCategory {
@@ -12,50 +13,43 @@ export enum TraitCategory {
     Culture
 }
 
-function isMeta(trait: Trait) {
-    return !isRacial(trait) && trait.categories.has("Meta");
-}
-
 function isAdvantage(trait: Trait) {
-    return !isRacial(trait)
-        && (trait.categories.has("Advantage")
-            || trait.basePoints > 1
-            || trait.pointsPerLevel > 1
-            || trait.adjustedPoints() > 1)
+    return trait.basePoints > 1
+        || trait.pointsPerLevel > 1
+        || trait.adjustedPoints() > 1
 }
 function isPerk(trait: Trait) {
-    return !isRacial(trait)
-        && (trait.categories.has("Perk")
-            || (trait.basePoints === 1
-                && trait.pointsPerLevel === 1
-                && trait.adjustedPoints() === 1)
-        )
+    return trait.basePoints === 1
+        && trait.pointsPerLevel === 1
+        && trait.adjustedPoints() === 1
 }
 function isDisadvantage(trait: Trait) {
-    return !isRacial(trait)
-        && (trait.categories.has("Disadvantage")
-            || trait.basePoints > 1
-            || trait.pointsPerLevel > 1
-            || trait.adjustedPoints() < -1)
+    return trait.basePoints > 1
+        || trait.pointsPerLevel > 1
+        || trait.adjustedPoints() < -1
 }
 function isQuirk(trait: Trait) {
-    return !isRacial(trait)
-        && (trait.categories.has("Quirk")
-            || (trait.basePoints === -1
-                && trait.pointsPerLevel === -1
-                && trait.adjustedPoints() === -1)
-        )
+    return trait.basePoints === -1
+        && trait.pointsPerLevel === -1
+        && trait.adjustedPoints() === -1
 }
 function isFeature(trait: Trait) {
-    return !isRacial(trait)
-        && (trait.categories.has("Feature")
-            || (!trait.basePoints
-                && !trait.pointsPerLevel
-                && trait.adjustedPoints() === 0)
-        )
+    return !trait.basePoints
+        && !trait.pointsPerLevel
+        && trait.adjustedPoints() === 0
 }
-function isRacial(trait: Trait) {
-    return trait.categories.has("Racial")
+
+function getCategory(trait: Trait) {
+    const categories = [...trait.categories].join(",");
+    console.log(categories);
+    if (/meta/i.test(categories)) return TraitCategory.Meta
+    if (/racial/i.test(categories)) return TraitCategory.Racial
+    if (/perk/i.test(categories)) return TraitCategory.Perk
+    if (/\badvantage\b/i.test(categories)) return TraitCategory.Advantage
+    if (/quirk/i.test(categories)) return TraitCategory.Quirk
+    if (/disadvantage/i.test(categories)) return TraitCategory.Disadavantage
+    if (/feature/i.test(categories)) return TraitCategory.Feature
+    return false
 }
 
 function getContainerType(trait: Trait) {
@@ -104,21 +98,24 @@ export function getTraitType(trait: Trait) {
     if (trait.children.size > 0) {
         return getContainerType(trait)
     } else {
-        const racial = isRacial(trait);
-        const meta = isMeta(trait);
-        const perk = isPerk(trait);
-        const advantage = isAdvantage(trait);
-        const quirk = isQuirk(trait);
-        const disadvantage = isDisadvantage(trait);
-        const feature = isFeature(trait);
+        let type = getCategory(trait);
 
-        if (racial) return TraitCategory.Racial;
+        const perk = isPerk(trait)
+        const advantage = isAdvantage(trait)
+        const quirk = isQuirk(trait)
+        const disadvantage = isDisadvantage(trait)
+        const feature = isFeature(trait)
+
+        if (type) return type
+
+
         if (perk) return TraitCategory.Perk;
         if (advantage) return TraitCategory.Advantage;
         if (quirk) return TraitCategory.Quirk;
         if (disadvantage) return TraitCategory.Disadavantage;
         if (feature) return TraitCategory.Feature;
 
-        return TraitCategory.Meta
+        type = TraitCategory.Meta;
+        return type
     }
 }

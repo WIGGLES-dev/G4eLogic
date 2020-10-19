@@ -1,5 +1,6 @@
 import { createPopper } from "@popperjs/core";
 import { fade } from "svelte/transition";
+import { string } from "./formatting";
 
 export function popperVirtualElement() {
     return {
@@ -24,14 +25,14 @@ export function popperVirtualElement() {
 
 function interpolate(input: string, context: any) {
     const brackets = /(\[([^\[\]]*|(\[[^\[\]]*\]))*\])/g
-    const math = /[/*|/%|/*|/+|/-]/;
     try {
         return input.replace(brackets, (match) => {
             if (brackets.test(match.slice(1, -1))) {
                 let expression = match.slice(1, -1).replace(brackets, (match) => context[match.slice(1, -1)] !== undefined ? context[match.slice(1, -1)] : `[ERROR!]`);
-                return new Function(`return ${expression}`)()
+                let result = new Function(`return ${expression}`)();
+                if (+result > Number.NEGATIVE_INFINITY) result = result.toFixed(0);
+                return result
             } else {
-
                 return context[match.slice(1, -1)] || `[ERROR!]`
             }
         });

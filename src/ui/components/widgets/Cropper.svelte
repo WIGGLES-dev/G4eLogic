@@ -2,7 +2,7 @@
     import Cropper from "cropperjs";
     import { onMount } from "svelte";
 
-    export let src = "";
+    export let src = "silhouette.png";
 
     let portrait;
     let cropper;

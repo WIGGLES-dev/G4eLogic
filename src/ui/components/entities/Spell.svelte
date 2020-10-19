@@ -1,7 +1,6 @@
 <script>
   import { getContext } from "svelte";
-  import { formatSkill, formatRSL } from "@ui/utils/formatting";
-  import { Number, Text, Select, Option, OptGroup, Checkbox } from "@ui/index";
+  import { string, formatRSL } from "@ui/utils/formatting";
 
   export let entity = null;
   export let depth;
@@ -36,7 +35,7 @@
   </td>
   <td><input type="text" class="w-24" bind:value={entity.castingTime} /></td>
   <td><input type="text" class="w-24" bind:value={entity.duration} /></td>
-  <td>{entity.calculateLevel() || ''}</td>
+  <td>{string(entity.calculateLevel(), { toFixed: 0 })}</td>
   <td>{formatRSL(entity)}</td>
   <td>
     {#if !entity.isContainer()}

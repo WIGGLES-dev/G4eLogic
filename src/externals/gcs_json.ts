@@ -162,7 +162,8 @@ export class GCSJSON extends Serializer {
         return {
             type: "character",
             profile: {
-                name: character.profile.name
+                name: character.profile.name,
+                portrait: character.profile.portrait.href,
             },
             total_points: character.totalPoints,
             ST: character.getAttribute("ST").level,

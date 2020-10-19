@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte";
-  import { formatSkill, formatRSL } from "@ui/utils/formatting";
+  import { formatRSL, string } from "@ui/utils/formatting";
   import { Number, Text, Select, Option, OptGroup, Checkbox } from "@ui/index";
 
   export let entity = null;
@@ -41,7 +41,7 @@
       <input type="text" bind:value={entity.specialization} />
     {/if}
   </td>
-  <td class="text-center">{entity.calculateLevel() || ''}</td>
+  <td class="text-center">{string(entity.calculateLevel(), { toFixed: 0 })}</td>
   <td class="text-center">{formatRSL(entity)}</td>
   <td>
     {#if !entity.isContainer()}

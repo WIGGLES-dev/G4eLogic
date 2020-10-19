@@ -18,7 +18,7 @@ export function formatRSL(skill: SkillLike) {
     let rsl = "";
     if (skill.signature) rsl += skill.signature;
     rsl += relativeLevel < 0 ? "" : "+";
-    rsl += relativeLevel;
+    rsl += relativeLevel.toFixed(0);
     return rsl
 }
 
@@ -34,12 +34,12 @@ export function formatEquipment() {
 
 }
 
-export function string(string, { beforeStart = "", afterEnd = "", fallback = "" } = {}) {
+export function string(string, { beforeStart = "", afterEnd = "", fallback = "", toFixed = 3 } = {}) {
     let output;
     try {
         if (string === null) return fallback
         if (string === undefined) return fallback
-        if (+string > Number.NEGATIVE_INFINITY) output = +string?.toFixed(3) ?? 0
+        if (+string > Number.NEGATIVE_INFINITY) output = +string?.toFixed(toFixed) ?? 0
         output = string;
     } catch (err) {
         output = fallback;

@@ -12,6 +12,8 @@
 
     import { Character } from "index";
 
+    $: view = "home";
+
     const subscriptions = new Map();
     function cleanup() {
         [subscriptions.values()].forEach((subscription) =>
@@ -23,6 +25,16 @@
     export let editor;
 
     const characterStore = writable(null);
+
+    function goHome() {
+        view = "home";
+        characterStore.set(null);
+    }
+
+    export function newCharacter() {
+        characterStore.set(new Character());
+        view = "editor";
+    }
 
     export async function loadCharacter(e) {
         Object.assign(document.createElement("input"), {
@@ -40,11 +52,14 @@
                         characterStore.set(character);
                     })
                 );
+                view = "editor";
             },
         }).click();
     }
 
     function saveCharacter() {
+        const character = $characterStore;
+        if (!character) return;
         const json = character.save();
         const text = JSON.stringify(json);
         Object.assign(document.createElement("a"), {
@@ -67,6 +82,12 @@
 </script>
 
 <style>
+    .option {
+        @apply outline-none w-full p-4 my-16 bg-gray-700 text-white text-lg;
+    }
+    .option:hover {
+        @apply bg-red-700;
+    }
 </style>
 
 <template style="" />
@@ -86,13 +107,17 @@
 
 <TitleBar>
     <div slot="title" class="flex">
-        <img src="favicon.png" alt="logo" class="h-8 pr-1" />
+        <img
+            on:click={goHome}
+            src="favicon.png"
+            alt="logo"
+            class="h-8 pr-1 cursor-pointer" />
         <span class="mr-3" on:click={() => console.log($characterStore)}>
             Valor Character Builder
         </span>
-        <a
+        <!-- <a
             class="underline"
-            href="https://www.patreon.com/bePatron?u=27866887">Become a Patron!</a>
+            href="https://www.patreon.com/bePatron?u=27866887">Become a Patron!</a> -->
     </div>
     <div class="h-full flex">
         <div class="inline-block ml-auto">
@@ -112,22 +137,18 @@
 <Notifications bind:this={ui.notifications} />
 
 <main>
-    <section>
-        {#if $characterStore}
-            <Sheet />
-        {:else}
-            <div class="fixed t-0 l-0 screen-center">
-                <button
-                    class="hover:bg-red-700 w-64 mx-4 p-4 bg-gray-700 text-white">Create
-                    a New Character</button>
-                <button
-                    on:click={loadCharacter}
-                    class="hover:bg-red-700 w-64 mx-4 p-4 bg-gray-700 text-white">Load
-                    An Existing Character</button>
-                <button
-                    class="hover:bg-red-700 w-64 mx-4 p-4 bg-gray-700 text-white">Read
-                    Documentation</button>
+    {#if $characterStore && view === 'editor'}
+        <Sheet />
+    {:else if !$characterStore || view === 'home'}
+        <section class="flex">
+            <div class="mx-48 flex flex-col">
+                <button on:click={newCharacter} class="option">Create a New
+                    Character</button>
+                <button on:click={loadCharacter} class="option">Load An Existing
+                    Character</button>
+                <button class="option">Read Documentation</button>
             </div>
-        {/if}
-    </section>
+            <div class="flex-1" />
+        </section>
+    {/if}
 </main>

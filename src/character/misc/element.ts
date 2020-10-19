@@ -32,8 +32,9 @@ export abstract class CharacterElement extends Observable {
 
     get categories() { return this.#categories }
     set categories(categories) {
+        if ([...categories].length < 1) return
         this.#categories = new Set([...categories]);
-        this.dispatch()
+        this.dispatch();
     }
     get id() { return this.uuid }
 

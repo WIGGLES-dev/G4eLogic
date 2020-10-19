@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte";
-  import {} from "@ui/utils/formatting";
+  import { string } from "@ui/utils/formatting";
 
   export let entity = null;
   const { display, config } = getContext("list");
@@ -11,9 +11,9 @@
 
 {#if $display === 'table'}
   <td><input type="checkbox" bind:checked={entity.enabled} /></td>
-  <td>{entity.name}</td>
-  <td>{entity.techLevel}</td>
-  <td>{entity.costType}</td>
-  <td>{entity.weightType}</td>
+  <td>{string(entity.name)}</td>
+  <td>{string(entity.techLevel)}</td>
+  <td>{string(entity.costType)}</td>
+  <td>{string(entity.weightType)}</td>
   <td class="w-full"><input type="text" bind:value={entity.reference} /></td>
 {/if}

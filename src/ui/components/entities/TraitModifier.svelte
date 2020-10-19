@@ -1,7 +1,6 @@
 <script>
   import { getContext } from "svelte";
-  import {} from "@ui/utils/formatting";
-  import { Number, Text, Select, Option, OptGroup, Checkbox } from "@ui/index";
+  import { string } from "@ui/utils/formatting";
   import {
     TraitModifierType,
     TraitModifierAffects,
@@ -14,12 +13,10 @@
 </style>
 
 {#if $display === 'table'}
+  <td><input type="checkbox" bind:value={entity.enabled} /></td>
   <td>
-    <Checkbox bind:checked={entity.enabled} />
-  </td>
-  <td>
-    <div>{entity.name}</div>
-    <div>{entity.notes}</div>
+    <div>{string(entity.name)}</div>
+    <div class="italic text-sm">{string(entity.notes)}</div>
   </td>
   <td>
     {#if entity.type === TraitModifierType.points}
@@ -28,7 +25,5 @@
     {entity.costModifier()}
     {#if entity.type === TraitModifierType.percentage}%{/if}
   </td>
-  <td class="w-full">
-    <Text bind:value={entity.reference} />
-  </td>
+  <td class="w-full"><input type="text" bind:value={entity.reference} /></td>
 {/if}

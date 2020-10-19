@@ -48,7 +48,7 @@ export class Profile {
 
     other = ""
 
-    portrait: URL
+    portrait: URL = new URL("silhouette.png", window.location.origin)
 
     constructor() {
 

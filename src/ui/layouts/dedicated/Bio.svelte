@@ -75,7 +75,7 @@
         </div>
         <div class="row-span-2">
             <Cropper
-                src={profile.portrait ? profile.portrait.href : 'silhouette.png'} />
+                bind:src={profile.portrait.href} />
         </div>
         <div class="flex flex-col">
             <div class="section-header">PHYSICAL</div>
