@@ -40,14 +40,13 @@ function isFeature(trait: Trait) {
 }
 
 function getCategory(trait: Trait) {
-    const categories = [...trait.categories].join(",");
-    console.log(categories);
+    const categories = [...trait.categories].join(" ");
     if (/meta/i.test(categories)) return TraitCategory.Meta
     if (/racial/i.test(categories)) return TraitCategory.Racial
-    if (/perk/i.test(categories)) return TraitCategory.Perk
-    if (/\badvantage\b/i.test(categories)) return TraitCategory.Advantage
     if (/quirk/i.test(categories)) return TraitCategory.Quirk
     if (/disadvantage/i.test(categories)) return TraitCategory.Disadavantage
+    if (/perk/i.test(categories)) return TraitCategory.Perk
+    if (/advantage/i.test(categories)) return TraitCategory.Advantage
     if (/feature/i.test(categories)) return TraitCategory.Feature
     return false
 }
@@ -100,19 +99,19 @@ export function getTraitType(trait: Trait) {
     } else {
         let type = getCategory(trait);
 
+        if (type > -1) return type
+
         const perk = isPerk(trait)
         const advantage = isAdvantage(trait)
         const quirk = isQuirk(trait)
         const disadvantage = isDisadvantage(trait)
         const feature = isFeature(trait)
 
-        if (type) return type
-
-
-        if (perk) return TraitCategory.Perk;
-        if (advantage) return TraitCategory.Advantage;
         if (quirk) return TraitCategory.Quirk;
         if (disadvantage) return TraitCategory.Disadavantage;
+        if (perk) return TraitCategory.Perk;
+        if (advantage) return TraitCategory.Advantage;
+
         if (feature) return TraitCategory.Feature;
 
         type = TraitCategory.Meta;

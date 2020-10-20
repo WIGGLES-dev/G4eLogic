@@ -104,15 +104,24 @@ export abstract class Sheet extends Observable {
     load(data: any, scope: string, ...args) {
         this.Hooks.callAll("before unload", this);
         this.void();
-        this.getSerializer(scope).load(this, data, ...args);
+        try {
+            this.getSerializer(scope).load(this, data, ...args);
+        } catch (err) {
+
+        }
         this.Hooks.callAll("after load", this);
         this.dispatch();
         return this
     }
 
     save(scope: string, target: any, ...args) {
+        let output;
         this.Hooks.callAll("before save", this);
-        let output = this.getSerializer(scope).save(this, target, ...args);
+        try {
+            output = this.getSerializer(scope).save(this, target, ...args);
+        } catch (err) {
+
+        }
         this.Hooks.callAll("after save", this);
         this.dispatch();
         return output;

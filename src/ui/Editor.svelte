@@ -14,14 +14,6 @@
 
     $: view = "home";
 
-    const subscriptions = new Map();
-    function cleanup() {
-        [subscriptions.values()].forEach((subscription) =>
-            subscription.unsubscribe()
-        );
-    }
-    onDestroy(cleanup);
-
     export let editor;
 
     const characterStore = writable(null);
@@ -31,8 +23,25 @@
         characterStore.set(null);
     }
 
-    export function newCharacter() {
-        characterStore.set(new Character());
+    const subscriptions = new Map();
+    function cleanup() {
+        [subscriptions.values()].forEach((subscription) =>
+            subscription.unsubscribe()
+        );
+    }
+    onDestroy(cleanup);
+    export function newCharacter(data) {
+        if (subscriptions.has($characterStore))
+            subscriptions.get($characterStore).unsubscribe();
+        const character = new Character();
+        if (data) character.load(data, "GCSJSON");
+        editor.character = character;
+        subscriptions.set(
+            character,
+            character.subscribe((character) => {
+                characterStore.set(character);
+            })
+        );
         view = "editor";
     }
 
@@ -42,16 +51,7 @@
             async onchange() {
                 const file = this.files[0];
                 const data = JSON.parse(await file.text());
-                if (subscriptions.has($characterStore))
-                    subscriptions.get($characterStore).unsubscribe();
-                const character = new Character().load(data, "GCSJSON");
-                editor.character = character;
-                subscriptions.set(
-                    character,
-                    character.subscribe((character) => {
-                        characterStore.set(character);
-                    })
-                );
+                newCharacter(data);
                 view = "editor";
             },
         }).click();
