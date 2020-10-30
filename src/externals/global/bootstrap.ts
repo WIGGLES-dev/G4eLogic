@@ -1,5 +1,0 @@
-class Bootstrap {
-    static init() {
-        
-    }
-}

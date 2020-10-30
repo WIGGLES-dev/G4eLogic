@@ -1,17 +1,17 @@
 <script>
   import { getContext } from "svelte";
-  import { List, Tabs, Tab, TabList, TabPanel } from "@ui/index";
+  import List from "@ui/lists/List";
 
-  import MeleeWeapon from "@ui/components/entities/MeleeWeapon";
-  import MeleeWeaponEditor from "@ui/components/editors/MeleeWeaponEditor";
+  import MeleeWeapon from "@ui/entities/MeleeWeapon";
+  import MeleeWeaponEditor from "@ui/editors/MeleeWeaponEditor";
 
-  import RangedWeapon from "@ui/components/entities/RangedWeapon";
-  import RangedWeaponEditor from "@ui/components/editors/RangedWeaponEditor";
+  import RangedWeapon from "@ui/entities/RangedWeapon";
+  import RangedWeaponEditor from "@ui/editors/RangedWeaponEditor";
 
-  import Silhouette from "@ui/components/widgets/Silhouette";
-  import SizeRange from "@ui/components/widgets/SizeRange";
+  import Silhouette from "@ui/widgets/Silhouette";
+  import SizeRange from "@ui/widgets/SizeRange";
 
-  const { character } = getContext("app");
+  const { character } = getContext("editor");
 
   $: dodge = $character.dodgeScore();
   $: encumberedDodge = $character.encumberedDodgeScore();

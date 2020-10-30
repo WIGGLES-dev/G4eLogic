@@ -26,3 +26,7 @@
         }
     }
 }
+
+blockquote {
+    @apply mx-3 my-2;
+}

@@ -1,15 +1,15 @@
 <script>
   import { getContext } from "svelte";
-  import { List, Tabs, Tab, TabList, TabPanel } from "@ui/index";
+  import List from "@ui/lists/List";
 
-  import TraitEditor from "@ui/components/editors/TraitEditor";
+  import TraitEditor from "@ui/editors/TraitEditor";
 
-  import Trait from "@ui/components/entities/Trait";
-  import Language from "@ui/components/entities/Language";
+  import Trait from "@ui/entities/Trait";
+  import Language from "@ui/entities/Language";
 
-  import { strEncodeUTF16 } from "utils/string_utils";
+  import { strEncodeUTF16 } from "@utils/strings";
 
-  const { character } = getContext("app");
+  const { character } = getContext("editor");
 
   $: traitList = $character.traitList;
 
@@ -17,12 +17,12 @@
 
   $: languages = traitList
     .iter()
-    .filter((trait) => trait.categories.has("Language"))
+    .filter((trait) => /language/i.test([...trait.categories].toString()))
     .sort((a, b) => strEncodeUTF16(b.name) - strEncodeUTF16(a.name));
 
   $: cultures = traitList
     .iter()
-    .filter((trait) => trait.categories.has("Culture"))
+    .filter((trait) => /culture/i.test([...trait.categories].toString()))
     .sort((a, b) => strEncodeUTF16(b.name) - strEncodeUTF16(a.name));
 
   function addItem(categories) {
@@ -33,6 +33,7 @@
 <div class="lg:flex">
   <div class="flex-1">
     <List
+      category="Advantage"
       on:additem={() => addItem(['Advantage'])}
       title="Advantages"
       component={Trait}
@@ -49,6 +50,7 @@
   </div>
   <div class="w-1/5">
     <List
+      category="Language"
       config={{ addItem: false }}
       list={languages}
       component={Language}
@@ -60,6 +62,7 @@
       </tr>
     </List>
     <List
+      category="Culture"
       config={{ addItem: false }}
       list={cultures}
       component={Trait}
@@ -73,6 +76,7 @@
   </div>
   <div class="flex-1">
     <List
+      category="Disadvantage"
       on:additem={() => addItem(['Disadvantage'])}
       title="Disadvantages"
       component={Trait}
@@ -92,6 +96,7 @@
 <div class="lg:flex">
   <div class="lg:flex-1">
     <List
+      category="Racial"
       on:additem={() => addItem(['Racial'])}
       title="Racial"
       component={Trait}
@@ -109,6 +114,7 @@
 
   <div class="flex-1">
     <List
+      category="Meta"
       on:additem={() => addItem(['Meta'])}
       title="Meta"
       component={Trait}
@@ -127,6 +133,7 @@
 <div class="lg:flex">
   <div class="flex-1">
     <List
+      category="Perk"
       on:additem={() => addItem(['Perk'])}
       title="Perks"
       component={Trait}
@@ -143,6 +150,7 @@
   </div>
   <div class="lg:flex-1">
     <List
+      category="Quirk"
       on:additem={() => addItem(['Quirk'])}
       title="Quirks"
       component={Trait}
@@ -159,6 +167,7 @@
   </div>
   <div class="flex-1">
     <List
+      category="Feature"
       on:additem={() => addItem(['Feature'])}
       title="Features"
       component={Trait}

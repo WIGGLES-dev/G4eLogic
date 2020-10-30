@@ -19,11 +19,7 @@ const config: webpack.Configuration = {
         hot: false
     },
     entry: {
-        'index': [path.resolve(__dirname, 'src/index.ts')],
-        'externals': [path.resolve(__dirname, 'src/externals/index.ts')],
-        'ui': [path.resolve(__dirname, 'src/ui/index.ts')],
         'test/test': [path.resolve(__dirname, 'src/test/index.ts')],
-        'lib-min': [path.resolve(__dirname, 'src/index.ts')]
     },
     resolve: {
         plugins: [

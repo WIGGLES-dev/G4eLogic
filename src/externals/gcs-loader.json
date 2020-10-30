@@ -1,63 +1,56 @@
 {
-    "schema": "gcs",
+    "scheme": "gcs",
     "templates": {
         "character_element": {
             "reference": "reference",
             "notes": "notes",
             "categories": {
-                "accessor": "categories",
-                "transform": "return new Set(data.categories || [])",
-                "revert": "return [...data.categories]"
+                "path": "categories",
+                "load": "return new Set(data.categories || [])",
+                "save": "return [...data.categories]"
             }
         },
         "list_item": {
             "features": {
-                "accessor": "features",
-                "process": "array",
-                "constructor": {
-                    "key": "addFeature",
-                    "args": []
-                },
-                "Entity": "Feature"
+                "path": "features",
+                "load": "data.features.forEach(feature => target.addFeature().load(scheme, feature))",
+                "save": "return [...data.features].map(feature => feature.save(scheme))"
             },
             "weapons": {
-                "accessor": "weapons",
-                "process": "array",
-                "constructor": {
-                    "key": "addWeapon",
-                    "args": [
-                        "type"
-                    ]
-                },
-                "Entity": "Weapon"
+                "path": "weapons",
+                "load": "data.weapons.forEach(weapon => target.addWeapon(data.type).load(scheme, weapon))",
+                "save": "return [...target.weapons].map(weapon => weapon.save(scheme))"
+            },
+            "canContainChildren": {
+                "load": "return (data.type || '').includes('container')"
+            },
+            "children": {
+                "path": "children",
+                "load": "data.children.forEach(child => target.ownedItems.add(new target.constructor().load(child).addAfter(target)))",
+                "save": "return data.children.map(child => child.save(scheme))"
             }
         },
         "skill": {
             "name": "name",
             "difficulty": {
-                "accessor": "difficulty",
-                "transform": "return data.difficulty.split('/')[1]",
-                "revert": "return `${data.signature}/${data.difficulty}`"
+                "path": "difficulty",
+                "load": "return data.difficulty.split('/')[1]",
+                "save": "return `${data.signature}/${data.difficulty}`"
             },
             "points": "points",
             "specialization": "specialization",
             "mod": "mod",
             "signature": {
-                "load_only": true,
-                "transform": "return data.difficulty.split('/')[0]"
+                "load": "return data.difficulty.split('/')[0]"
             },
             "hasTechLevel": {
-                "transform": ""
+                "load": "return Boolean(data.tech_level)"
             },
             "techLevel": "tech_level",
             "defaults": {
-                "accessor": "defaults",
-                "process": "array",
-                "constructor": {
-                    "key": "addDefault",
-                    "args": []
-                },
-                "Entity": "Default"
+                "path": "defaults",
+                "load": "data.defaults.forEach(Default => target.addDefault().load(scheme, Default))",
+                "save": "return [...data.features].filter(feature => feature.constructor === 'Default').map(Default => Default.save(scheme))"
             },
             "defaultedFrom": null,
             "encumbrancePenaltyMultiple": "encumbrance_penalty_multiplier"
@@ -70,26 +63,39 @@
         },
         "modifier": {
             "enabled": {
-                "accessor": "disabled",
-                "transform": "return !Boolean(data.disabled)",
-                "revert": "return !data.enabled"
+                "path": "disabled",
+                "load": "return !Boolean(data.disabled)",
+                "save": "return !data.enabled"
             },
             "name": "name",
             "cost": "cost"
+        },
+        "weapon": {
+            "usage": "usage",
+            "strength": "strength",
+            "damage": {
+                "load": "return data.damage.st || '' + `${data.damage.st ? ' + ' : ' '}` + data.damage.base || data.damage.type"
+            },
+            "damageStrength": "damage.st",
+            "damageBase": "damage.base",
+            "damageType": "damage.type",
+            "defaults": {
+                "path": "defaults",
+                "load": "data.defaults.forEach(Default => target.addDefault().load(scheme, Default))",
+                "save": "return [...data.features].filter(feature => feature.constructor === 'Default').map(Default => Default.save(scheme))"
+            }
         }
     },
     "mappings": {
         "Equipment": {
             "type": {
-                "save_only": true,
-                "accessor": "type",
-                "revert": "return data.canContainChildren === true ? 'equipment_container' : 'equipment'"
+                "path": "type",
+                "save": "return data.canContainChildren === true ? 'equipment_container' : 'equipment'"
             },
             "equipped": "equipped",
             "version": {
-                "save_only": true,
-                "accessor": "version",
-                "value": 1
+                "path": "version",
+                "save": "return 1"
             },
             "templates": [
                 "character_element",
@@ -102,17 +108,17 @@
             "uses": "uses",
             "maxUses": "max_uses",
             "weight": {
-                "accessor": "weight",
-                "transform": "return +(data.weight ? data.weight.split(' ')[0] : 0)",
-                "revert": "return `${data.weight} lb`"
+                "path": "weight",
+                "load": "return +(data.weight ? data.weight.split(' ')[0] : 0)",
+                "save": "return `${data.weight} lb`"
             },
             "value": {
-                "accessor": "value",
-                "transform": "return +data.value",
-                "revert": "return `${data.value}`"
+                "path": "value",
+                "load": "return +data.value",
+                "save": "return `${data.value}`"
             },
             "containedWeightReduction": {
-                "transform": "return null"
+                "load": "return null"
             },
             "applySkillEncumbrancePenalty": "ignore_weight_for_skills",
             "isAmmunition": "isAmmunition",
@@ -120,14 +126,12 @@
         },
         "Trait": {
             "type": {
-                "save_only": true,
-                "accessor": "type",
-                "revert": "return data.canContainChildren === true ? 'advantage_container': 'advantage'"
+                "path": "type",
+                "save": "return data.canContainChildren === true ? 'advantage_container': 'advantage'"
             },
             "version": {
-                "save_only": true,
-                "accessor": "version",
-                "value": 1
+                "path": "version",
+                "save": "return 1"
             },
             "templates": [
                 "character_element",
@@ -136,13 +140,12 @@
             "name": "name",
             "basePoints": "base_points",
             "hasLevels": {
-                "load_only": true,
-                "transform": "return +data.levels > -1"
+                "load": "return +data.levels > -1"
             },
             "levels": {
-                "accessor": "levels",
-                "transform": "return +data.levels",
-                "revert": "return data.hasLevels && data.levels ? data.levels.toString() : undefined"
+                "path": "levels",
+                "load": "return +data.levels",
+                "save": "return data.hasLevels && data.levels ? data.levels.toString() : undefined"
             },
             "allowHalfLevels": null,
             "hasHalfLevel": "has_half_level",
@@ -152,24 +155,20 @@
             "pointsPerLevel": "points_per_level",
             "containerType": null,
             "modifiers": {
-                "accessor": "modifiers",
-                "process": "array",
-                "constructor": {
-                    "key": "addModifier",
-                    "args": []
-                },
-                "Entity": "Modifier"
+                "path": "modifiers",
+                "load": "data.modifiers.forEach(modifier => target.addModifier().load(scheme, modifier))",
+                "save": "data.modifiers"
             }
         },
         "Skill": {
             "type": {
                 "save_only": true,
-                "accessor": "type",
-                "revert": "return data.canContainChildren === true ? 'skill_container': 'skill'"
+                "path": "type",
+                "save": "return data.canContainChildren === true ? 'skill_container': 'skill'"
             },
             "version": {
                 "save_only": true,
-                "accessor": "version",
+                "path": "version",
                 "value": 1
             },
             "templates": [
@@ -180,14 +179,12 @@
         },
         "Technique": {
             "type": {
-                "save_only": true,
-                "accessor": "type",
-                "value": "technique"
+                "load": "return 1",
+                "path": "type"
             },
             "version": {
-                "save_only": true,
-                "accessor": "version",
-                "value": 1
+                "path": "version",
+                "load": "return 1"
             },
             "templates": [
                 "skill",
@@ -197,22 +194,20 @@
             "difficulty": "difficulty",
             "limit": "limit",
             "default": {
-                "accessor": "default",
-                "Entity": "Default",
-                "constructor": {
-                    "key": "default"
-                }
+                "path": "default",
+                "load": "return target.default.load(scheme, data)",
+                "save": "return data.save(scheme)"
             }
         },
         "Spell": {
             "type": {
                 "save_only": true,
-                "accessor": "type",
-                "revert": "return data.canContainChildren === true ? 'spell_container' : 'spell'"
+                "path": "type",
+                "save": "return data.canContainChildren === true ? 'spell_container' : 'spell'"
             },
             "version": {
                 "save_only": true,
-                "accessor": "version",
+                "path": "version",
                 "value": 1
             },
             "templates": [
@@ -232,13 +227,9 @@
         },
         "Feature": {
             "type": {
-                "accessor": "type",
-                "helper": {
-                    "key": "loadFeature",
-                    "args": [
-                        "type"
-                    ]
-                }
+                "path": "type",
+                "load": "return this.loadFeature(target).load(scheme, data.type)",
+                "save": ""
             },
             "leveled": "per_level",
             "amount": "amount",
@@ -252,32 +243,31 @@
             "core.categoryCompareType": "category.compare",
             "core.category": "category.qualifier"
         },
-        "weapon": {
-            "usage": "usage",
-            "strength": "strength",
-            "damage": {
-                "transform": "return data.damage.st || '' + `${data.damage.st ? ' + ' : ' '}` + data.damage.base || data.damage.type"
+        "RangedWeapon": {
+            "templates": [
+                "weapon"
+            ],
+            "type": {
+                "path": "type",
+                "save": "return 'ranged_weapon'"
             },
-            "damageStrength": "damage.st",
-            "damageBase": "damage.base",
-            "damageType": "damage.type",
-            "defaults": {
-                "accessor": "defaults",
-                "process": "array",
-                "constructor": {
-                    "key": "addDefault",
-                    "args": []
-                },
-                "Entity": "Default"
-            },
-            "reach": "reach",
-            "parry": "parry",
-            "block": "block",
             "accuracy": "accuracy",
             "range": "range",
             "rateOfFire": "rate_of_fire",
             "shots": "shots",
             "bulk": "bulk"
+        },
+        "MeleeWeapon": {
+            "templates": [
+                "weapon"
+            ],
+            "type": {
+                "path": "type",
+                "save": "return 'melee_weapon'"
+            },
+            "reach": "reach",
+            "parry": "parry",
+            "block": "block"
         },
         "SkillDefault": {
             "templates": [
@@ -292,12 +282,12 @@
         "EquipmentModifier": {
             "type": {
                 "save_only": true,
-                "accessor": "type",
+                "path": "type",
                 "value": "eqp_modifier"
             },
             "version": {
                 "save_only": true,
-                "accessor": "version",
+                "path": "version",
                 "value": 1
             },
             "templates": [
@@ -311,12 +301,12 @@
         "TraitModifier": {
             "type": {
                 "save_only": true,
-                "accessor": "type",
+                "path": "type",
                 "value": "modifier"
             },
             "version": {
                 "save_only": true,
-                "accessor": "version",
+                "path": "version",
                 "value": 1
             },
             "templates": [
@@ -330,55 +320,51 @@
     },
     "root": {
         "totalPoints": "total_points",
-        "__STATIC__": {
-            "settings": {
-                "version": 1,
-                "default_length_units": "ft_in",
-                "default_weight_units": "lb",
-                "user_description_display": "tooltip",
-                "modifiers_display": "inline",
-                "notes_display": "inline_and_tooltip",
-                "base_will_and_per_on_10": false,
-                "use_multiplicative_modifiers": false,
-                "use_modifying_dice_plus_adds": false,
-                "use_know_your_own_strength": false,
-                "use_reduced_swing": true,
-                "use_thrust_equals_swing_minus_2": false,
-                "use_simple_metric_conversions": true,
-                "show_college_in_sheet_spells": false,
-                "use_title_in_footer": false,
-                "block_layout": [
-                    "reactions",
-                    "melee",
-                    "ranged",
-                    "advantages skills",
-                    "spells",
-                    "equipment",
-                    "other_equipment",
-                    "notes"
-                ]
-            }
-        },
-        "__REVERSE__": {
-            "ST": {
-                "transform": "return data.attributeList.getAttribute('ST').level"
+        "settings": {
+            "version": {
+                "save": "return 1"
             },
-            "DX": {
-                "transform": "return data.attributeList.getAttribute('DX').level"
-            },
-            "IQ": {
-                "transform": "return data.attributeList.getAttribute('DX').level"
-            },
-            "HT": {
-                "transform": "return data.attributeList.getAttribute('HT').level"
-            },
-            "advantages": {},
-            "skills": {},
-            "equipment": {},
-            "other_equipment": {},
-            "third_party": {}
+            "default_length_units": "ft_in",
+            "default_weight_units": "lb",
+            "user_description_display": "tooltip",
+            "modifiers_display": "inline",
+            "notes_display": "inline_and_tooltip",
+            "base_will_and_per_on_10": false,
+            "use_multiplicative_modifiers": false,
+            "use_modifying_dice_plus_adds": false,
+            "use_know_your_own_strength": false,
+            "use_reduced_swing": true,
+            "use_thrust_equals_swing_minus_2": false,
+            "use_simple_metric_conversions": true,
+            "show_college_in_sheet_spells": false,
+            "use_title_in_footer": false,
+            "block_layout": [
+                "reactions",
+                "melee",
+                "ranged",
+                "advantages skills",
+                "spells",
+                "equipment",
+                "other_equipment",
+                "notes"
+            ]
         }
     },
-    "on_save": {},
-    "on_load": {}
+    "ST": {
+        "save": "return data.attributeList.getAttribute('ST').level"
+    },
+    "DX": {
+        "save": "return data.attributeList.getAttribute('DX').level"
+    },
+    "IQ": {
+        "save": "return data.attributeList.getAttribute('DX').level"
+    },
+    "HT": {
+        "load": "return data.attributeList.getAttribute('HT').level"
+    },
+    "advantages": {},
+    "skills": {},
+    "equipment": {},
+    "other_equipment": {},
+    "third_party": {}
 }

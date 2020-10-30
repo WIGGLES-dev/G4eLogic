@@ -1,9 +1,8 @@
 <script>
     import { getContext } from "svelte";
-    import { Appearance } from "@character/profile";
-    import Cropper from "@ui/components/widgets/Cropper";
-    const { character } = getContext("app");
-
+    import { Appearance } from "@sheet/profile";
+    import Cropper from "@ui/widgets/Cropper";
+    const { character } = getContext("editor");
     $: profile = $character.profile;
 </script>
 
@@ -51,7 +50,7 @@
             </div>
             <div class="flex">
                 <label for="" class="flex-1">Race<input
-                        type="number"
+                        type="text"
                         bind:value={profile.race} /></label>
                 <label for="" class="flex-1">Size
                     <input
@@ -74,8 +73,7 @@
                     bind:value={profile.reaction} /></label>
         </div>
         <div class="row-span-2">
-            <Cropper
-                bind:src={profile.portrait.href} />
+            <Cropper bind:src={profile.portrait.href} />
         </div>
         <div class="flex flex-col">
             <div class="section-header">PHYSICAL</div>

@@ -1,13 +1,13 @@
 <script>
   import { getContext } from "svelte";
-  import { derived } from "svelte/store";
-  import { List, Tabs, Tab, TabList, TabPanel } from "@ui/index";
+  import { Tabs, Tab, TabPanel, TabList } from "@ui/tabs/tabs";
+  import List from "@ui/lists/List";
 
-  import EquipmentEditor from "@ui/components/editors/EquipmentEditor";
-  import Equipment from "@ui/components/entities/Equipment";
-  import { capitalize } from "@utils/string_utils";
+  import EquipmentEditor from "@ui/editors/EquipmentEditor";
+  import Equipment from "@ui/entities/Equipment";
+  import { capitalize } from "@utils/strings";
 
-  const { character } = getContext("app");
+  const { character } = getContext("editor");
 
   $: displayedItems = $character.equipmentList.itemsByLocation(
     displayedLocation
@@ -31,7 +31,7 @@
   <colgroup slot="colgroup">
     <col />
     <col />
-    <col class="w-full" />
+    <col />
     <col span="6" class="" />
   </colgroup>
   <tr slot="header">

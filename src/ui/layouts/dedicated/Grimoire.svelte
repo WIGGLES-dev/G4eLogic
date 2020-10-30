@@ -1,11 +1,11 @@
 <script>
   import { getContext } from "svelte";
-  import { List, Tabs, Tab, TabList, TabPanel } from "@ui/index";
 
-  import Spell from "@ui/components/entities/Spell";
-  import SpellEditor from "@ui/components/editors/SpellEditor";
+  import List from "@ui/lists/List";
+  import Spell from "@ui/entities/Spell";
+  import SpellEditor from "@ui/editors/SpellEditor";
 
-  const { character } = getContext("app");
+  const { character } = getContext("editor");
 
   $: spellList = $character.spellList;
 

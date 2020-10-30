@@ -1,22 +1,22 @@
 <script>
     import { getContext } from "svelte";
-    import List from "@ui/components/lists/List";
+    import List from "@ui/lists/List";
 
-    import Skill from "@ui/components/entities/Skill";
-    import SkillEditor from "@ui/components/editors/SkillEditor";
+    import Skill from "@ui/entities/Skill";
+    import SkillEditor from "@ui/editors/SkillEditor";
 
-    import TechniqueEditor from "@ui/components/editors/TechniqueEditor";
+    import TechniqueEditor from "@ui/editors/TechniqueEditor";
 
-    const { character, components } = getContext("app");
+    const { character, components } = getContext("editor");
 
-    $: skillList = $character.skillList;
-    $: techniqueList = $character.techniqueList;
+    $: skillList = $character.skillList.rootItems();
+    $: techniqueList = $character.techniqueList.rootItems();
 
     function addSkill() {
-        skillList.addListItem();
+        $character.skillList.addListItem();
     }
     function addTechnique() {
-        techniqueList.addListItem();
+        $character.techniqueList.addListItem();
     }
 </script>
 
@@ -28,14 +28,14 @@
     on:additem={addTechnique}
     component={Skill}
     editor={TechniqueEditor}
-    list={techniqueList.contents.arr}>
+    list={techniqueList}>
     <tr slot="header">
-        <th class="w-full">Techniques</th>
-        <th>SL</th>
-        <th>RSL</th>
-        <th>Pts</th>
-        <th>Mod</th>
         <th>Ref</th>
+        <th>Pts</th>
+        <th>Rsl</th>
+        <th>Mod</th>
+        <th>Lvl</th>
+        <th class="w-full">Techniques</th>
     </tr>
 </List>
 <List
@@ -43,13 +43,13 @@
     title="Skill"
     component={Skill}
     editor={SkillEditor}
-    list={skillList.contents.arr}>
+    list={skillList}>
     <tr slot="header">
-        <th class="w-full">Skills</th>
-        <th>SL</th>
-        <th>RSL</th>
-        <th>Pts</th>
-        <th>Mod</th>
         <th>Ref</th>
+        <th>Pts</th>
+        <th>Rsl</th>
+        <th>Mod</th>
+        <th>Lvl</th>
+        <th class="w-full">Skills</th>
     </tr>
 </List>

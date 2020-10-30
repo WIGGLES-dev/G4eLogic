@@ -1,24 +1,24 @@
 <script>
   import { getContext } from "svelte";
 
-  import AttributeList from "@ui/components/widgets/AttributeList";
-  import Pools from "@ui/components/widgets/Pools";
-  import EncumbranceTable from "@ui/components/widgets/EncumbranceTable";
-  import LiftingTable from "@ui/components/widgets/LiftingTable";
-  import PointTotals from "@ui/components/widgets/PointTotals";
-  import Combat from "@ui/components/widgets/Combat";
-  import Silhouette from "@ui/components/widgets/Silhouette.svelte";
-  import TinyMCE from "@ui/components/widgets/TinyMCE";
+  import AttributeList from "@ui/widgets/AttributeList";
+  import Pools from "@ui/widgets/Pools";
+  import EncumbranceTable from "@ui/widgets/EncumbranceTable";
+  import LiftingTable from "@ui/widgets/LiftingTable";
+  import PointTotals from "@ui/widgets/PointTotals";
+  import Combat from "@ui/widgets/Combat";
+  import Silhouette from "@ui/widgets/Silhouette.svelte";
+  import TinyMCE from "@ui/widgets/TinyMCE";
 
-  import List from "@ui/components/lists/List";
+  import List from "@ui/lists/List";
 
-  import MeleeWeapon from "@ui/components/entities/MeleeWeapon";
-  import MeleeWeaponEditor from "@ui/components/editors/MeleeWeaponEditor";
+  import MeleeWeapon from "@ui/entities/MeleeWeapon";
+  import MeleeWeaponEditor from "@ui/editors/MeleeWeaponEditor";
 
-  import RangedWeapon from "@ui/components/entities/RangedWeapon";
-  import RangedWeaponEditor from "@ui/components/editors/RangedWeaponEditor";
+  import RangedWeapon from "@ui/entities/RangedWeapon";
+  import RangedWeaponEditor from "@ui/editors/RangedWeaponEditor";
 
-  const { character, components } = getContext("app");
+  const { character, components } = getContext("editor");
 </script>
 
 <style>

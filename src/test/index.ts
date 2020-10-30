@@ -1,13 +1,15 @@
-import { Character } from "@character/character";
-import { GCSJSON } from "@externals/gcs_json";
-
-import { CharacterEditor } from "editor/editor";
+import * as jp from "jsonpath";
+import { Valor, ValorEvent } from "valor/valor";
 
 import "@ui/styles/styles.css";
 
 function init() {
-    Character.registerSerializer(GCSJSON);
-    CharacterEditor.mount(document.body);
+    const editor = Valor.init().mount(document.body);
+
+    editor.on(ValorEvent.Roll, ({ detail }) => alert(detail.entity.id))
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
+//@ts-ignore
+window.jp = jp;

@@ -1,15 +1,14 @@
 <script>
   import { getContext } from "svelte";
-  import { Checkbox, Select, Option } from "@ui/index";
-  import JSONEditor from "@ui/components/widgets/JSONEditor";
+  import JSONEditor from "@ui/widgets/JSONEditor";
 
-  const { character } = getContext("app");
+  const { character } = getContext("editor");
 
   let configEditor;
 
   function changeConfig() {
     try {
-      character.config.reconfigure(configEditor.editor.get());
+      $character.config.reconfigure(configEditor.editor.get());
     } catch (err) {}
   }
 </script>
@@ -28,7 +27,7 @@
       type="button">Change Config</button>
     <button
       on:click={() => {
-        configEditor.editor.set(character.config.setDefault());
+        configEditor.editor.set($character.config.setDefault());
       }}
       class="bg-gray-700 text-white font-semibold flex-1 underline hover:bg-red-700"
       type="button">Default Configuration</button>

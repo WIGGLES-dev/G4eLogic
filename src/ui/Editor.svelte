@@ -1,83 +1,37 @@
 <script>
     import { setContext, onMount, onDestroy } from "svelte";
-    import { derived, writable } from "svelte/store";
 
-    import TitleBar from "@ui/components/menus/TitleBar";
+    import TitleBar from "@ui/menus/TitleBar";
     import Sheet from "./Sheet";
-
-    import ContextMenu from "@ui/components/context-menu/ContextMenu";
-    import Tooltips from "@ui/components/tooltips/Tooltip";
-    import Applications from "@ui/components/applications/ApplicationManager.svelte";
-    import Notifications from "@ui/components/applications/Notifications.svelte";
-
-    import { Character } from "index";
 
     $: view = "home";
 
     export let editor;
-
-    const characterStore = writable(null);
+    const { store } = editor;
 
     function goHome() {
         view = "home";
-        characterStore.set(null);
+        store.set(null);
     }
 
-    const subscriptions = new Map();
-    function cleanup() {
-        [subscriptions.values()].forEach((subscription) =>
-            subscription.unsubscribe()
-        );
-    }
-    onDestroy(cleanup);
-    export function newCharacter(data) {
-        if (subscriptions.has($characterStore))
-            subscriptions.get($characterStore).unsubscribe();
-        const character = new Character();
-        if (data) character.load(data, "GCSJSON");
-        editor.character = character;
-        subscriptions.set(
-            character,
-            character.subscribe((character) => {
-                characterStore.set(character);
-            })
-        );
+    export function newCharacter() {
+        editor.newCharacter();
         view = "editor";
     }
 
     export async function loadCharacter(e) {
-        Object.assign(document.createElement("input"), {
-            type: "file",
-            async onchange() {
-                const file = this.files[0];
-                const data = JSON.parse(await file.text());
-                newCharacter(data);
-                view = "editor";
-            },
-        }).click();
+        const files = await editor.upload();
+        const text = await files[0].text();
+        const data = JSON.parse(text);
+        editor.load(data);
     }
 
     function saveCharacter() {
-        const character = $characterStore;
-        if (!character) return;
-        const json = character.save();
-        const text = JSON.stringify(json);
-        Object.assign(document.createElement("a"), {
-            href: "data:text/json;charset=utf-8," + encodeURIComponent(text),
-            download: `${character.profile.name || "???"}.gcs`,
-        }).click();
+        editor.save();
     }
 
-    const ui = {
-        contextMenu: null,
-        modals: null,
-        tooltips: null,
-        notifications: null,
-    };
-
-    setContext("app", {
-        components: ui,
-        character: characterStore,
+    setContext("valor", {
+        editor,
     });
 </script>
 
@@ -106,18 +60,9 @@
 </svelte:head>
 
 <TitleBar>
-    <div slot="title" class="flex">
-        <img
-            on:click={goHome}
-            src="favicon.png"
-            alt="logo"
-            class="h-8 pr-1 cursor-pointer" />
-        <span class="mr-3" on:click={() => console.log($characterStore)}>
-            Valor Character Builder
-        </span>
-        <!-- <a
-            class="underline"
-            href="https://www.patreon.com/bePatron?u=27866887">Become a Patron!</a> -->
+    <div on:click={goHome} slot="title" class="flex">
+        <img src="favicon.png" alt="logo" class="h-8 pr-1 cursor-pointer" />
+        <span class="mr-3"> Valor Character Builder </span>
     </div>
     <div class="h-full flex">
         <div class="inline-block ml-auto">
@@ -131,15 +76,10 @@
     </div>
 </TitleBar>
 
-<ContextMenu bind:this={ui.contextMenu} />
-<Applications bind:this={ui.modals} />
-<Tooltips bind:this={ui.tooltips} />
-<Notifications bind:this={ui.notifications} />
-
 <main>
-    {#if $characterStore && view === 'editor'}
-        <Sheet />
-    {:else if !$characterStore || view === 'home'}
+    {#if $store && view === 'editor'}
+        <Sheet character={store} />
+    {:else if !$store || view === 'home'}
         <section class="flex">
             <div class="mx-48 flex flex-col">
                 <button on:click={newCharacter} class="option">Create a New
@@ -147,6 +87,10 @@
                 <button on:click={loadCharacter} class="option">Load An Existing
                     Character</button>
                 <button class="option">Read Documentation</button>
+                <a
+                    class="underline"
+                    href="https://www.patreon.com/bePatron?u=27866887">Become a
+                    Patron!</a>
             </div>
             <div class="flex-1" />
         </section>
