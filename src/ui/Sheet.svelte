@@ -17,7 +17,11 @@
   import Grimoire from "@ui/layouts/dedicated/Grimoire";
   import Combat from "@ui/layouts/dedicated/Combat";
 
-  export let character;
+  import { Skill } from "@sheet/gurpsFeatures/index";
+  import { Sheet } from "@sheet/feature";
+
+  export let character = new Sheet();
+  new Skill().mount(character.id);
 
   const ui = {
     contextMenu: null,
@@ -33,16 +37,6 @@
     character,
     components: ui,
   });
-
-  import { Valor } from "../rxjs-test/valor";
-  import { Sheet, Skill } from "../rxjs-test/wrappers";
-  import { children } from "svelte/internal";
-
-  console.log(Valor);
-  let skill = new Skill();
-  const { allChildren$, children$ } = skill;
-  console.log(skill);
-  const draft = skill.draft;
 </script>
 
 <style>
@@ -57,22 +51,12 @@
     crossorigin="anonymous" />
 </svelte:head>
 
-<pre>
-  {JSON.stringify($skill, null, 2)}
-</pre>
-{#each $allChildren$ as child, i (child.id)}
-  <pre>
-    {JSON.stringify(child.data, null, 2)}
-  </pre>
-{/each}
-<button on:click={() => skill.nest()}>Add Child</button>
-
 <ContextMenu bind:this={ui.contextMenu} />
 <Applications bind:this={ui.modals} />
 <Tooltips bind:this={ui.tooltips} />
 <Notifications bind:this={ui.notifications} />
 
-<!-- <div class="bg-white w-full overflow-auto">
+<div class="bg-white w-full overflow-auto">
   <Tabs>
     <TabList>
       <Tab>General</Tab>
@@ -93,4 +77,4 @@
     <TabPanel component={Combat} />
     <TabPanel component={Settings} />
   </Tabs>
-</div> -->
+</div>

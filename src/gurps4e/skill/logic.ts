@@ -1,16 +1,16 @@
-import { SkillDifficulty as Difficulty, SkillDefault } from "../../rxjs-test/entities/skill/model";
+import { SkillDifficulty } from "@sheet/keys";
 
-export function getBaseRelativeLevel(difficulty: Difficulty) {
+export function getBaseRelativeLevel(difficulty: SkillDifficulty) {
     switch (difficulty) {
-        case Difficulty.Easy:
+        case SkillDifficulty.Easy:
             return 0
-        case Difficulty.Average:
+        case SkillDifficulty.Average:
             return -1
-        case Difficulty.Hard:
+        case SkillDifficulty.Hard:
             return -2
-        case Difficulty.VeryHard:
+        case SkillDifficulty.VeryHard:
             return -3
-        case Difficulty.Wildcard:
+        case SkillDifficulty.Wildcard:
             return -3
     }
 }
@@ -28,7 +28,7 @@ export function calculateRelativeLevel(points: number, relativeLevel: number) {
 
 export function calculateSkillLevel(
     buyLevelFromDefault: boolean,
-    difficulty: Difficulty,
+    difficulty: SkillDifficulty,
     points: number,
     base: number = 10,
     defaultedFrom?: any,
@@ -41,7 +41,7 @@ export function calculateSkillLevel(
     let relativeLevel = getBaseRelativeLevel(difficulty);
     let level = base;
     if (level !== Number.NEGATIVE_INFINITY) {
-        if (difficulty === Difficulty.Wildcard) {
+        if (difficulty === SkillDifficulty.Wildcard) {
             points /= 3;
         } else {
             if (defaultedFrom && defaultedFrom.points > 0 && buyLevelFromDefault) {

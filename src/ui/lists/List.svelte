@@ -2,8 +2,6 @@
   import { setContext, createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
   import { writable } from "svelte/store";
-  import ContextMenu from "../context-menu/ContextMenu.svelte";
-
   import ListItem from "./ListItem";
 
   export let display = "table";
@@ -19,8 +17,6 @@
   export let editor = null;
   export let list = [];
 
-  export let selected = writable(null);
-
   setContext("list", {
     display: writable(display),
     component: writable(component),
@@ -28,7 +24,6 @@
     headers: writable(0),
     length: writable(0),
     config: writable(config),
-    selected,
     onDropRow(entity) {
       dispatch("ondrop", entity);
     },
@@ -75,7 +70,9 @@
       </thead>
       <tbody>
         {#each list as entity, i (entity.id)}
-          <ListItem {entity} {i} on:select={(e) => selected.set(e.detail)} />
+          {#if entity.exists}
+            <ListItem {entity} {i} />
+          {/if}
         {/each}
       </tbody>
       <tfoot>

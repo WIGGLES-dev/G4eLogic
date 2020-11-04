@@ -19,6 +19,7 @@
   import RangedWeaponEditor from "@ui/editors/RangedWeaponEditor";
 
   const { character, components } = getContext("editor");
+  const { rangedWeapons$, meleeWeapons$, hitLocations$ } = character;
 </script>
 
 <style>
@@ -48,24 +49,24 @@
     </div>
   </div>
   <div class="mx-4 flex-shrink-0">
-    <Silhouette />
+    <!-- <Silhouette /> -->
     <List
       title="Ranged Weapons"
       display="list"
       component={RangedWeapon}
       editor={RangedWeaponEditor}
       config={{ addItem: false }}
-      list={$character.rangedWeapons()} />
+      list={$rangedWeapons$} />
     <List
       title="Melee Weapons"
       display="list"
       component={MeleeWeapon}
       editor={MeleeWeaponEditor}
       config={{ addItem: false }}
-      list={$character.meleeWeapons()} />
+      list={$rangedWeapons$} />
   </div>
   <div class="flex-1 mx-6 hidden xl:block">
-    <TinyMCE bind:content={character.notes} />
+    <TinyMCE bind:content={$character.notes} />
   </div>
   <PointTotals />
   <div class="p-1" />

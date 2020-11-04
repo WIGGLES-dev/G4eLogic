@@ -4,8 +4,17 @@
     import AttributeOptions from "@ui/options/AttributeOptions.svelte";
 
     export let entity = null;
+    $: defaults = $entity.keys.defaults || [];
 
-    $: defaults = [...entity.defaults];
+    function addDefault() {
+        entity.pathUpdate(`keys.defaults`, [...defaults, {}]);
+    }
+    function removeDefault(i) {
+        entity.pathUpdate(
+            `keys.defaults`,
+            defaults.filter((skillDefault, i1) => i !== i1)
+        );
+    }
 </script>
 
 <style>
@@ -14,30 +23,37 @@
     }
 </style>
 
-<Boxes on:addbox={() => entity.addDefault()}>
-    {#each defaults as skillDefault, i (skillDefault.id)}
-        <Box
-            on:addbox={() => entity.addDefault()}
-            on:deletebox={() => skillDefault.delete()}>
-            <div class="flex topmost">
-                <AttributeOptions bind:attribute={skillDefault.criteria.type}>
+<Boxes on:addbox={addDefault}>
+    {#each defaults as skillDefault, i (i)}
+        <Box on:addbox={addDefault} on:deletebox={() => removeDefault(i)}>
+            <div class="flex">
+                <AttributeOptions
+                    {entity}
+                    bind:attribute={$entity.keys.defaults[i].type}>
                     <option value="Skill">Skill Named</option>
                 </AttributeOptions>
 
-                {#if skillDefault.criteria.type !== 'Skill'}
-                    <input type="number" bind:value={skillDefault.modifier} />
+                {#if skillDefault.type !== 'Skill'}
+                    <input
+                        type="number"
+                        placeholder="modifier"
+                        bind:value={$entity.keys.defaults[i].type} />
                 {/if}
             </div>
             {#if skillDefault.type === 'Skill'}
                 <div class="flex">
                     <input
                         type="text"
-                        bind:value={skillDefault.criteria.name} />
+                        placeholder="name"
+                        bind:value={$entity.keys.defaults[i].name} />
                     <input
                         type="text"
                         placeholder="specialization"
-                        bind:value={skillDefault.criteria.specialization} />
-                    <input type="text" bind:value={skillDefault.modifier} />
+                        bind:value={$entity.keys.defaults[i].specialization} />
+                    <input
+                        type="number"
+                        placeholder="modifier"
+                        bind:value={$entity.keys.defaults[i].modifier} />
                 </div>
             {/if}
         </Box>

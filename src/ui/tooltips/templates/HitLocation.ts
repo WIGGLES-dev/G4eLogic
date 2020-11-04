@@ -1,7 +1,6 @@
-import { HitLocation } from "sheet/locations"
 import { capitalize } from "@utils/strings";
 
-export function hitLocationTemplate(location: HitLocation) {
+export function hitLocationTemplate(location: any) {
     if (!location) return `Location Not Found`;
     return `
         <strong>${capitalize(location.location)} (${location.hitPenalty})</strong>,` +
@@ -15,7 +14,7 @@ export function hitLocationTemplate(location: HitLocation) {
         // <blockquote>
         //     ${[...location.equippedItems]
         //     .map((item) => ``)
-        //     .join("")}    
+        //     .join("")}
         // </blockquote>
         // <strong>
         //     Natural DR

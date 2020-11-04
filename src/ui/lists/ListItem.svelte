@@ -1,15 +1,10 @@
 <script>
   import { getContext } from "svelte";
-  import { derived } from "svelte/store";
-
-  import { Equipment } from "@gurps4e/equipment/equipment";
-
-  export let entity = null;
-  const proxy = derived(entity, (store) => entity);
-
   export let depth = 0;
 
-  $: children = [...(entity.children || [])];
+  export let entity = null;
+  const { children$ } = entity;
+  $: children = children$;
 
   const {
     display,
@@ -18,7 +13,6 @@
     headers,
     length,
     config,
-    selected,
     onDropRow,
   } = getContext("list");
 
@@ -28,7 +22,6 @@
 
   function onContextMenu(e) {
     e.preventDefault();
-    selected.set(entity);
     components.contextMenu.render({ contextMenuOptions, e });
   }
 
@@ -109,28 +102,19 @@
       show: () => Boolean($editor),
     },
     {
-      label: `Move To ${entity.location === "carried" ? "Other" : "Carried"}`,
-      callback: () => {
-        entity.location = entity.location === "carried" ? "other" : "carried";
-      },
-      show: () => entity instanceof Equipment,
-    },
-    {
       label: "Collapse",
-      callback: () => (entity.isOpen = false),
-      show: () => entity.isOpen && entity.canContainChildren === true,
+      callback: () => {},
+      show: () => false,
     },
     {
       label: "Expand",
-      callback: () => (entity.isOpen = true),
-      show: () => !entity.isOpen && entity.canContainChildren === true,
+      callback: () => {},
+      show: () => false,
     },
     {
       label: "Make Container",
-      callback: () => (entity.canContainChildren = true),
-      show: () => {
-        if (entity.isContainer) return !entity.isContainer();
-      },
+      callback: () => {},
+      show: () => false,
     },
     {
       label: "Delete",
@@ -166,41 +150,39 @@
   }
 </style>
 
-{#if $display === 'table'}
-  <tr
-    data-id={$proxy.id}
-    data-i={$proxy.listWeight}
-    draggable={true}
-    on:dragstart={onDragstart}
-    on:dragenter={onDragenter}
-    on:dragleave={() => (dragover = false)}
-    on:dragover={onDragenter}
-    on:drop={onDrop}
-    on:contextmenu={onContextMenu}
-    class:disabled={$entity.disabled}
-    class:dragover
-    on:click={handleItemClick}
-    on:dblclick={() => edit()}>
-    <svelte:component
-      this={$component}
-      entity={$proxy}
-      {depth}
-      selected={$selected === $entity} />
-  </tr>
-  {#if $proxy.isOpen && !$config.flat}
-    {#each children as entity, i (entity.id)}
-      <svelte:self {entity} depth={depth + 1} on:select />
-    {/each}
-  {/if}
-{:else if $display === 'list'}
-  <li on:contextmenu={onContextMenu}>
-    <svelte:component this={$component} entity={$proxy} {depth} />
-    {#if children.length > 0 && entity.isOpen && !$config.flat}
-      <ul>
-        {#each children as entity, i (entity.id)}
-          <svelte:self {entity} depth={depth + 1} />
-        {/each}
-      </ul>
+{#if entity.exists}
+  {#if $display === 'table'}
+    <tr
+      data-id={$entity.id}
+      data-i={$entity.ui.listWeight}
+      draggable={true}
+      on:dragstart={onDragstart}
+      on:dragenter={onDragenter}
+      on:dragleave={() => (dragover = false)}
+      on:dragover={onDragenter}
+      on:drop={onDrop}
+      on:contextmenu={onContextMenu}
+      class:disabled={$entity.keys.disabled}
+      class:dragover
+      on:click={handleItemClick}
+      on:dblclick={() => edit()}>
+      <svelte:component this={$component} {entity} {depth} />
+    </tr>
+    {#if $entity.ui.canCantainChildren && !$config.flat}
+      {#each children as entity, i (entity.id)}
+        <svelte:self {entity} depth={depth + 1} on:select />
+      {/each}
     {/if}
-  </li>
+  {:else if $display === 'list'}
+    <li on:contextmenu={onContextMenu}>
+      <svelte:component this={$component} {entity} {depth} />
+      {#if children.length > 0 && $entity.ui.visible && !$config.flat}
+        <ul>
+          {#each children as entity, i (entity.id)}
+            <svelte:self {entity} depth={depth + 1} />
+          {/each}
+        </ul>
+      {/if}
+    </li>
+  {/if}
 {/if}

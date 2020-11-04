@@ -1,9 +1,10 @@
 <script>
   import { getContext } from "svelte";
-  
+
   const { character } = getContext("editor");
 
-  $: totals = $character.pointTotals();
+  const { pointTotal$ } = character;
+  $: totals = $pointTotal$;
 </script>
 
 <style>
@@ -29,7 +30,7 @@
         class="text-center bg-gray-200 p-1 outline-none"
         type="number"
         placeholder="0"
-        bind:value={$character.totalPoints} />
+        bind:value={$character.pointTotal} />
     </div>
     <div class="col-span-2 pt-1" />
     <div class="font-semibold text-right">Spent</div>

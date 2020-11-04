@@ -4,13 +4,13 @@
 
   const { character } = getContext("editor");
 
-  $: carriedWeight = $character.equipmentList.totalWeight({
-    carriedOnly: true,
-  });
-  $: encLevel = $character.encumbranceLevel();
-  $: move = $character.getAttribute("move").calculateLevel();
-  $: lift = $character.basicLift();
-  $: dodge = $character.dodgeScore();
+  $: carriedWeight = 0
+  $: encLevel = 0;
+
+  const { attributes$, basicLift$ } = character;
+  $: move = ($attributes$["move"] || {}).displayLevel || 5;
+  $: lift = $basicLift$;
+  $: dodge = $attributes$["dodge"].displayLevel || {} || 8;
 </script>
 
 <style>

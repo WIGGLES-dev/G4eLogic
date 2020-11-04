@@ -2,7 +2,8 @@
     import { getContext } from "svelte";
     import { createTooltip } from "@ui/utils/popper";
     const { character } = getContext("editor");
-    $: lift = $character.basicLift();
+    const {basicLift$} = character;
+    $: lift = $basicLift$;
 </script>
 
 <style>

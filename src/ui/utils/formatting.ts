@@ -3,7 +3,7 @@ export function string(string, { beforeStart = "", afterEnd = "", fallback = "",
     try {
         if (string === null) return fallback
         if (string === undefined) return fallback
-        if (+string > Number.NEGATIVE_INFINITY && toFixed > -1) output = +string?.toFixed(toFixed)
+        if (typeof string === "number" && +string > Number.NEGATIVE_INFINITY && toFixed > -1) output = +string?.toFixed(toFixed)
     } catch (err) {
         output = fallback;
     }

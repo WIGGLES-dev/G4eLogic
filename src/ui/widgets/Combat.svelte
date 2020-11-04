@@ -3,6 +3,7 @@
   import { createTooltip } from "@ui/utils/popper";
 
   const { character } = getContext("editor");
+  const { swingDamage$, thrustDamage$ } = character;
 </script>
 
 <style>
@@ -157,7 +158,7 @@
     <span class="flex-1 text-center font-semibold">Swing </span>
     <span class="flex-1">
       <span
-        class="fas fa-dice-d6 hover:text-red-700 pr-1" />{$character.getSwingDamage()}</span>
+        class="fas fa-dice-d6 hover:text-red-700 pr-1" />{$swingDamage$}</span>
   </div>
   <div
     class="flex"
@@ -261,6 +262,6 @@
     <span class="flex-1 text-center font-semibold">Thrust </span>
     <span class="flex-1">
       <span
-        class="fas fa-dice-d6 hover:text-red-700 pr-1" />{$character.getThrustDamage()}</span>
+        class="fas fa-dice-d6 hover:text-red-700 pr-1" />{$thrustDamage$}</span>
   </div>
 </section>

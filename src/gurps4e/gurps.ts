@@ -59,7 +59,7 @@ function diceString(count: number, modifier: number = 0, sides: number = 6, mult
     return string
 }
 
-export function getThrust(strikingStrength: number) {
+export function getThrustDamage(strikingStrength: number) {
     let value = strikingStrength;
     if (strikingStrength < 19) {
         return diceString(1, -(6 - (value - 1) / 2))
@@ -74,7 +74,7 @@ export function getThrust(strikingStrength: number) {
     return diceString(value / 8 + 1, value % 8 / 2 - 1)
 }
 
-export function getSwing(strikingStrength: number) {
+export function getSwingDamage(strikingStrength: number) {
     let value = strikingStrength;
     if (value < 10) {
         return diceString(1, -(5 - (value - 1) / 2))
@@ -92,44 +92,6 @@ export function getSwing(strikingStrength: number) {
     value += 9
     return diceString(value / 8 + 1, value % 8 / 2 - 1)
 }
-
-// pointTotals() {
-//     function sumActiveAdvantages(traits: Trait[]) {
-//         return traits.reduce((total, trait) => {
-//             if (trait.active && !trait.isContained()) total += trait.adjustedPoints();
-//             return total
-//         }, 0)
-//     }
-
-//     const totalPoints = this.totalPoints;
-//     const attributePoints = this.totalAttributesCost();
-
-//     const traits = this.traitList.split();
-//     const racialPoints = sumActiveAdvantages(traits.racial);
-//     const advantages = sumActiveAdvantages(traits.advantages);
-//     const perks = sumActiveAdvantages(traits.perks);
-//     const disadvantages = sumActiveAdvantages(traits.disadvantages);
-//     const quirks = sumActiveAdvantages(traits.quirks);
-
-//     const skills = this.skillList.sum("points");
-//     const techniques = this.techniqueList.sum("points");
-//     const spells = this.spellList.sum("points");
-
-//     return {
-//         racialPoints,
-//         attributePoints,
-//         advantages,
-//         perks,
-//         disadvantages,
-//         quirks,
-//         skills,
-//         techniques,
-//         spells,
-//         spent: racialPoints + attributePoints + advantages + perks + disadvantages + quirks + skills + techniques + spells,
-//         total: totalPoints,
-//         get unspent() { return this.total - this.spent }
-//     }
-// }
 
 /**
  * Reducing Algorithm to remove duplicates from derived lists. Any item that appears

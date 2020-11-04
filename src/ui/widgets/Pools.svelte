@@ -4,14 +4,7 @@
     import Bar from "./Bar";
 
     const { character } = getContext("editor");
-
-    $: attributes = [...$character.attributeList.attributes.values()];
-
-    $: pools = attributes.filter((attr) => isPool(attr));
-
-    function isPool(attr) {
-        return attr.hasTag("pool");
-    }
+    const pools = character.pools$;
 </script>
 
 <style>
@@ -33,13 +26,15 @@
     <span class="text-center text-white bg-gray-700">CUR</span>
     <span class="text-center text-white bg-gray-700">MAX</span>
     <span class="text-center text-white bg-gray-700">MOD</span>
-    {#each pools as attr, i (attr.id)}
+    {#each Object.values($pools) as attr, i (attr.signature)}
         <div class="col-span-2">
             <div class="w-full flex">
                 <span
-                    use:createTooltip={{ context: attr, placement: 'bottom-start', tipclass: 'text-sm', tooltip: `${attr.tooltip}` }}
-                    class="text-center w-1/2 inline-block font-semibold uppercase">{attr.abbreviation}
-                    {#if attr.costPerLevel}[{attr.pointsSpent()}]{/if}</span>
+                    use:createTooltip={{ context: attr, placement: 'bottom-start', tipclass: 'text-sm', tooltip: `${attr.keys.tooltip}` }}
+                    class="text-center w-1/2 inline-block font-semibold uppercase">{attr.keys.abbreviation}
+                    {#if attr.keys.costPerLevel}
+                        [{attr.pointsSpent()}]
+                    {/if}</span>
                 <input
                     class="bg-transparent w-10 m-auto text-sm border-b border-gray-700 border-solid text-center outline-none"
                     type="number"
@@ -59,7 +54,7 @@
             <Bar
                 max={attr.displayLevel}
                 current={attr.currentValue}
-                color={attr.color} />
+                color={attr.keys.color} />
         </div>
     {/each}
 </section>

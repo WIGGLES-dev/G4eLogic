@@ -1,5 +1,5 @@
 <script>
-  const Features = {};
+  import { FeatureBonusType } from "@sheet/keys";
   export let feature;
 </script>
 
@@ -7,11 +7,13 @@
 </style>
 
 <select name="" id="" bind:value={feature}>
-  <option value="" />
-  <option value={Features.AttributeBonus}>Gives an attribute bonus of</option>
-  <option value={Features.Armor}>Gives a DR bonus of</option>
+  <option value={undefined} />
+  <option value={FeatureBonusType.Attribute}>
+    Gives an attribute bonus of
+  </option>
+  <option value={FeatureBonusType.Armor}>Gives a DR bonus of</option>
   <option disabled={true}>Gives a reaction modifier of</option>
-  <option value={Features.SkillBonus}>Gives a skill level bonus of</option>
+  <option value={FeatureBonusType.Skill}>Gives a skill level bonus of</option>
   <option disabled={true}>Gives a skill point bonus of</option>
   <option disabled={true}>vies a spell level bonus of</option>
   <option disabled={true}>Gives a spell point bonus of</option>

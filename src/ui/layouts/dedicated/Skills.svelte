@@ -1,22 +1,21 @@
 <script>
+    import { Skill, Technique } from "@sheet/gurpsFeatures/index";
     import { getContext } from "svelte";
     import List from "@ui/lists/List";
 
-    import Skill from "@ui/entities/Skill";
+    import SkillEntity from "@ui/entities/Skill";
     import SkillEditor from "@ui/editors/SkillEditor";
 
     import TechniqueEditor from "@ui/editors/TechniqueEditor";
 
     const { character, components } = getContext("editor");
-
-    $: skillList = $character.skillList.rootItems();
-    $: techniqueList = $character.techniqueList.rootItems();
+    const { skills$, techniques$ } = character;
 
     function addSkill() {
-        $character.skillList.addListItem();
+        new Skill().mount(character.id);
     }
     function addTechnique() {
-        $character.techniqueList.addListItem();
+        new Technqique().mount(character.id);
     }
 </script>
 
@@ -26,9 +25,9 @@
 <List
     title="Techniques"
     on:additem={addTechnique}
-    component={Skill}
+    component={SkillEntity}
     editor={TechniqueEditor}
-    list={techniqueList}>
+    list={$techniques$}>
     <tr slot="header">
         <th>Ref</th>
         <th>Pts</th>
@@ -41,9 +40,9 @@
 <List
     on:additem={addSkill}
     title="Skill"
-    component={Skill}
+    component={SkillEntity}
     editor={SkillEditor}
-    list={skillList}>
+    list={$skills$}>
     <tr slot="header">
         <th>Ref</th>
         <th>Pts</th>

@@ -3,11 +3,10 @@
 
   import { getContext } from "svelte";
   import { createTooltip } from "@ui/utils/popper";
-  export let attributes = [];
 
   const { character, components, dispatch } = getContext("editor");
 
-  $: attributes = [...$character.attributeList.attributes.values()];
+  const attributes = character.attributes$;
 
   function roll(attr) {
     let text;
@@ -65,7 +64,7 @@
   <span class="text-center text-white bg-gray-700">MOD</span>
   <span class="text-center text-white bg-gray-700 px-2">PTS</span>
 
-  {#each attributes as attr, i (attr.id)}
+  {#each Object.values($attributes) as attr, i (attr.signature)}
     {#if (!isSubstat(attr) || true) && !isPool(attr)}
       <div
         class:primary={isPrimary(attr)}
@@ -75,7 +74,7 @@
         class="truncate uppercase">
         <span
           class="float-right pr-2"
-          use:createTooltip={{ context: attr, tipclass: 'text-xs', placement: 'bottom-start', tooltip: `${attr.tooltip || ''}` }}>{attr.abbreviation}
+          use:createTooltip={{ context: attr, tipclass: 'text-xs', placement: 'bottom-start', tooltip: `${attr.keys.tooltip || ''}` }}>{attr.keys.abbreviation}
         </span>
       </div>
       <span
@@ -90,7 +89,7 @@
         class:text-white={!isPrimary(attr)}>
         <input
           class="w-16 rounded text-center outline-none bg-transparent"
-          step={attr.increment}
+          step={attr.keys.increment || 1}
           type="number"
           bind:value={attr.displayLevel} />
         <span
@@ -102,7 +101,7 @@
         step={attr.increment}
         type="number"
         bind:value={attr.modifier} />
-      <span class="text-sm text-center self-center">{#if attr.costPerLevel}
+      <span class="text-sm text-center self-center">{#if attr.keys.costPerLevel}
           [{attr.pointsSpent()}]
         {/if}</span>
     {/if}
