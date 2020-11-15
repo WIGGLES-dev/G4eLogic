@@ -1,4 +1,5 @@
 import * as path from "path";
+import rxPaths from "rxjs/_esm5/path-mapping"
 import webpack from "webpack";
 import CopyPlugin from "copy-webpack-plugin";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
@@ -7,21 +8,29 @@ import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { GenerateSW } from "workbox-webpack-plugin";
 import { postcss } from "svelte-preprocess";
 
-const mode = "development" || "production";
+const mode = "development";
+//@ts-ignore
 const prod = mode === 'production';
 
-const config: webpack.Configuration = {
+const paths = [
+    "E:\\foundryVTT\\GURPS\\node_modules\\g4elogic\\lib",
+    path.resolve(__dirname, "./lib")
+];
+
+const config = (target): webpack.Configuration => ({
     devServer: {
         writeToDisk: true,
-        contentBase: path.join(__dirname, "lib/test"),
+        contentBase: target + "/test",
         compress: false,
         port: 5000,
         hot: false
     },
     entry: {
-        'test/test': [path.resolve(__dirname, 'src/test/index.ts')],
+        'test/test': [path.resolve(__dirname, 'src/test/test.ts')],
+        'index': [path.resolve(__dirname, 'src/index.ts')]
     },
     resolve: {
+        alias: rxPaths(),
         plugins: [
             new TsConfigPathsPlugin({ configFileName: "tsconfig.json" })
         ],
@@ -29,8 +38,9 @@ const config: webpack.Configuration = {
         mainFields: ['svelte', 'browser', 'module', 'main']
     },
     output: {
-        path: path.resolve(__dirname, 'lib'),
+        path: target,
         filename: '[name].js',
+        libraryTarget: "umd",
     },
     module: {
         rules: [
@@ -47,11 +57,13 @@ const config: webpack.Configuration = {
                 use: {
                     loader: 'svelte-loader',
                     options: {
+                        onwarn: false,
                         emitCss: true,
                         preprocess: [
                             postcss({
                                 plugins: [
                                     require("tailwindcss"),
+                                    require("postcss-nested"),
                                     require("autoprefixer")
                                 ]
                             })
@@ -62,7 +74,7 @@ const config: webpack.Configuration = {
             {
                 test: /\.css$/,
                 use: [
-                    prod ? MiniCssExtractPlugin.loader : 'style-loader',
+                    MiniCssExtractPlugin.loader || 'style-loader',
                     'css-loader',
                     {
                         loader: "postcss-loader",
@@ -71,6 +83,7 @@ const config: webpack.Configuration = {
                                 ident: "postcss",
                                 plugins: [
                                     require("tailwindcss"),
+                                    require("postcss-nested"),
                                     require("autoprefixer")
                                 ]
                             }
@@ -92,7 +105,7 @@ const config: webpack.Configuration = {
         new webpack.ProvidePlugin({
             tinymce: 'tinymce'
         }),
-        new GenerateSW(),
+        // new GenerateSW(),
         new CleanWebpackPlugin(),
         new CopyPlugin({
             patterns: [
@@ -102,6 +115,9 @@ const config: webpack.Configuration = {
         new MiniCssExtractPlugin()
     ],
     devtool: prod ? false : 'source-map'
-}
+})
 
-export default config;
+export default [
+    config(paths[0]),
+    config(paths[1])
+];

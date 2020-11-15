@@ -11,13 +11,20 @@
     .grid {
         height: min-content;
     }
-    .pool {
-        @apply duration-300;
-        transition-property: width;
-    }
     .overflow {
     }
+
     .low {
+    }
+
+    .current-input {
+        @apply bg-transparent w-10 m-auto text-sm border-b border-gray-700 border-solid text-center outline-none;
+    }
+    .max-input {
+        @apply w-10 m-auto text-sm border-b border-gray-700 border-solid text-center outline-none;
+    }
+    .mod-input {
+        @apply w-10 m-auto text-sm border-b border-gray-700 border-solid text-center outline-none;
     }
 </style>
 
@@ -36,19 +43,13 @@
                         [{attr.pointsSpent()}]
                     {/if}</span>
                 <input
-                    class="bg-transparent w-10 m-auto text-sm border-b border-gray-700 border-solid text-center outline-none"
+                    class="current-input"
                     type="number"
                     bind:value={attr.currentValue} />
             </div>
         </div>
-        <input
-            class="w-10 m-auto text-sm border-b border-gray-700 border-solid text-center outline-none"
-            type="number"
-            bind:value={attr.displayLevel} />
-        <input
-            type="number"
-            bind:value={attr.modifier}
-            class="w-10 m-auto text-sm border-b border-gray-700 border-solid text-center outline-none" />
+        <input class="max-input" type="number" bind:value={attr.displayLevel} />
+        <input type="number" bind:value={attr.modifier} class="mod-input" />
         <div
             class="col-span-4 relative h-3 rounded-r-md border-b border-solid border-gray-700">
             <Bar

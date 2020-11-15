@@ -1,5 +1,10 @@
 <script>
-    import { onMount, createEventDispatcher, afterUpdate } from "svelte";
+    import {
+        onMount,
+        onDestroy,
+        createEventDispatcher,
+        afterUpdate,
+    } from "svelte";
     const dispatch = createEventDispatcher();
 
     export let options = {};

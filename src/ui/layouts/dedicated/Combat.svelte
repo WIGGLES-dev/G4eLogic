@@ -2,19 +2,35 @@
   import { getContext } from "svelte";
   import List from "@ui/lists/List";
 
-  import MeleeWeapon from "@ui/entities/MeleeWeapon";
-  import MeleeWeaponEditor from "@ui/editors/MeleeWeaponEditor";
-
-  import RangedWeapon from "@ui/entities/RangedWeapon";
-  import RangedWeaponEditor from "@ui/editors/RangedWeaponEditor";
+  import MeleeWeaponEntity from "@ui/entities/MeleeWeapon";
+  import RangedWeaponEntity from "@ui/entities/RangedWeapon";
 
   import Silhouette from "@ui/widgets/Silhouette";
   import SizeRange from "@ui/widgets/SizeRange";
 
   const { character } = getContext("editor");
+  const {
+    encumbranceLevel$,
+    attributes$,
+    meleeWeapons$,
+    rangedWeapons$,
+  } = character;
 
-  $: dodge = $character.dodgeScore();
-  $: encumberedDodge = $character.encumberedDodgeScore();
+  $: dodge = $attributes$["dodge"]
+    ? $attributes$["dodge"].calculateLevel() || 5
+    : 5;
+  $: encumberedDodge = dodge + ($encumbranceLevel$ || 0);
+
+  $: rangedWeaponProps = {
+    addItem: false,
+    component: RangedWeaponEntity,
+    list: $rangedWeapons$,
+  };
+  $: meleeWeaponProps = {
+    addItem: false,
+    component: MeleeWeaponEntity,
+    list: $meleeWeapons$,
+  };
 </script>
 
 <style>
@@ -30,12 +46,7 @@
       <button class="button">Dodge+ ({encumberedDodge + 3})</button>
     </div>
     <div class="my-4">
-      <List
-        title="Melee Weapons"
-        component={MeleeWeapon}
-        editor={MeleeWeaponEditor}
-        list={$character.meleeWeapons()}
-        config={{ addItem: false }}>
+      <List {...meleeWeaponProps}>
         <colgroup slot="colgroup">
           <col />
           <col />
@@ -55,12 +66,7 @@
         </tr>
       </List>
     </div>
-    <List
-      title="Ranged Weapons"
-      component={RangedWeapon}
-      editor={RangedWeaponEditor}
-      list={$character.rangedWeapons()}
-      config={{ addItem: false }}>
+    <List {...rangedWeaponProps}>
       <colgroup slot="colgroup">
         <col />
         <col />
@@ -81,11 +87,9 @@
         <th scope="col">ST</th>
       </tr>
     </List>
-  </div>
-  <div class="w-1/3 mx-4">
-    <Silhouette />
+    <SizeRange />
   </div>
   <div class="flex-1">
-    <SizeRange />
+    <Silhouette />
   </div>
 </div>

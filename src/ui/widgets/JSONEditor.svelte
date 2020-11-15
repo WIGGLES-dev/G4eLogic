@@ -3,21 +3,16 @@
     import JSONEditor from "jsoneditor";
 
     const dispatch = createEventDispatcher();
-
     export let editor;
     let editorElement;
     export let data = {};
     export let options = {
         modes: ["code", "tree"],
-        // onChange() {
-        //     dispatch("onChange", { editor });
-        // },
-        // onChangeJSON(json) {
-        //     dispatch("onChangeJSON", { editor, json });
-        // },
-        // onChangeText(jsonString) {
-        //     dispatch("onChangeText", { editor, jsonString });
-        // },
+        onChange(e) {
+            data = editor.get();
+        },
+        onChangeJSON(json) {},
+        onChangeText(jsonString) {},
     };
 
     onMount(() => {

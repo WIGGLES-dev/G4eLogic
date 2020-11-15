@@ -1,5 +1,5 @@
 <script>
-  import List from "ui/lists/List";
+  import List from "@ui/lists/List";
   import TraitModifier from "@ui/entities/TraitModifier";
   import TraitModifierEditor from "@ui/editors/TraitModifierEditor";
 

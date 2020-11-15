@@ -12,7 +12,7 @@
     } from "@svgdotjs/svg.js";
 
     const { character, components } = getContext("editor");
-
+    const { hitLocations$ } = character;
     export let height = "100%";
     export let width = "100%";
     export let scale = "1";
@@ -82,7 +82,7 @@
 
     function hideAllUnfocusedNodes() {
         let nodes = draw.find(
-            `[data-location-group]:not([data-location-group="${focusedLocation.name
+            `[data-location-group]:not([data-location-group="${focusedLocation.location
                 .split(" ")
                 .join("-")}"])`
         );
@@ -106,7 +106,7 @@
     function createTooltips() {
         draw.find(`[data-location-group]`).forEach((svg) => {
             const name = svg.node.dataset.locationGroup.split("-").join(" ");
-            const location = $character.locationList.getLocation(name);
+            const location = $hitLocations$[name];
             const tooltip = hitLocationTemplate(location);
             tooltips[location ? location.key : ""] = createTooltip(svg.node, {
                 tooltip,
@@ -117,13 +117,18 @@
     async function focusLocation(e) {
         const locationGroup = e.target.closest("[data-location-group]");
         if (!locationGroup) return;
-        let newLocation = $character.locationList.getLocation(
-            locationGroup.dataset.locationGroup.split("-").join(" ")
-        );
-        if (focusedLocation === newLocation) return;
+        let newLocation =
+            $hitLocations$[
+                locationGroup.dataset.locationGroup.split("-").join(" ")
+            ];
+        if (
+            focusedLocation &&
+            focusedLocation.location === newLocation.location
+        )
+            return;
         focusedLocation = newLocation;
         let node = draw.find(
-            `[data-location-group="${focusedLocation.name
+            `[data-location-group="${focusedLocation.location
                 .split(" ")
                 .join("-")}"]`
         )[0];
@@ -167,16 +172,12 @@
         createTooltips();
     });
 
-    $: [...$character.locationList.locations.values()].forEach((location) => {
+    $: [...Object.values($hitLocations$)].forEach((location) => {
         if (!draw) return;
-        const anySubLocationsCrippled = (location) =>
-            location
-                .getSubLocations()
-                .some((location) => location.isCrippled());
         const svg = draw.find(
-            `[data-location-group="${location.name
+            `[data-location-group="${location.location
                 .split(" ")
-                .join("-")}"],[data-location="${location.name
+                .join("-")}"],[data-location="${location.location
                 .split(" ")
                 .join("-")}"]`
         );
@@ -193,24 +194,23 @@
         const right = ["torso", "right arm", "right leg"];
         const allSilhoueteLocations = [...left, ...right]
             .map((location) => {
-                const hitLocation = $character.locationList.getLocation(
-                    location
-                );
-                return [hitLocation, ...hitLocation.getSubLocations()];
+                const hitLocation = $hitLocations$[location];
+                return [hitLocation, ...hitLocation.subLocations];
             })
             .flat()
             .filter((value) => value);
         const mapLocations = (list) => {
             return [
                 ...list.reduce((locations, location) => {
-                    if (focusedLocation && focusedLocation.name === location) {
-                        focusedLocation
-                            .getSubLocations()
-                            .forEach((location) => locations.add(location));
-                    } else if (!focusedLocation) {
-                        locations.add(
-                            $character.locationList.getLocation(location)
+                    if (
+                        focusedLocation &&
+                        focusedLocation.location === location
+                    ) {
+                        focusedLocation.subLocations.forEach((location) =>
+                            locations.add(location)
                         );
+                    } else if (!focusedLocation) {
+                        locations.add($hitLocations$[location]);
                     }
                     return locations;
                 }, new Set()),
@@ -219,8 +219,12 @@
         return {
             left: mapLocations(left),
             right: mapLocations(right),
-            other: [...$character.locationList.locations.values()].filter(
-                (location) => !allSilhoueteLocations.includes(location)
+            other: [...Object.values($hitLocations$)].filter(
+                (location) =>
+                    !allSilhoueteLocations.filter(
+                        (silhouetteLocation) =>
+                            silhouetteLocation !== location.location
+                    )
             ),
         };
     };
@@ -264,6 +268,12 @@
     span.fas.fa-shield {
         @apply pr-1;
     }
+    .damage-input {
+        @apply w-5 outline-none text-black;
+    }
+    .cripple-threshold {
+        @apply w-5 outline-none;
+    }
 </style>
 
 <svelte:window />
@@ -271,21 +281,20 @@
 <section class="relative">
     <div class="flex">
         <div class="location-bar">
-            {#each getLocations().left as location, i (location.id)}
+            {#each getLocations().left as location, i (location.location)}
                 <div
                     class="location"
                     class:crippled={location.isCrippled()}
-                    bind:this={hud[location.key]}>
-                    <div class="location-name">{location.name}</div>
+                    bind:this={hud[location.location]}>
+                    <div class="location-name">{location.location}</div>
                     <div>
-                        <span
-                            class="fas fa-shield">{location.armorValue()}</span>
+                        <span class="fas fa-shield">{location.armor}</span>
                         <input
                             type="number"
-                            class="w-5 outline-none text-black"
+                            class="damage-input"
                             bind:value={location.damageTaken} />
                         <input
-                            class="w-5 outline-none"
+                            class="cripple-threshold"
                             type="number"
                             disabled
                             value={Math.ceil(location.crippleThreshold())} />
@@ -568,15 +577,14 @@
             </g>
         </svg>
         <div class="location-bar">
-            {#each getLocations().right as location, i (location.id)}
+            {#each getLocations().right as location, i (location.location)}
                 <div
                     class="location"
                     class:crippled={location.isCrippled()}
                     bind:this={hud[location.key]}>
-                    <div class="location-name">{location.name}</div>
+                    <div class="location-name">{location.location}</div>
                     <div>
-                        <span
-                            class="fas fa-shield">{location.armorValue()}</span>
+                        <span class="fas fa-shield">{location.armor}</span>
                         <input
                             type="number"
                             class="w-5 outline-none text-black"
@@ -598,20 +606,20 @@
         </div>
     </div>
     <div class="w-full grid grid-cols-6">
-        {#each getLocations().other as location, i (location.id)}
+        {#each getLocations().other as location, i (location.location)}
             <div
                 class="location"
                 class:crippled={location.isCrippled()}
                 bind:this={hud[location.key]}>
-                <div class="location-name">{location.name}</div>
+                <div class="location-name">{location.location}</div>
                 <div>
-                    <span class="fas fa-shield">{location.armorValue()}</span>
+                    <span class="fas fa-shield">{location.armor}</span>
                     <input
                         type="number"
-                        class="w-5 outline-none text-black"
+                        class="damage-taken"
                         bind:value={location.damageTaken} />
                     <input
-                        class="w-5 outline-none"
+                        class="cripple-threshold"
                         type="number"
                         disabled
                         value={Math.ceil(location.crippleThreshold())} />

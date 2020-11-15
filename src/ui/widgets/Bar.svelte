@@ -9,8 +9,11 @@
 </script>
 
 <style>
+  .bar {
+    @apply h-full rounded-r-md transition-all duration-300 pointer-events-none;
+  }
 </style>
 
 <div
-  class="h-full point-events-none rounded-r-md transition-all duration-300"
+  class="bar"
   style="background-color: {viewWidth ? color : null}; width:{viewWidth}%" />

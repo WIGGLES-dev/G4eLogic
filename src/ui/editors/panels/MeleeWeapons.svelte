@@ -1,30 +1,38 @@
 <script>
   import List from "@ui/lists/List";
-  import MeleeWeapon from "@ui/entities/MeleeWeapon";
+  import ListItem from "@ui/lists/ListItem";
+  import MeleeWeaponEntity from "@ui/entities/MeleeWeapon";
   import MeleeWeaponEditor from "@ui/editors/MeleeWeaponEditor";
 
-  export let entity = null;
+  import { WeaponType, MeleeWeapon } from "@internal";
 
-  $: weapons = entity.getMeleeWeapons();
+  export let entity = null;
+  $: ({ meleeWeapons$ } = entity);
+
+  function addWeapon() {
+    entity.embed(new MeleeWeapon());
+  }
+
+  $: props = {
+    addItem: true,
+    component: MeleeWeaponEntity,
+    list: $meleeWeapons$,
+  };
 </script>
 
 <style>
 </style>
 
-<List
-  list={weapons}
-  title="Melee Weapons"
-  editor={MeleeWeaponEditor}
-  component={MeleeWeapon}
-  on:additem={() => entity.addMeleeWeapon()}>
+<List on:additem={addWeapon} {...props}>
   <tr slot="header">
-    <th class="w-full">Melee Weapons</th>
-    <th>Usage</th>
+    <th>Melee Weapons</th>
+    <th class="w-full">Usage</th>
     <th>Lvl</th>
     <th>Parry</th>
     <th>Block</th>
     <th>Damage</th>
     <th>Reach</th>
+    <th>Info</th>
     <th>ST</th>
   </tr>
 </List>

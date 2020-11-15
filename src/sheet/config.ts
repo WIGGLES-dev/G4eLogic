@@ -1,8 +1,4 @@
-import { Config, KeyList, HitLocationData, AttributeData, PoolData } from "@sheet/keys";
-
-function parseConfig(config: Config) {
-
-}
+import { KeyList, AttributeData, PoolData, HitLocationData } from "@internal";
 
 export function parseAttributes(attributes: KeyList<AttributeData>) {
     const attributeList = Object.entries(attributes).reduce(
@@ -25,7 +21,6 @@ export const defaultAttributeData = (): AttributeData => ({
 export function parsePools(pools: KeyList<PoolData>) {
     return parseAttributes(pools) as KeyList<PoolData>;
 }
-
 export function parseHitLocations(locations: KeyList<HitLocationData>) {
     const hitLocations = Object.entries(locations).reduce(
         (locations, [location, data]) => {

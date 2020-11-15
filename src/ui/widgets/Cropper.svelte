@@ -1,13 +1,13 @@
 <script>
     import Cropper from "cropperjs";
-    import { onMount } from "svelte";
+    import { Valor } from "@internal";
 
-    export let src = "silhouette.png";
+    export let src;
+    export let cropped;
 
     let portrait;
     let cropper;
     let circular = false;
-    let filePicker;
 
     function getRoundedCanvas(sourceCanvas) {
         const canvas = document.createElement("canvas");
@@ -35,24 +35,33 @@
     function cropPortrait() {
         if (!cropper) {
             cropper = new Cropper(portrait);
-        } else {
+        } else if (cropper) {
             const canvas = cropper.getCroppedCanvas();
-            src = circular
-                ? getRoundedCanvas(canvas).toDataURL()
-                : canvas.toDataURL();
             cropper.destroy();
             cropper = null;
+            cropped = circular
+                ? getRoundedCanvas(canvas).toDataURL()
+                : canvas.toDataURL();
         }
     }
-
-    function newImage() {
-        filePicker.click();
+    function reset() {
+        cropped = null;
     }
 
-    function changeImage(e) {
-        let file = e.target.files[0];
-        let url = URL.createObjectURL(file);
-        src = url;
+    function cancel(e) {
+        if (e && e.which != "3" && !cropper) return;
+        cropper.destroy();
+        cropper = null;
+    }
+
+    async function newImage() {
+        let files = await Valor.upload();
+        const reader = new FileReader();
+        reader.addEventListener("load", (e) => {
+            src = e.target.result;
+        });
+        cropped = null;
+        if (files[0]) reader.readAsDataURL(files[0]);
     }
 </script>
 
@@ -69,23 +78,26 @@
 </style>
 
 <section class:circular class="flex flex-col">
-    <img
-        class="object-contain"
-        style="max-height: 80vh;"
-        {src}
-        alt="profile"
-        bind:this={portrait} />
-    <div>
+    <div class="bg-gray-700 text-white px-4 mb-2">
+        {#if cropper}
+            <span
+                title="cancel"
+                on:click={cancel}
+                class="fas fa-window-close" />
+        {/if}
         <span
+            title="crop"
             on:click={cropPortrait}
             class="fas"
             class:fa-crop={!cropper}
             class:fa-check={cropper} />
-        <span on:click={newImage} class="fas fa-images" />
-        <input
-            on:change={changeImage}
-            type="file"
-            hidden
-            bind:this={filePicker} />
+        <span title="upload" on:click={newImage} class="fas fa-images" />
+        <span title="uncrop" on:click={reset} class="fas fa-undo" />
     </div>
+    <img
+        class="object-contain object-center"
+        style="max-height: 80vh;"
+        src={cropped || src}
+        alt="profile"
+        bind:this={portrait} />
 </section>

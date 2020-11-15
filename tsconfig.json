@@ -1,12 +1,12 @@
 {
     "compilerOptions": {
         "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
         "noImplicitAny": false,
         "removeComments": true,
         "preserveConstEnums": true,
         "moduleResolution": "node",
         "sourceMap": true,
-        "allowSyntheticDefaultImports": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "outDir": "lib",
@@ -24,17 +24,14 @@
         ],
         "baseUrl": "./src",
         "paths": {
-            "@valor/*": [
-                "valor/*"
-            ],
             "@sheet/*": [
                 "sheet/*"
             ],
-            "@gurps4e/*": [
-                "gurps4e/*"
-            ],
             "@utils/*": [
                 "utils/*"
+            ],
+            "@internal": [
+                "./internal.ts"
             ],
             "@externals/*": [
                 "externals/*"
@@ -49,7 +46,8 @@
     "include": [
         "types",
         "src",
-        "../foundryVTT/GURPS/src/svelte/tabs", "src/rxjs-test"
+        "../foundryVTT/GURPS/src/svelte/tabs",
+        "src/rxjs-test"
     ],
     "exclude": [
         "node_modules",

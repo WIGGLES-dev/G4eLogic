@@ -1,4 +1,16 @@
+<script context="module">
+  const modals = new Set();
+  function modalToTop(modal) {
+    const highestIndex = [...modals].reduce(
+      (z, modal) => Math.max(z, modal.zIndex),
+      0
+    );
+    modal.zIndex = highestIndex + 1;
+  }
+</script>
+
 <script>
+  import { get_current_component } from "svelte/internal";
   import {
     createEventDispatcher,
     getContext,
@@ -6,24 +18,22 @@
     onMount,
     onDestroy,
   } from "svelte";
+
   const dispatch = createEventDispatcher();
+
   import { toTop } from "@ui/utils/use";
 
-  setContext("modal", {
-    isModal: true,
+  const modal = get_current_component();
+
+  onMount(() => {
+    modals.add(modal);
+    return modals.delete(modal);
+  });
+  onDestroy(() => {
+    modals.delete(modal);
   });
 
-  const {
-    components: { modals },
-  } = getContext("editor");
-
-  onMount(() => {});
-  onDestroy(() => {});
-
-  export let rendered = false;
-
   export let component;
-  export let props = {};
 
   export let title = null;
   export let height = 600;
@@ -128,43 +138,42 @@
   }
 </style>
 
+<svelte:options accessors={true} />
 <svelte:window
   on:resize={handleScreenSize}
   on:mousemove={onDrag}
   on:mouseup={() => (dragging = false)}
   on:keydown={keyDown} />
 
-{#if rendered}
-  <div
-    use:handleScreenSize
-    data-appid
-    bind:offsetHeight={height}
-    bind:offsetWidth={width}
-    class:resize={!minify}
-    on:mousedown={() => dispatch('focus')}
-    class="flex flex-col overflow-hidden fixed border border-gray-700 border-solid bg-white"
-    bind:this={dialog}
-    use:toTop
-    style="
+<div
+  use:handleScreenSize
+  bind:offsetHeight={height}
+  bind:offsetWidth={width}
+  class:resize={!minify}
+  on:mousedown={() => modalToTop(modal)}
+  class="flex flex-col overflow-hidden fixed border border-gray-700 border-solid bg-white"
+  bind:this={dialog}
+  style="
   z-index: {zIndex};
   height: {height}px;
   width: {width}px;
   left: {dLeft}px;
   top: {dTop}px;
   ">
-    <header
-      class="bg-gray-700 flex p-2 text-white"
-      bind:this={header}
-      on:dblclick={minifyModal}
-      on:dragstart={(e) => e.preventDefault()}
-      on:mousedown={() => (dragging = true)}>
-      <span class="flex-1">{title}</span>
-      <span
-        class="hover:text-red-700 close fas fa-window-close"
-        on:click={() => dispatch('close')} />
-    </header>
-    <section class:hidden={minify} class="flex-1 overflow-scroll">
-      <svelte:component this={component} {...props} />
-    </section>
-  </div>
-{/if}
+  <header
+    class="bg-gray-700 flex p-2 text-white"
+    bind:this={header}
+    on:dblclick={minifyModal}
+    on:dragstart={(e) => e.preventDefault()}
+    on:mousedown={() => (dragging = true)}>
+    <span class="flex-1">{title}</span>
+    <span
+      class="hover:text-red-700 close fas fa-window-close"
+      on:click={() => dispatch('close')} />
+  </header>
+  <section class:hidden={minify} class="flex-1 overflow-scroll">
+    <slot>
+      <svelte:component this={component} {...$$props} />
+    </slot>
+  </section>
+</div>

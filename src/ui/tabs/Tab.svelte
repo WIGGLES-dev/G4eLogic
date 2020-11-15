@@ -4,7 +4,7 @@
 
   export let disabled = false;
   export let identifier = null;
-  const tab = { identifier };
+  const tab = { identifier, disabled };
   const { registerTab, selectTab, selectedTab } = getContext(TABS);
   registerTab(tab);
 

@@ -33,7 +33,7 @@ export function encumberedDodgeTarget(encumbranceLevel: number, dodgeTarget: num
     }
 }
 
-function diceString(count: number, modifier: number = 0, sides: number = 6, multiplier: number = 1) {
+export function diceString(count: number, modifier: number = 0, sides: number = 6, multiplier: number = 1) {
     let string = "";
     count = Math.floor(Math.max(count, 0));
     sides = Math.max(sides, 0);
@@ -92,32 +92,3 @@ export function getSwingDamage(strikingStrength: number) {
     value += 9
     return diceString(value / 8 + 1, value % 8 / 2 - 1)
 }
-
-/**
- * Reducing Algorithm to remove duplicates from derived lists. Any item that appears
- * in the list later on, based on the order of the keys. Things earlier in the lists will
- * be overridden by things later in the list. Be sure to account for that when using this function.
- * @param lists A series of lists to remove the duplicates from
- */
-// export function removeDuplicates(lists: { [key: string]: ListItem[] }) {
-//     const checked = new Set();
-//     return Object.entries(lists).reduce((prev, [key, list]) => {
-//         checked.add(key);
-//         const checkAgainst = Object.entries(lists).filter(([key1, list]) => {
-//             key !== key1 && !checked.has(key1)
-//         }).map(values => values[1]).map(list => list).flat();
-//         let newCollection = list.filter(item => !checkAgainst.includes(item));
-//         lists[key] = newCollection;
-//         return prev
-//     }, lists)
-// }
-
-// function resolveWeights(list: List, target?: ListItem, newWeight?: number) {
-//     if (!list) return
-//     if (!list.contents.has(target)) return list
-//     let arr = list.iter();
-//     if (target && newWeight > -1) {
-//         arr.splice(newWeight, 0, arr.splice(target.listWeight, 1)[0]);
-//     }
-//     arr.forEach((item, i) => item.listWeight = i);
-// }

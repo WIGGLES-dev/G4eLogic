@@ -12,14 +12,25 @@
 
   import List from "@ui/lists/List";
 
-  import MeleeWeapon from "@ui/entities/MeleeWeapon";
-  import MeleeWeaponEditor from "@ui/editors/MeleeWeaponEditor";
+  import MeleeWeaponEntity from "@ui/entities/MeleeWeapon";
 
-  import RangedWeapon from "@ui/entities/RangedWeapon";
-  import RangedWeaponEditor from "@ui/editors/RangedWeaponEditor";
+  import RangedWeaponEntity from "@ui/entities/RangedWeapon";
 
-  const { character, components } = getContext("editor");
-  const { rangedWeapons$, meleeWeapons$, hitLocations$ } = character;
+  const { character } = getContext("editor");
+  const { rangedWeapons$, meleeWeapons$ } = character;
+
+  $: rangedWeaponProps = {
+    display: "list",
+    addItem: false,
+    component: RangedWeaponEntity,
+    list: $rangedWeapons$,
+  };
+  $: meleeWeaponProps = {
+    display: "list",
+    addItem: false,
+    component: MeleeWeaponEntity,
+    list: $meleeWeapons$,
+  };
 </script>
 
 <style>
@@ -48,26 +59,16 @@
       <LiftingTable />
     </div>
   </div>
-  <div class="mx-4 flex-shrink-0">
-    <!-- <Silhouette /> -->
-    <List
-      title="Ranged Weapons"
-      display="list"
-      component={RangedWeapon}
-      editor={RangedWeaponEditor}
-      config={{ addItem: false }}
-      list={$rangedWeapons$} />
-    <List
-      title="Melee Weapons"
-      display="list"
-      component={MeleeWeapon}
-      editor={MeleeWeaponEditor}
-      config={{ addItem: false }}
-      list={$rangedWeapons$} />
+  <div class="flex-shrink-0">
+    <div class="mx-4">
+      <Silhouette />
+    </div>
+    <List {...rangedWeaponProps}><span slot="title">Ranged Weapons</span></List>
+    <List {...meleeWeaponProps}><span slot="title">Melee Weapons</span></List>
   </div>
-  <div class="flex-1 mx-6 hidden xl:block">
+  <!-- <div class="flex-1 mx-6 hidden xl:block">
     <TinyMCE bind:content={$character.notes} />
-  </div>
+  </div> -->
   <PointTotals />
   <div class="p-1" />
 </div>

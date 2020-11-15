@@ -2,44 +2,90 @@
   import { getContext } from "svelte";
   import List from "@ui/lists/List";
 
-  import TraitEditor from "@ui/editors/TraitEditor";
-
-  import Trait from "@ui/entities/Trait";
+  import TraitEntity from "@ui/entities/Trait";
   import Language from "@ui/entities/Language";
 
   import { strEncodeUTF16 } from "@utils/strings";
+  import { split, Trait } from "@internal";
 
   const { character } = getContext("editor");
 
-  $: traitList = $character.traitList;
+  const { traits$ } = character;
 
-  $: splits = traitList.split();
-
-  $: languages = traitList
-    .iter()
-    .filter((trait) => /language/i.test([...trait.categories].toString()))
-    .sort((a, b) => strEncodeUTF16(b.name) - strEncodeUTF16(a.name));
-
-  $: cultures = traitList
-    .iter()
-    .filter((trait) => /culture/i.test([...trait.categories].toString()))
-    .sort((a, b) => strEncodeUTF16(b.name) - strEncodeUTF16(a.name));
-
-  function addItem(categories) {
-    traitList.addListItem().categories = categories;
+  function languages(traits) {
+    traits
+      .filter((trait) => /language/i.test(trait.keys.categories.join(" ")))
+      .sort((a, b) => strEncodeUTF16(b.name) - strEncodeUTF16(a.name));
   }
+  function cultures(traits) {
+    traits
+      .filter((trait) => /culture/i.test(trait.keys.categories.join(" ")))
+      .sort((a, b) => strEncodeUTF16(b.name) - strEncodeUTF16(a.name));
+  }
+  function addItem(categories = []) {
+    new Trait().mount(character.id).update((data) => {
+      data.keys.categories = categories;
+    });
+  }
+  function getRoot(entities = []) {
+    return entities
+      .filter((entity) => entity.owner == null)
+      .sort((a, b) => a.listWeight - b.listWeight);
+  }
+  function accessChildren(entity) {
+    return entity.sameChildren.sort((a, b) => a.listWeight - b.listWeight);
+  }
+  $: props = {
+    draggable: true,
+    addItem: true,
+    component: TraitEntity,
+    list: $traits$,
+    accessChildren,
+  };
+  $: advantageProps = {
+    ...props,
+    getRoot: (list) => getRoot(split(list).advantages),
+  };
+  $: languageProps = {
+    ...props,
+    addItem: false,
+    getRoot: (list) => getRoot(languages(list)),
+    component: Language,
+  };
+  $: cultureProps = {
+    ...props,
+    addItem: false,
+    getRoot: (list) => getRoot(cultures(list)),
+  };
+  $: disadvantageProps = {
+    ...props,
+    getRoot: (list) => getRoot(split(list).disadvantages),
+  };
+  $: racialProps = {
+    ...props,
+    getRoot: (list) => getRoot(split(list).racial),
+  };
+  $: metaProps = {
+    ...props,
+    getRoot: (list) => getRoot(split(list).meta),
+  };
+  $: perkProps = {
+    ...props,
+    getRoot: (list) => getRoot(split(list).perks),
+  };
+  $: quirkProps = {
+    ...props,
+    getRoot: (list) => getRoot(split(list).quirks),
+  };
+  $: featureProps = {
+    ...props,
+    getRoot: (list) => getRoot(split(list).features),
+  };
 </script>
 
 <div class="lg:flex">
   <div class="flex-1">
-    <List
-      category="Advantage"
-      on:additem={() => addItem(['Advantage'])}
-      title="Advantages"
-      component={Trait}
-      editor={TraitEditor}
-      list={splits.advantages}
-      config={{ flat: false }}>
+    <List on:additem={() => addItem(['Advantage'])} {...advantageProps}>
       <tr slot="header">
         <th class="w-full">Advantages</th>
         <th>Lvl</th>
@@ -49,24 +95,14 @@
     </List>
   </div>
   <div class="w-1/5">
-    <List
-      category="Language"
-      config={{ addItem: false }}
-      list={languages}
-      component={Language}
-      editor={TraitEditor}>
+    <List {...languageProps}>
       <tr slot="header">
         <th class="w-full">Languages</th>
         <th>Pts</th>
         <th>Ref</th>
       </tr>
     </List>
-    <List
-      category="Culture"
-      config={{ addItem: false }}
-      list={cultures}
-      component={Trait}
-      editor={TraitEditor}>
+    <List {...cultureProps}>
       <tr slot="header">
         <th class="w-full">Cultures</th>
         <th>Pts</th>
@@ -75,14 +111,7 @@
     </List>
   </div>
   <div class="flex-1">
-    <List
-      category="Disadvantage"
-      on:additem={() => addItem(['Disadvantage'])}
-      title="Disadvantages"
-      component={Trait}
-      editor={TraitEditor}
-      list={splits.disadvantages}
-      config={{ flat: false }}>
+    <List on:additem={() => addItem(['Disadvantage'])} {...disadvantageProps}>
       <tr slot="header">
         <th class="w-full">Disadvantages</th>
         <th>Lvl</th>
@@ -95,14 +124,7 @@
 
 <div class="lg:flex">
   <div class="lg:flex-1">
-    <List
-      category="Racial"
-      on:additem={() => addItem(['Racial'])}
-      title="Racial"
-      component={Trait}
-      editor={TraitEditor}
-      list={splits.racial}
-      config={{ flat: false }}>
+    <List on:additem={() => addItem(['Racial'])} {...racialProps}>
       <tr slot="header">
         <th class="w-full">Racial</th>
         <th>Lvl</th>
@@ -113,14 +135,7 @@
   </div>
 
   <div class="flex-1">
-    <List
-      category="Meta"
-      on:additem={() => addItem(['Meta'])}
-      title="Meta"
-      component={Trait}
-      editor={TraitEditor}
-      list={splits.meta}
-      config={{ flat: false }}>
+    <List on:additem={() => addItem(['Meta'])} {...metaProps}>
       <tr slot="header">
         <th class="w-full">Meta</th>
         <th>Lvl</th>
@@ -132,14 +147,7 @@
 </div>
 <div class="lg:flex">
   <div class="flex-1">
-    <List
-      category="Perk"
-      on:additem={() => addItem(['Perk'])}
-      title="Perks"
-      component={Trait}
-      editor={TraitEditor}
-      list={splits.perks}
-      config={{ flat: false }}>
+    <List on:additem={() => addItem(['Perk'])} {...perkProps}>
       <tr slot="header">
         <th class="w-full">Perks</th>
         <th>Lvl</th>
@@ -149,14 +157,7 @@
     </List>
   </div>
   <div class="lg:flex-1">
-    <List
-      category="Quirk"
-      on:additem={() => addItem(['Quirk'])}
-      title="Quirks"
-      component={Trait}
-      editor={TraitEditor}
-      list={splits.quirks}
-      config={{ flat: false }}>
+    <List on:additem={() => addItem(['Quirk'])} {...quirkProps}>
       <tr slot="header">
         <th class="w-full">Quirks</th>
         <th>Lvl</th>
@@ -166,13 +167,7 @@
     </List>
   </div>
   <div class="flex-1">
-    <List
-      category="Feature"
-      on:additem={() => addItem(['Feature'])}
-      title="Features"
-      component={Trait}
-      editor={TraitEditor}
-      list={splits.features || []}>
+    <List on:additem={() => addItem(['Feature'])} {...featureProps}>
       <tr slot="header">
         <th class="w-full">Features</th>
         <th>Lvl</th>

@@ -10,7 +10,7 @@
 <style>
 </style>
 
-<select name="" id="" bind:value={attribute}>
+<select bind:value={attribute}>
     <option value={undefined} />
     {#each attributes as [signature, attribute], i (i)}
         {#if signaturesOnly ? attribute.skillSignature : true}

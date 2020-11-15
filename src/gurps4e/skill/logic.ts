@@ -1,4 +1,4 @@
-import { SkillDifficulty } from "@sheet/keys";
+import { SkillDifficulty } from "@internal";
 
 export function getBaseRelativeLevel(difficulty: SkillDifficulty) {
     switch (difficulty) {

@@ -1,54 +1,63 @@
 <script>
   import { getContext } from "svelte";
   import { string } from "@ui/utils/formatting";
-
-  export let entity = null;
+  import Toggle from "./Toggle";
   export let depth;
-
-  const { display, config } = getContext("list");
-  const {
-    components: { contextMenu, modals },
-  } = getContext("editor");
-
-  const contextMenuOptions = [{}];
+  export let entity = {};
+  $: ({
+    equipped$,
+    extendedValue$,
+    extendedWeight$,
+    exists,
+    id,
+    disabled,
+    hidden,
+  } = entity);
+  export let display = "table";
+  export let addItem = false;
+  export let list = [];
+  export let getRoot = (list) => list;
+  export let accessChildren = () => [];
+  export let contextMenuOptions = () => [];
+  export let component = null;
 </script>
 
 <style>
-  .hidden {
-    @apply hidden;
-  }
 </style>
 
-{#if $display === 'table'}
-  <td><input type="checkbox" bind:checked={entity.equipped} /></td>
-  <td><input class="w-10" type="number" bind:value={entity.quantity} /></td>
-  <td class="w-full">
-    <div class="flex">
-      <span class="h-full" style="padding-left:{depth * 2}rem;">&thinsp;</span>
-      <span
-        data-container-toggle
-        on:click={() => (entity.isOpen = !entity.isOpen)}
-        class="fas text-red-700"
-        class:fa-angle-right={!entity.isOpen}
-        class:fa-angle-down={entity.isOpen}
-        class:hidden={!entity.isContainer()} />
-      <input class="flex-1" type="text" bind:value={entity.name} />
-    </div>
-  </td>
-  <td><input class="w-10" type="number" bind:value={entity.uses} min="0" /></td>
-  <td>
-    <input type="number" class="w-12" min="0" bind:value={entity.value} />
-  </td>
-  <td>
-    <input type="number" class="w-12" min="0" bind:value={entity.weight} />
-  </td>
-  <td>{string(entity.extendedValue(), { beforeStart: '$' })}</td>
-  <td>{string(entity.extendedWeight(), { afterEnd: ' lb.' })}</td>
-  <td><input class="w-12" type="text" bind:value={entity.reference} /></td>
-{:else if $display === 'list'}
-  <span>{entity.name}</span>
-{:else if $display === 'grid'}
-  <div style="padding-left:{entity.getItemDepth() * 10}px">
-    {string(entity.name)}
-  </div>
+{#if exists}
+  {#if display === 'table'}
+    <td>
+      <input
+        type="checkbox"
+        on:change={(e) => entity.update((entity) => {
+            entity.keys.disabled = !e.target.checked;
+          })}
+        checked={$equipped$} />
+    </td>
+    <td><input class="w-10" type="number" bind:value={$entity.quantity} /></td>
+    <td class="w-full">
+      <div class="flex">
+        <span
+          class="h-full"
+          style="padding-left:{depth * 2}rem;">&thinsp;</span>
+        <Toggle
+          visible={$entity.ui.canContainChildren}
+          bind:off={$entity.ui.hidden} />
+        <input class="flex-1" type="text" bind:value={$entity.name} />
+      </div>
+    </td>
+    <td>
+      <input class="w-10" type="number" bind:value={$entity.uses} min="0" />
+    </td>
+    <td>
+      <input type="number" class="w-12" min="0" bind:value={$entity.value} />
+    </td>
+    <td>
+      <input type="number" class="w-12" min="0" bind:value={$entity.weight} />
+    </td>
+    <td>{string($extendedValue$, { beforeStart: '$' })}</td>
+    <td>{string($extendedWeight$, { afterEnd: ' lb.' })}</td>
+    <td><input class="w-12" type="text" bind:value={$entity.reference} /></td>
+  {:else if display === 'list'}<span>{$entity.name}</span>{/if}
 {/if}

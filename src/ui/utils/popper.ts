@@ -1,3 +1,4 @@
+import { accessFrame } from "@internal";
 import { createPopper } from "@popperjs/core";
 import { fade } from "svelte/transition";
 import { string } from "./formatting";
@@ -46,14 +47,16 @@ function interpolate(input: string, context: any) {
 
 export function createTooltip(node: HTMLElement, params: any) {
     let component;
-    let tooltip
+    let tooltip: HTMLElement
 
     if (params.component) {
 
     } else if (params.tooltip) {
-        tooltip = document.createElement("div");
-        tooltip.className = 'bg-black text-white text-sm rounded-lg p-2' + ' ' + params.tipclass || "";
-        tooltip.innerHTML = interpolate(params.tooltip, params.context);
+        tooltip = Object.assign(document.createElement("div"), {
+            className: 'bg-black text-white text-sm rounded-lg p-2' + ' ' + params.tipclass || "",
+            innerHTML: interpolate(params.tooltip, params.context)
+        });
+        tooltip.style.zIndex = "1000";
     }
 
     const virtualElement = popperVirtualElement();
@@ -80,8 +83,8 @@ export function createTooltip(node: HTMLElement, params: any) {
                 }
             });
         } else if (tooltip) {
-            if (!document.body.contains(tooltip)) {
-                document.body.appendChild(tooltip);
+            if (!accessFrame().document.body.contains(tooltip)) {
+                accessFrame().document.body.appendChild(tooltip);
             }
             virtualElement.update(clientX, clientY);
             popper.update();

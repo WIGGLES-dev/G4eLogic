@@ -1,32 +1,32 @@
-@import "jsoneditor/dist/jsoneditor.css";
-@import "cropperjs/dist/cropper.css";
+  @import "jsoneditor/dist/jsoneditor.css";
+  @import "cropperjs/dist/cropper.css";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+  @tailwind base;
+  @tailwind components;
+  @tailwind utilities;
 
-@layer utilities {
+  @layer utilities {
     @responsive {
-        .screen-center {
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        .w-min {
-            width: min-content;
-        }
-        .h-min {
-            height: min-content;
-        }
-        .w-max {
-            width: min-content;
-        }
-        .h-max {
-            height: min-content;
-        }
+      .screen-center {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .w-min {
+        width: min-content;
+      }
+      .h-min {
+        height: min-content;
+      }
+      .w-max {
+        width: min-content;
+      }
+      .h-max {
+        height: min-content;
+      }
     }
-}
+  }
 
-blockquote {
+  blockquote {
     @apply mx-3 my-2;
-}
+  }

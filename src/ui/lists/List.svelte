@@ -1,33 +1,30 @@
 <script>
-  import { setContext, createEventDispatcher } from "svelte";
+  import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
-  import { writable } from "svelte/store";
+
   import ListItem from "./ListItem";
 
   export let display = "table";
-  export let category = null;
-
-  let defaultConfig = { flat: false, addItem: true };
-  export let config = {};
-  config = Object.assign(defaultConfig, config);
-
-  export let title = null;
-
-  export let component = null;
-  export let editor = null;
+  export let addItem = false;
+  export let draggable = false;
   export let list = [];
+  export let getRoot = (list) => list;
+  export let accessChildren = () => [];
+  export let contextMenuOptions = () => [];
+  export let component = null;
 
-  setContext("list", {
-    display: writable(display),
-    component: writable(component),
-    editor: writable(editor),
-    headers: writable(0),
-    length: writable(0),
-    config: writable(config),
-    onDropRow(entity) {
-      dispatch("ondrop", entity);
-    },
-  });
+  $: root = getRoot(list);
+
+  $: props = {
+    display,
+    addItem,
+    draggable,
+    list,
+    getRoot,
+    accessChildren,
+    contextMenuOptions,
+    component,
+  };
 </script>
 
 <style>
@@ -45,22 +42,12 @@
   thead {
     @apply border-b border-gray-700 border-solid rounded-r-md;
   }
-  tbody :global(tr):nth-child(even) {
-    @apply bg-gray-100;
-  }
-  tbody :global(tr:hover) {
-    @apply bg-gray-700 text-white;
-  }
 </style>
 
 <section
-  data-list
-  data-category={category}
-  class:mx-4={display === 'table'}
-  class="select-none mb-2 mt-2 border-b border-gray-700 border-solid rounded-r-md"
-  class:border-red-700={config.addItem}
-  on:contextmenu={(e) => e.preventDefault()}
-  data-list-type={display}>
+  class="mx-4 select-none mb-2 mt-2 border-b border-gray-700 border-solid rounded-r-md"
+  class:border-red-700={addItem}
+  on:contextmenu={(e) => e.preventDefault()}>
   {#if display === 'table'}
     <table class="text-sm whitespace-no-wrap text-left">
       <caption />
@@ -69,31 +56,25 @@
         <slot name="header" />
       </thead>
       <tbody>
-        {#each list as entity, i (entity.id)}
-          {#if entity.exists}
-            <ListItem {entity} {i} />
-          {/if}
+        {#each root as entity, i (root.id || i)}
+          <ListItem {...props} {entity} {i} />
         {/each}
+        <slot />
       </tbody>
       <tfoot>
         <slot name="footer" />
       </tfoot>
     </table>
   {:else if display === 'list'}
-    <div class="bg-gray-700 text-center text-white">{title}</div>
+    <slot name="title" />
     <ul class="pb-1">
-      {#each list as entity, i (entity.id)}
-        <ListItem {entity} />
+      {#each root as entity, i (entity.id || i)}
+        <ListItem {...props} {entity} {i} />
+        <slot />
       {/each}
     </ul>
-  {:else if display === 'grid'}
-    <div class="w-full">{title}</div>
-    <slot />
-    {#each list as entity, i (entity.id)}
-      <ListItem {entity} />
-    {/each}
   {/if}
-  {#if config.addItem}
+  {#if addItem}
     <div class="flex w-full relative">
       <span
         class="fas fa-plus text-red-700 hover:bg-red-700 hover:text-white p-1"

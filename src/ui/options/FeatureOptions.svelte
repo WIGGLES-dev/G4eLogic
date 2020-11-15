@@ -1,12 +1,12 @@
 <script>
-  import { FeatureBonusType } from "@sheet/keys";
+  import { FeatureBonusType } from "@internal";
   export let feature;
 </script>
 
 <style>
 </style>
 
-<select name="" id="" bind:value={feature}>
+<select bind:value={feature}>
   <option value={undefined} />
   <option value={FeatureBonusType.Attribute}>
     Gives an attribute bonus of

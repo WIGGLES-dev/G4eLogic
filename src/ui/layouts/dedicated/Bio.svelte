@@ -1,6 +1,6 @@
 <script>
     import { getContext } from "svelte";
-    import { Appearance } from "@sheet/keys";
+    import { Appearance } from "@internal";
     import Cropper from "@ui/widgets/Cropper";
     const { character } = getContext("editor");
 </script>
@@ -38,19 +38,19 @@
         <div class="flex flex-col">
             <div class="section-header">GENERAL</div>
             <label for="">Name
-                <input type="text" bind:value={$character.profile.name} /></label>
+                <input type="text" bind:value={$character.name} /></label>
             <label for="">Nickname
-                <input type="text" bind:value={$character.profile.nickName} /></label>
+                <input type="text" bind:value={$character.nickName} /></label>
             <div class="flex">
                 <label for="">Sex
-                    <input type="text" bind:value={$character.profile.sex} /></label>
+                    <input type="text" bind:value={$character.sex} /></label>
                 <label for="">Gender
-                    <input type="text" bind:value={$character.profile.gender} /></label>
+                    <input type="text" bind:value={$character.gender} /></label>
             </div>
             <div class="flex">
                 <label for="" class="flex-1">Race<input
                         type="text"
-                        bind:value={$character.profile.race} /></label>
+                        bind:value={$character.race} /></label>
                 <label for="" class="flex-1">Size
                     <input
                         type="number"
@@ -61,26 +61,27 @@
                 <label for="">Handedness
                     <input
                         type="text"
-                        bind:value={$character.profile.handedness} /></label>
+                        bind:value={$character.handedness} /></label>
                 <label for="" class="flex-1">Reach <input type="text" /></label>
             </div>
             <label class="w-full text-center" for="">Reaction
-                <textarea
-                    name=""
-                    id=""
-                    rows="4"
-                    bind:value={$character.profile.reaction} /></label>
+                <textarea rows="4" bind:value={$character.reaction} /></label>
         </div>
         <div class="row-span-2">
-            <Cropper bind:src={$character.profile.portrait.href} />
+            <Cropper
+                bind:src={$character.profile.portrait}
+                bind:cropped={$character.profile.cropped} />
         </div>
         <div class="flex flex-col">
             <div class="section-header">PHYSICAL</div>
             <div class="flex">
                 <label for="">Age
-                    <input type="text" bind:value={$character.profile.age} /></label>
+                    <input type="text" bind:value={$character.age} /></label>
                 <label for="">Appearance
-                    <select name="" id="" bind:value={$character.profile.appearance}>
+                    <select
+                        name=""
+                        id=""
+                        bind:value={$character.profile.appearance}>
                         <option value={Appearance.Horrific}>Horrific</option>
                         <option value={Appearance.Monstrous}>Monstrous</option>
                         <option value={Appearance.Hideous}>Hideous</option>
@@ -106,99 +107,101 @@
             </div>
             <div class="flex">
                 <label for="" class="flex-1">Weight
-                    <input type="text" bind:value={$character.profile.weight} /></label>
+                    <input type="text" bind:value={$character.weight} /></label>
                 <label for="" class="flex-1">Height
-                    <input type="text" bind:value={$character.profile.height} /></label>
+                    <input type="text" bind:value={$character.height} /></label>
             </div>
             <div class="flex">
                 <label for="">Build
-                    <input type="text" bind:value={$character.profile.build} /></label>
+                    <input type="text" bind:value={$character.build} /></label>
                 <label for="">Skin
-                    <input type="text" bind:value={$character.profile.skin} /></label>
+                    <input type="text" bind:value={$character.skin} /></label>
             </div>
 
             <div class="flex">
                 <label for="">Hair
-                    <input type="text" bind:value={$character.profile.hair} /></label>
+                    <input type="text" bind:value={$character.hair} /></label>
                 <label for="">Facial Hair
                     <input
                         type="text"
-                        bind:value={$character.profile.facialHair} /></label>
+                        bind:value={$character.facialHair} /></label>
             </div>
 
             <div class="flex">
                 <label for="">Eyes
-                    <input type="text" bind:value={$character.profile.eyes} /></label>
+                    <input type="text" bind:value={$character.eyes} /></label>
                 <label for="">Voice
-                    <input type="text" bind:value={$character.profile.voice} /></label>
+                    <input type="text" bind:value={$character.voice} /></label>
             </div>
 
             <label class="text-center" for="">Features<textarea
                     name=""
                     id=""
                     rows="4"
-                    bind:value={$character.profile.appearanceFeatures} /></label>
+                    bind:value={$character.appearanceFeatures} /></label>
         </div>
         <div class="flex flex-col">
             <div class="section-header">BACKGROUND</div>
             <div class="flex">
                 <label for="">Birthday
-                    <input type="text" bind:value={$character.profile.birthday} /></label>
+                    <input
+                        type="text"
+                        bind:value={$character.birthday} /></label>
                 <label for="">Birthplace
                     <input
                         type="text"
-                        bind:value={$character.profile.birthPlace} /></label>
+                        bind:value={$character.birthPlace} /></label>
             </div>
             <div class="flex">
                 <label for="">Status<input
                         type="text"
-                        bind:value={$character.profile.status} /></label>
+                        bind:value={$character.status} /></label>
                 <label for="">Wealth<input
                         type="text"
-                        bind:value={$character.profile.wealth} /></label>
+                        bind:value={$character.wealth} /></label>
             </div>
             <div class="flex">
                 <label for="">Income<input
                         type="text"
-                        bind:value={$character.profile.income} /></label>
+                        bind:value={$character.income} /></label>
                 <label for="">Expenses<input
                         type="text"
-                        bind:value={$character.profile.expenses} /></label>
+                        bind:value={$character.expenses} /></label>
             </div>
             <div class="flex">
                 <label for="">Affiliation<input
                         type="text"
-                        bind:value={$character.profile.affiliation} /></label>
+                        bind:value={$character.affiliation} /></label>
                 <label for="">Base<input
                         type="text"
-                        bind:value={$character.profile.base} /></label>
+                        bind:value={$character.base} /></label>
             </div>
             <label class="text-center" for="">Family
                 <textarea
                     name=""
                     id=""
                     rows="4"
-                    bind:value={$character.profile.family} /></label>
+                    bind:value={$character.family} /></label>
         </div>
         <div class="flex flex-col">
             <div class="section-header">MISC</div>
             <label for="">Religion<input
                     type="text"
-                    bind:value={$character.profile.religion} /></label>
+                    bind:value={$character.religion} /></label>
             <label for="">Education<input
                     type="text"
-                    bind:value={$character.profile.education} /></label>
+                    bind:value={$character.education} /></label>
             <label for="">Citizenship<input
                     type="text"
-                    bind:value={$character.profile.citizenship} /></label>
+                    bind:value={$character.citizenship} /></label>
             <label for="">Orientation<input
                     type="text"
-                    bind:value={$character.profile.orientation} /></label>
+                    bind:value={$character.orientation} /></label>
             <label class="text-center" for="">Other<textarea
                     name=""
                     id=""
                     rows="4"
-                    bind:value={$character.profile.other} /></label>
+                    bind:value={$character.other} /></label>
         </div>
     </div>
 </section>

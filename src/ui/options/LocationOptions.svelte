@@ -1,5 +1,5 @@
 <script>
-    import { parseHitLocations } from "@sheet/config";
+    import { parseHitLocations } from "@internal";
     export let location;
     export let entity = null;
     const { config$ } = entity;
@@ -8,7 +8,7 @@
 <style>
 </style>
 
-<select name="" id="" bind:value={location}>
+<select bind:value={location}>
     <option value={undefined} />
     {#each parseHitLocations($config$.locations) as { location, isGroup, subLocations }, i (i)}
         {#if isGroup}

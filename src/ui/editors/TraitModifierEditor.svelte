@@ -1,9 +1,6 @@
 <script>
   import Form from "@ui/form/Form";
-  import {
-    TraitModifierAffects,
-    TraitModifierType,
-  } from "gurps4e/trait/logic";
+  import { TraitModifierAffects, TraitModifierType } from "@internal";
   export let entity = null;
 </script>
 

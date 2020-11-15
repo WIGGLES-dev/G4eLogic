@@ -1,11 +1,20 @@
 <script>
-  import { getContext } from "svelte";
+  import { getContext, createEventDispatcher } from "svelte";
   import { string } from "@ui/utils/formatting";
+  export let i;
+  export let depth;
+  export let entity = {};
+  $: ({ owner$, exists, id, disabled, hidden } = entity);
+  export let display = "table";
+  export let addItem = false;
+  export let list = [];
+  export let getRoot = (list) => list;
+  export let accessChildren = () => [];
+  export let contextMenuOptions = () => [];
+  export let component = null;
 
-  export let entity = null;
-
-  const { display, config } = getContext("list");
-  const { dispatch } = getContext("editor");
+  const { character, globalDispatch = createEventDispatcher() } =
+    getContext("editor") || {};
 </script>
 
 <style>
@@ -14,10 +23,10 @@
   }
 </style>
 
-{#if $display === 'table'}
+{#if display === 'table'}
   <td>{string(entity.owner.name)}</td>
   <td>{string(entity.usage)}</td>
-  <td on:click={() => dispatch('roll', { entity, for: 'attack' })}>
+  <td on:click={() => globalDispatch('roll', { entity, for: 'attack' })}>
     <div>
       <img src="sword-svgrepo-com.svg" alt="" />
       <span>{string(entity.getBestAttackLevel())}</span>
@@ -25,20 +34,20 @@
   </td>
   <td>
     <span
-      class="fas fa-dice-d6 pr-1" />{string(entity.damage, {
-      afterEnd: ' ' + string(entity.damageType),
+      class="fas fa-dice-d6 pr-1" />{string($entity.damage, {
+      afterEnd: ' ' + string($entity.damageType),
     })}
   </td>
-  <td>{string(entity.accuracy)}</td>
-  <td>{string(entity.range)}</td>
-  <td>{string(entity.rateOfFire)}</td>
-  <td>{string(entity.shots)}</td>
-  <td>{string(entity.bulk)}</td>
-  <td>{string(entity.recoil)}</td>
-  <td>{string(entity.strength)}</td>
-{:else if $display === 'list'}
+  <td>{string($entity.accuracy)}</td>
+  <td>{string($entity.range)}</td>
+  <td>{string($entity.rateOfFire)}</td>
+  <td>{string($entity.shots)}</td>
+  <td>{string($entity.bulk)}</td>
+  <td>{string($entity.recoil)}</td>
+  <td>{string($entity.strength)}</td>
+{:else if display === 'list'}
   <li class="text-sm italic hover:underline">
-    {string(entity.owner.name, {
+    {string($owner$.name, {
       afterEnd:
         ' - ' +
         string(entity.usage, {

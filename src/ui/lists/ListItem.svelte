@@ -1,136 +1,82 @@
 <script>
-  import { getContext } from "svelte";
+  import { resolveWeights } from "@internal";
+
+  export let entity = {};
+  $: ({ exists = true, id, hidden = false, disabled = false } = entity);
+
   export let depth = 0;
 
-  export let entity = null;
-  const { children$ } = entity;
-  $: children = children$;
+  export let display = "table";
+  export let addItem = false;
+  export let draggable = false;
+  export let list = [];
+  export let getRoot = (list) => list;
+  export let accessChildren = () => [];
+  export let contextMenuOptions = () => [];
+  export let component = null;
 
-  const {
+  $: props = {
     display,
+    addItem,
+    draggable,
+    list,
+    getRoot,
+    accessChildren,
+    contextMenuOptions,
     component,
-    editor,
-    headers,
-    length,
-    config,
-    onDropRow,
-  } = getContext("list");
-
-  const { components, character, dispatch } = getContext("editor");
-
-  let dragover = false;
-
-  function onContextMenu(e) {
-    e.preventDefault();
-    components.contextMenu.render({ contextMenuOptions, e });
-  }
+  };
 
   function handleOverToggle(e) {
-    if (e.target.matches("[data-container-toggle]")) {
-      e.target.classList.add("text-3xl");
-    } else {
-      e.target
-        .closest("[data-id]")
-        .querySelector("[data-container-toggle]")
-        .classList.remove("text-3xl");
-    }
+    try {
+      if (e.target.matches("[data-container-toggle]")) {
+        e.target.classList.add("text-3xl");
+      } else {
+        e.target
+          .closest("[data-id]")
+          .querySelector("[data-container-toggle]")
+          .classList.remove("text-3xl");
+      }
+    } catch (err) {}
   }
 
   function onDragstart(e) {
-    // const image = new Image();
-    // image.src = "drag.gif";
-    // e.dataTransfer.setDragImage(image, 0, 0);
-    e.dataTransfer.setData("text/plain", entity.id);
+    try {
+      e.dataTransfer.setData("text/plain", id);
+      resolveWeights(list);
+    } catch (err) {}
   }
 
   function onDragenter(e) {
-    dragover = true;
-    const row = e.target.closest("[data-id]");
-    if (row.dataset.id) e.preventDefault();
-    handleOverToggle(e);
+    try {
+      const row = e.target.closest("[data-id]");
+      if (row.dataset.id) e.preventDefault();
+      handleOverToggle(e);
+    } catch (err) {}
   }
 
   function onDrop(e) {
-    const { id } = e.target.closest("[data-id]").dataset;
-    const selectedId = e.dataTransfer.getData("text/plain");
-
-    const selectedEntity = $character.getElement(selectedId);
-    const targetEntity = $character.getElement(id);
-
-    const isOnToggle = e.target.matches("[data-container-toggle]");
-    selectedEntity.addAfter(targetEntity);
-    if (isOnToggle) {
-      selectedEntity.containedBy = targetEntity;
-      e.target.classList.remove("text-3xl");
-    }
-    // const category = e.target.closest("section").dataset.category;
-    // if (!category) return;
-    // selectedEntity.categories.add(category);
-    // selectedEntity.dispatch();
-    onDropRow(selectedEntity);
-  }
-
-  let editing = false;
-  function edit() {
-    dispatch("edit", { entity });
-    if (editing) return;
-    editing = true;
-    components.modals.render(
-      `Editor`,
-      $editor,
-      {
-        entity,
-      },
-      {
-        onClose: () => {
-          editing = false;
-        },
+    try {
+      const selectedId = e.dataTransfer.getData("text/plain");
+      const isOnToggle = e.target.matches("[data-container-toggle]");
+      if (entity.isContainer() && isOnToggle) {
+        entity.slot(selectedId);
+      } else {
+        entity.addAfter(selectedId);
       }
-    );
+      const target = entity.createThis(selectedId);
+      resolveWeights(list, target, entity.listWeight);
+      e.target.classList.remove("text-3xl");
+    } catch (err) {
+      console.log(err);
+    }
   }
-
   function handleItemClick(e) {
-    console.log(entity);
-    if (e.target.matches("input")) return;
-    e.target.closest("[data-id]").querySelector("input").focus();
+    try {
+      console.log(entity);
+      if (e.target.matches("input")) return;
+      e.target.closest("[data-id]").querySelector("input").focus();
+    } catch (err) {}
   }
-
-  const contextMenuOptions = [
-    {
-      label: "Edit",
-      callback: () => edit(),
-      show: () => Boolean($editor),
-    },
-    {
-      label: "Collapse",
-      callback: () => {},
-      show: () => false,
-    },
-    {
-      label: "Expand",
-      callback: () => {},
-      show: () => false,
-    },
-    {
-      label: "Make Container",
-      callback: () => {},
-      show: () => false,
-    },
-    {
-      label: "Delete",
-      callback: () => {
-        entity.delete();
-      },
-      show: () => true,
-      classes: [
-        "bg-red-700",
-        "text-white",
-        "hover:bg-red-700",
-        "hover:text-white",
-        "rounded-b",
-      ],
-    },
-  ];
 </script>
 
 <style>
@@ -148,38 +94,53 @@
   tr :global(div.flex .fas) {
     @apply self-center;
   }
+  tr:nth-child(even) {
+    @apply bg-gray-100;
+  }
+  tr:hover {
+    @apply bg-gray-700 text-white;
+  }
 </style>
 
-{#if entity.exists}
-  {#if $display === 'table'}
+{#if exists}
+  {#if display === 'table'}
     <tr
-      data-id={$entity.id}
-      data-i={$entity.ui.listWeight}
-      draggable={true}
+      data-id={id}
+      {draggable}
       on:dragstart={onDragstart}
       on:dragenter={onDragenter}
-      on:dragleave={() => (dragover = false)}
       on:dragover={onDragenter}
       on:drop={onDrop}
-      on:contextmenu={onContextMenu}
-      class:disabled={$entity.keys.disabled}
-      class:dragover
+      on:contextmenu={(e) => {
+        entity.renderContextMenu(e);
+      }}
+      class:disabled
       on:click={handleItemClick}
-      on:dblclick={() => edit()}>
-      <svelte:component this={$component} {entity} {depth} />
+      on:dblclick={(e) => {
+        entity.edit();
+      }}>
+      <svelte:component this={component} {depth} {entity} {...props} />
+      <slot {entity} />
     </tr>
-    {#if $entity.ui.canCantainChildren && !$config.flat}
-      {#each children as entity, i (entity.id)}
-        <svelte:self {entity} depth={depth + 1} on:select />
+    {#if !hidden}
+      {#each accessChildren(entity) as entity, i (entity.id || i)}
+        <svelte:self depth={depth + 1} {entity} {...props} />
       {/each}
     {/if}
-  {:else if $display === 'list'}
-    <li on:contextmenu={onContextMenu}>
-      <svelte:component this={$component} {entity} {depth} />
-      {#if children.length > 0 && $entity.ui.visible && !$config.flat}
+  {:else if display === 'list'}
+    <li
+      on:contextmenu={(e) => {
+        entity.renderContextMenu(e);
+      }}
+      on:dblclick={(e) => {
+        entity.edit();
+      }}>
+      <svelte:component this={component} {depth} {entity} {...props} />
+      <slot {entity} />
+      {#if !hidden}
         <ul>
-          {#each children as entity, i (entity.id)}
-            <svelte:self {entity} depth={depth + 1} />
+          {#each accessChildren(entity) as entity, i (entity.id || i)}
+            <svelte:self depth={depth + 1} {entity} {...props} />
           {/each}
         </ul>
       {/if}

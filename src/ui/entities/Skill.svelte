@@ -1,65 +1,54 @@
 <script>
   import { getContext } from "svelte";
   import { string } from "@ui/utils/formatting";
+  import Toggle from "./Toggle";
 
-  export let entity = null;
-  const { level$, relativeLevel$ } = entity;
+  export let i;
   export let depth;
+  export let entity = {};
+  $: ({ level$, relativeLevel$, exists, id, disabled, hidden } = entity);
 
-  const { display, config } = getContext("list");
+  export let display = "table";
+  export let addItem = false;
+  export let list = [];
+  export let getRoot = (list) => list;
+  export let accessChildren = () => [];
+  export let contextMenuOptions = () => [];
+  export let component = null;
 </script>
 
 <style>
-  .invalid {
-    @apply text-white bg-red-700;
-  }
-  .hidden {
-    @apply hidden;
-  }
 </style>
 
-{#if entity.exists}
-  {#if $display === 'table'}
-    <td>
-      <input class="w-12" type="text" bind:value={$entity.keys.reference} />
-    </td>
+{#if exists}
+  {#if display === 'table'}
+    <td><input class="w-12" type="text" bind:value={$entity.reference} /></td>
     <td>
       {#if !entity.isContainer()}
         <input
           class="text-center w-10"
           type="number"
-          bind:value={$entity.keys.points} />
+          bind:value={$entity.points} />
       {/if}
     </td>
     <td class="text-center">
-      {$entity.keys.signature || '10'}{$relativeLevel$ > -1 ? '+' : ''}{Math.floor($relativeLevel$)}
+      {$entity.signature || '10'}{$relativeLevel$ > -1 ? '+' : ''}{Math.floor($relativeLevel$)}
     </td>
     <td>
-      <input
-        class="w-10 text-center"
-        type="number"
-        bind:value={$entity.keys.mod} />
+      <input class="w-10 text-center" type="number" bind:value={$entity.mod} />
     </td>
     <td class="text-center">{Math.floor($level$)}</td>
     <td class="w-full">
       <span class="h-full" style="padding-left:{depth * 2}rem;">&thinsp;</span>
-      <span
-        data-container-toggle
-        on:click={() => (entity.isOpen = !entity.isOpen)}
-        class="fas text-red-700"
-        class:fa-angle-right={!entity.isOpen}
-        class:fa-angle-down={entity.isOpen}
-        class:hidden={!entity.isContainer()} />
-
-      {string($entity.keys.name)}{string($entity.keys.techLevel, {
+      <Toggle
+        visible={$entity.ui.canContainChildren}
+        bind:toggled={$entity.ui.hidden} />
+      {string($entity.name)}{string($entity.techLevel, {
         beforeStart: '/',
         toFixed: false,
       })}
-      {#if $entity.keys.specialization}
-        {string($entity.keys.specialization, {
-          beforeStart: ' (',
-          afterEnd: ')',
-        })}
+      {#if $entity.specialization}
+        {string($entity.specialization, { beforeStart: ' (', afterEnd: ')' })}
       {/if}
     </td>
   {/if}

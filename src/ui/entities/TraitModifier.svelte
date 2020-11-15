@@ -1,7 +1,8 @@
 <script>
   import { getContext } from "svelte";
   import { string } from "@ui/utils/formatting";
-  import { TraitModifierType, TraitModifierAffects } from "gurps4e/trait/logic";
+  import { TraitModifierType, TraitModifierAffects } from "@internal";
+  
   export let entity = null;
 
   const { display, config } = getContext("list");

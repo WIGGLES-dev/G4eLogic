@@ -1,43 +1,34 @@
 <script>
-  import { onMount, onDestroy, tick } from "svelte";
+  import { onMount, onDestroy, tick, createEventDispatcher } from "svelte";
+  const dispatch = createEventDispatcher();
 
   import { createPopper } from "@popperjs/core";
   import { popperVirtualElement } from "@ui/utils/popper";
-  import { toTop } from "@ui/utils/use";
-
-  import { slide } from "svelte/transition";
 
   import ContextMenuOption from "./ContextMenuOption.svelte";
 
   export let options = [];
-
-  export let rendered = false;
+  export let e = {};
 
   let HTMLUListElement;
 
   let virtualElement = popperVirtualElement();
   let popper;
 
-  onMount(() => {});
-
-  export async function render({
-    contextMenuOptions = [],
-    e: { clientX, clientY },
-  } = {}) {
-    rendered = true;
-    await tick();
+  async function render() {
     popper = createPopper(virtualElement, HTMLUListElement, {
       placement: "bottom-start",
       strategy: "fixed",
     });
-    virtualElement.update(clientX, clientY);
-    await popper.update();
-    options = contextMenuOptions;
+    virtualElement.update(e.clientX, e.clientY);
+    popper.update();
   }
-  export async function close() {
-    rendered = false;
-    await tick();
-    await popper.destroy();
+
+  onMount(render);
+  onDestroy(() => popper.destroy());
+
+  function close() {
+    dispatch("close");
   }
 </script>
 
@@ -49,17 +40,12 @@
 </style>
 
 <svelte:window
-  on:scroll={() => {
-    if (rendered) close();
-  }}
-  on:click={(e) => {
-    if (rendered) close();
-  }} />
+  on:scroll={close}
+  on:click={close}
+  on:contextmenu|capture={close} />
 
-{#if rendered}
-  <ul use:toTop bind:this={HTMLUListElement} class="context-menu">
-    {#each options as option, i (i)}
-      <ContextMenuOption {...option} />
-    {/each}
-  </ul>
-{/if}
+<ul bind:this={HTMLUListElement} class="context-menu">
+  {#each options as option, i (i)}
+    <ContextMenuOption {...option} />
+  {/each}
+</ul>

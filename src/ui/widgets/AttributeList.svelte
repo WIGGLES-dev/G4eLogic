@@ -1,20 +1,10 @@
 <script>
-  import { Valor } from "@valor/valor";
-
   import { getContext } from "svelte";
   import { createTooltip } from "@ui/utils/popper";
 
-  const { character, components, dispatch } = getContext("editor");
+  const { character } = getContext("editor");
 
   const attributes = character.attributes$;
-
-  function roll(attr) {
-    let text;
-
-    text = `Rolling ${attr.calculateLevel()} against ${attr.name}`;
-
-    components.notifications.postMessage({ type: "message", text });
-  }
 
   function isPrimary(attr) {
     return attr.hasTag("primary");
@@ -49,6 +39,15 @@
   .sub-stat {
     @apply italic;
   }
+  .attribute-text {
+    @apply mr-2 rounded-r-lg;
+  }
+  .main-input {
+    @apply w-16 rounded text-center outline-none bg-transparent border-none;
+  }
+  .mod-input {
+    @apply w-10 border-b border-black border-solid m-auto text-sm outline-none text-center;
+  }
 </style>
 
 <section class="grid gap-y-1">
@@ -78,7 +77,7 @@
         </span>
       </div>
       <span
-        class="pr-1 rounded-r-lg"
+        class="attribute-text"
         class:primary={isPrimary(attr)}
         class:secondary={isSecondary(attr)}
         class:tertiary={isTertiary(attr)}
@@ -88,16 +87,19 @@
         class:bg-gray-700={!isPrimary(attr)}
         class:text-white={!isPrimary(attr)}>
         <input
-          class="w-16 rounded text-center outline-none bg-transparent"
+          class="main-input"
           step={attr.keys.increment || 1}
           type="number"
           bind:value={attr.displayLevel} />
         <span
-          on:click={() => dispatch('roll', { entity: attr, for: 'attribute' })}
+          on:click={() => character.executeAction('roll', {
+              for: 'attribute',
+              attr,
+            })}
           class="fas fa-dice-d6 hover:text-green-500" />
       </span>
       <input
-        class="w-10 ml-2 border-b border-black border-solid m-auto text-sm outline-none text-center"
+        class="mod-input"
         step={attr.increment}
         type="number"
         bind:value={attr.modifier} />

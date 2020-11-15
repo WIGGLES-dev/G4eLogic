@@ -1,29 +1,123 @@
-import { combineQueries } from "@datorama/akita";
-import { combineLatest, Observable } from "rxjs";
-import { filter, map } from "rxjs/operators";
-import { Feature } from "../feature";
-import { SkillData, SkillLikeData, SkillDefault, SkillDifficulty, defaultSkillData, FeatureType, Features, FeatureBonusType, FeatureBonuses, SkillBonus } from "../keys";
-import { TechniqueData, defaultTechniqueData } from "../keys";
-import { SpellData, defaultSpellData } from "../keys"
+import { StringCompare } from "@utils/strings";
+import {
+    FeatureType,
+    FeatureBonusType,
+    FeatureBonus,
+    Feature,
+    featureData,
+    FeatureData,
+    Sheet,
 
-type Skills = SkillData | TechniqueData | SpellData
-abstract class SkillLike<T extends Skills> extends Feature<T> {
-    get type() { return FeatureType.Skill }
-    constructor(id: string) {
-        super(id);
+} from "@internal";
+import { combineLatest, Observable } from "rxjs";
+import { filter, map, withLatestFrom, takeWhile } from "rxjs/operators";
+
+
+export enum SkillDifficulty {
+    Easy = "E",
+    Average = "A",
+    Hard = "H",
+    VeryHard = "VH",
+    Wildcard = "W"
+}
+export interface SkillDefault {
+    type: "Skill" | "Attribtue",
+    name: string,
+    specialization?: string
+    modifier: number
+}
+export interface SkillBonus extends FeatureBonus {
+    type: FeatureBonusType.Skill
+    nameCompare: StringCompare
+    nameCriteria: string
+    specializationCompare: StringCompare
+    specializationCriteria: string
+    categoryCompare: StringCompare
+    categoryCriteria: string
+}
+
+export type Skills = SkillData | TechniqueData | SpellData
+export interface SkillLikeData {
+    points: number
+    name: string
+    specialization?: string
+    techLevel?: string
+    difficulty: SkillDifficulty,
+    signature: string,
+    mod: number
+    encumbrancePenaltyMultiple: number
+    defaults: SkillDefault[]
+}
+export interface SkillData extends FeatureData, SkillLikeData {
+    type: FeatureType.Skill,
+}
+export const skillData = (): SkillData => ({
+    ...featureData(),
+    type: FeatureType.Skill,
+    points: 1,
+    name: "",
+    specialization: null,
+    techLevel: null,
+    difficulty: SkillDifficulty.Average,
+    signature: null,
+    mod: 0,
+    encumbrancePenaltyMultiple: 1,
+    defaults: []
+});
+export type TechniqueDifficulty = SkillDifficulty.Average | SkillDifficulty.Hard;
+export interface TechniqueData extends FeatureData, SkillLikeData {
+    type: FeatureType.Technique
+    difficulty: TechniqueDifficulty
+    default: SkillDefault
+    defaults: undefined
+}
+export const techniqueData = (): TechniqueData => ({
+    ...skillData(),
+    type: FeatureType.Technique,
+    difficulty: SkillDifficulty.Average,
+    default: {} as SkillDefault,
+    defaults: null
+});
+export interface SpellData extends FeatureData, SkillLikeData {
+    type: FeatureType.Spell
+    requiresConcentration: boolean
+    currentlyActive: boolean
+    college?: string
+    class?: string
+    resist?: string
+    powerSource?: string
+    spellClass?: string
+    castingCost?: string
+    maintenanceCost?: string
+    castingTime?: string
+    duration?: string
+}
+export const spellData = (): SpellData => ({
+    ...skillData(),
+    type: FeatureType.Spell,
+    requiresConcentration: false,
+    currentlyActive: false,
+});
+
+abstract class SkillLike<T extends FeatureType, K extends Skills> extends Feature<T, K> {
+    constructor(id: string, sheet?: Sheet) {
+        super(id, sheet);
     }
     get level() { return null }
-    get level$() {
+    get level$(): Observable<number> {
+        if (!this.exists) return
         const sheet = this.sheet;
-        if (!sheet) return NaN
+        if (!sheet) return null
         return combineLatest([
             this.instance$,
             sheet.skills$,
             sheet.attributes$,
-            this._skillBonus$
+            this.skillBonus$
         ]).pipe(
-            map(([targetSkill, otherSheetSkills, attributes]) => {
-                const defaults = targetSkill?.keys.defaults
+            takeWhile(([targetSkill]) => targetSkill.exists)
+        ).pipe(
+            map(([targetSkill, otherSheetSkills, attributes, bonus]) => {
+                const defaults = targetSkill.keys.defaults
                 const matches = otherSheetSkills.filter(skill => this.id !== skill.id && skillMatchesAnyDefaults(skill.keys, defaults));
                 const highestSkillDefault = defaults.reduce(
                     (highest, skillDefault) => {
@@ -47,39 +141,26 @@ abstract class SkillLike<T extends Skills> extends Feature<T> {
                 );
             })
         )
-    } get relativeLevel() {
+    }
+    get relativeLevel() {
         return calculateRelativeSkillLevel(
-            this.keys?.points,
-            this.keys?.difficulty
+            this.keys.points,
+            this.keys.difficulty
         )
     }
-    get relativeLevel$() {
-        const sheet = this.sheet;
-        if (!sheet) return NaN
-        return combineLatest([
-            this.instance$,
-            this.level$,
-            sheet.attributes$
-        ]).pipe(
-            map(([skill, level, attributes]) => {
-                return skill.relativeLevel
-            })
-        )
-    }
-    protected get _skillBonus$() {
+    get relativeLevel$() { return this.instance$.pipe(map(skill => skill.relativeLevel)) }
+    get skillBonus$() {
         const sheet = this.sheet;
         if (!sheet) return
-        return this.bonuses$.pipe(
+        return this.sheet.bonuses$.pipe(
             map(bonuses => {
-                bonuses
+                return bonuses
                     .filter(bonus => !bonus.disabled)
-                    .reduce(
-                        (bonuses, features) => {
-                            const skillBonuses = features.bonuses.filter(bonus => bonus.type === FeatureBonusType.Skill);
-                            [...bonuses, ...skillBonuses]
-                            return bonuses
-                        }, [] as SkillBonus[]
-                    )
+                    .map(bonus => {
+                        bonus.bonuses = bonus.bonuses.filter(bonus => bonus.type === FeatureBonusType.Skill);
+                        return bonus
+                    })
+                    .reduce((total, { bonus }) => total + bonus, 0)
             })
         )
     }
@@ -94,7 +175,7 @@ export function skillMatchesDefault(skill: SkillLikeData, skillDefault: SkillDef
     if (skillDefault.type !== "Skill") return false
     const nameMatches = skillDefault.name === skill.name;
     const specializationMatches = skillDefault.specialization === skill.specialization;
-    return (!skillDefault.name || nameMatches) && (!skillDefault.specialization || specializationMatches)
+    return (!skillDefault.name && nameMatches) && (!skillDefault.specialization || specializationMatches)
 }
 function calculateBaseRelativeLevel(difficulty: SkillDifficulty) {
     switch (difficulty) {
@@ -136,25 +217,26 @@ export function calculateSkillLevel(
     const preliminaryLevel = baseLevel + relativeLevel + encumbrancePenalty;
     return Math.max(preliminaryLevel, defaultLevel) + skill.mod + bonus
 }
-export class Skill extends SkillLike<SkillData> {
-    constructor(id: string) {
-        super(id);
+export class Skill extends SkillLike<FeatureType.Skill, SkillData> {
+    type = FeatureType.Skill as FeatureType.Skill
+    constructor(id: string, sheet?: Sheet) {
+        super(id, sheet);
     }
-    defaultData() { return this._wrapFeatureData(defaultSkillData()) }
+    defaultData() { return skillData() }
 }
-export class Technique extends SkillLike<TechniqueData> {
-    get type() { return FeatureType.Technique }
-    constructor(id: string) {
-        super(id);
+export class Technique extends SkillLike<FeatureType.Technique, TechniqueData> {
+    type = FeatureType.Technique as FeatureType.Technique
+    constructor(id: string, sheet?: Sheet) {
+        super(id, sheet);
     }
-    defaultData() { return this._wrapFeatureData(defaultTechniqueData()) }
+    defaultData() { return techniqueData() }
 }
-export class Spell extends SkillLike<SpellData> {
-    get type() { return FeatureType.Spell }
-    constructor(id: string) {
-        super(id)
+export class Spell extends SkillLike<FeatureType.Spell, SpellData> {
+    type = FeatureType.Spell as FeatureType.Spell
+    constructor(id: string, sheet?: Sheet) {
+        super(id, sheet)
     }
-    defaultData() { return this._wrapFeatureData(defaultSpellData()) }
+    defaultData() { return spellData() }
 }
 export function calculateTechniqueLevel(
     technique: TechniqueData,

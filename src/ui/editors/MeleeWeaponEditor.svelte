@@ -1,8 +1,10 @@
 <script>
     import Form from "@ui/form/Form";
     import { Tabs, Tab, TabPanel, TabList } from "@ui/tabs/tabs";
+
     import SkillDefaults from "./panels/SkillDefaults";
-    export let entity;
+
+    export let entity = {};
 </script>
 
 <style>
@@ -15,8 +17,14 @@
     </TabList>
     <TabPanel>
         <Form>
-            <label for="">Usage
-                <input type="text" bind:value={$entity.usage} /></label>
+            <div class="flex">
+                <label for="">Usage
+                    <input type="text" bind:value={$entity.usage} />
+                </label>
+                <label for="">
+                    <input type="text" bind:value={$entity.info} />
+                </label>
+            </div>
             <div class="flex">
                 <label for="">Damage
                     <input type="text" bind:value={$entity.damage} /></label>
@@ -38,5 +46,7 @@
                 <input type="text" bind:value={$entity.strength} /></label>
         </Form>
     </TabPanel>
-    <TabPanel component={SkillDefaults} props={{ entity: $entity }} />
+    <TabPanel>
+        <SkillDefaults {entity} bind:defaults={$entity.defaults} />
+    </TabPanel>
 </Tabs>

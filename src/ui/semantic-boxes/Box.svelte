@@ -5,7 +5,7 @@
 
 <style>
   .semantic-box {
-    @apply relative;
+    @apply relative p-1;
   }
   .box-interface {
     @apply absolute top-0 right-0 text-sm;
