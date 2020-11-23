@@ -3,7 +3,7 @@
   const dispatch = createEventDispatcher();
 
   import { createPopper } from "@popperjs/core";
-  import { popperVirtualElement } from "@ui/utils/popper";
+  import { popperVirtualElement } from "@internal";
 
   import ContextMenuOption from "./ContextMenuOption.svelte";
 
@@ -19,13 +19,25 @@
     popper = createPopper(virtualElement, HTMLUListElement, {
       placement: "bottom-start",
       strategy: "fixed",
+      modifiers: [
+        {
+          name: "offset",
+          options: {
+            offset: [5, 5],
+          },
+        },
+      ],
     });
     virtualElement.update(e.clientX, e.clientY);
     popper.update();
   }
 
   onMount(render);
-  onDestroy(() => popper.destroy());
+  onDestroy(() => {
+    try {
+      popper.destroy();
+    } catch (err) {}
+  });
 
   function close() {
     dispatch("close");
@@ -44,7 +56,7 @@
   on:click={close}
   on:contextmenu|capture={close} />
 
-<ul bind:this={HTMLUListElement} class="context-menu">
+<ul style="margin:0px;" bind:this={HTMLUListElement} class="context-menu">
   {#each options as option, i (i)}
     <ContextMenuOption {...option} />
   {/each}

@@ -2,8 +2,10 @@
     import Cropper from "cropperjs";
     import { Valor } from "@internal";
 
+    export let fallback;
     export let src;
     export let cropped;
+    
 
     let portrait;
     let cropper;
@@ -97,7 +99,7 @@
     <img
         class="object-contain object-center"
         style="max-height: 80vh;"
-        src={cropped || src}
+        src={cropped || src || fallback}
         alt="profile"
         bind:this={portrait} />
 </section>

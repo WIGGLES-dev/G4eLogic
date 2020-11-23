@@ -42,8 +42,12 @@
 <div class="flex">
   <div>
     <div class="flex mx-4">
-      <button class="button">Dodge ({encumberedDodge})</button>
-      <button class="button">Dodge+ ({encumberedDodge + 3})</button>
+      <button
+        on:click={() => character.executeAction('dodge')}
+        class="button">Dodge ({encumberedDodge})</button>
+      <button
+        class="button"
+        on:click={() => character.executeAction('dodge+')}>Dodge+ ({encumberedDodge + 3})</button>
     </div>
     <div class="my-4">
       <List {...meleeWeaponProps}>
@@ -90,6 +94,6 @@
     <SizeRange />
   </div>
   <div class="flex-1">
-    <Silhouette />
+    <Silhouette maxHeight="600px" minWidth="225px" viewbox="200 0 400 800" />
   </div>
 </div>

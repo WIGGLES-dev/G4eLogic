@@ -9,7 +9,10 @@ export function resolveWeights(list: Feature[], target?: Feature, newWeight?: nu
     }
     applyTransaction(
         () => {
-            arr.forEach((item, i) => item.update(data => { data.keys.ui.listWeight = i }));
+            arr.forEach((item, i) => item.update(data => {
+                data.keys.ui.listWeight = i
+                return data
+            }));
         }
     );
 }

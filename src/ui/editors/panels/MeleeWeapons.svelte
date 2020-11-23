@@ -1,16 +1,14 @@
 <script>
   import List from "@ui/lists/List";
-  import ListItem from "@ui/lists/ListItem";
   import MeleeWeaponEntity from "@ui/entities/MeleeWeapon";
-  import MeleeWeaponEditor from "@ui/editors/MeleeWeaponEditor";
 
-  import { WeaponType, MeleeWeapon } from "@internal";
+  import { MeleeWeapon } from "@internal";
 
-  export let entity = null;
+  export let entity = {};
   $: ({ meleeWeapons$ } = entity);
 
   function addWeapon() {
-    entity.embed(new MeleeWeapon());
+    entity.splice(new MeleeWeapon(null, null));
   }
 
   $: props = {

@@ -1,20 +1,13 @@
 <script>
+  import attackIco from "@ui/assets/sword-svgrepo-com.svg";
+
   import { getContext, createEventDispatcher } from "svelte";
   import { string } from "@ui/utils/formatting";
-  export let i;
-  export let depth;
   export let entity = {};
-  $: ({ owner$, exists, id, disabled, hidden } = entity);
+  $: ({ bestAttackLevel$, owner$, exists, id, disabled, hidden } = entity);
   export let display = "table";
-  export let addItem = false;
-  export let list = [];
-  export let getRoot = (list) => list;
-  export let accessChildren = () => [];
-  export let contextMenuOptions = () => [];
-  export let component = null;
 
-  const { character, globalDispatch = createEventDispatcher() } =
-    getContext("editor") || {};
+  const { character } = getContext("editor") || {};
 </script>
 
 <style>
@@ -26,13 +19,15 @@
 {#if display === 'table'}
   <td>{string(entity.owner.name)}</td>
   <td>{string(entity.usage)}</td>
-  <td on:click={() => globalDispatch('roll', { entity, for: 'attack' })}>
+  <td on:click={() => entity.executeAction('roll', { for: 'attack' })}>
     <div>
-      <img src="sword-svgrepo-com.svg" alt="" />
-      <span>{string(entity.getBestAttackLevel())}</span>
+      <img src={attackIco} alt="" />
+      <span>{string($bestAttackLevel$)}</span>
     </div>
   </td>
-  <td>
+  <td
+    class="cell-click"
+    on:click={() => entity.executeAction('roll', { for: 'damage' })}>
     <span
       class="fas fa-dice-d6 pr-1" />{string($entity.damage, {
       afterEnd: ' ' + string($entity.damageType),
@@ -47,11 +42,11 @@
   <td>{string($entity.strength)}</td>
 {:else if display === 'list'}
   <li class="text-sm italic hover:underline">
-    {string($owner$.name, {
+    {string($owner$.keys.name, {
       afterEnd:
         ' - ' +
-        string(entity.usage, {
-          afterEnd: string(entity.getBestAttackLevel(), {
+        string($entity.usage, {
+          afterEnd: string($bestAttackLevel$, {
             beforeStart: ' (',
             afterEnd: ')',
           }),

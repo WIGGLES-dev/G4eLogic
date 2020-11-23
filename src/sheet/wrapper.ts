@@ -1,74 +1,107 @@
-import { EntityStore, EntityState, QueryEntity, UpdateStateCallback, transaction } from "@datorama/akita"
-import { asyncScheduler, interval, Observable, Observer, PartialObserver, Subscription, } from "rxjs"
+import { EntityStore, EntityState, QueryEntity, EntityStateHistoryPlugin } from "@datorama/akita"
+import { asyncScheduler, fromEvent, interval, Observable, Observer, PartialObserver, Subscription, } from "rxjs"
 import { map, takeWhile, pluck, finalize, throwIfEmpty, throttle, throttleTime, sampleTime, auditTime, debounceTime } from "rxjs/operators"
 import { v4 as uuidv4 } from "uuid";
 import * as jp from "jsonpath";
-import { KeyList } from "@internal";
-import { SvelteComponent } from "svelte";
+import deepmerge from "deepmerge";
+import { get } from "svelte/store";
+import { after, before, debounce, debounceTimeAfterFirst, Valor } from "@internal";
 
-import Editor from "@ui/editors/Editor.svelte";
-import Modal from "@ui/applications/Modal.svelte";
-
-import { Valor } from "./valor";
-
-import { after, before } from "@externals/hooks";
-import { AsyncScheduler } from "rxjs/internal/scheduler/AsyncScheduler";
-
+interface ResourceStateMethods {
+    undo()
+    redo()
+    jumpToPast(i: number)
+    jumpToFuture(i: number)
+    clear()
+    ignoreNext()
+    destroy(clearHistroy: boolean)
+    hasPast(): boolean
+    hasFuture(): boolean
+}
 abstract class Resource<T extends string = string, K = any> {
-    lastSet: Date
-    pendingSet: K
-
     id: string
-
-    private static readonly _editorInstances: { [key: string]: Editor } = {}
-    private get _editor() { return Resource._editorInstances[this.id] }
-
     abstract readonly type: T
+
     readonly abstract exists: boolean
-    get exists$() { return this.instance$.pipe(pluck("exists")) as Observable<boolean> }
-    readonly abstract data: EntityData<T, K>
-    readonly abstract data$: Observable<EntityData<T, K>>
-    get allEmbeddedData() { return Object.values(this.data.embeddedEntities) }
+    get exists$() { return this.instance$.pipe(map(instance => instance.exists)) }
+    protected readonly abstract _sourceData: EntityData<T, K>
+    protected readonly abstract _sourceData$: Observable<EntityData<T, K>>
+    get data() {
+        try {
+            return this._sourceData
+        } catch (err) {
+            this.repairData();
+            return this._sourceData
+        }
+    }
+    get data$() {
+        try {
+            return this._sourceData$.pipe(takeWhile(data => this.exists))
+        } catch (err) {
+            this.repairData();
+            return this._sourceData$
+        }
+    }
+    get allEmbeddedData() { return Object.values(this.data.embeddedEntities || {}) }
     get instance() { if (this.exists) return this.createThis(this.id) }
-    get instance$() { return this.data$.pipe(takeWhile(data => this.exists), map(data => this.instance)) }
-    get keys() { return this.data.keys }
-    get keys$() { return this.data$.pipe(pluck("keys")) as Observable<K> }
+    get instance$() { return this.data$.pipe(map(data => this.instance)) }
+    get keys(): K { return this.data.keys }
+    get keys$() { return this.data$.pipe(map(data => data.keys)) }
     get createdOn(): Date { return new Date(this.data.createdOn) }
-    get lastEdit(): Date { if (this.data.lastEdit) return new Date(this.data.lastEdit) }
+    get lastEdit(): Date { return new Date(this.data.lastEdit) }
 
     constructor(id: string) {
         this.id = id;
     }
 
-    wrapData() { return entityData(this.type, this.defaultData()) }
+    @before("before newId")
+    newId() { return uuidv4() }
+
+    wrapData() { return entityData(this.type, this.defaultData(), this.id) }
+    abstract defaultData(): K
+    isDataValid() { }
+    repairData() { }
+
     createThis(id: string = this.id) { return new (this.constructor as new (id: string) => this)(id) }
 
-    abstract defaultData(): K
 
-    hasEmbeddedEntity(id: string) { return this.data.embeddedEntities[id]?.id === id }
 
     subscribe(observer: PartialObserver<K>) {
-        const subscription = this.keys$.pipe(
-            map(keys => clone(keys))
-        ).subscribe(observer);
-        return () => subscription.unsubscribe()
+        return this.keys$.pipe(map(keys => deepmerge<K>({}, keys))).subscribe(observer);
     }
 
     pathValue(path: string) { return jp.value(this.data, path) }
     pathValue$(path: string) { return this.instance$.pipe(map(instance => instance.pathValue(path))) }
 
-    pathUpdate(path: string, value: any) { this.update(data => { jp.value(data, path, value) }) }
-    abstract update(fn: UpdateStateCallback<EntityData<T, K>, Partial<EntityData<T, K>>>)
+    pathUpdate(path: string, value: any) {
+        this.update(data => {
+            jp.value(data, path, value);
+            return data
+        })
+    }
+
+    abstract update(fn: (data: EntityData<T, K>) => EntityData<T, K>)
+    splice(resource: EmbeddedResource) {
+        this.update(data => {
+            const splice = { ...(resource.data || resource.wrapData()) };
+            splice.id = this.newId();
+            splice.rootEntityId = this.data.rootEntityId || this.id;
+            splice.rootEntityType = this.data.rootEntityType || this.type;
+            data.embeddedEntities[splice.id] = splice;
+            return data
+        });
+    }
 
     set(keys: K) {
-        const updateTime = new Date();
-        if (this.lastSet?.getMilliseconds() > updateTime.getMilliseconds() - 500) {
-            this.pendingSet = keys;
-            this.lastSet = updateTime;
-        } else {
-            this.update(data => { data.keys = clone(this.pendingSet || keys) });
-            this.pendingSet = null;
-        }
+        this.update(data => {
+            data.keys = deepmerge<K>({}, keys);
+            return data
+        });
+    }
+
+    get<T>(observable: Observable<T> | string) {
+        //@ts-ignore
+        return get<T>(typeof observable === "string" ? this[observable] : observable)
     }
 
     abstract delete()
@@ -79,24 +112,7 @@ abstract class Resource<T extends string = string, K = any> {
     toJSON() { return this.data }
 
     @before("before edit")
-    edit() {
-        if (this._editor) return
-        if (!document) return
-        const editor = new Modal(
-            {
-                target: document.body,
-                props: {
-                    component: Editor,
-                    entity: this
-                }
-            }
-        )
-        Resource._editorInstances[this.id] = editor;
-        editor.$on("close", () => {
-            editor.$destroy();
-            Resource._editorInstances[this.id] = null;
-        });
-    }
+    edit() { }
 
     @before("before contextmenu")
     renderContextMenu(e: MouseEvent) { Valor.contextMenu(e, this.contextMenuOptions) }
@@ -132,16 +148,17 @@ export interface EntityData<T extends string = string, K = any> {
     type: T
     keys: K
     embedded: boolean
-    rootEntityId?: string
-    progenitorId?: string
     embeddedEntities: { [key: string]: EntityData<string, any> }
+    rootEntityId?: string
+    rootEntityType?: string
+    progenitorId?: string
     createdOn: string
     lastEdit?: string
 }
-function entityData<T extends string, K>(type: T, keys: K): EntityData<T, K> {
+function entityData<T extends string, K>(type: T, keys: K, id: string): EntityData<T, K> {
     return {
         isEntity: true,
-        id: uuidv4() as string,
+        id,
         type,
         keys,
         embedded: false,
@@ -150,13 +167,13 @@ function entityData<T extends string, K>(type: T, keys: K): EntityData<T, K> {
     }
 }
 
-interface Repo<T extends string = string, K = any> extends EntityStore<EntityState<EntityData<T, K>, string>> { }
-interface Query<T extends string = string, K = any> extends QueryEntity<EntityState<EntityData<T, K>, string>> { }
+export interface Repo<T extends string = string, K = any> extends EntityStore<EntityState<EntityData<T, K>, string>> { }
+export interface Lookup<T extends string = string, K = any> extends QueryEntity<EntityState<EntityData<T, K>, string>> { }
 export abstract class Entity<
     T extends string = string,
     K = any,
-    S extends Repo = Repo,
-    Q extends Query = Query,
+    S extends Repo<T, K> = Repo<T, K>,
+    Q extends Lookup<T, K> = Lookup<T, K>,
     > extends Resource<T, K> {
 
     abstract store: S
@@ -164,29 +181,37 @@ export abstract class Entity<
 
     get exists() { return this.query.hasEntity(this.id) }
     get exists$() { return this.instance$.pipe(pluck("exists")) as Observable<boolean> }
-    get data() { return this.query.getEntity(this.id) as EntityData<T, K> }
-    get data$() {
-        return this.query.selectEntity(this.id).pipe(
-            takeWhile(data => this.exists),
-            // throttleTime(500)
-        ) as Observable<EntityData<T, K>>
-    }
+    get _sourceData() { return this.query.getEntity(this.id) }
+    get _sourceData$() { return this.query.selectEntity(this.id) }
 
     constructor(id: string) {
         super(id);
     }
 
-    private _updateStore() {
-
+    abstract stateHistory: EntityStateHistoryPlugin<EntityState<EntityData<T, K>>>
+    get state() { return this._forwardStateToEntity(this.stateHistory) }
+    protected _forwardStateToEntity<S extends EntityStateHistoryPlugin<EntityState<EntityData<T, K>>>>(stateHistory: S) {
+        return {
+            undo: () => stateHistory.undo(this.id),
+            redo: () => stateHistory.redo(this.id),
+            jumpToPast: (i) => stateHistory.jumpToPast(this.id, i),
+            jumpToFuture: (i) => stateHistory.jumpToFuture(this.id, i),
+            clear: () => stateHistory.clear(this.id),
+            ignoreNext: () => stateHistory.ignoreNext(),
+            destroy: (clearHistroy = false) => this.stateHistory.destroy(this.id, clearHistroy),
+            hasPast: () => stateHistory.hasPast(this.id),
+            hasFuture: () => stateHistory.hasFuture(this.id)
+        }
     }
+
 
     @before("before update")
     @after("after update")
-    update(fn: UpdateStateCallback<EntityData<T, K>, Partial<EntityData<T, K>>>) {
+    update(fn: (data: EntityData<T, K>) => EntityData<T, K>) {
         try {
             const src = this.data;
             this.store.update(this.id, data => {
-                fn(data as EntityData<T, K>);
+                fn(data);
                 data.lastEdit = new Date().toJSON();
                 data.id = this.id;
                 data.type = this.type;
@@ -200,22 +225,21 @@ export abstract class Entity<
 
     @before("before embed")
     @after("after embed")
-    embed<T extends EmbeddableEntity>(entity: T) {
-        if (entity.embedded) return
-        let embed = entity.data || entity.wrapData();
+    embed<T extends EmbeddableEntity>(entity: T, keys: { [key: string]: any }) {
+        const embed = deepmerge(entity.data || entity.wrapData(), { keys });
         embed.embedded = true;
-        embed.rootEntityId = this instanceof EmbeddableEntity ? this.root.id : this.id
-        this.update(data => {
-            data.embeddedEntities[embed.id] = embed;
-        });
-        return entity.createThis(embed.id, this);
+        embed.rootEntityId = this.id;
+        embed.rootEntityType = this.type;
+        embed.id = this.newId();
+        entity.embeddedStore.add(embed);
+        return entity.createThis(embed.id)
     }
 
     duplicate() { return this.create(this.data); }
 
     @before("before create")
     create(data?: EntityData<T, K>) {
-        const id = uuidv4() as string
+        const id = this.newId() as string
         this.store.add(Object.assign({}, this.wrapData(), data, { id }));
         return this.createThis(id);
     }
@@ -223,7 +247,6 @@ export abstract class Entity<
     @before("before delete")
     delete() { this.store.remove(this.id); }
 }
-export function clone<T>(data: T): T { try { return JSON.parse(JSON.stringify(data)) } catch (err) { console.log(err, data); } }
 
 /**
  * An entity that is meant to be embedded on other entities but whose source data comes from a global store.
@@ -231,53 +254,49 @@ export function clone<T>(data: T): T { try { return JSON.parse(JSON.stringify(da
 export abstract class EmbeddableEntity<
     T extends string = string,
     K = any,
-    E extends Entity = Entity,
-    S extends Repo = Repo,
-    Q extends Query = Query
+    E = Entity,
+    S extends Repo<T, K> = Repo<T, K>,
+    Q extends Lookup<T, K> = Lookup<T, K>
     > extends Entity<T, K, S, Q> {
 
-    root: E
-    get embedded() { return this.root?.exists && this.root.hasEmbeddedEntity(this.id) }
+    abstract embeddedStore: S
+    abstract embeddedQuery: Q
+    abstract embeddedState: EntityStateHistoryPlugin<EntityState<EntityData<T, K>>>
 
-    get parent() { return null }
-    get exists() { return this.embedded ? true : super.exists }
-    get data(): EntityData<T, K> { return this.embedded ? this.root.data.embeddedEntities[this.id] as EntityData<T, K> : super.data }
-    get data$(): Observable<EntityData<T, K>> {
+    abstract parent: E
+
+    get embedded() { return this.embeddedQuery?.hasEntity(this.id) }
+
+    get exists() { return this.embedded ? true : super.exists || super.exists }
+    get data() { return this.embedded ? this.embeddedQuery.getEntity(this.id) as EntityData<T, K> : super.data }
+    get data$() {
         return this.embedded
-            ? this.root.data$.pipe(
-                takeWhile(data => this.exists),
-                map(data => data.embeddedEntities[this.id] as EntityData<T, K>)
+            ? this.embeddedQuery.selectEntity(this.id).pipe(
+                takeWhile(data => this.exists)
             ) :
             super.data$
     }
 
-    constructor(id: string, entity?: E) {
+    constructor(id: string) {
         super(id);
-        if (entity instanceof EmbeddableEntity) {
-            this.root = entity.root
-        } else {
-            this.root = entity;
-        }
     }
 
-    createThis(id: string = this.id, entity: E = this.root) { return new (this.constructor as new (id: string, entity: E) => this)(id, entity) }
-
-    update(fn: (data: EntityData<T, K>) => void) {
+    update(fn: (data: EntityData<T, K>) => EntityData<T, K>) {
         if (!this.embedded) return super.update(fn);
         this._embeddedUpdate(fn);
     }
 
+
     @before("before embedded update")
     @after("after embedded update")
-    private _embeddedUpdate(fn: (data: EntityData<T, K>) => void) {
+    private _embeddedUpdate(fn: (data: EntityData<T, K>) => EntityData<T, K>) {
         const src = this.data;
-        return this.root.update(data => {
-            const val = data.embeddedEntities[this.id] as EntityData<T, K>
-            fn(val);
-            val.lastEdit = new Date().toJSON();
-            val.id = this.id;
-            val.type = this.type;
-            val.createdOn = src.createdOn;
+        return this.embeddedStore.update(this.id, data => {
+            fn(data);
+            data.lastEdit = new Date().toJSON();
+            data.id = this.id;
+            data.type = this.type;
+            data.createdOn = src.createdOn;
         })
     }
 
@@ -291,16 +310,45 @@ export abstract class EmbeddableEntity<
     @before("before embedded delete")
     @after("after embedded delete")
     private _embeddedDelete() {
-        this.root.update((data) => { delete data.embeddedEntities[this.id] });
+        this.embeddedStore.remove(this.id);
     }
 }
 
 export abstract class EmbeddedResource<T extends string = string, K = any, E extends Entity = Entity> extends Resource<T, K> {
     parent: E
+    embedded = true
     get parent$() { return this.parent?.instance$ }
-    get exists() { return this.parent?.exists && this.parent.hasEmbeddedEntity(this.id) }
-    get data(): EntityData<T, K> { return this.parent?.data?.embeddedEntities[this.id] as EntityData<T, K> }
-    get data$(): Observable<EntityData<T, K>> { return this.parent.data$.pipe(takeWhile(data => this.exists), map(data => data.embeddedEntities[this.id] as EntityData<T, K>)) }
+    get exists() { return this.parent.exists && (this.parent.data.embeddedEntities || {})[this.id]?.id === this.id }
+    get _sourceData() { return (this.parent?.data?.embeddedEntities ?? {})[this.id] as EntityData<T, K> }
+    get _sourceData$() { return this.parent.data$.pipe(takeWhile(data => this.exists), map(data => data.embeddedEntities[this.id] as EntityData<T, K>)) }
+
+    get stateHistory() { return this.parent.stateHistory }
+    get state() { return this.parent.state }
+    protected _forwardStateToEmbeddedResource<S extends EntityStateHistoryPlugin<EntityState<EntityData<T, K>>>>(stateHistory: S) {
+        return {
+            undo: () => {
+                stateHistory.undo();
+                const oldData = this.data;
+                stateHistory.redo();
+                this.update(data => {
+                    Object.assign(data, oldData);
+                });
+            },
+            redo: () => {
+                if (stateHistory.hasFuture(this.id)) return
+            },
+            jumpToPast: (i) => stateHistory.jumpToPast(this.id, i),
+            jumpToFuture: (i) => stateHistory.jumpToFuture(this.id, i),
+            clear: () => stateHistory.clear(this.id),
+            ignoreNext: () => stateHistory.ignoreNext(),
+            destroy: (clearHistroy = false) => this.stateHistory.destroy(this.id, clearHistroy),
+            hasPast: () => stateHistory.hasPast(this.id),
+            hasFuture: () => stateHistory.hasFuture(this.id)
+        }
+    }
+
+    protected _forwardTo
+
     constructor(id: string, entity: E) {
         super(id);
         this.parent = entity
@@ -316,8 +364,19 @@ export abstract class EmbeddedResource<T extends string = string, K = any, E ext
             val.id = this.id;
             val.type = this.type;
             val.createdOn = src.createdOn;
+            return data
         });
     }
+
+    createThis(id: string = this.id, parent: E = this.parent) { return new (this.constructor as new (id: string, parent: E) => this)(id, this.parent) }
     create() { return null }
-    delete() { this.parent.update((data) => { delete data.embeddedEntities[this.id] }); }
+
+    @before("before delete embedded resource")
+    @after("after delete embedded resource")
+    delete() {
+        this.parent.update(data => {
+            delete data.embeddedEntities[this.id];
+            return data
+        });
+    }
 }

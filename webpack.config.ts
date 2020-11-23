@@ -4,6 +4,7 @@ import webpack from "webpack";
 import CopyPlugin from "copy-webpack-plugin";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import { TsConfigPathsPlugin } from "awesome-typescript-loader";
+import DeclarationBundlerPlugin from './dts-webpack-plugin';
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { GenerateSW } from "workbox-webpack-plugin";
 import { postcss } from "svelte-preprocess";
@@ -30,9 +31,13 @@ const config = (target): webpack.Configuration => ({
         'index': [path.resolve(__dirname, 'src/index.ts')]
     },
     resolve: {
-        alias: rxPaths(),
+        alias: {
+            ...rxPaths(),
+        },
         plugins: [
-            new TsConfigPathsPlugin({ configFileName: "tsconfig.json" })
+            new TsConfigPathsPlugin({
+                config: "tsconfig.json"
+            })
         ],
         extensions: ['.mjs', '.ts', '.js', '.wasm', '.json', '.svelte'],
         mainFields: ['svelte', 'browser', 'module', 'main']
@@ -49,15 +54,13 @@ const config = (target): webpack.Configuration => ({
                 use: {
                     loader: 'awesome-typescript-loader',
                 },
-                exclude: /node_modules/
             },
             {
-                test: /\.(html|svelte)$/,
-                exclude: /node_modules/,
+                test: /\.svelte$/,
                 use: {
                     loader: 'svelte-loader',
                     options: {
-                        onwarn: false,
+                        onwarn: () => false,
                         emitCss: true,
                         preprocess: [
                             postcss({
@@ -98,21 +101,30 @@ const config = (target): webpack.Configuration => ({
                     limit: 8192,
                 },
             },
+            {
+                test: /\.html$/i,
+                loader: 'html-loader',
+            }
         ]
     },
     mode,
     plugins: [
         new webpack.ProvidePlugin({
-            tinymce: 'tinymce'
+            Svelte: ['svelte'],
+            SvelteStore: ['svelte/store']
         }),
-        // new GenerateSW(),
         new CleanWebpackPlugin(),
         new CopyPlugin({
             patterns: [
                 { from: 'src/test/public', to: "./test" }
             ]
         }),
-        new MiniCssExtractPlugin()
+        new MiniCssExtractPlugin(),
+        // new DeclarationBundlerPlugin({
+        //     moduleName: 'index',
+        //     out: 'index.d.ts',
+        // })
+        // new GenerateSW(),
     ],
     devtool: prod ? false : 'source-map'
 })

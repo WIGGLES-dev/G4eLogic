@@ -10,7 +10,6 @@
   export let list = [];
   export let getRoot = (list) => list;
   export let accessChildren = () => [];
-  export let contextMenuOptions = () => [];
   export let component = null;
 
   $: root = getRoot(list);
@@ -22,7 +21,6 @@
     list,
     getRoot,
     accessChildren,
-    contextMenuOptions,
     component,
   };
 </script>
@@ -56,7 +54,7 @@
         <slot name="header" />
       </thead>
       <tbody>
-        {#each root as entity, i (root.id || i)}
+        {#each root as entity, i (entity.id || i)}
           <ListItem {...props} {entity} {i} />
         {/each}
         <slot />

@@ -3,6 +3,8 @@
     import { Tabs, Tab, TabPanel, TabList } from "@ui/tabs/tabs";
     import SkillDefaults from "./panels/SkillDefaults";
 
+    import ProseMirror from "@ui/prosemirror/ProseMirror";
+
     export let entity;
 </script>
 
@@ -13,6 +15,7 @@
     <TabList>
         <Tab>Data</Tab>
         <Tab>Defaults</Tab>
+        <Tab>User Description</Tab>
     </TabList>
     <TabPanel>
         <Form>
@@ -21,16 +24,12 @@
             </label>
             <div class="flex">
                 <label for="">Damage
-                    <input
-                        type="text"
-                        bind:value={$entity.damage} /></label>
+                    <input type="text" bind:value={$entity.damage} /></label>
                 <label for="">Damage Type <input type="text" /></label>
                 <label for="">AD<input type="number" min="0" /></label>
             </div>
             <label for="">ROF
-                <input
-                    type="text"
-                    bind:value={$entity.rateOfFire} /></label>
+                <input type="text" bind:value={$entity.rateOfFire} /></label>
             <label for="">Range
                 <input type="text" bind:value={$entity.range} /></label>
             <label>Acc<input
@@ -49,5 +48,8 @@
     </TabPanel>
     <TabPanel>
         <SkillDefaults {entity} bind:defaults={$entity.defaults} />
+    </TabPanel>
+    <TabPanel>
+        <ProseMirror bind:content={$entity.userDescription} />
     </TabPanel>
 </Tabs>

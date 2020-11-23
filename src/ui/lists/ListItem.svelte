@@ -12,7 +12,6 @@
   export let list = [];
   export let getRoot = (list) => list;
   export let accessChildren = () => [];
-  export let contextMenuOptions = () => [];
   export let component = null;
 
   $: props = {
@@ -22,7 +21,6 @@
     list,
     getRoot,
     accessChildren,
-    contextMenuOptions,
     component,
   };
 
@@ -58,10 +56,8 @@
     try {
       const selectedId = e.dataTransfer.getData("text/plain");
       const isOnToggle = e.target.matches("[data-container-toggle]");
-      if (entity.isContainer() && isOnToggle) {
-        entity.slot(selectedId);
-      } else {
-        entity.addAfter(selectedId);
+      if (entity.isContainer()) {
+        entity.slot(entity.type, selectedId);
       }
       const target = entity.createThis(selectedId);
       resolveWeights(list, target, entity.listWeight);

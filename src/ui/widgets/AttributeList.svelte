@@ -1,10 +1,11 @@
 <script>
   import { getContext } from "svelte";
-  import { createTooltip } from "@ui/utils/popper";
+  import { tooltip } from "@internal";
 
   const { character } = getContext("editor");
 
-  const attributes = character.attributes$;
+  $: order = ($character.config.UI || {}).attributeOrder;
+  const attributes$ = character.attributes$;
 
   function isPrimary(attr) {
     return attr.hasTag("primary");
@@ -54,7 +55,7 @@
   <div class="flex bg-gray-700 col-span-2">
     <span
       class="col-span-2 text-center m-auto text-white bg-gray-700"
-      use:createTooltip={{ placement: 'bottom-start', tooltip: `
+      use:tooltip={{ placement: 'bottom-start', tooltip: `
       Attributes from the configuration panel. Clicking the dice will roll the styles number.<br/>
       The mod input will adjust the main attribute without adjusting point total.<br/>
       the number in brackets is the amount of points spent modifying the attribute.<br/>
@@ -63,7 +64,11 @@
   <span class="text-center text-white bg-gray-700">MOD</span>
   <span class="text-center text-white bg-gray-700 px-2">PTS</span>
 
-  {#each Object.values($attributes) as attr, i (attr.signature)}
+  {#each order ? order
+        .map((attr) => $attributes$[attr])
+        .filter(
+          (val) => val
+        ) : Object.values($attributes$) as attr, i (attr.signature)}
     {#if (!isSubstat(attr) || true) && !isPool(attr)}
       <div
         class:primary={isPrimary(attr)}
@@ -73,7 +78,7 @@
         class="truncate uppercase">
         <span
           class="float-right pr-2"
-          use:createTooltip={{ context: attr, tipclass: 'text-xs', placement: 'bottom-start', tooltip: `${attr.keys.tooltip || ''}` }}>{attr.keys.abbreviation}
+          use:tooltip={{ context: attr, tipclass: 'text-xs', placement: 'bottom-start', tooltip: `${attr.keys.tooltip || ''}` }}>{attr.keys.abbreviation}
         </span>
       </div>
       <span
@@ -90,18 +95,18 @@
           class="main-input"
           step={attr.keys.increment || 1}
           type="number"
+          min="0"
+          placeholder="0"
           bind:value={attr.displayLevel} />
         <span
-          on:click={() => character.executeAction('roll', {
-              for: 'attribute',
-              attr,
-            })}
+          on:click={() => character.executeAction('roll', { for: 'attribute' })}
           class="fas fa-dice-d6 hover:text-green-500" />
       </span>
       <input
         class="mod-input"
-        step={attr.increment}
+        step={attr.keys.increment || 1}
         type="number"
+        placeholder="0"
         bind:value={attr.modifier} />
       <span class="text-sm text-center self-center">{#if attr.keys.costPerLevel}
           [{attr.pointsSpent()}]

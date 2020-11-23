@@ -1,12 +1,11 @@
 <script>
   import { getContext } from "svelte";
-  import List from "@ui/lists/List";
 
+  import List from "@ui/lists/List";
   import TraitEntity from "@ui/entities/Trait";
   import Language from "@ui/entities/Language";
 
-  import { strEncodeUTF16 } from "@utils/strings";
-  import { split, Trait } from "@internal";
+  import { split, Trait, TraitCategory, strEncodeUTF16 } from "@internal";
 
   const { character } = getContext("editor");
 
@@ -23,8 +22,8 @@
       .sort((a, b) => strEncodeUTF16(b.name) - strEncodeUTF16(a.name));
   }
   function addItem(categories = []) {
-    new Trait().mount(character.id).update((data) => {
-      data.keys.categories = categories;
+    character.embed(new Trait(), {
+      categories,
     });
   }
   function getRoot(entities = []) {
@@ -44,7 +43,7 @@
   };
   $: advantageProps = {
     ...props,
-    getRoot: (list) => getRoot(split(list).advantages),
+    getRoot: (list) => getRoot(split(list)[TraitCategory.Advantage]),
   };
   $: languageProps = {
     ...props,
@@ -59,27 +58,27 @@
   };
   $: disadvantageProps = {
     ...props,
-    getRoot: (list) => getRoot(split(list).disadvantages),
+    getRoot: (list) => getRoot(split(list)[TraitCategory.Disadavantage]),
   };
   $: racialProps = {
     ...props,
-    getRoot: (list) => getRoot(split(list).racial),
+    getRoot: (list) => getRoot(split(list)[TraitCategory.Racial]),
   };
   $: metaProps = {
     ...props,
-    getRoot: (list) => getRoot(split(list).meta),
+    getRoot: (list) => getRoot(split(list)[TraitCategory.Meta]),
   };
   $: perkProps = {
     ...props,
-    getRoot: (list) => getRoot(split(list).perks),
+    getRoot: (list) => getRoot(split(list)[TraitCategory.Perk]),
   };
   $: quirkProps = {
     ...props,
-    getRoot: (list) => getRoot(split(list).quirks),
+    getRoot: (list) => getRoot(split(list)[TraitCategory.Quirk]),
   };
   $: featureProps = {
     ...props,
-    getRoot: (list) => getRoot(split(list).features),
+    getRoot: (list) => getRoot(split(list)[TraitCategory.Feature]),
   };
 </script>
 

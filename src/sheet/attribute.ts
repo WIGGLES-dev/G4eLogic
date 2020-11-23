@@ -1,4 +1,4 @@
-import { KeyList, Sheet } from "@internal";
+import { AttributeBonus, FeatureBonusType, KeyList, Sheet, debounce } from "@internal";
 import * as jp from "jsonpath"
 
 export interface AttributeData {
@@ -43,18 +43,53 @@ export class Attribute {
         this.#signature = signature;
         this.#attributes = attributes;
     }
-    get level() { return this.attribute?.level || 0 + this.keys.defaultLevel || null }
-    set level(level) { this.sheet.pathUpdate(`$.keys.${this.selector}['${this.signature}'].level`, level) }
+
+    get level() { return (this.attribute?.level > Number.NEGATIVE_INFINITY ? this.attribute?.level ?? null : this.keys.defaultLevel || null) || null }
+    set level(level) { this.updateLevel(level) }
+    @debounce(220)
+    updateLevel(level) {
+        this.sheet.pathUpdate(`$.keys.${this.selector}['${this.signature}'].level`, level)
+    }
+
     get modifier(): number { return this.attribute?.mod ?? null }
-    set modifier(mod) { this.sheet.pathUpdate(`$.keys.${this.selector}['${this.signature}'].mod`, mod) }
-    get unmodifiedLevel(): number { return null }
+    set modifier(mod) { this.updateModifier(mod) }
+    @debounce(220)
+    updateModifier(mod) {
+        this.sheet.pathUpdate(`$.keys.${this.selector}['${this.signature}'].mod`, mod)
+    }
+
+    get unmodifiedLevel(): number { return this.calculateLevel() - this.modifier - this.attributeBonus }
     get displayLevel(): number { return this.calculateLevel() }
-    set displayLevel(level) { this.level = level - this.modifier - this.basedOn() }
-    calculateLevel() { return this.level + this.modifier + this.basedOn() }
-    basedOn(): number { return new Function(`attributes`, this.keys.basedOn || "return null")(this.attributes) }
+    set displayLevel(level) { this.level = level - this.modifier - this.basedOn() - this.attributeBonus }
+    calculateLevel() { return this.level + this.modifier + this.basedOn() + this.attributeBonus }
+    basedOn(): number {
+        try {
+            return new Function(`attributes`, this.keys.basedOn || "return null")(this.attributes)
+        } catch (err) {
+            return null
+        }
+    }
     pointsSpent() { return this.levelsIncreased() * this.keys.costPerLevel }
     levelsIncreased() { return this.level - (this.keys.defaultLevel || null) }
     hasTag(tag: string) { return this.keys.tags?.includes(tag) ?? false }
+
+    get costPerLevel() { return this.keys.costPerLevel }
+
+    get attributeBonus() {
+        if (!this.sheet) return null
+        return this.sheet.get(this.sheet.bonuses$)
+            .filter(bonus => !bonus.disabled)
+            .map(bonus => {
+                bonus.bonuses = bonus.bonuses.filter(
+                    bonus =>
+                        bonus.type === FeatureBonusType.Attribute &&
+                        bonus.attribute === this.signature)
+                return bonus
+            })
+            .reduce((total, feature) => {
+                return total + feature.bonuses.reduce((total, bonus) => total + (bonus.leveled ? bonus.amount * feature.level : bonus.amount), 0)
+            }, 0)
+    }
 }
 
 export class Pool extends Attribute {
@@ -65,5 +100,7 @@ export class Pool extends Attribute {
         super(sheet, keys, signature, attributes)
     }
     get currentValue() { return this.attribute?.current ?? 0 }
-    set currentValue(val) { this.sheet.pathUpdate(`$.keys.${this.selector}['${this.signature}'].current`, val) }
+    set currentValue(val) { this.setCurrentValue(val) }
+    @debounce(220)
+    setCurrentValue(val) { this.sheet.pathUpdate(`$.keys.${this.selector}['${this.signature}'].current`, val) }
 }

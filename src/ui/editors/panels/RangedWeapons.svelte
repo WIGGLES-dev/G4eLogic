@@ -1,23 +1,19 @@
 <script>
   import List from "@ui/lists/List";
   import RangedWeaponEntity from "@ui/entities/RangedWeapon";
-  import RangedWeaponEditor from "@ui/editors/RangedWeaponEditor";
 
-  import { WeaponType, RangedWeapon } from "@internal";
-  export let entity = null;
+  import { RangedWeapon } from "@internal";
+  export let entity = {};
   $: ({ rangedWeapons$ } = entity);
 
   function addWeapon() {
-    const weapon = new RangedWeapon();
-    entity.slot(weapon.id);
+    entity.splice(new RangedWeapon(null, null));
   }
-  
+
   $: props = {
     addItem: true,
-    editor: MeleeWeaponEditor,
-    component: MeleeWeaponEntity,
+    component: RangedWeaponEntity,
     list: $rangedWeapons$,
-    contextMenuOptions: contextActions("Delete"),
   };
 </script>
 

@@ -1,4 +1,3 @@
-import { StringCompare } from "@utils/strings";
 import {
     FeatureType,
     FeatureBonusType,
@@ -7,11 +6,14 @@ import {
     featureData,
     FeatureData,
     Sheet,
+    StringCompare,
+    skillDefaultMatches,
+    bonusForSkill,
+    stringCompare,
 
 } from "@internal";
 import { combineLatest, Observable } from "rxjs";
 import { filter, map, withLatestFrom, takeWhile } from "rxjs/operators";
-
 
 export enum SkillDifficulty {
     Easy = "E",
@@ -21,7 +23,7 @@ export enum SkillDifficulty {
     Wildcard = "W"
 }
 export interface SkillDefault {
-    type: "Skill" | "Attribtue",
+    type: "Skill" | string,
     name: string,
     specialization?: string
     modifier: number
@@ -36,8 +38,7 @@ export interface SkillBonus extends FeatureBonus {
     categoryCriteria: string
 }
 
-export type Skills = SkillData | TechniqueData | SpellData
-export interface SkillLikeData {
+export interface SkillLikeData<T extends FeatureType = FeatureType> extends FeatureData<T> {
     points: number
     name: string
     specialization?: string
@@ -48,9 +49,7 @@ export interface SkillLikeData {
     encumbrancePenaltyMultiple: number
     defaults: SkillDefault[]
 }
-export interface SkillData extends FeatureData, SkillLikeData {
-    type: FeatureType.Skill,
-}
+export interface SkillData extends SkillLikeData<FeatureType.Skill> { }
 export const skillData = (): SkillData => ({
     ...featureData(),
     type: FeatureType.Skill,
@@ -65,8 +64,7 @@ export const skillData = (): SkillData => ({
     defaults: []
 });
 export type TechniqueDifficulty = SkillDifficulty.Average | SkillDifficulty.Hard;
-export interface TechniqueData extends FeatureData, SkillLikeData {
-    type: FeatureType.Technique
+export interface TechniqueData extends SkillLikeData<FeatureType.Technique> {
     difficulty: TechniqueDifficulty
     default: SkillDefault
     defaults: undefined
@@ -78,8 +76,7 @@ export const techniqueData = (): TechniqueData => ({
     default: {} as SkillDefault,
     defaults: null
 });
-export interface SpellData extends FeatureData, SkillLikeData {
-    type: FeatureType.Spell
+export interface SpellData extends SkillLikeData<FeatureType.Spell> {
     requiresConcentration: boolean
     currentlyActive: boolean
     college?: string
@@ -99,45 +96,28 @@ export const spellData = (): SpellData => ({
     currentlyActive: false,
 });
 
-abstract class SkillLike<T extends FeatureType, K extends Skills> extends Feature<T, K> {
-    constructor(id: string, sheet?: Sheet) {
-        super(id, sheet);
+export abstract class SkillLike<T extends FeatureType = FeatureType, K extends SkillLikeData<T> = SkillLikeData<T>> extends Feature<T, K> {
+    constructor(id: string) {
+        super(id);
     }
-    get level() { return null }
+    get level() { return this.get(this.level$) }
     get level$(): Observable<number> {
-        if (!this.exists) return
-        const sheet = this.sheet;
-        if (!sheet) return null
         return combineLatest([
-            this.instance$,
-            sheet.skills$,
-            sheet.attributes$,
-            this.skillBonus$
+            skillDefaultMatches(this.sheet, this.keys$.pipe(map(keys => keys.defaults))),
+            this.sheet?.instance$,
+            this.sheet?.attributes$,
         ]).pipe(
-            takeWhile(([targetSkill]) => targetSkill.exists)
-        ).pipe(
-            map(([targetSkill, otherSheetSkills, attributes, bonus]) => {
-                const defaults = targetSkill.keys.defaults
-                const matches = otherSheetSkills.filter(skill => this.id !== skill.id && skillMatchesAnyDefaults(skill.keys, defaults));
-                const highestSkillDefault = defaults.reduce(
-                    (highest, skillDefault) => {
-                        const canidates = matches.filter(skill => skillMatchesDefault(skill.keys, skillDefault));
-                        const best = canidates.reduce(
-                            (highest, skill) => {
-                                const base = attributes[skill.keys.signature]?.calculateLevel() ?? 10;
-                                const mod = skillDefault.modifier || null;
-                                return Math.max(skill.relativeLevel + base + mod, highest)
-                            }, Number.NEGATIVE_INFINITY
-                        );
-                        return Math.max(highest, best);
-                    }, Number.NEGATIVE_INFINITY
-                )
-                return calculateSkillLevel(
-                    targetSkill.keys,
-                    attributes[targetSkill.keys?.signature]?.calculateLevel() ?? 10,
-                    0,
-                    0,
-                    highestSkillDefault
+            takeWhile(() => this.exists && this.sheet.exists),
+            map(([bestDefault, sheet, attributes]) => {
+                return Math.max(
+                    calculateSkillLevel(
+                        this.keys,
+                        attributes[this.keys?.signature]?.calculateLevel() ?? 10,
+                        0,
+                        this.skillBonus,
+
+                    ),
+                    bestDefault
                 );
             })
         )
@@ -149,33 +129,36 @@ abstract class SkillLike<T extends FeatureType, K extends Skills> extends Featur
         )
     }
     get relativeLevel$() { return this.instance$.pipe(map(skill => skill.relativeLevel)) }
-    get skillBonus$() {
-        const sheet = this.sheet;
-        if (!sheet) return
-        return this.sheet.bonuses$.pipe(
-            map(bonuses => {
-                return bonuses
-                    .filter(bonus => !bonus.disabled)
-                    .map(bonus => {
-                        bonus.bonuses = bonus.bonuses.filter(bonus => bonus.type === FeatureBonusType.Skill);
-                        return bonus
-                    })
-                    .reduce((total, { bonus }) => total + bonus, 0)
-            })
-        )
+    get skillBonus() {
+        if (!this.sheet) return
+        return bonusForSkill(this.sheet.get(this.sheet.bonuses$), this.keys)
     }
-    calculateLevel() {
-
+    get skillBonus$() {
+        return this.instance$.pipe(map(instance => instance.skillBonus))
     }
 }
-export function skillMatchesAnyDefaults(skill: SkillData, defaults: SkillDefault[]) {
+export function skillBonusMatchesSkill(skill: SkillLikeData, skillBonus: SkillBonus) {
+    const nameMatches = stringCompare(skill.name, skillBonus.nameCriteria, skillBonus.nameCompare);
+    const specializationMatches = stringCompare(skill.specialization, skillBonus.specializationCriteria, skillBonus.specializationCompare);
+    const categoryMatches = true;
+    return (
+        (skill.name && nameMatches) &&
+        (skill.specialization ?
+            specializationMatches : skill.name && nameMatches
+        ) && categoryMatches)
+}
+export function skillMatchesAnyDefaults(skill: SkillLikeData, defaults: SkillDefault[]) {
     return defaults?.some((skillDefault) => skillMatchesDefault(skill, skillDefault))
 }
 export function skillMatchesDefault(skill: SkillLikeData, skillDefault: SkillDefault) {
     if (skillDefault.type !== "Skill") return false
     const nameMatches = skillDefault.name === skill.name;
     const specializationMatches = skillDefault.specialization === skill.specialization;
-    return (!skillDefault.name && nameMatches) && (!skillDefault.specialization || specializationMatches)
+    return (
+        skill.name && nameMatches) &&
+        (skillDefault.specialization ?
+            specializationMatches : skill.name && nameMatches
+        )
 }
 function calculateBaseRelativeLevel(difficulty: SkillDifficulty) {
     switch (difficulty) {
@@ -207,7 +190,6 @@ export function calculateSkillLevel(
     baseLevel: number = 10,
     encumbranceLevel: number = 0,
     bonus: number = 0,
-    defaultLevel: number = null
 ) {
     if (!skill) return NaN
     let points = skill.points;
@@ -215,36 +197,45 @@ export function calculateSkillLevel(
     let relativeLevel = calculateRelativeSkillLevel(points, skill.difficulty);
     const encumbrancePenalty = encumbranceLevel * skill.encumbrancePenaltyMultiple;
     const preliminaryLevel = baseLevel + relativeLevel + encumbrancePenalty;
-    return Math.max(preliminaryLevel, defaultLevel) + skill.mod + bonus
+    return Math.max(preliminaryLevel) + skill.mod + bonus
 }
 export class Skill extends SkillLike<FeatureType.Skill, SkillData> {
-    type = FeatureType.Skill as FeatureType.Skill
-    constructor(id: string, sheet?: Sheet) {
-        super(id, sheet);
+    type: FeatureType.Skill = FeatureType.Skill
+    constructor(id: string) {
+        super(id);
     }
     defaultData() { return skillData() }
 }
 export class Technique extends SkillLike<FeatureType.Technique, TechniqueData> {
-    type = FeatureType.Technique as FeatureType.Technique
+    type: FeatureType.Technique = FeatureType.Technique
     constructor(id: string, sheet?: Sheet) {
-        super(id, sheet);
+        super(id);
+    }
+
+    get level$(): Observable<number> {
+        return combineLatest([
+            skillDefaultMatches(this.sheet, this.keys$.pipe(map(keys => [keys.default]))),
+            this.sheet.skills$,
+            this.sheet.attributes$,
+            this.skillBonus$
+        ]).pipe(
+            takeWhile(() => this.exists && this.sheet.exists),
+            map(([bestDefault]) => {
+                return calculateTechniqueLevel(
+                    this.keys,
+                    bestDefault,
+                    this.skillBonus
+                )
+            })
+        )
     }
     defaultData() { return techniqueData() }
-}
-export class Spell extends SkillLike<FeatureType.Spell, SpellData> {
-    type = FeatureType.Spell as FeatureType.Spell
-    constructor(id: string, sheet?: Sheet) {
-        super(id, sheet)
-    }
-    defaultData() { return spellData() }
 }
 export function calculateTechniqueLevel(
     technique: TechniqueData,
     baseLevel: number = 10,
     bonus: number = 0,
-    mod: number = 0
 ) {
-    if (this.default.getMatches()?.highest?.points === 0) return NaN
     let points = technique.points;
     let relativeLevel = 0;
     let level = baseLevel
@@ -267,8 +258,16 @@ export function calculateTechniqueLevel(
                 level = max;
             }
         }
-        return level + mod
+        return level + technique.mod
     } else {
         return NaN
     }
 }
+export class Spell extends SkillLike<FeatureType.Spell, SpellData> {
+    type: FeatureType.Spell = FeatureType.Spell
+    constructor(id: string) {
+        super(id)
+    }
+    defaultData() { return spellData() }
+}
+

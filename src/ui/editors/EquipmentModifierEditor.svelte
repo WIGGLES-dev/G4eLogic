@@ -4,7 +4,7 @@
     EquipmentModifierWeightType,
     EquipmentModifierWeightValueType,
     EquipmentModifierCostValueType,
-  } from "gurps4e/equipment/equipment";
+  } from "@internal";
   export let entity = null;
 </script>
 

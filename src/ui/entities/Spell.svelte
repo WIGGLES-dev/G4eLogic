@@ -7,18 +7,9 @@
   export let entity = {};
   $: ({ level$, relativeLevel$, exists, id, disabled, hidden } = entity);
   export let display = "table";
-  export let addItem = false;
-  export let list = [];
-  export let getRoot = (list) => list;
-  export let accessChildren = () => [];
-  export let contextMenuOptions = () => [];
-  export let component = null;
 </script>
 
 <style>
-  .hidden {
-    @apply hidden;
-  }
 </style>
 
 {#if exists}
@@ -29,7 +20,11 @@
       {$entity.signature || '10'}{$relativeLevel$ > -1 ? '+' : ''}{Math.floor($relativeLevel$)}
     </td>
     <td><input type="number" bind:value={$entity.mod} /></td>
-    <td>{Math.floor($level$)}</td>
+    <td
+      class="cell-click"
+      on:click={() => entity.executeAction('roll', { for: 'spell' })}>
+      {Math.floor($level$)}
+    </td>
     <td>
       <div class="flex">
         <span

@@ -1,6 +1,11 @@
-  @import "jsoneditor/dist/jsoneditor.css";
-  @import "cropperjs/dist/cropper.css";
-
+  @import "~prosemirror-view/style/prosemirror.css";
+  @import "~prosemirror-example-setup/style/style.css";
+  @import "~prosemirror-gapcursor/style/gapcursor.css";
+  @import "~prosemirror-menu/style/menu.css";
+  
+  @import "~jsoneditor/dist/jsoneditor.css";
+  @import "~cropperjs/dist/cropper.css";
+ 
   @tailwind base;
   @tailwind components;
   @tailwind utilities;
@@ -29,4 +34,11 @@
 
   blockquote {
     @apply mx-3 my-2;
+  }
+
+  .cell-click {
+    @apply bg-red-700 text-white;
+  }
+  .cell-click:hover {
+    @apply bg-green-500 text-white;
   }

@@ -1,21 +1,25 @@
 <script>
+  import attackIco from "@ui/assets/sword-svgrepo-com.svg";
+  import parryIco from "@ui/assets/tai-chi-chuan-person-silhouette-with-a-fight-sword-svgrepo-com.svg";
+  import blockIco from "@ui/assets/shield-svgrepo-com.svg";
+
   import { getContext, createEventDispatcher } from "svelte";
   import { string } from "@ui/utils/formatting";
   export let i;
   export let depth;
   export let entity = {};
-  $: ({ owner$, exists, id, disabled, hidden } = entity);
+  $: ({
+    bestAttackLevel$,
+    parryLevel$,
+    blockLevel$,
+    owner$,
+    exists,
+    id,
+    disabled,
+    hidden,
+  } = entity);
   export let display = "table";
-  export let addItem = false;
-  export let list = [];
-  export let getRoot = (list) => list;
-  export let accessChildren = () => [];
-  export let contextMenuOptions = () => [];
-  export let component = null;
-
-  const { character, globalDispatch = createEventDispatcher() } =
-    getContext("editor") || {};
-
+  const { character } = getContext("editor") || {};
 </script>
 
 <style>
@@ -29,36 +33,34 @@
     <td>{string($owner$.keys.name)}</td>
     <td class="break-all">{string($entity.usage)}</td>
     <td
-      class="text-center"
-      on:click={() => globalDispatch('roll', { entity, for: 'attack' })}>
+      class="text-center cell-click"
+      on:click={() => entity.executeAction('roll', { for: 'attack' })}>
       <div>
-        <img src="sword-svgrepo-com.svg" alt="" />
-        <span>{string(entity.getBestAttackLevel())}</span>
+        <img src={attackIco} alt="" />
+        <span>{string($bestAttackLevel$)}</span>
       </div>
     </td>
     <td
-      class="text-center"
-      on:click={() => globalDispatch('roll', { entity, for: 'parry' })}>
+      class="text-center cell-click"
+      on:click={() => entity.executeAction('roll', { for: 'parry' })}>
       <div>
-        <img
-          src="tai-chi-chuan-person-silhouette-with-a-fight-sword-svgrepo-com.svg"
-          alt="" />
-        <span>{string(entity.getParryLevel(), { fallback: 'No' })}</span>
+        <img src={parryIco} alt="" />
+        <span>{string($parryLevel$, { fallback: 'No' })}</span>
       </div>
     </td>
     <td
-      class="text-center"
-      on:click={() => globalDispatch('roll', { entity, for: 'block' })}>
+      class="text-center cell-click"
+      on:click={() => entity.executeAction('roll', { for: 'block' })}>
       <div>
         <img
-          src="shield-svgrepo-com.svg"
-          alt="" /><span>{string(entity.getBlockLevel(), {
-            fallback: 'No',
-          })}</span>
+          src={blockIco}
+          alt="" /><span>{string($blockLevel$, { fallback: 'No' })}</span>
       </div>
     </td>
     <td>{string($entity.info)}</td>
-    <td on:click={() => globalDispatch('roll', { entity, for: 'damage' })}>
+    <td
+      class="cell-click"
+      on:click={() => entity.executeAction('roll', { for: 'damage' })}>
       <span class="fas fa-dice-d6 pr-1" />{string($entity.damage)}
       {string($entity.damageType)}
     </td>
@@ -68,11 +70,11 @@
     <li class="text-sm italic hover:underline">
       <div class="flex">
         <span>
-          {string($owner$.name, {
+          {string($owner$.keys.name, {
             afterEnd:
               ' - ' +
               string($entity.usage, {
-                afterEnd: string(entity.getBestAttackLevel(), {
+                afterEnd: string($bestAttackLevel$, {
                   beforeStart: ' (',
                   afterEnd: ')',
                 }),

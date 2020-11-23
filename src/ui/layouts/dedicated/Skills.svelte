@@ -12,11 +12,11 @@
     const { character, editor } = getContext("editor");
     const { skills$, techniques$ } = character;
 
-    function addSkill() {
-        new Skill().mount(character.id);
+    async function addSkill() {
+        const skill = await character.embed(new Skill());
     }
-    function addTechnique() {
-        new Technique().mount(character.id);
+    async function addTechnique() {
+        const technique = await character.embed(new Technique());
     }
     function getRoot(entities) {
         return entities

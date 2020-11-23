@@ -55,7 +55,7 @@ export enum FeatureBonusType {
 export interface FeatureBonus {
     type: FeatureBonusType
     leveled: boolean
-    levels: number
+    amount: number
 }
 export type FeatureBonuses = AttributeBonus | SkillBonus | ArmorBonus | ReactionBonus;
 
@@ -66,7 +66,8 @@ export const defaultFeatureData = () => ({
     categories: [],
 });
 export interface AttributeBonus extends FeatureBonus {
-
+    type: FeatureBonusType.Attribute
+    attribute: string
 }
 export interface ReactionBonus extends FeatureBonus {
     type: FeatureBonusType.Reaction

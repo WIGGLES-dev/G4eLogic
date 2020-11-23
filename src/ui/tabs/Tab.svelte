@@ -28,11 +28,11 @@
   data-tab="n/a"
   on:mouseover={(e) => {
     if (e.which == 1) {
-      selectTab(tab);
+      // if (!disabled) selectTab(tab);
     }
   }}
   on:dragenter={(e) => {
-    selectTab(tab);
+    if (!disabled) selectTab(tab);
   }}
   class:selected
   class:disabled

@@ -4,20 +4,18 @@
   import List from "@ui/lists/List";
 
   import EquipmentEntity from "@ui/entities/Equipment";
-  import { Equipment } from "@internal";
-  import { capitalize } from "@utils/strings";
+  import { Equipment, capitalize } from "@internal";
 
   const { character } = getContext("editor");
-  const { equipment$ } = character;
+  const { equipment$, carriedWeight$ } = character;
 
   $: displayedItems = $equipment$.filter((item) => {
     return item.keys.storedLocation === displayedLocation;
   });
-  $: equippedWeight = 0;
   $: displayedLocation = "carried";
 
-  function createEquipment() {
-    let embed = character.embed(new Equipment());
+  async function createEquipment() {
+    const equipment = await character.embed(new Equipment());
   }
   function getRoot(entities) {
     return entities
@@ -58,7 +56,7 @@
         {/each}
       </select>
       Equipped Weight:
-      {equippedWeight}
+      {$carriedWeight$}
     </th>
     <th scope="col">Uses</th>
     <th scope="col">Value</th>

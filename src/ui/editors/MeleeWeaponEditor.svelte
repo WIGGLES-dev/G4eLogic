@@ -4,6 +4,7 @@
 
     import SkillDefaults from "./panels/SkillDefaults";
 
+    import ProseMirror from "@ui/prosemirror/ProseMirror";
     export let entity = {};
 </script>
 
@@ -14,6 +15,7 @@
     <TabList>
         <Tab>Data</Tab>
         <Tab>Defaults</Tab>
+        <Tab>User Description</Tab>
     </TabList>
     <TabPanel>
         <Form>
@@ -48,5 +50,8 @@
     </TabPanel>
     <TabPanel>
         <SkillDefaults {entity} bind:defaults={$entity.defaults} />
+    </TabPanel>
+    <TabPanel>
+        <ProseMirror bind:content={$entity.userDescription} />
     </TabPanel>
 </Tabs>

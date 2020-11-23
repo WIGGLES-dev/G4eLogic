@@ -18,13 +18,12 @@ export const traitData = (): TraitData => ({
     allowHalfLevel: false,
     hasHalfLevel: false,
     roundDown: false,
-    controlRating: null,
+    controlRating: ControlRating.NoneRequired,
     types: [],
     modifiers: []
 });
 
-export interface TraitData extends FeatureData {
-    type: FeatureType.Trait
+export interface TraitData extends FeatureData<FeatureType.Trait> {
     basePoints: number
     hasLevels: boolean
     levels: number
@@ -70,12 +69,10 @@ export enum TraitType {
     Exotic = "Exotic",
 }
 
-
-
 export class Trait extends Feature<FeatureType.Trait, TraitData> {
-    type = FeatureType.Trait as FeatureType.Trait
-    constructor(id: string, sheet?: Sheet) {
-        super(id, sheet)
+    type: FeatureType.Trait = FeatureType.Trait
+    constructor(id: string) {
+        super(id)
     }
     defaultData() { return traitData() }
     get adjustedPoints$() { return this.instance$.pipe(map(instance => calculateTraitCost(instance.keys))) }
@@ -314,14 +311,18 @@ export function getTraitType(trait: Trait) {
 
 export function split(traits: Trait[]) {
     return removeDuplicates({
-        advantages: traits.filter(trait => getTraitType(trait) === TraitCategory.Advantage),
-        disadvantages: traits.filter(trait => getTraitType(trait) === TraitCategory.Disadavantage),
-        racial: traits.filter(trait => getTraitType(trait) === TraitCategory.Racial),
-        meta: traits.filter(trait => getTraitType(trait) === TraitCategory.Meta),
-        perks: traits.filter(trait => getTraitType(trait) === TraitCategory.Perk),
-        quirks: traits.filter(trait => getTraitType(trait) === TraitCategory.Quirk),
-        features: traits.filter(trait => getTraitType(trait) === TraitCategory.Feature)
+        [TraitCategory.Advantage]: traits.filter(trait => getTraitType(trait) === TraitCategory.Advantage),
+        [TraitCategory.Disadavantage]: traits.filter(trait => getTraitType(trait) === TraitCategory.Disadavantage),
+        [TraitCategory.Racial]: traits.filter(trait => getTraitType(trait) === TraitCategory.Racial),
+        [TraitCategory.Meta]: traits.filter(trait => getTraitType(trait) === TraitCategory.Meta),
+        [TraitCategory.Perk]: traits.filter(trait => getTraitType(trait) === TraitCategory.Perk),
+        [TraitCategory.Quirk]: traits.filter(trait => getTraitType(trait) === TraitCategory.Quirk),
+        [TraitCategory.Feature]: traits.filter(trait => getTraitType(trait) === TraitCategory.Feature)
     })
+}
+
+export function sumTraitArray(traits: Trait[]) {
+    return traits.reduce((total, trait) => calculateTraitCost(trait.keys) + total, 0)
 }
 
 /**

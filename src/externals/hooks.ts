@@ -34,13 +34,23 @@ class HookEvent {
     preventDefault() { this.prevented = true; }
 }
 
+function createHook(fn: Function) {
+
+}
+
+function createAsyncHook(fn: (...args) => Promise<any>): (...args) => Promise<any> {
+    return async function () {
+
+    }
+}
+
 export function before(hook: string) {
     return function (target, propertyKey: string, descriptor: PropertyDescriptor) {
         const func = descriptor.value;
         descriptor.value = function (...args) {
             const event = new HookEvent(func, this, ...args);
-            const hookResults = hooks[hook]?.map(hook => hook(event));
-            if (event.prevented) return
+            hooks[hook]?.map(hook => hook(event)) ?? [];
+            if (event.prevented) return event.value;
             if (!event.nexted) return event.next()
             return event.value
         }

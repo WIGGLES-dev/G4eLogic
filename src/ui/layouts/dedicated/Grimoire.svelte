@@ -8,8 +8,8 @@
   const { character } = getContext("editor");
   const { spells$ } = character;
 
-  function addSpell() {
-    new Spell().mount(character.id);
+  async function addSpell() {
+    const spell = await character.embed(new Spell());
   }
   function getRoot(entities) {
     return entities

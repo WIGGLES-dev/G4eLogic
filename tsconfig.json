@@ -24,17 +24,8 @@
         ],
         "baseUrl": "./src",
         "paths": {
-            "@sheet/*": [
-                "sheet/*"
-            ],
-            "@utils/*": [
-                "utils/*"
-            ],
             "@internal": [
                 "./internal.ts"
-            ],
-            "@externals/*": [
-                "externals/*"
             ],
             "@ui/*": [
                 "ui/*"

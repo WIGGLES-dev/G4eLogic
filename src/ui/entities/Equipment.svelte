@@ -14,12 +14,6 @@
     hidden,
   } = entity);
   export let display = "table";
-  export let addItem = false;
-  export let list = [];
-  export let getRoot = (list) => list;
-  export let accessChildren = () => [];
-  export let contextMenuOptions = () => [];
-  export let component = null;
 </script>
 
 <style>

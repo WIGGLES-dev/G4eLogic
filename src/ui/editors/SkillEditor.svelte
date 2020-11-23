@@ -3,8 +3,7 @@
   import Form from "@ui/form/Form";
   import CategoryList from "@ui/form/CategoryList";
 
-  import TinyMCE from "@ui/widgets/TinyMCE";
-
+  import ProseMirror from "@ui/prosemirror/ProseMirror";
   import AttributeOptions from "@ui/options/AttributeOptions";
 
   import Features from "./panels/Features";
@@ -28,7 +27,7 @@
       <Tab>Features</Tab>
       <Tab>Melee Weapons</Tab>
       <Tab>Ranged Weapons</Tab>
-      <Tab disabled={true}>User Description</Tab>
+      <Tab>User Description</Tab>
     </TabList>
     <TabPanel>
       <Form>
@@ -69,7 +68,7 @@
               bind:value={$entity.points} />
           </label>
           <label for="">Final Level
-            <input type="number" disabled value={$level$} /></label>
+            <input type="number" disabled value={Math.floor($level$)} /></label>
         </div>
 
         <div class="flex">
@@ -118,10 +117,12 @@
     </TabPanel>
     <TabPanel />
     <TabPanel>
-      <Features {entity} bind:features={$entity.defaults} />
+      <Features {entity} bind:features={$entity.bonuses} />
     </TabPanel>
     <TabPanel component={MeleeWeapons} {entity} />
     <TabPanel component={RangedWeapons} {entity} />
-    <TabPanel component={TinyMCE} />
+    <TabPanel>
+      <ProseMirror bind:content={$entity.userDescription} />
+    </TabPanel>
   </Tabs>
 {/if}

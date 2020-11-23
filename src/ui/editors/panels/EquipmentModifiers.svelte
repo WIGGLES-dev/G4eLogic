@@ -1,5 +1,5 @@
 <script>
- import List from "@ui/lists/List";
+  import List from "@ui/lists/List";
 
   import EquipmentModifier from "@ui/entities/EquipmentModifier";
   import EquipmentModifierEditor from "@ui/editors/EquipmentModifierEditor";

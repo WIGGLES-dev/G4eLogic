@@ -1,6 +1,35 @@
 {
     "UI": {
-        "rolling": true
+        "rolling": true,
+        "attributeOrder": [
+            "strength",
+            "striking strength",
+            "lifting strength",
+            "intelligence",
+            "perception",
+            "vision",
+            "hearing",
+            "smell & taste",
+            "touch",
+            "willpower",
+            "fright check",
+            "fright check threshold",
+            "dexterity",
+            "basic speed",
+            "dodge",
+            "move",
+            "health",
+            "unstun",
+            "knockdown",
+            "unconsciosness",
+            "death",
+            "quintessence"
+        ],
+        "poolOrder": [
+            "hit points",
+            "fatigue points",
+            "quintessence points"
+        ]
     },
     "rulesets": {
         "useMultiplicativeModifiers": false,
@@ -159,7 +188,7 @@
             "abbreviation": "Dodge",
             "tooltip": "Dodge ([costPerLevel] points per level per 0.25), ref. BS51 for Enhanced Defenses (Dodge).<br/>Based off Basic Speed. Modifies all Dodge-based defenses.<br/>Penalized by encumberance. See adjoining encumberance table.<br/>Halved if either HP or FP fall under 1/3. Ref. BS419, BS426, respectively.<br/>Unmodified ([unmodifiedLevel])<br/>",
             "costPerLevel": 15,
-            "basedOn": "return Math.floor(attributes['basic speed'].calculateLevel())",
+            "basedOn": "return Math.floor(attributes['basic speed'].calculateLevel()) + 3",
             "tags": [
                 "derived",
                 "tertiary"
@@ -201,7 +230,7 @@
                 "sub-stat"
             ]
         },
-        "unconsciocsness": {
+        "unconsciosness": {
             "abbreviation": "UC",
             "name": "unconsciousness",
             "tooltip": "Unconsciousness Check, ref. BS380. Based on HT.<br/>If you are at 0 or less HP, roll every turn you take any action other than Do Nothing. Failure means you fall unconscious.<br/>You take a -1 per full multiple of HP below zero.<br/>Hard to Subdue gives +1/level. Ref. BS59. Fit gives +1, Very Fit gives +2. Ref. BS55.<br/>Unmodified ([unmodifiedLevel])<br/>",

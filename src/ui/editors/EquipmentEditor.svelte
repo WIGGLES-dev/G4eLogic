@@ -6,7 +6,7 @@
   export let entity = {};
   $: ({ equipped$, exists } = entity);
 
-  import TinyMCE from "@ui/widgets/TinyMCE";
+  import ProseMirror from "@ui/prosemirror/ProseMirror";
   import Features from "./panels/Features";
   import MeleeWeapons from "./panels/MeleeWeapons.svelte";
   import RangedWeapons from "./panels/RangedWeapons.svelte";
@@ -24,7 +24,7 @@
       <Tab disabled={true}>Modifiers</Tab>
       <Tab>Melee Weapons</Tab>
       <Tab>Ranged Weapons</Tab>
-      <Tab disabled={true}>User Description</Tab>
+      <Tab>User Description</Tab>
     </TabList>
     <TabPanel>
       <Form>
@@ -93,6 +93,8 @@
     <TabPanel>
       <RangedWeapons {entity} />
     </TabPanel>
-    <TabPanel component={TinyMCE} />
+    <TabPanel>
+      <ProseMirror bind:content={$entity.userDescription} />
+    </TabPanel>
   </Tabs>
 {/if}

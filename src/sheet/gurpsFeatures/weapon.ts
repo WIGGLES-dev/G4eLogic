@@ -1,9 +1,15 @@
 import {
     Feature, FeatureType, FeatureData, featureData,
     SkillDefault,
+    skillMatchesAnyDefaults,
     Sheet,
-    EmbeddedResource
+    EmbeddedResource,
+    Valor,
+    skillMatchesDefault,
+    skillDefaultMatches
 } from "@internal";
+import { combineLatest, Observable } from "rxjs";
+import { map, takeWhile } from "rxjs/operators";
 
 export enum BaseDamage {
     Swing = "sw",
@@ -47,7 +53,6 @@ export const meleeWeaponData = (): MeleeWeaponData => ({
     blockBonus: 0,
     reach: "1"
 });
-
 export interface RangedWeaponData extends WeaponData, FeatureData {
     type: FeatureType.RangedWeapon
     accuracy: string
@@ -69,26 +74,45 @@ export const rangedWeaponData = (): RangedWeaponData => ({
     bulk: "2"
 });
 
-export abstract class Weapon<OT extends FeatureType, OK extends FeatureData, T extends FeatureType, K extends Weapons = Weapons> extends EmbeddedResource<T, K, Feature<OT, OK>> {
+export abstract class Weapon<OT extends FeatureType, OK extends FeatureData<OT>, T extends FeatureType, K extends Weapons = Weapons> extends EmbeddedResource<T, K, Feature<OT, OK>> {
+    get sheet() { return this.parent?.sheet }
     get owner() { return this.parent }
     get owner$() { return this.parent$ }
     constructor(id: string, feature: Feature<OT, OK>) {
         super(id, feature);
     }
-    getBestAttackLevel() { return 0 }
-    getParryLevel() { return 0 }
-    getBlockLevel() { return 0 }
+    get config$() { return this.embedded ? this.sheet?.config$ : Valor.data$.pipe(map(valor => valor.globalConfig)) }
+
+    get bestAttackLevel$(): Observable<number> {
+        return skillDefaultMatches(this.sheet, this.keys$.pipe(map(keys => keys.defaults))).pipe(takeWhile(() => this.exists))
+    }
 }
 
-export class MeleeWeapon<T extends FeatureType = FeatureType, K extends FeatureData = FeatureData> extends Weapon<T, K, FeatureType.MeleeWeapon, MeleeWeaponData> {
+export class MeleeWeapon<T extends FeatureType = FeatureType, K extends FeatureData<T> = FeatureData<T>> extends Weapon<T, K, FeatureType.MeleeWeapon, MeleeWeaponData> {
     type = FeatureType.MeleeWeapon as FeatureType.MeleeWeapon
     constructor(id: string, feature: Feature<T, K>) {
         super(id, feature);
     }
+    get parryLevel$() {
+        return combineLatest([
+            this.bestAttackLevel$,
+            this.keys$
+        ]).pipe(
+            map(([level, keys]) => level / 2 + 3 + (keys.parryBonus || null))
+        )
+    }
+    get blockLevel$() {
+        return combineLatest([
+            this.bestAttackLevel$,
+            this.keys$
+        ]).pipe(
+            map(([level, keys]) => level / 2 + 3 + (keys.blockBonus || null))
+        )
+    }
     defaultData() { return meleeWeaponData() }
 }
 
-export class RangedWeapon<T extends FeatureType = FeatureType, K extends FeatureData = FeatureData> extends Weapon<T, K, FeatureType.RangedWeapon, RangedWeaponData> {
+export class RangedWeapon<T extends FeatureType = FeatureType, K extends FeatureData<T> = FeatureData<T>> extends Weapon<T, K, FeatureType.RangedWeapon, RangedWeaponData> {
     type = FeatureType.RangedWeapon as FeatureType.RangedWeapon;
     constructor(id: string, feature: Feature<T, K>) {
         super(id, feature);

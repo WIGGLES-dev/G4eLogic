@@ -3,16 +3,12 @@
   import { string } from "@ui/utils/formatting";
 
   import Toggle from "./Toggle";
+  import { ControlRating } from "@internal";
+
   export let depth;
   export let entity = {};
   $: ({ adjustedPoints$, exists, id, disabled, hidden } = entity);
   export let display = "table";
-  export let addItem = false;
-  export let list = [];
-  export let getRoot = (list) => list;
-  export let accessChildren = () => [];
-  export let contextMenuOptions = () => [];
-  export let component = null;
 </script>
 
 <style>
@@ -27,8 +23,16 @@
           style="padding-left:{depth * 2}rem;">&thinsp;</span>
         <Toggle
           visible={$entity.ui.canContainChildren}
-          bind:toggled={$entity.ui.hidden} />
+          bind:off={$entity.ui.hidden} />
         <input type="text" class="truncate flex-1" bind:value={$entity.name} />
+
+        {#if ![undefined, 'n/a'].includes($entity.controlRating)}
+          <span
+            class="cell-click p-1 mx-1"
+            on:click={() => entity.executeAction('roll', {
+                for: 'control rating',
+              })}>{$entity.controlRating}</span>
+        {/if}
         {#if $entity.categories instanceof Array && $entity.categories.length > 0}
           <span class="fas fa-user-tag bg-g text-gray-700" />
         {/if}

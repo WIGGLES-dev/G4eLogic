@@ -3,6 +3,8 @@
   const dispatch = createEventDispatcher();
   import { Tabs, Tab, TabPanel, TabList } from "@ui/tabs/tabs";
 
+  import ProseMirror from "@ui/prosemirror/ProseMirror";
+
   import Traits from "@ui/layouts/dedicated/Traits";
   import Bio from "@ui/layouts/dedicated/Bio";
   import Skills from "@ui/layouts/dedicated/Skills";
@@ -40,21 +42,25 @@
     <Tabs>
       <TabList>
         <Tab>General</Tab>
+        <Tab>Combat</Tab>
+        <Tab>Skills</Tab>
+        <Tab>Equipment</Tab>
         <Tab>Traits</Tab>
         <Tab>Bio</Tab>
-        <Tab>Equipment</Tab>
-        <Tab>Skills</Tab>
+        <Tab>Notes</Tab>
         <Tab>Grimoire</Tab>
-        <Tab>Combat</Tab>
         <Tab><span class="fas fa-cogs" /></Tab>
       </TabList>
       <TabPanel component={General} />
+      <TabPanel component={Combat} />
+      <TabPanel component={Skills} />
+      <TabPanel component={Equipment} />
       <TabPanel component={Traits} />
       <TabPanel component={Bio} />
-      <TabPanel component={Equipment} />
-      <TabPanel component={Skills} />
+      <TabPanel>
+        <ProseMirror bind:content={$character.notes} />
+      </TabPanel>
       <TabPanel component={Grimoire} />
-      <TabPanel component={Combat} />
       <TabPanel component={Settings} />
     </Tabs>
   {/if}

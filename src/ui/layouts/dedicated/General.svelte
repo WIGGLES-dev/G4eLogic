@@ -8,12 +8,11 @@
   import PointTotals from "@ui/widgets/PointTotals";
   import Combat from "@ui/widgets/Combat";
   import Silhouette from "@ui/widgets/Silhouette.svelte";
-  import TinyMCE from "@ui/widgets/TinyMCE";
+  
 
   import List from "@ui/lists/List";
 
   import MeleeWeaponEntity from "@ui/entities/MeleeWeapon";
-
   import RangedWeaponEntity from "@ui/entities/RangedWeapon";
 
   const { character } = getContext("editor");
@@ -26,8 +25,7 @@
     list: $rangedWeapons$,
   };
   $: meleeWeaponProps = {
-    display: "list",
-    addItem: false,
+    ...rangedWeaponProps,
     component: MeleeWeaponEntity,
     list: $meleeWeapons$,
   };
@@ -61,14 +59,11 @@
   </div>
   <div class="flex-shrink-0">
     <div class="mx-4">
-      <Silhouette />
+      <Silhouette minWidth="200px" viewbox="200 0 400 800" />
     </div>
-    <List {...rangedWeaponProps}><span slot="title">Ranged Weapons</span></List>
-    <List {...meleeWeaponProps}><span slot="title">Melee Weapons</span></List>
+    <!-- <List {...rangedWeaponProps}><span slot="title">Ranged Weapons</span></List>
+    <List {...meleeWeaponProps}><span slot="title">Melee Weapons</span></List> -->
   </div>
-  <!-- <div class="flex-1 mx-6 hidden xl:block">
-    <TinyMCE bind:content={$character.notes} />
-  </div> -->
   <PointTotals />
   <div class="p-1" />
 </div>

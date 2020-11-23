@@ -1,8 +1,8 @@
 <script>
     import { getContext } from "svelte";
-    import { createTooltip } from "@ui/utils/popper";
+    import { tooltip } from "@internal";
     const { character } = getContext("editor");
-    const {basicLift$} = character;
+    const { basicLift$ } = character;
     $: lift = $basicLift$;
 </script>
 
@@ -31,32 +31,32 @@
         </thead>
         <tbody>
             <tr
-                use:createTooltip={{ tipclass: 'text-sm', tooltip: 'Governs the weight you can pick up and move. Ref. BS352.' }}>
+                use:tooltip={{ tipclass: 'text-sm', tooltip: 'Governs the weight you can pick up and move. Ref. BS352.' }}>
                 <td>{lift}</td>
                 <td>Simple Lift</td>
             </tr>
             <tr
-                use:createTooltip={{ tipclass: 'text-sm', tooltip: 'The weight you can lift overhead with one hands in two seconds. Equals Basic Lift * 2.' }}>
+                use:tooltip={{ tipclass: 'text-sm', tooltip: 'The weight you can lift overhead with one hands in two seconds. Equals Basic Lift * 2.' }}>
                 <td>{lift * 2}</td>
                 <td>One-Handed-Lift</td>
             </tr>
             <tr
-                use:createTooltip={{ tipclass: 'text-sm', tooltip: 'The weight you can lift overhead with two hands in four seconds. Equals Basic Lift * 8.' }}>
+                use:tooltip={{ tipclass: 'text-sm', tooltip: 'The weight you can lift overhead with two hands in four seconds. Equals Basic Lift * 8.' }}>
                 <td>{lift * 8}</td>
                 <td>Two-Handed-Lift</td>
             </tr>
             <tr
-                use:createTooltip={{ tipclass: 'text-sm', tooltip: 'The weight you can shove and knock over from a standing position. Equals Basic Lift * 12.' }}>
+                use:tooltip={{ tipclass: 'text-sm', tooltip: 'The weight you can shove and knock over from a standing position. Equals Basic Lift * 12.' }}>
                 <td>{lift * 12}</td>
                 <td>Shove & Knock Over</td>
             </tr>
             <tr
-                use:createTooltip={{ tipclass: 'text-sm', tooltip: 'The weight you can shove and knock over from a running start. Equals Basic Lift * 24.' }}>
+                use:tooltip={{ tipclass: 'text-sm', tooltip: 'The weight you can shove and knock over from a running start. Equals Basic Lift * 24.' }}>
                 <td>{lift * 24}</td>
                 <td>Running Shove & Knock Over</td>
             </tr>
             <tr
-                use:createTooltip={{ tipclass: 'text-sm', tooltip: `
+                use:tooltip={{ tipclass: 'text-sm', tooltip: `
                     The maximum weight you can carry on your back. Equals Basic Lift * 15.<br />
                     If this puts you over Basic Lift * 10 (Extra-Heavy encumbrance), you lose 1 FP per second until you put the weight down.<br/>
                     ` }}>
@@ -64,7 +64,7 @@
                 <td>Carry on Back</td>
             </tr>
             <tr
-                use:createTooltip={{ tipclass: 'text-sm', tooltip: 'The maximum weight you can move in any way over any period of time. Equals Basic Lift * 50.' }}>
+                use:tooltip={{ tipclass: 'text-sm', tooltip: 'The maximum weight you can move in any way over any period of time. Equals Basic Lift * 50.' }}>
                 <td>{lift * 50}</td>
                 <td>Shift Slightly</td>
             </tr>

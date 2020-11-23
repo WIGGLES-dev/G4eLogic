@@ -3,7 +3,7 @@
   import Form from "@ui/form/Form";
   import CategoryList from "@ui/form/CategoryList";
 
-  import TinyMCE from "@ui/widgets/TinyMCE";
+  import ProseMirror from "@ui/prosemirror/ProseMirror";
 
   import Features from "./panels/Features";
   import MeleeWeapons from "./panels/MeleeWeapons.svelte";
@@ -25,10 +25,10 @@
       <Tab>Trait Data</Tab>
       <Tab disabled={true}>Prerequisites</Tab>
       <Tab>Features</Tab>
-      <Tab>Modifiers</Tab>
+      <Tab disabled={true}>Modifiers</Tab>
       <Tab>Melee Weapons</Tab>
       <Tab>Ranged Weapons</Tab>
-      <Tab disabled={true}>User Description</Tab>
+      <Tab>User Description</Tab>
     </TabList>
     <TabPanel>
       <Form>
@@ -46,6 +46,7 @@
             CR
             <select bind:value={$entity.controlRating}>
               {#each Object.entries(ControlRollMultiplier) as [key, value], i (i)}
+                <option value={undefined} />
                 <option {value}>
                   CR:{value.toUpperCase()}({key
                     .split(/(?=[A-Z])/)
@@ -96,10 +97,14 @@
       </Form>
     </TabPanel>
     <TabPanel />
-    <TabPanel component={Features} props={{ entity }} />
-    <TabPanel component={TraitModifiers} props={{ entity }} />
-    <TabPanel component={MeleeWeapons} props={{ entity }} />
-    <TabPanel component={RangedWeapons} props={{ entity }} />
-    <TabPanel component={TinyMCE} props={{}} />
+    <TabPanel>
+      <Features {entity} bind:features={$entity.bonuses} />
+    </TabPanel>
+    <TabPanel component={TraitModifiers} {entity} />
+    <TabPanel component={MeleeWeapons} {entity} />
+    <TabPanel component={RangedWeapons} {entity} />
+    <TabPanel>
+      <ProseMirror bind:content={$entity.userDescription} />
+    </TabPanel>
   </Tabs>
 {/if}

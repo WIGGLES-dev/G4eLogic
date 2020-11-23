@@ -5,7 +5,7 @@
 
     import AttributeOptions from "@ui/options/AttributeOptions";
 
-    import TinyMCE from "@ui/widgets/TinyMCE";
+    import ProseMirror from "@ui/prosemirror/ProseMirror";
     import Features from "./panels/Features";
     import MeleeWeapons from "./panels/MeleeWeapons.svelte";
     import RangedWeapons from "./panels/RangedWeapons.svelte";
@@ -26,7 +26,7 @@
             <Tab>Features</Tab>
             <Tab>MeleeWeapons</Tab>
             <Tab>RangedWeapons</Tab>
-            <Tab disabled={true}>User Description</Tab>
+            <Tab>User Description</Tab>
         </TabList>
         <TabPanel>
             <Form>
@@ -89,7 +89,10 @@
                         <input type="number" bind:value={$entity.points} />
                     </label>
                     <label for="">Final Level
-                        <input type="number" disabled value={$level$} /></label>
+                        <input
+                            type="number"
+                            disabled
+                            value={Math.floor($level$)} /></label>
                     <label for="">Disabled<input
                             type="checkbox"
                             bind:checked={$entity.disabled} /></label>
@@ -103,17 +106,17 @@
                             bind:value={$entity.reference} /></label>
                 </div>
                 <label for="">Notes </label>
-                <textarea
-                    bind:value={$entity.notes}
-                    name=""
-                    id=""
-                    rows="3" />
+                <textarea bind:value={$entity.notes} name="" id="" rows="3" />
             </Form>
         </TabPanel>
         <TabPanel />
-        <TabPanel component={Features} props={{ entity }} />
+        <TabPanel>
+            <Features {entity} bind:features={$entity.bonuses} />
+        </TabPanel>
         <TabPanel component={MeleeWeapons} props={{ entity }} />
         <TabPanel component={RangedWeapons} props={{ entity }} />
-        <TabPanel component={TinyMCE} props={{}} />
+        <TabPanel>
+            <ProseMirror bind:content={$entity.userDescription} />
+        </TabPanel>
     </Tabs>
 {/if}
