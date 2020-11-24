@@ -1,7 +1,8 @@
-import { EntityState, StoreConfig, EntityStore, QueryEntity, EntityStateHistoryPlugin } from "@datorama/akita";
+import Schema from "validate"
+import { EntityState, EntityStateHistoryPlugin, createEntityQuery, createEntityStore } from "@datorama/akita";
 import produce from "immer";
 import { combineLatest, Observable } from "rxjs";
-import { flatMap, map, mergeMap, reduce } from "rxjs/operators";
+import { map } from "rxjs/operators";
 import { MeleeWeapon, RangedWeapon } from "./gurpsFeatures/weapon";
 import {
     Entity,
@@ -13,7 +14,6 @@ import {
     FeatureQuery,
     parseAttributes,
     Attribute,
-    KeyList,
     parsePools,
     Pool,
     parseHitLocations,
@@ -26,7 +26,6 @@ import {
     Spell,
     split,
     sumTraitArray,
-    ValorEntityStore,
     SkillDefault,
     FeatureBonuses,
     skillBonusMatchesSkill,
@@ -35,33 +34,48 @@ import {
 import { TraitCategory } from "./gurpsFeatures/trait";
 import { SkillLikeData, skillMatchesAnyDefaults, skillMatchesDefault } from "./gurpsFeatures/skill";
 import { encumbranceLevel } from "./gurps";
+import { ResourceParams } from "./wrapper";
+import { configSchema } from "./config";
 
-export interface SheetState extends EntityState<EntityData<"sheet", SheetData>, string> { }
-@StoreConfig({ name: 'sheets', producerFn: produce })
-export class SheetStore extends ValorEntityStore<SheetState> {
-    constructor() {
-        super();
-    }
+export enum EntityType {
+    Sheet = "sheet"
 }
-export class SheetQuery extends QueryEntity<SheetState> {
-    constructor(store: SheetStore) {
-        super(store);
-    }
-}
-export const SheetRepo = new SheetStore();
-export const SheetLookup = new SheetQuery(SheetRepo);
-export const SheetHistory = new EntityStateHistoryPlugin<SheetState>(SheetLookup)
 
+export interface SheetState extends EntityState<EntityData<EntityType.Sheet, SheetData>, string> { }
 export interface SheetData {
+    type: EntityType.Sheet,
     config: Config
     pointTotal: number
     notes: string
     profile: ProfileData
-    hitLocationDamage: KeyList<number>,
-    poolLevels: KeyList<PoolLevel>,
-    attributeLevels: KeyList<AttributeLevel>
+    hitLocationDamage: Record<string, number>,
+    poolLevels: Record<string, PoolLevel>,
+    attributeLevels: Record<string, AttributeLevel>
 }
+export const sheetSchema = () =>
+    new Schema({
+        type: { enum: [EntityType.Sheet] },
+        config: configSchema(),
+        pointTotal: Number,
+        //notes: String,
+        profile: { "*": String },
+        hitLocationDamage: { "*": Number },
+        poolLevels: {
+            "*": {
+                level: Number,
+                mod: Number,
+                current: Number
+            }
+        },
+        attributeLevels: {
+            "*": {
+                level: Number,
+                mod: Number
+            }
+        }
+    })
 export const sheetData = (): SheetData => ({
+    type: EntityType.Sheet,
     config,
     pointTotal: 150,
     notes: "",
@@ -70,6 +84,11 @@ export const sheetData = (): SheetData => ({
     poolLevels: {},
     attributeLevels: {},
 })
+
+export const sheetStore = createEntityStore<SheetState>({}, { name: 'sheets', producerFn: produce });
+export const sheetQuery = createEntityQuery(sheetStore);
+export const sheetHistory = new EntityStateHistoryPlugin<SheetState>(sheetQuery)
+
 export enum Appearance {
     Horrific,
     Monstrous,
@@ -127,25 +146,30 @@ const profileData = (): ProfileData => ({
     appearance: Appearance.Average
 });
 
-export class Sheet extends Entity<"sheet", SheetData, SheetStore, SheetQuery> {
-    type: "sheet" = "sheet"
+export class Sheet extends Entity<EntityType.Sheet, SheetData, typeof sheetStore, typeof sheetQuery> {
+    type: EntityType.Sheet = EntityType.Sheet
 
-    store = SheetRepo
-    query = SheetLookup
-    stateHistory = SheetHistory
+    store = sheetStore
+    query = sheetQuery
+    stateHistory = sheetHistory
 
-    constructor(id: string) {
-        super(id);
+    get schema() {
+        const schema = super.schema;
+        schema.path("keys", sheetSchema())
+        return schema;
     }
 
+    constructor(id: string) {
+        super(id)
+    }
     get config$() { return this.data$.pipe(map(data => data.keys.config)) }
     defaultData() { return sheetData() }
 
-    get skills$() { return FeatureQuery.allSkills$.pipe(map(features => features.filter(feature => feature.data.rootEntityId === this.id))) }
-    get techniques$() { return FeatureQuery.allTechniques$.pipe(map(features => features.filter(feature => feature.data.rootEntityId === this.id))) }
-    get spells$() { return FeatureQuery.allSpells$.pipe(map(features => features.filter(feature => feature.data.rootEntityId === this.id))) }
-    get traits$() { return FeatureQuery.allTraits$.pipe(map(features => features.filter(feature => feature.data.rootEntityId === this.id))) }
-    get equipment$() { return FeatureQuery.allEquipment$.pipe(map(features => features.filter(feature => feature.data.rootEntityId === this.id))) }
+    get skills$() { return FeatureQuery.allSkills$.pipe(map(features => features.filter(feature => feature.data?.rootEntityId === this.id))) }
+    get techniques$() { return FeatureQuery.allTechniques$.pipe(map(features => features.filter(feature => feature.data?.rootEntityId === this.id))) }
+    get spells$() { return FeatureQuery.allSpells$.pipe(map(features => features.filter(feature => feature.data?.rootEntityId === this.id))) }
+    get traits$() { return FeatureQuery.allTraits$.pipe(map(features => features.filter(feature => feature.data?.rootEntityId === this.id))) }
+    get equipment$() { return FeatureQuery.allEquipment$.pipe(map(features => features.filter(feature => feature?.data.rootEntityId === this.id))) }
 
     get allFeatures$() { return combineLatest([this.skills$, this.techniques$, this.spells$, this.traits$, this.equipment$]) }
     get allFeaturesFlat$() { return this.allFeatures$.pipe(map(feature => feature.flat())) }
@@ -178,23 +202,29 @@ export class Sheet extends Entity<"sheet", SheetData, SheetStore, SheetQuery> {
 
     get attributes() {
         return Object.entries(
-            parseAttributes(this.keys.config.attributes)
+            parseAttributes(this.keys?.config?.attributes)
         ).reduce(
             (attributes, [signature, data]) => {
                 attributes[signature] = new Attribute(this, data, signature, attributes)
                 return attributes
-            }, {} as KeyList<Attribute>
-        )
+            }, {} as Record<string, Attribute>
+        ) || {}
     }
-    get attributes$(): Observable<KeyList<Attribute>> {
+    get attributes$(): Observable<Record<string, Attribute>> {
         return combineLatest(
             [this.instance$, this.bonuses$]
         ).pipe(
-            map(([sheet, bonuses]) => {
+            map(([sheet]) => {
                 return sheet.attributes
             })
         )
     }
+    get orderedAttributes$(): Observable<Attribute[]> {
+        return this.attributes$.pipe(map(attributes => {
+            return this.keys.config.UI?.attributeOrder?.map(attr => attributes[attr]).filter(val => val) ?? Object.values(attributes)
+        }))
+    }
+
     get pools() {
         const attributes = this.attributes;
         return Object.entries(
@@ -203,28 +233,39 @@ export class Sheet extends Entity<"sheet", SheetData, SheetStore, SheetQuery> {
             (pools, [signature, data]) => {
                 pools[signature] = new Pool(this, data, signature, attributes)
                 return pools
-            }, {} as KeyList<Pool>
+            }, {} as Record<string, Pool>
         )
     }
     get pools$() {
         return combineLatest(
             [this.instance$, this.bonuses$]
-        ).pipe(map(([sheet, bonuses]) => sheet.pools))
+        ).pipe(map(([sheet]) => sheet.pools))
+    }
+    get orderedPools$() {
+        return this.pools$.pipe(map(pools => {
+            return this.keys.config.UI?.poolOrder?.map(attr => pools[attr]).filter(val => val) ?? Object.values(pools)
+        }))
+    }
+
+    get hitLocations() {
+        try {
+            return Object.entries(
+                parseHitLocations(this.keys?.config?.locations) || {}
+            ).reduce(
+                (locations, [name, data]) => {
+                    locations[name] = new HitLocation(this, data, name, locations);
+                    return locations
+                }, {} as Record<string, HitLocation>
+            ) || {}
+        } catch (err) {
+            return {}
+        }
     }
     get hitLocations$() {
         return combineLatest(
             [this.instance$, this.bonuses$]
         ).pipe(
-            map(([sheet, bonuses]) => {
-                return Object.entries(
-                    parseHitLocations(sheet.keys.config.locations)
-                ).reduce(
-                    (locations, [name, data]) => {
-                        locations[name] = new HitLocation(this, data, name, locations);
-                        return locations
-                    }, {} as KeyList<HitLocation>
-                )
-            })
+            map(([sheet]) => sheet.hitLocations)
         )
     }
 
@@ -292,9 +333,6 @@ export class Sheet extends Entity<"sheet", SheetData, SheetStore, SheetQuery> {
     }
 }
 
-function pointTotalSplits() {
-
-}
 
 export function skillDefaultMatches(sheet: Sheet, defaults: Observable<SkillDefault[]>) {
     return combineLatest([

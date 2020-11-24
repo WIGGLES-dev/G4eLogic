@@ -1,7 +1,7 @@
-<script>
-  import { resolveWeights } from "@internal";
+<script lang="ts">
+  import { resolveWeights, Feature } from "@internal";
 
-  export let entity = {};
+  export let entity = {} as Feature;
   $: ({ exists = true, id, hidden = false, disabled = false } = entity);
 
   export let depth = 0;
@@ -11,7 +11,7 @@
   export let draggable = false;
   export let list = [];
   export let getRoot = (list) => list;
-  export let accessChildren = () => [];
+  export let accessChildren = (entity) => [];
   export let component = null;
 
   $: props = {
@@ -24,12 +24,13 @@
     component,
   };
 
-  function handleOverToggle(e) {
+  function handleOverToggle(e: MouseEvent) {
+    const target = e.target as HTMLElement;
     try {
-      if (e.target.matches("[data-container-toggle]")) {
-        e.target.classList.add("text-3xl");
+      if (target.matches("[data-container-toggle]")) {
+        target.classList.add("text-3xl");
       } else {
-        e.target
+        target
           .closest("[data-id]")
           .querySelector("[data-container-toggle]")
           .classList.remove("text-3xl");
@@ -37,16 +38,19 @@
     } catch (err) {}
   }
 
-  function onDragstart(e) {
+  function onDragstart(e: DragEvent) {
     try {
       e.dataTransfer.setData("text/plain", id);
       resolveWeights(list);
-    } catch (err) {}
+    } catch (err) {
+      console.log(err);
+    }
   }
 
-  function onDragenter(e) {
+  function onDragenter(e: DragEvent) {
+    const target = e.target as HTMLElement;
     try {
-      const row = e.target.closest("[data-id]");
+      const row = target.closest<HTMLElement>("[data-id]");
       if (row.dataset.id) e.preventDefault();
       handleOverToggle(e);
     } catch (err) {}

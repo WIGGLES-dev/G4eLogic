@@ -4,7 +4,7 @@ import {
     FeatureType,
     featureData,
     FeatureData,
-    Sheet
+    Sheet,
 } from "@internal"
 import { map } from "rxjs/operators"
 
@@ -72,7 +72,7 @@ export enum TraitType {
 export class Trait extends Feature<FeatureType.Trait, TraitData> {
     type: FeatureType.Trait = FeatureType.Trait
     constructor(id: string) {
-        super(id)
+        super(id);
     }
     defaultData() { return traitData() }
     get adjustedPoints$() { return this.instance$.pipe(map(instance => calculateTraitCost(instance.keys))) }

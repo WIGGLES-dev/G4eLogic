@@ -29,7 +29,7 @@ export function tooltip(node: HTMLElement, params: any = {}) {
         ]
     });
 
-    async function mousemove({ clientX, clientY }) {
+    function mouseenter() {
         if (params.component) {
             new params.component({
                 target: document.body,
@@ -40,8 +40,6 @@ export function tooltip(node: HTMLElement, params: any = {}) {
             });
         } else if (tooltip) {
             getRoot(node).appendChild(tooltip);
-            virtualElement.update(clientX, clientY);
-            popper.update();
         }
     }
     function mouseleave() {
@@ -51,8 +49,13 @@ export function tooltip(node: HTMLElement, params: any = {}) {
             tooltip.remove();
         }
     }
+    async function mousemove({ clientX, clientY }) {
+        virtualElement.update(clientX, clientY);
+        popper.update();
+    }
 
     node.addEventListener("mousemove", mousemove);
+    node.addEventListener("mouseenter", mouseenter)
     node.addEventListener("mouseleave", mouseleave);
 
     return {
@@ -67,6 +70,7 @@ export function tooltip(node: HTMLElement, params: any = {}) {
             popper.destroy();
             document.removeEventListener("mousemove", mousemove);
             document.removeEventListener("mouseleave", mouseleave);
+            document.removeEventListener("mouseenter", mousemove);
             if (tooltip) tooltip.remove();
             if (component) component.$destroy();
         }

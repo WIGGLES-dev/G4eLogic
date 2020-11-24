@@ -1,15 +1,19 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte";
 
-  import List from "@ui/lists/List";
-  import SpellEntity from "@ui/entities/Spell";
-  import { Spell } from "@internal";
+  import List from "@ui/lists/List.svelte";
+  import SpellEntity from "@ui/entities/Spell.svelte";
+  import { Spell, valorPostMessage, FeatureType, ValorEvent } from "@internal";
 
   const { character } = getContext("editor");
   const { spells$ } = character;
 
   async function addSpell() {
-    const spell = await character.embed(new Spell());
+    valorPostMessage({
+      event: ValorEvent.Embed,
+      type: FeatureType.Spell,
+    });
+    const spell = await character.embed(new Spell(null));
   }
   function getRoot(entities) {
     return entities

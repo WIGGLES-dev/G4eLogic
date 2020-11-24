@@ -9,7 +9,7 @@
   export let draggable = false;
   export let list = [];
   export let getRoot = (list) => list;
-  export let accessChildren = () => [];
+  export let accessChildren = (entity) => [];
   export let component = null;
 
   $: root = getRoot(list);

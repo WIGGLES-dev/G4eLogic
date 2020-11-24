@@ -1,10 +1,10 @@
-import { createStore } from "@datorama/akita";
+import { createStore, transaction } from "@datorama/akita";
 import {
     FeatureData,
     featureData,
     FeatureType,
     Feature,
-    Sheet
+    Sheet,
 } from "@internal";
 import { Observable, Observer, Subscriber } from "rxjs";
 import { map } from "rxjs/operators";
@@ -33,7 +33,7 @@ export class Equipment extends Feature<FeatureType.Equipment, EquipmentData> {
     type: FeatureType.Equipment = FeatureType.Equipment
 
     constructor(id: string) {
-        super(id)
+        super(id);
     }
     get equipped$(): Observable<boolean> { return this.instance$.pipe(map(data => !data.keys.disabled)) }
     get value() { return (this.keys.value || null) * (this.keys.quantity || 1) }
@@ -59,7 +59,31 @@ export class Equipment extends Feature<FeatureType.Equipment, EquipmentData> {
     }
     get extendedWeight$() { return this.instance$.pipe(map(item => item.extendedWeight)) }
 
+    @transaction()
+    moveToLocation(location: string) {
+        this.update(data => {
+            data.keys.storedLocation = location;
+            return data
+        });
+        this.sameChildren.forEach(child => {
+            child.update(data => {
+                data.keys.storedLocation = location
+                return data
+            })
+        })
+    }
+
     defaultData() { return equipmentData() }
+
+    get contextMenuOptions() {
+        return [
+            {
+                label: `Move to ${this.keys.storedLocation === 'carried' ? 'other' : 'carried'}`,
+                callback: () => { this.moveToLocation(this.keys.storedLocation === 'carried' ? 'other' : 'carried') },
+                show: () => true
+            }, ...super.contextMenuOptions
+        ]
+    }
 }
 
 export enum EquipmentModifierWeightType {

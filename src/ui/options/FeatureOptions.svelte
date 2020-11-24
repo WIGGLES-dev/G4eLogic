@@ -1,6 +1,6 @@
-<script>
+<script lang="ts">
   import { FeatureBonusType } from "@internal";
-  export let feature;
+  export let feature: FeatureBonusType;
 </script>
 
 <style>

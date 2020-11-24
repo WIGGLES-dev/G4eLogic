@@ -94,6 +94,6 @@
     <SizeRange />
   </div>
   <div class="flex-1">
-    <Silhouette maxHeight="600px" minWidth="225px" viewbox="200 0 400 800" />
+    <Silhouette maxHeight="600px" minWidth="225px" viewBox="200 0 400 800" />
   </div>
 </div>

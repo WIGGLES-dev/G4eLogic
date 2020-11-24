@@ -1,6 +1,5 @@
 import {
     AttributeData,
-    config,
     EquipmentData,
     HitLocationData,
     MeleeWeaponData,
@@ -12,24 +11,6 @@ import {
     TechniqueData,
     TraitData
 } from "@internal";
-
-export interface KeyList<T = any> { [key: string]: T }
-
-export interface Config {
-    UI: {
-        rolling: boolean
-    }
-    rulesets: {
-        useMultiplicativeModifiers: boolean
-        useKnowingYourOwnStrength: boolean
-        useReducedSwingDamage: boolean
-        useNoSchoolGrognardReducedSwingDamage: boolean
-    },
-    attributes: KeyList<AttributeData>
-    pools: KeyList<PoolData>
-    locations: KeyList<HitLocationData>
-}
-
 
 export enum Signatures {
 
@@ -59,12 +40,6 @@ export interface FeatureBonus {
 }
 export type FeatureBonuses = AttributeBonus | SkillBonus | ArmorBonus | ReactionBonus;
 
-export const defaultFeatureData = () => ({
-    disabled: false,
-    bonuses: [],
-    templates: [],
-    categories: [],
-});
 export interface AttributeBonus extends FeatureBonus {
     type: FeatureBonusType.Attribute
     attribute: string

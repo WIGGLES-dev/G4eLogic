@@ -1,11 +1,9 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte";
-  import { tooltip } from "@internal";
+  import { Attribute, Sheet, tooltip, SheetData } from "@internal";
 
-  const { character } = getContext("editor");
-
-  $: order = ($character.config.UI || {}).attributeOrder;
-  const attributes$ = character.attributes$;
+  const { character }: { character: Sheet } = getContext("editor");
+  const { orderedAttributes$ } = character;
 
   function isPrimary(attr) {
     return attr.hasTag("primary");
@@ -63,54 +61,55 @@
   </div>
   <span class="text-center text-white bg-gray-700">MOD</span>
   <span class="text-center text-white bg-gray-700 px-2">PTS</span>
-
-  {#each order ? order
-        .map((attr) => $attributes$[attr])
-        .filter(
-          (val) => val
-        ) : Object.values($attributes$) as attr, i (attr.signature)}
-    {#if (!isSubstat(attr) || true) && !isPool(attr)}
-      <div
-        class:primary={isPrimary(attr)}
-        class:secondary={isSecondary(attr)}
-        class:tertiary={isTertiary(attr)}
-        class:sub-stat={isSubstat(attr)}
-        class="truncate uppercase">
+  {#if $orderedAttributes$ instanceof Array}
+    {#each [...$orderedAttributes$] as attr, i (attr.signature)}
+      {#if (!isSubstat(attr) || true) && !isPool(attr)}
+        <div
+          class:primary={isPrimary(attr)}
+          class:secondary={isSecondary(attr)}
+          class:tertiary={isTertiary(attr)}
+          class:sub-stat={isSubstat(attr)}
+          class="truncate uppercase">
+          <span
+            class="float-right pr-2"
+            use:tooltip={{ context: attr, tipclass: 'text-xs', placement: 'bottom-start', tooltip: `${attr.keys.tooltip || ''}` }}>{attr.keys.abbreviation}
+          </span>
+        </div>
         <span
-          class="float-right pr-2"
-          use:tooltip={{ context: attr, tipclass: 'text-xs', placement: 'bottom-start', tooltip: `${attr.keys.tooltip || ''}` }}>{attr.keys.abbreviation}
+          class="attribute-text"
+          class:primary={isPrimary(attr)}
+          class:secondary={isSecondary(attr)}
+          class:tertiary={isTertiary(attr)}
+          class:sub-stat={isSubstat(attr)}
+          class:bg-white={isPrimary(attr)}
+          class:text-black={isPrimary(attr)}
+          class:bg-gray-700={!isPrimary(attr)}
+          class:text-white={!isPrimary(attr)}>
+          <input
+            class="main-input"
+            step={attr.keys.increment || 1}
+            type="number"
+            min="0"
+            placeholder="0"
+            bind:value={attr.displayLevel} />
+          <span
+            on:click={() => character.executeAction('roll', {
+                for: 'attribute',
+              })}
+            class="fas fa-dice-d6 hover:text-green-500" />
         </span>
-      </div>
-      <span
-        class="attribute-text"
-        class:primary={isPrimary(attr)}
-        class:secondary={isSecondary(attr)}
-        class:tertiary={isTertiary(attr)}
-        class:sub-stat={isSubstat(attr)}
-        class:bg-white={isPrimary(attr)}
-        class:text-black={isPrimary(attr)}
-        class:bg-gray-700={!isPrimary(attr)}
-        class:text-white={!isPrimary(attr)}>
         <input
-          class="main-input"
+          class="mod-input"
           step={attr.keys.increment || 1}
           type="number"
-          min="0"
           placeholder="0"
-          bind:value={attr.displayLevel} />
+          bind:value={attr.modifier} />
         <span
-          on:click={() => character.executeAction('roll', { for: 'attribute' })}
-          class="fas fa-dice-d6 hover:text-green-500" />
-      </span>
-      <input
-        class="mod-input"
-        step={attr.keys.increment || 1}
-        type="number"
-        placeholder="0"
-        bind:value={attr.modifier} />
-      <span class="text-sm text-center self-center">{#if attr.keys.costPerLevel}
-          [{attr.pointsSpent()}]
-        {/if}</span>
-    {/if}
-  {/each}
+          class="text-sm text-center self-center">{#if attr.keys.costPerLevel}
+            [{attr.pointsSpent()}]
+          {/if}
+        </span>
+      {/if}
+    {/each}
+  {/if}
 </section>

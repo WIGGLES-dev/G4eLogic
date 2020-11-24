@@ -59,7 +59,7 @@
   </div>
   <div class="flex-shrink-0">
     <div class="mx-4">
-      <Silhouette minWidth="200px" viewbox="200 0 400 800" />
+      <Silhouette minWidth="200px" viewBox="200 0 400 800" />
     </div>
     <!-- <List {...rangedWeaponProps}><span slot="title">Ranged Weapons</span></List>
     <List {...meleeWeaponProps}><span slot="title">Melee Weapons</span></List> -->

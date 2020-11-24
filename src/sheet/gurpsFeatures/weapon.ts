@@ -78,8 +78,8 @@ export abstract class Weapon<OT extends FeatureType, OK extends FeatureData<OT>,
     get sheet() { return this.parent?.sheet }
     get owner() { return this.parent }
     get owner$() { return this.parent$ }
-    constructor(id: string, feature: Feature<OT, OK>) {
-        super(id, feature);
+    constructor(feature: Feature<OT, OK>, id: string) {
+        super(feature, id);
     }
     get config$() { return this.embedded ? this.sheet?.config$ : Valor.data$.pipe(map(valor => valor.globalConfig)) }
 
@@ -90,8 +90,8 @@ export abstract class Weapon<OT extends FeatureType, OK extends FeatureData<OT>,
 
 export class MeleeWeapon<T extends FeatureType = FeatureType, K extends FeatureData<T> = FeatureData<T>> extends Weapon<T, K, FeatureType.MeleeWeapon, MeleeWeaponData> {
     type = FeatureType.MeleeWeapon as FeatureType.MeleeWeapon
-    constructor(id: string, feature: Feature<T, K>) {
-        super(id, feature);
+    constructor(feature: Feature<T, K>, id) {
+        super(feature, id);
     }
     get parryLevel$() {
         return combineLatest([
@@ -114,8 +114,8 @@ export class MeleeWeapon<T extends FeatureType = FeatureType, K extends FeatureD
 
 export class RangedWeapon<T extends FeatureType = FeatureType, K extends FeatureData<T> = FeatureData<T>> extends Weapon<T, K, FeatureType.RangedWeapon, RangedWeaponData> {
     type = FeatureType.RangedWeapon as FeatureType.RangedWeapon;
-    constructor(id: string, feature: Feature<T, K>) {
-        super(id, feature);
+    constructor(feature: Feature<T, K>, id: string) {
+        super(feature, id);
     }
     defaultData() { return rangedWeaponData() }
 }

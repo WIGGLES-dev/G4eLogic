@@ -1,4 +1,5 @@
-import { AttributeBonus, FeatureBonusType, KeyList, Sheet, debounce } from "@internal";
+import Schema from "validate"
+import { AttributeBonus, FeatureBonusType, Sheet, debounce } from "@internal";
 import * as jp from "jsonpath"
 
 export interface AttributeData {
@@ -12,8 +13,25 @@ export interface AttributeData {
     substats?: string[]
     tags?: string[]
 }
+export const attributeSchema = () =>
+    new Schema({
+        abbreviation: String,
+        tooltip: String,
+        costPerLevel: Number,
+        defaultLevel: Number,
+        basedOn: String,
+        increment: Number,
+        skillSignature: Boolean,
+        subStats: [String],
+        tags: [String]
+    })
 export interface PoolData extends AttributeData {
     color: string
+}
+export const poolSchema = () => {
+    const schema = attributeSchema()
+    schema.path("color").type(String)
+    return schema
 }
 
 export interface AttributeLevel {
@@ -31,13 +49,13 @@ export class Attribute {
     get keys() { return this.#keys }
     #signature: string
     get signature() { return this.#signature }
-    #attributes: KeyList<Attribute>
+    #attributes: Record<string, Attribute>
     get attributes() { return this.#attributes }
 
     get selector() { return "attributeLevels" }
     get attribute() { return this.sheet.keys.attributeLevels[this.signature] }
 
-    constructor(sheet: Sheet, keys: AttributeData, signature: string, attributes: KeyList<Attribute>) {
+    constructor(sheet: Sheet, keys: AttributeData, signature: string, attributes: Record<string, Attribute>) {
         this.#sheet = sheet;
         this.#keys = keys;
         this.#signature = signature;
@@ -96,7 +114,7 @@ export class Pool extends Attribute {
     get keys() { return super.keys as PoolData }
     get selector() { return "poolLevels" }
     get attribute() { return this.sheet.keys.poolLevels[this.signature] }
-    constructor(sheet: Sheet, keys: PoolData, signature, attributes: KeyList<Attribute>) {
+    constructor(sheet: Sheet, keys: PoolData, signature, attributes: Record<string, Attribute>) {
         super(sheet, keys, signature, attributes)
     }
     get currentValue() { return this.attribute?.current ?? 0 }

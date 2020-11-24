@@ -1,6 +1,6 @@
 import { Sheet } from "./sheet";
 import * as jp from "jsonpath"
-import { ArmorBonus, FeatureBonusType, KeyList, debounce } from "@internal";
+import { ArmorBonus, FeatureBonusType, debounce } from "@internal";
 export interface HitLocationData {
     isGroup?: boolean
     subLocations?: string[]
@@ -18,9 +18,9 @@ export class HitLocation {
     get keys() { return this.#keys }
     #location: string
     get location() { return this.#location }
-    #locations: KeyList<HitLocation>
+    #locations: Record<string, HitLocation>
     get locations() { return this.#locations }
-    constructor(sheet: Sheet, keys: HitLocationData, location: string, locations: KeyList<HitLocation>) {
+    constructor(sheet: Sheet, keys: HitLocationData, location: string, locations: Record<string, HitLocation>) {
         this.#sheet = sheet;
         this.#keys = keys;
         this.#location = location

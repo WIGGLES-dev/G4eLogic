@@ -3,7 +3,7 @@
 
     import { getContext } from "svelte";
     import { Appearance } from "@internal";
-    import Cropper from "@ui/widgets/Cropper";
+    import Cropper from "@ui/cropper/Cropper.svelte";
     const { character } = getContext("editor");
 </script>
 

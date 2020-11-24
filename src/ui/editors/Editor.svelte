@@ -11,7 +11,7 @@
     import TraitEditor from "@ui/editors/TraitEditor.svelte";
     import TraitModifierEditor from "@ui/editors/TraitModifierEditor.svelte";
 
-    import Modal from "@ui/applications/Modal.svelte";
+    import Modal from "@ui/Modal.svelte";
 
     import { FeatureType } from "@internal";
 

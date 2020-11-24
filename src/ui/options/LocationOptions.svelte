@@ -1,7 +1,7 @@
-<script>
-    import { parseHitLocations } from "@internal";
-    export let location;
-    export let entity = null;
+<script lang="ts">
+    import { parseHitLocations, Feature } from "@internal";
+    export let location: string;
+    export let entity: Feature = null;
     const { config$ } = entity;
 </script>
 

@@ -1,11 +1,64 @@
-import { EntityStore, EntityState, QueryEntity, EntityStateHistoryPlugin } from "@datorama/akita"
-import { asyncScheduler, fromEvent, interval, Observable, Observer, PartialObserver, Subscription, } from "rxjs"
-import { map, takeWhile, pluck, finalize, throwIfEmpty, throttle, throttleTime, sampleTime, auditTime, debounceTime } from "rxjs/operators"
+import Dexie from 'dexie';
+import Schema from "validate";
+import { EntityStore, EntityState, QueryEntity, EntityStateHistoryPlugin, createEntityStore, createEntityQuery } from "@datorama/akita"
+import { from, Observable, PartialObserver, Subscribable, Subscription } from "rxjs"
+import { map, takeWhile, pluck, catchError } from "rxjs/operators"
 import { v4 as uuidv4 } from "uuid";
 import * as jp from "jsonpath";
 import deepmerge from "deepmerge";
 import { get } from "svelte/store";
-import { after, before, debounce, debounceTimeAfterFirst, Valor } from "@internal";
+import { after, before, Valor } from "@internal";
+import produce from "immer";
+
+export interface Repo<T extends string = string, K = any> extends EntityStore<EntityState<EntityData<T, K>, string>> { }
+export interface Lookup<T extends string = string, K = any> extends QueryEntity<EntityState<EntityData<T, K>, string>> { }
+
+interface EntityCollectionParams<T, K, E> {
+    type: T
+    constructor: new (...args) => E
+    indexedDbTable?: string
+    branches?: string[]
+}
+class EntityCollection<T extends string, K = any, E extends Entity = Entity> {
+    constructor({ type, constructor, indexedDbTable, branches }: EntityCollectionParams<T, K, E>) {
+        if (!(constructor instanceof Entity)) return
+        const coreStore = createEntityStore({}, { name: type, producerFn: produce });
+        const branchStores = branches?.map(branch => createEntityStore({}, { name: `${branch} ${type}`, producerFn: produce })) ?? [];
+        const uiStores = [coreStore, ...branchStores].forEach(store => store.createUIStore());
+        const coreQuery = createEntityQuery(coreStore);
+        const branchQueries = branchStores.map(store => createEntityQuery(store));
+        const uiQueries = [coreQuery, ...branchQueries].map(query => query.createUIQuery());
+    }
+
+    static sync() { }
+
+    static snapshot() { }
+}
+
+export enum ResourceHooks {
+    BeforeNewId = "before newId",
+    BeforeEdit = "before edit",
+    BeforeContextMenu = "before contextmenu",
+    BeforeExecuteAction = "before execute action",
+
+    BeforeUpdateEntity = "before update entity",
+    AfterUpdateEntity = "after update entity",
+
+    BeforeUpdateEmbeddedEntity = "before update emdbedded entity",
+    AfterUpdateEmbeddedEntity = "after update embedded entity",
+
+    BeforeEmbedEntity = "before embed entity",
+    AfterEmbedEntity = "after embed entity",
+
+    BeforeDeleteEntity = "before delete enity",
+    AfterDeleteEntity = "after delete entity",
+
+    BeforeDeleteEmbeddedEntity = "before delete embedded entity",
+    AfterDeleteEmbeddedEntity = "after delete embedded entity",
+
+    BeforeDeleteEmbeddedResource = "before delete embedded resource",
+    AfterDeleteEmbeddedResource = "after delete embedded resource"
+}
 
 interface ResourceStateMethods {
     undo()
@@ -18,6 +71,12 @@ interface ResourceStateMethods {
     hasPast(): boolean
     hasFuture(): boolean
 }
+
+export interface ResourceParams {
+    id: string
+    create?: boolean
+    merge?: any
+}
 abstract class Resource<T extends string = string, K = any> {
     id: string
     abstract readonly type: T
@@ -28,47 +87,59 @@ abstract class Resource<T extends string = string, K = any> {
     protected readonly abstract _sourceData$: Observable<EntityData<T, K>>
     get data() {
         try {
+            if (this.isDataValid(this._sourceData)) { }
             return this._sourceData
         } catch (err) {
+            console.log(err)
             this.repairData();
             return this._sourceData
         }
     }
     get data$() {
         try {
-            return this._sourceData$.pipe(takeWhile(data => this.exists))
+            return this._sourceData$.pipe(takeWhile(() => this.exists),)
         } catch (err) {
+            console.log(err);
             this.repairData();
             return this._sourceData$
         }
     }
+
     get allEmbeddedData() { return Object.values(this.data.embeddedEntities || {}) }
     get instance() { if (this.exists) return this.createThis(this.id) }
-    get instance$() { return this.data$.pipe(map(data => this.instance)) }
+    get instance$() { return this.data$.pipe(map(() => this.instance)) }
     get keys(): K { return this.data.keys }
-    get keys$() { return this.data$.pipe(map(data => data.keys)) }
-    get createdOn(): Date { return new Date(this.data.createdOn) }
-    get lastEdit(): Date { return new Date(this.data.lastEdit) }
+    get keys$() { return this.data$.pipe(map(data => data?.keys)) }
+    get createdOn(): Date { return new Date(this.data?.createdOn) }
+    get lastEdit(): Date { return new Date(this.data?.lastEdit) }
 
     constructor(id: string) {
-        this.id = id;
+        this.id = id
     }
 
-    @before("before newId")
+    @before(ResourceHooks.BeforeNewId)
     newId() { return uuidv4() }
 
-    wrapData() { return entityData(this.type, this.defaultData(), this.id) }
+    static clone<T>(data: T): T { return deepmerge<T>({}, data) }
+
+    wrapData(current = false, merge: Partial<K> = {}) { return entityData(this.type, deepmerge.all([this.defaultData(), current ? this.data || {} : {}, merge]), this.id) }
     abstract defaultData(): K
-    isDataValid() { }
-    repairData() { }
+    get schema() { return entitySchema() }
+    isDataValid(data = this._sourceData) {
+        const valid = this.schema.validate(Resource.clone(data));
+        console.log(valid);
+        return valid
+    }
+    repairData() {
+        this.update(data => {
+            Object.assign(data, this.wrapData(), { id: this.id })
+            return data
+        })
+    }
 
     createThis(id: string = this.id) { return new (this.constructor as new (id: string) => this)(id) }
 
-
-
-    subscribe(observer: PartialObserver<K>) {
-        return this.keys$.pipe(map(keys => deepmerge<K>({}, keys))).subscribe(observer);
-    }
+    subscribe(run: (keys: K) => K) { return this.keys$.pipe(map(keys => Resource.clone(keys))).subscribe(run); }
 
     pathValue(path: string) { return jp.value(this.data, path) }
     pathValue$(path: string) { return this.instance$.pipe(map(instance => instance.pathValue(path))) }
@@ -81,6 +152,8 @@ abstract class Resource<T extends string = string, K = any> {
     }
 
     abstract update(fn: (data: EntityData<T, K>) => EntityData<T, K>)
+    abstract delete()
+
     splice(resource: EmbeddedResource) {
         this.update(data => {
             const splice = { ...(resource.data || resource.wrapData()) };
@@ -104,17 +177,12 @@ abstract class Resource<T extends string = string, K = any> {
         return get<T>(typeof observable === "string" ? this[observable] : observable)
     }
 
-    abstract delete()
-
-    abstract duplicate(): this
-
-    abstract create(): this
     toJSON() { return this.data }
 
-    @before("before edit")
+    @before(ResourceHooks.BeforeEdit)
     edit() { }
 
-    @before("before contextmenu")
+    @before(ResourceHooks.BeforeContextMenu)
     renderContextMenu(e: MouseEvent) { Valor.contextMenu(e, this.contextMenuOptions) }
 
     get contextMenuOptions() {
@@ -139,8 +207,8 @@ abstract class Resource<T extends string = string, K = any> {
         ]
     }
 
-    @before("before execute action")
-    executeAction(action: string, ...args) { }
+    @before(ResourceHooks.BeforeExecuteAction)
+    executeAction(...args) { }
 }
 export interface EntityData<T extends string = string, K = any> {
     isEntity
@@ -148,13 +216,26 @@ export interface EntityData<T extends string = string, K = any> {
     type: T
     keys: K
     embedded: boolean
-    embeddedEntities: { [key: string]: EntityData<string, any> }
+    embeddedEntities: Record<string, EntityData<string, any>>
     rootEntityId?: string
     rootEntityType?: string
     progenitorId?: string
     createdOn: string
     lastEdit?: string
 }
+const entitySchema = (maxDepth = 1, currentDepth = 0) =>
+    new Schema({
+        isEntity: { type: Boolean },
+        id: { type: String, required: true },
+        type: { type: String, required: true },
+        embedded: { type: Boolean },
+        //embeddedEntities: { "*": currentDepth === maxDepth ? undefined : entitySchema(maxDepth, ++currentDepth) },
+        rootEntityId: { type: String },
+        rootEntityType: { type: String },
+        progenitorId: { type: String },
+        createdOn: { type: String },
+        lastEdit: { type: String }
+    });
 function entityData<T extends string, K>(type: T, keys: K, id: string): EntityData<T, K> {
     return {
         isEntity: true,
@@ -167,8 +248,7 @@ function entityData<T extends string, K>(type: T, keys: K, id: string): EntityDa
     }
 }
 
-export interface Repo<T extends string = string, K = any> extends EntityStore<EntityState<EntityData<T, K>, string>> { }
-export interface Lookup<T extends string = string, K = any> extends QueryEntity<EntityState<EntityData<T, K>, string>> { }
+
 export abstract class Entity<
     T extends string = string,
     K = any,
@@ -189,7 +269,7 @@ export abstract class Entity<
     }
 
     abstract stateHistory: EntityStateHistoryPlugin<EntityState<EntityData<T, K>>>
-    get state() { return this._forwardStateToEntity(this.stateHistory) }
+    get state(): ResourceStateMethods { return this._forwardStateToEntity(this.stateHistory) }
     protected _forwardStateToEntity<S extends EntityStateHistoryPlugin<EntityState<EntityData<T, K>>>>(stateHistory: S) {
         return {
             undo: () => stateHistory.undo(this.id),
@@ -205,8 +285,8 @@ export abstract class Entity<
     }
 
 
-    @before("before update")
-    @after("after update")
+    @before(ResourceHooks.BeforeUpdateEntity)
+    @after(ResourceHooks.AfterUpdateEntity)
     update(fn: (data: EntityData<T, K>) => EntityData<T, K>) {
         try {
             const src = this.data;
@@ -223,8 +303,8 @@ export abstract class Entity<
         }
     }
 
-    @before("before embed")
-    @after("after embed")
+    @before(ResourceHooks.BeforeEmbedEntity)
+    @after(ResourceHooks.AfterEmbedEntity)
     embed<T extends EmbeddableEntity>(entity: T, keys: { [key: string]: any }) {
         const embed = deepmerge(entity.data || entity.wrapData(), { keys });
         embed.embedded = true;
@@ -235,16 +315,8 @@ export abstract class Entity<
         return entity.createThis(embed.id)
     }
 
-    duplicate() { return this.create(this.data); }
-
-    @before("before create")
-    create(data?: EntityData<T, K>) {
-        const id = this.newId() as string
-        this.store.add(Object.assign({}, this.wrapData(), data, { id }));
-        return this.createThis(id);
-    }
-
-    @before("before delete")
+    @before(ResourceHooks.BeforeDeleteEntity)
+    @after(ResourceHooks.AfterDeleteEntity)
     delete() { this.store.remove(this.id); }
 }
 
@@ -272,7 +344,7 @@ export abstract class EmbeddableEntity<
     get data$() {
         return this.embedded
             ? this.embeddedQuery.selectEntity(this.id).pipe(
-                takeWhile(data => this.exists)
+                takeWhile(() => this.exists)
             ) :
             super.data$
     }
@@ -285,10 +357,14 @@ export abstract class EmbeddableEntity<
         if (!this.embedded) return super.update(fn);
         this._embeddedUpdate(fn);
     }
+    delete() {
+        if (!this.embedded) return super.delete();
+        this._embeddedDelete();
+    }
 
 
-    @before("before embedded update")
-    @after("after embedded update")
+    @before(ResourceHooks.BeforeUpdateEmbeddedEntity)
+    @after(ResourceHooks.AfterUpdateEmbeddedEntity)
     private _embeddedUpdate(fn: (data: EntityData<T, K>) => EntityData<T, K>) {
         const src = this.data;
         return this.embeddedStore.update(this.id, data => {
@@ -300,15 +376,10 @@ export abstract class EmbeddableEntity<
         })
     }
 
-    create() { return null }
 
-    delete() {
-        if (!this.embedded) return super.delete();
-        this._embeddedDelete();
-    }
 
-    @before("before embedded delete")
-    @after("after embedded delete")
+    @before(ResourceHooks.BeforeDeleteEmbeddedEntity)
+    @after(ResourceHooks.AfterDeleteEmbeddedEntity)
     private _embeddedDelete() {
         this.embeddedStore.remove(this.id);
     }
@@ -320,7 +391,7 @@ export abstract class EmbeddedResource<T extends string = string, K = any, E ext
     get parent$() { return this.parent?.instance$ }
     get exists() { return this.parent.exists && (this.parent.data.embeddedEntities || {})[this.id]?.id === this.id }
     get _sourceData() { return (this.parent?.data?.embeddedEntities ?? {})[this.id] as EntityData<T, K> }
-    get _sourceData$() { return this.parent.data$.pipe(takeWhile(data => this.exists), map(data => data.embeddedEntities[this.id] as EntityData<T, K>)) }
+    get _sourceData$() { return this.parent.data$.pipe(takeWhile(() => this.exists), map(data => data.embeddedEntities[this.id] as EntityData<T, K>)) }
 
     get stateHistory() { return this.parent.stateHistory }
     get state() { return this.parent.state }
@@ -349,12 +420,11 @@ export abstract class EmbeddedResource<T extends string = string, K = any, E ext
 
     protected _forwardTo
 
-    constructor(id: string, entity: E) {
+    constructor(entity: E, id: string) {
         super(id);
         this.parent = entity
     }
 
-    duplicate() { return null }
     update(fn: (data: EntityData<T, K>) => void) {
         const src = this.data;
         this.parent.update(data => {
@@ -368,11 +438,10 @@ export abstract class EmbeddedResource<T extends string = string, K = any, E ext
         });
     }
 
-    createThis(id: string = this.id, parent: E = this.parent) { return new (this.constructor as new (id: string, parent: E) => this)(id, this.parent) }
-    create() { return null }
+    createThis(id: string = this.id, parent: E = this.parent) { return new (this.constructor as new (parent: E, id: string) => this)(parent, id) }
 
-    @before("before delete embedded resource")
-    @after("after delete embedded resource")
+    @before(ResourceHooks.BeforeDeleteEmbeddedResource)
+    @after(ResourceHooks.AfterDeleteEmbeddedResource)
     delete() {
         this.parent.update(data => {
             delete data.embeddedEntities[this.id];

@@ -1,11 +1,10 @@
-<script>
+<script lang="ts">
     import Cropper from "cropperjs";
-    import { Valor } from "@internal";
+    import { upload } from "@internal";
 
     export let fallback;
     export let src;
     export let cropped;
-    
 
     let portrait;
     let cropper;
@@ -57,7 +56,7 @@
     }
 
     async function newImage() {
-        let files = await Valor.upload();
+        let files = await upload();
         const reader = new FileReader();
         reader.addEventListener("load", (e) => {
             src = e.target.result;

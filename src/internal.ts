@@ -1,5 +1,6 @@
 export * from "./utils/strings";
-export * from "./externals/dataPipe";
+export * from "./utils/dom";
+
 export * from "./externals/debounce";
 export * from "./externals/hooks";
 export * from "./externals/mixin";
@@ -7,7 +8,8 @@ export * from "./externals/operators";
 
 export * from "./sheet/wrapper";
 
-export * from "./sheet/valor";
+export * from "./valor/valor";
+export * from "./valor/messenger"
 export * from "./sheet/interfaces";
 
 export * from "./sheet/feature";
@@ -18,7 +20,7 @@ export * from "./sheet/gurpsFeatures/equipment";
 export * from "./sheet/gurpsFeatures/skill";
 export * from "./sheet/gurpsFeatures/weapon";
 
-export * from "./sheet/attribute"; 
+export * from "./sheet/attribute";
 export * from "./sheet/hitLocation";
 
 export * from "./sheet/gurps";

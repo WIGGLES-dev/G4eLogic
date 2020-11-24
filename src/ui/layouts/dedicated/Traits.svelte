@@ -1,28 +1,42 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte";
 
-  import List from "@ui/lists/List";
-  import TraitEntity from "@ui/entities/Trait";
-  import Language from "@ui/entities/Language";
+  import List from "@ui/lists/List.svelte";
+  import TraitEntity from "@ui/entities/Trait.svelte";
+  import Language from "@ui/entities/Language.svelte";
 
-  import { split, Trait, TraitCategory, strEncodeUTF16 } from "@internal";
-
+  import {
+    split,
+    Trait,
+    TraitCategory,
+    strEncodeUTF16,
+    valorPostMessage,
+    ValorEvent,
+    FeatureType,
+  } from "@internal";
   const { character } = getContext("editor");
 
   const { traits$ } = character;
 
   function languages(traits) {
-    traits
+    return traits
       .filter((trait) => /language/i.test(trait.keys.categories.join(" ")))
       .sort((a, b) => strEncodeUTF16(b.name) - strEncodeUTF16(a.name));
   }
   function cultures(traits) {
-    traits
+    return traits
       .filter((trait) => /culture/i.test(trait.keys.categories.join(" ")))
       .sort((a, b) => strEncodeUTF16(b.name) - strEncodeUTF16(a.name));
   }
   function addItem(categories = []) {
-    character.embed(new Trait(), {
+    valorPostMessage({
+      event: ValorEvent.Embed,
+      type: FeatureType.Trait,
+      merge: {
+        categories,
+      },
+    });
+    character.embed(new Trait(null), {
       categories,
     });
   }

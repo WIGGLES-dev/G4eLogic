@@ -1,22 +1,34 @@
-<script>
+<script lang="ts">
     import { getContext } from "svelte";
-    import List from "@ui/lists/List";
+    import List from "@ui/lists/List.svelte";
 
-    import SkillEntity from "@ui/entities/Skill";
-    import SkillEditor from "@ui/editors/SkillEditor";
+    import SkillEntity from "@ui/entities/Skill.svelte";
+    import SkillEditor from "@ui/editors/SkillEditor.svelte";
 
-    import { Skill, Technique } from "@internal";
-    import { writable } from "svelte/store";
-    import { listen } from "svelte/internal";
+    import {
+        Skill,
+        Technique,
+        ValorEvent,
+        FeatureType,
+        valorPostMessage,
+    } from "@internal";
 
     const { character, editor } = getContext("editor");
     const { skills$, techniques$ } = character;
 
     async function addSkill() {
-        const skill = await character.embed(new Skill());
+        valorPostMessage({
+            event: ValorEvent.Embed,
+            type: FeatureType.Skill,
+        });
+        const skill = await character.embed(new Skill(null));
     }
     async function addTechnique() {
-        const technique = await character.embed(new Technique());
+        valorPostMessage({
+            event: ValorEvent.Create,
+            type: FeatureType.Technique,
+        });
+        const technique = await character.embed(new Technique(null));
     }
     function getRoot(entities) {
         return entities

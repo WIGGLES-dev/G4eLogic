@@ -7,14 +7,14 @@ import { TsConfigPathsPlugin } from "awesome-typescript-loader";
 import DeclarationBundlerPlugin from './dts-webpack-plugin';
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { GenerateSW } from "workbox-webpack-plugin";
-import { postcss } from "svelte-preprocess";
+import { postcss, typescript } from "svelte-preprocess";
 
 const mode = "development";
 //@ts-ignore
 const prod = mode === 'production';
 
 const paths = [
-    "E:\\foundryVTT\\GURPS\\node_modules\\g4elogic\\lib",
+    path.resolve("E:\\foundryVTT\\GURPS\\node_modules\\g4elogic", "./lib"),
     path.resolve(__dirname, "./lib")
 ];
 
@@ -63,6 +63,9 @@ const config = (target): webpack.Configuration => ({
                         onwarn: () => false,
                         emitCss: true,
                         preprocess: [
+                            typescript({
+                                tsconfigFile: "tsconfig.json"
+                            }),
                             postcss({
                                 plugins: [
                                     require("tailwindcss"),
@@ -131,5 +134,5 @@ const config = (target): webpack.Configuration => ({
 
 export default [
     config(paths[0]),
-    config(paths[1])
+    // config(paths[1])
 ];

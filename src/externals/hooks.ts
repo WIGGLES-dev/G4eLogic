@@ -9,7 +9,7 @@ export function removeHook(hook: string, fn: Function) {
     hooks[hook].filter(hook => hook !== fn)
 }
 
-class HookEvent {
+export class HookEvent {
     prevented = false
     nexted = false
     value

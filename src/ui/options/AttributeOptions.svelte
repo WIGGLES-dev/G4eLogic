@@ -1,6 +1,8 @@
-<script>
-    export let attribute;
-    export let entity;
+<script lang="ts">
+    import { Feature } from "@internal";
+
+    export let attribute: string;
+    export let entity: Feature;
     export let signaturesOnly = false;
 
     const { config$ } = entity;

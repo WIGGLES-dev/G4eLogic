@@ -1,29 +1,28 @@
-<script>
+<script lang="ts">
   import { setContext, createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
   import { Tabs, Tab, TabPanel, TabList } from "@ui/tabs/tabs";
 
-  import ProseMirror from "@ui/prosemirror/ProseMirror";
+  import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
 
-  import Traits from "@ui/layouts/dedicated/Traits";
-  import Bio from "@ui/layouts/dedicated/Bio";
-  import Skills from "@ui/layouts/dedicated/Skills";
-  import Equipment from "@ui/layouts/dedicated/Equipment";
-  import Settings from "@ui/layouts/dedicated/Settings";
-  import General from "@ui/layouts/dedicated/General";
-  import Grimoire from "@ui/layouts/dedicated/Grimoire";
-  import Combat from "@ui/layouts/dedicated/Combat";
+  import Traits from "@ui/layouts/dedicated/Traits.svelte";
+  import Bio from "@ui/layouts/dedicated/Bio.svelte";
+  import Skills from "@ui/layouts/dedicated/Skills.svelte";
+  import Equipment from "@ui/layouts/dedicated/Equipment.svelte";
+  import Settings from "@ui/layouts/dedicated/Settings.svelte";
+  import General from "@ui/layouts/dedicated/General.svelte";
+  import Grimoire from "@ui/layouts/dedicated/Grimoire.svelte";
+  import Combat from "@ui/layouts/dedicated/Combat.svelte";
 
   import { Sheet } from "@internal";
+
   export let id;
   export let editor = null;
 
   const character = new Sheet(id);
+  console.log(character);
 
   setContext("editor", {
-    globalDispatch(event, detail) {
-      dispatch(event, detail);
-    },
     character,
     editor,
   });

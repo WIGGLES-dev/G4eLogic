@@ -98,7 +98,7 @@ export const spellData = (): SpellData => ({
 
 export abstract class SkillLike<T extends FeatureType = FeatureType, K extends SkillLikeData<T> = SkillLikeData<T>> extends Feature<T, K> {
     constructor(id: string) {
-        super(id);
+        super(id)
     }
     get level() { return this.get(this.level$) }
     get level$(): Observable<number> {
@@ -202,14 +202,14 @@ export function calculateSkillLevel(
 export class Skill extends SkillLike<FeatureType.Skill, SkillData> {
     type: FeatureType.Skill = FeatureType.Skill
     constructor(id: string) {
-        super(id);
+        super(id)
     }
     defaultData() { return skillData() }
 }
 export class Technique extends SkillLike<FeatureType.Technique, TechniqueData> {
     type: FeatureType.Technique = FeatureType.Technique
-    constructor(id: string, sheet?: Sheet) {
-        super(id);
+    constructor(id: string) {
+        super(id)
     }
 
     get level$(): Observable<number> {

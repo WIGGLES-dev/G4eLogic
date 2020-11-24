@@ -1,10 +1,16 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte";
   import { Tabs, Tab, TabPanel, TabList } from "@ui/tabs/tabs";
-  import List from "@ui/lists/List";
+  import List from "@ui/lists/List.svelte";
 
-  import EquipmentEntity from "@ui/entities/Equipment";
-  import { Equipment, capitalize } from "@internal";
+  import EquipmentEntity from "@ui/entities/Equipment.svelte";
+  import {
+    Equipment,
+    capitalize,
+    ValorEvent,
+    FeatureType,
+    valorPostMessage,
+  } from "@internal";
 
   const { character } = getContext("editor");
   const { equipment$, carriedWeight$ } = character;
@@ -14,8 +20,12 @@
   });
   $: displayedLocation = "carried";
 
-  async function createEquipment() {
-    const equipment = await character.embed(new Equipment());
+  function createEquipment() {
+    valorPostMessage({
+      event: ValorEvent.Embed,
+      type: FeatureType.Equipment,
+    });
+    const equipment = character.embed(new Equipment(null));
   }
   function getRoot(entities) {
     return entities
@@ -48,10 +58,9 @@
     <th scope="col">#</th>
     <th scope="col" class="w-full">
       <select
-        disabled
         class="outline-none bg-gray-700 w-1/3 text-white"
         bind:value={displayedLocation}>
-        {#each ['carried'] as location, i (i)}
+        {#each ['carried', 'other'] as location, i (i)}
           <option value={location}>{capitalize(location)}</option>
         {/each}
       </select>
