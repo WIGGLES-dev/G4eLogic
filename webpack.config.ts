@@ -4,7 +4,6 @@ import webpack from "webpack";
 import CopyPlugin from "copy-webpack-plugin";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import { TsConfigPathsPlugin } from "awesome-typescript-loader";
-import DeclarationBundlerPlugin from './dts-webpack-plugin';
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { GenerateSW } from "workbox-webpack-plugin";
 import { postcss, typescript } from "svelte-preprocess";
@@ -103,7 +102,6 @@ function config(env): webpack.Configuration {
         plugins: [
             new CleanWebpackPlugin(),
             new MiniCssExtractPlugin(),
-            // new GenerateSW(),
         ],
         devtool: prod ? false : 'source-map'
     }
