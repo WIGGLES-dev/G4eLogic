@@ -1,9 +1,6 @@
 import {
-    AttributeData,
     EquipmentData,
-    HitLocationData,
     MeleeWeaponData,
-    PoolData,
     RangedWeaponData,
     SkillBonus,
     SkillData,
@@ -52,5 +49,3 @@ export interface ArmorBonus extends FeatureBonus {
     location: string
     amount: number
 }
-
-

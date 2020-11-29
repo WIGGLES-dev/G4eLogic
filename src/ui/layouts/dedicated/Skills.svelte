@@ -5,30 +5,20 @@
     import SkillEntity from "@ui/entities/Skill.svelte";
     import SkillEditor from "@ui/editors/SkillEditor.svelte";
 
-    import {
-        Skill,
-        Technique,
-        ValorEvent,
-        FeatureType,
-        valorPostMessage,
-    } from "@internal";
+    import { Skill, Technique, Valor, FeatureType, Sheet } from "@internal";
 
-    const { character, editor } = getContext("editor");
-    const { skills$, techniques$ } = character;
+    const sheet = getContext<Sheet>("sheet");
+    const { skills$, techniques$ } = sheet;
 
     async function addSkill() {
-        valorPostMessage({
-            event: ValorEvent.Embed,
-            type: FeatureType.Skill,
-        });
-        const skill = await character.embed(new Skill(null));
+        Valor.addEntities(FeatureType.Skill, [
+            sheet.embed(new Skill(null).wrapData()),
+        ]);
     }
     async function addTechnique() {
-        valorPostMessage({
-            event: ValorEvent.Create,
-            type: FeatureType.Technique,
-        });
-        const technique = await character.embed(new Technique(null));
+        Valor.addEntities(FeatureType.Technique, [
+            sheet.embed(new Technique(null).wrapData()),
+        ]);
     }
     function getRoot(entities) {
         return entities

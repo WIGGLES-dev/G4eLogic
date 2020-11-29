@@ -1,15 +1,14 @@
 export * from "./utils/strings";
 export * from "./utils/dom";
+export * from "./utils/object";
 
 export * from "./externals/debounce";
-export * from "./externals/hooks";
 export * from "./externals/mixin";
 export * from "./externals/operators";
 
 export * from "./sheet/wrapper";
 
 export * from "./valor/valor";
-export * from "./valor/messenger"
 export * from "./sheet/interfaces";
 
 export * from "./sheet/feature";
@@ -28,7 +27,8 @@ export * from "./sheet/config";
 export * from "./sheet/list";
 
 export * from "./ui/utils/use";
-export { default as Editor } from "./ui/editors/Editor.svelte";
-export { default as SheetEditor } from "./ui/sheet.svelte";
+
+export * from "./valor/database";
+export * from "./valor/plugins/foundryC2";
 
 export { default as config } from "./sheet/config.json";

@@ -1,34 +1,17 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte";
 
-  import AttributeList from "@ui/widgets/AttributeList";
-  import Pools from "@ui/widgets/Pools";
-  import EncumbranceTable from "@ui/widgets/EncumbranceTable";
-  import LiftingTable from "@ui/widgets/LiftingTable";
-  import PointTotals from "@ui/widgets/PointTotals";
-  import Combat from "@ui/widgets/Combat";
+  import AttributeList from "@ui/widgets/AttributeList.svelte";
+  import Pools from "@ui/widgets/Pools.svelte";
+  import EncumbranceTable from "@ui/widgets/EncumbranceTable.svelte";
+  import LiftingTable from "@ui/widgets/LiftingTable.svelte";
+  import PointTotals from "@ui/widgets/PointTotals.svelte";
+  import Combat from "@ui/widgets/Combat.svelte";
   import Silhouette from "@ui/widgets/Silhouette.svelte";
-  
 
-  import List from "@ui/lists/List";
+  import { Sheet } from "@internal";
 
-  import MeleeWeaponEntity from "@ui/entities/MeleeWeapon";
-  import RangedWeaponEntity from "@ui/entities/RangedWeapon";
-
-  const { character } = getContext("editor");
-  const { rangedWeapons$, meleeWeapons$ } = character;
-
-  $: rangedWeaponProps = {
-    display: "list",
-    addItem: false,
-    component: RangedWeaponEntity,
-    list: $rangedWeapons$,
-  };
-  $: meleeWeaponProps = {
-    ...rangedWeaponProps,
-    component: MeleeWeaponEntity,
-    list: $meleeWeapons$,
-  };
+  const sheet = getContext<Sheet>("sheet");
 </script>
 
 <style>

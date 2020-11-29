@@ -4,7 +4,6 @@ import webpack from "webpack";
 import CopyPlugin from "copy-webpack-plugin";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import { TsConfigPathsPlugin } from "awesome-typescript-loader";
-import DeclarationBundlerPlugin from './dts-webpack-plugin';
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { GenerateSW } from "workbox-webpack-plugin";
 import { postcss, typescript } from "svelte-preprocess";
@@ -12,12 +11,18 @@ import { postcss, typescript } from "svelte-preprocess";
 function config(env): webpack.Configuration {
     const mode = env?.production ?? "development";
     const prod = mode === "production"
-    const output = env?.output ?? path.resolve(__dirname, "./lib");
+    const output = env?.output ?? path.resolve(__dirname, "./server");
 
     return {
+        devServer: {
+            writeToDisk: true,
+            contentBase: output + "/server",
+            compress: false,
+            port: 5000,
+            hot: false
+        },
         entry: {
-            'index': [path.resolve(__dirname, 'src/index.ts')],
-            'init': [path.resolve(__dirname, 'src/valor/init.ts')]
+            'test': [path.resolve(__dirname, 'test.ts')],
         },
         resolve: {
             alias: {
@@ -102,6 +107,11 @@ function config(env): webpack.Configuration {
         mode,
         plugins: [
             new CleanWebpackPlugin(),
+            new CopyPlugin({
+                patterns: [
+                    { from: path.resolve(__dirname, "./public"), to: path.resolve(__dirname, "./server") }
+                ]
+            }),
             new MiniCssExtractPlugin(),
             // new GenerateSW(),
         ],

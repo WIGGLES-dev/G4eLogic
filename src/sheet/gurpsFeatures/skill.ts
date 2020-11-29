@@ -10,6 +10,7 @@ import {
     skillDefaultMatches,
     bonusForSkill,
     stringCompare,
+    entityConfig,
 
 } from "@internal";
 import { combineLatest, Observable } from "rxjs";
@@ -199,19 +200,21 @@ export function calculateSkillLevel(
     const preliminaryLevel = baseLevel + relativeLevel + encumbrancePenalty;
     return Math.max(preliminaryLevel) + skill.mod + bonus
 }
+@entityConfig(FeatureType.Skill)
 export class Skill extends SkillLike<FeatureType.Skill, SkillData> {
+    static type: FeatureType.Skill = FeatureType.Skill
     type: FeatureType.Skill = FeatureType.Skill
-    constructor(id: string) {
-        super(id)
-    }
-    defaultData() { return skillData() }
-}
-export class Technique extends SkillLike<FeatureType.Technique, TechniqueData> {
-    type: FeatureType.Technique = FeatureType.Technique
-    constructor(id: string) {
-        super(id)
-    }
+    constructor(id: string) { super(id) }
 
+    static defaultData = skillData()
+    get defaultData() { return Feature.clone(Skill.defaultData) }
+}
+
+@entityConfig(FeatureType.Technique)
+export class Technique extends SkillLike<FeatureType.Technique, TechniqueData> {
+    static type: FeatureType.Technique = FeatureType.Technique
+    type: FeatureType.Technique = FeatureType.Technique
+    constructor(id: string) { super(id) }
     get level$(): Observable<number> {
         return combineLatest([
             skillDefaultMatches(this.sheet, this.keys$.pipe(map(keys => [keys.default]))),
@@ -229,7 +232,9 @@ export class Technique extends SkillLike<FeatureType.Technique, TechniqueData> {
             })
         )
     }
-    defaultData() { return techniqueData() }
+
+    static defaultData = techniqueData()
+    get defaultData() { return Technique.defaultData }
 }
 export function calculateTechniqueLevel(
     technique: TechniqueData,
@@ -263,11 +268,14 @@ export function calculateTechniqueLevel(
         return NaN
     }
 }
+
+@entityConfig(FeatureType.Spell)
 export class Spell extends SkillLike<FeatureType.Spell, SpellData> {
+    static type: FeatureType.Spell = FeatureType.Spell
     type: FeatureType.Spell = FeatureType.Spell
-    constructor(id: string) {
-        super(id)
-    }
-    defaultData() { return spellData() }
+    constructor(id: string) { super(id) }
+
+    static defaultData = spellData()
+    get defaultData() { return Spell.defaultData }
 }
 

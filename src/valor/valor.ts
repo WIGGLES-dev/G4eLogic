@@ -1,136 +1,180 @@
-import { Query, Store, StoreConfig, createStore, createQuery } from "@datorama/akita";
+import {
+    createStore,
+    createQuery,
+    runEntityStoreAction,
+    EntityStoreAction,
+    snapshotManager,
+    EntityAction,
+    EntityActions,
+    combineQueries,
+    transaction,
+} from "@datorama/akita";
 import produce from "immer";
-import Editor from "@ui/sheet.svelte";
-import EntityEditor from "@ui/editors/Editor.svelte";
-import ContextMenu from "@ui/context-menu/ContextMenu.svelte";
-
-import { config, Config, addHook, removeHook, ResourceHooks, getRoot, bubbleFrameEvents, HookEvent } from "@internal";
+import { connectToChild } from "penpal";
+import {
+    config,
+    Config,
+    getRoot,
+    bubbleFrameEvents,
+    createContextMenu,
+    db,
+    FeatureType,
+    EntityType,
+    Entity,
+    EntityData,
+    Identifiable
+} from "@internal";
 import { fromEvent, Observable } from "rxjs";
+import deepmerge from "deepmerge";
+import { Connection } from "penpal/lib/types";
 
 export interface ValorConfig {
-    focusedFrameId?: string
     contextMenuActive: boolean
     globalConfig: Config
-    currentlyEditing: string[]
+    lastStateUpdate?: {
+        id: string,
+        timestamp: number
+    }
+    currentlyEditingId: string,
+    currentlyEditingType: string
 }
 
 export const defaultValorConfig = (): ValorConfig => ({
     contextMenuActive: false,
     globalConfig: config,
-    currentlyEditing: []
+    currentlyEditingId: null,
+    currentlyEditingType: null
 })
 
-export const ValorRepo = createStore<ValorConfig>(defaultValorConfig(), { name: 'valor', producerFn: produce });
-export const ValorLookup = createQuery(ValorRepo)
+export const valorState = createStore<ValorConfig>(defaultValorConfig(), { name: 'valor', producerFn: produce });
+export const valorQuery = createQuery(valorState)
 
-type ValorHooks = ResourceHooks
 export class Valor {
+    static db = db
+    static entityTable(type) { return this.db.table<EntityData>(type) }
+
     static channel = new BroadcastChannel("valor")
+    static connections: Map<string, Connection<typeof Valor["methods"]>> = new Map()
 
-    static get data() { return ValorLookup.getValue() }
-    static get data$() { return ValorLookup.select() }
-
-    static on(hook: ValorHooks, fn: (e: HookEvent) => void) { return addHook(hook, fn) }
-    static on$(hook: ValorHooks) { return fromEvent<HookEvent>(this, hook) }
-    static get allHooks() {
-        return Object.values({ ...ResourceHooks }).reduce((hooks, hook) => {
-            hooks[hook] = this.on$(hook)
-            return hooks
-        }, {} as { [key in ValorHooks]: Observable<HookEvent> })
-    }
-
-    static off(hook: string, fn: Function) { return removeHook(hook, fn) }
-
-    window: Window
-
-    constructor(window: Window) {
-        this.window = window;
+    static get state() { return valorState.getValue() }
+    static get state$() { return valorQuery.select() }
+    static setState(state: Partial<ValorConfig>) {
+        valorState.update(prevState => deepmerge(prevState, state, Valor.mergeOptions))
     }
 
     static contextMenu(e: MouseEvent, options = []) {
-        if (!options.length || this.data.contextMenuActive) return
-        const menu = new ContextMenu({
-            target: getRoot(e.target as HTMLElement),
-            props: {
-                e,
-                options
-            }
+        const menu = createContextMenu(e, options);
+        if (!menu || this.state.contextMenuActive) return
+        valorState.update(data => { data.contextMenuActive = true; })
+        menu.$on("close", () => valorState.update(data => { data.contextMenuActive = false }));
+    }
+
+    static async addEntities(store: string, entities: EntityData[], options = {}) {
+        runEntityStoreAction(store, EntityStoreAction.AddEntities, (
+            add
+        ) => {
+            add(entities)
         });
-        ValorRepo.update(data => {
-            data.contextMenuActive = true;
-        })
-        menu.$on("close", () => { menu.$destroy(); ValorRepo.update(data => { data.contextMenuActive = false }) });
+        return entities
     }
 
-    static open() { }
-    static embed() { }
-
-    static mount(target: HTMLElement, props) {
-        return mount(Editor, target, { ...props, editor: this });
-    }
-    static mountEditor(target: HTMLElement, props = {}) {
-        return mount(EntityEditor, target, { ...props, editor: this });
+    private static get mergeOptions() {
+        return {
+            arrayMerge: (destinaition, source, options) => source
+        }
     }
 
-    setState() {
-        this.window
+    @transaction()
+    static async updateEntities(store: string, entities: EntityData[], options = {}) {
+        runEntityStoreAction(store, EntityStoreAction.UpdateEntities, (
+            update,
+        ) => {
+            entities.forEach(entity => {
+                update(entity.id, (data) => {
+
+                    if (data instanceof Array) {
+                        return deepmerge.all(data, Valor.mergeOptions)
+                    }
+                    return deepmerge(data, entity, Valor.mergeOptions)
+                }
+                );
+            });
+        });
+        return entities
     }
-}
 
-function mount(app: typeof Editor, target: HTMLElement, props) {
-    if (!props.id) return
-    let appInstance = new app({
-        target: props.encapsulate ?
-            props.encapsulate === "shadow" ?
-                createShadow(target, props) : createFrame(target, props).contentDocument.body
-            : target,
-        props
-    });
+    static async removeEntities(store: string, entities: EntityData[], options = {}) {
+        const ids = entities.map(entity => entity.id);
+        runEntityStoreAction(store, EntityStoreAction.RemoveEntities, (
+            remove
+        ) => {
+            remove(ids)
+        });
+        return entities
+    }
 
-    return appInstance
-}
+    static get methods() {
+        return {
+            loadDatabase: this.loadDatabase,
+            setStoreSnapshot: snapshotManager.setStoresSnapshot,
+            getStoreSnapshot: snapshotManager.getStoresSnapshot,
+            addEntities: this.addEntities,
+            updateEntities: this.updateEntities,
+            removeEntities: this.removeEntities,
+            setState: this.setState
+        }
+    }
 
-function createShadow(target: HTMLElement, props) {
-    const root = target.appendChild(document.createElement("div"));
-    const shadow = root.attachShadow({ mode: 'open' });
-    const meta = document.createElement("meta");
-    meta.setAttribute("charset", "utf-8")
-    const links = props.styles?.map(href => {
-        return Object.assign(document.createElement("link"), {
-            rel: "stylesheet",
-            href
-        })
-    });
-    shadow.append(meta, ...links);
-    const mount = shadow.appendChild(document.createElement("div"));
-    return mount
+    private static _loadTable(obj: EntityData, { key, primaryKey }) { Entity.getCollection(obj.type)?.store.add(obj); }
+    static loadDatabase(this: typeof Valor) {
+        Valor.entityTable(EntityType.Sheet).each(this._loadTable);
+        Valor.entityTable(FeatureType.Skill).each(this._loadTable);
+        Valor.entityTable(FeatureType.Technique).each(this._loadTable);
+        Valor.entityTable(FeatureType.Spell).each(this._loadTable);
+        Valor.entityTable(FeatureType.Equipment).each(this._loadTable);
+        Valor.entityTable(FeatureType.Trait).each(this._loadTable);
+    }
+
+    static open(this: typeof Valor) { }
+
+    static async embed(target: HTMLElement, options) {
+        if (!options.id) return
+        const iframe = createFrame(target, options);
+        const connection = connectToChild<typeof Valor["methods"]>({
+            iframe,
+            get methods() { return this.methods }
+        });
+        target.appendChild(iframe);
+        const snapshot = snapshotManager.getStoresSnapshot();
+        await (await connection.promise).setStoreSnapshot(snapshot);
+        this.connections.set(options.id, connection);
+        return connection
+    }
 }
 
 function createFrame(target: HTMLElement, props) {
     const frame = target.appendChild(Object.assign(document.createElement("iframe"), {
-        width: "100%",
-        height: "100%",
-        src: "about:blank",
-        name: `valor character sheet ~ ${props.id}`,
+        width: props.height || "100%",
+        height: props.width || "100%",
+        src: props.src || "about:blank",
+        name: props.name,
     }));
-
     const meta = document.createElement("meta");
     meta.setAttribute("charset", "utf-8")
-    const links = props.styles?.map(href => {
+    const styles = props.styles?.map(href => {
         return Object.assign(document.createElement("link"), {
             rel: "stylesheet",
             href
         })
     });
-    frame.contentDocument.head.append(meta, ...links);
-    frame.onmouseenter = () => {
-        ValorRepo.update(data => { data.focusedFrameId = props.id })
-        window.frames[`valor character sheet ~ ${props.id}`].focus();
-    };
-    frame.onmouseleave = () => {
-        ValorRepo.update(data => { data.focusedFrameId = null })
-        window.focus();
-    };
+    const scripts = props.scripts?.map(src => {
+        return Object.assign(document.createElement("script"), {
+            src
+        })
+    });
+    frame.contentDocument.head.append(meta, ...styles, ...scripts);
+    frame.onmouseenter = () => frame.focus();
+    frame.onmouseleave = () => window.focus();
     bubbleFrameEvents(frame);
     return frame
 }

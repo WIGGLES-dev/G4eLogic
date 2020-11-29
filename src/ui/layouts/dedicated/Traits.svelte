@@ -10,13 +10,13 @@
     Trait,
     TraitCategory,
     strEncodeUTF16,
-    valorPostMessage,
-    ValorEvent,
+    Valor,
+    Sheet,
     FeatureType,
   } from "@internal";
-  const { character } = getContext("editor");
+  const sheet = getContext<Sheet>("editor");
 
-  const { traits$ } = character;
+  const { traits$ } = sheet;
 
   function languages(traits) {
     return traits
@@ -29,16 +29,16 @@
       .sort((a, b) => strEncodeUTF16(b.name) - strEncodeUTF16(a.name));
   }
   function addItem(categories = []) {
-    valorPostMessage({
-      event: ValorEvent.Embed,
-      type: FeatureType.Trait,
-      merge: {
-        categories,
-      },
-    });
-    character.embed(new Trait(null), {
-      categories,
-    });
+    Valor.sendMessage(window, "addEntity", {});
+    Valor.addEntities(FeatureType.Trait, [
+      sheet.embed(
+        new Trait(null).wrapData({
+          keys: {
+            categories,
+          },
+        })
+      ),
+    ]);
   }
   function getRoot(entities = []) {
     return entities

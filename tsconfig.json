@@ -18,17 +18,18 @@
             "ES2019"
         ],
         "types": [
+            "deep-diff",
             "webpack",
             "webpack-dev-server",
             "svelte",
         ],
-        "baseUrl": "./src",
+        "baseUrl": "./",
         "paths": {
             "@internal": [
-                "./internal.ts"
+                "./src/internal.ts"
             ],
             "@ui/*": [
-                "ui/*"
+                "./src/ui/*"
             ]
         },
         "target": "ES2015",

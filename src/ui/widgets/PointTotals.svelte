@@ -1,7 +1,8 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte";
+  import { Sheet } from "@internal";
 
-  const { character } = getContext("editor");
+  const { character }: { character: Sheet } = getContext("editor");
 
   const { pointTotal$ } = character;
   $: totals = $pointTotal$;
@@ -14,6 +15,7 @@
   hr {
     @apply border border-solid border-gray-700 m-2 ml-0 mr-0;
   }
+
   .grid {
     grid-template-columns: auto auto;
   }

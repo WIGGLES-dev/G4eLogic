@@ -5,6 +5,7 @@ import {
     featureData,
     FeatureData,
     Sheet,
+    entityConfig,
 } from "@internal"
 import { map } from "rxjs/operators"
 
@@ -68,13 +69,17 @@ export enum TraitType {
     Social = "Social",
     Exotic = "Exotic",
 }
-
+@entityConfig(FeatureType.Trait)
 export class Trait extends Feature<FeatureType.Trait, TraitData> {
+    static type: FeatureType.Trait = FeatureType.Trait
     type: FeatureType.Trait = FeatureType.Trait
     constructor(id: string) {
         super(id);
     }
-    defaultData() { return traitData() }
+
+    static defaultData = traitData()
+    get defaultData() { return Trait.defaultData }
+
     get adjustedPoints$() { return this.instance$.pipe(map(instance => calculateTraitCost(instance.keys))) }
 }
 

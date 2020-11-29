@@ -3,17 +3,15 @@
 
   import List from "@ui/lists/List.svelte";
   import SpellEntity from "@ui/entities/Spell.svelte";
-  import { Spell, valorPostMessage, FeatureType, ValorEvent } from "@internal";
+  import { Spell, FeatureType, Valor, Sheet } from "@internal";
 
-  const { character } = getContext("editor");
-  const { spells$ } = character;
+  const sheet = getContext<Sheet>("sheet");
+  const { spells$ } = sheet;
 
   async function addSpell() {
-    valorPostMessage({
-      event: ValorEvent.Embed,
-      type: FeatureType.Spell,
-    });
-    const spell = await character.embed(new Spell(null));
+    Valor.addEntities(FeatureType.Spell, [
+      sheet.embed(new Spell(null).wrapData()),
+    ]);
   }
   function getRoot(entities) {
     return entities

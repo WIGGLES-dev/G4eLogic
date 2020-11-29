@@ -4,16 +4,10 @@
   import List from "@ui/lists/List.svelte";
 
   import EquipmentEntity from "@ui/entities/Equipment.svelte";
-  import {
-    Equipment,
-    capitalize,
-    ValorEvent,
-    FeatureType,
-    valorPostMessage,
-  } from "@internal";
+  import { Equipment, capitalize, FeatureType, Sheet, Valor } from "@internal";
 
-  const { character } = getContext("editor");
-  const { equipment$, carriedWeight$ } = character;
+  const sheet = getContext<Sheet>("sheet");
+  const { equipment$, carriedWeight$ } = sheet;
 
   $: displayedItems = $equipment$.filter((item) => {
     return item.keys.storedLocation === displayedLocation;
@@ -21,11 +15,9 @@
   $: displayedLocation = "carried";
 
   function createEquipment() {
-    valorPostMessage({
-      event: ValorEvent.Embed,
-      type: FeatureType.Equipment,
-    });
-    const equipment = character.embed(new Equipment(null));
+    Valor.addEntities(FeatureType.Equipment, [
+      sheet.embed(new Equipment(null).wrapData()),
+    ]);
   }
   function getRoot(entities) {
     return entities

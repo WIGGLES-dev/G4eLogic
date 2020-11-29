@@ -81,7 +81,7 @@ export abstract class Weapon<OT extends FeatureType, OK extends FeatureData<OT>,
     constructor(feature: Feature<OT, OK>, id: string) {
         super(feature, id);
     }
-    get config$() { return this.embedded ? this.sheet?.config$ : Valor.data$.pipe(map(valor => valor.globalConfig)) }
+    get config$() { return this.embedded ? this.sheet?.config$ : Valor.state$.pipe(map(valor => valor.globalConfig)) }
 
     get bestAttackLevel$(): Observable<number> {
         return skillDefaultMatches(this.sheet, this.keys$.pipe(map(keys => keys.defaults))).pipe(takeWhile(() => this.exists))
@@ -89,7 +89,8 @@ export abstract class Weapon<OT extends FeatureType, OK extends FeatureData<OT>,
 }
 
 export class MeleeWeapon<T extends FeatureType = FeatureType, K extends FeatureData<T> = FeatureData<T>> extends Weapon<T, K, FeatureType.MeleeWeapon, MeleeWeaponData> {
-    type = FeatureType.MeleeWeapon as FeatureType.MeleeWeapon
+    static type: FeatureType.MeleeWeapon = FeatureType.MeleeWeapon
+    type: FeatureType.MeleeWeapon = FeatureType.MeleeWeapon
     constructor(feature: Feature<T, K>, id) {
         super(feature, id);
     }
@@ -109,13 +110,18 @@ export class MeleeWeapon<T extends FeatureType = FeatureType, K extends FeatureD
             map(([level, keys]) => level / 2 + 3 + (keys.blockBonus || null))
         )
     }
-    defaultData() { return meleeWeaponData() }
+
+    static defaultData = meleeWeaponData()
+    get defaultData() { return MeleeWeapon.defaultData }
 }
 
 export class RangedWeapon<T extends FeatureType = FeatureType, K extends FeatureData<T> = FeatureData<T>> extends Weapon<T, K, FeatureType.RangedWeapon, RangedWeaponData> {
-    type = FeatureType.RangedWeapon as FeatureType.RangedWeapon;
+    static type: FeatureType.RangedWeapon = FeatureType.RangedWeapon
+    type: FeatureType.RangedWeapon = FeatureType.RangedWeapon
     constructor(feature: Feature<T, K>, id: string) {
         super(feature, id);
     }
-    defaultData() { return rangedWeaponData() }
+
+    static defaultData = rangedWeaponData()
+    get defaultData() { return RangedWeapon.defaultData }
 }

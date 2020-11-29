@@ -1,8 +1,5 @@
 import Dexie from 'dexie';
 import 'dexie-observable';
-import { IDatabaseChange } from 'dexie-observable/api';
-
-import { fromEvent } from "rxjs";
 
 import { FeatureType, EntityType } from '@internal';
 
@@ -16,8 +13,6 @@ const entityIndexes = [
     "createdOn",
     "lastEdit"
 ];
-
-const featureIndexes = []
 
 function concatIndexes(indexes: string[]) { return indexes.join(",") }
 
@@ -33,12 +28,4 @@ const schema = {
 const db = new Dexie("valor database");
 db.version(1).stores(schema);
 
-db.on("changes", (changes: IDatabaseChange[], partial: boolean) => {
-    changes.forEach(change => {
-
-    });
-});
-
-db.open();
-
-export default db
+export { db }

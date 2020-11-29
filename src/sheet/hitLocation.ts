@@ -56,7 +56,7 @@ export class HitLocation {
         return this.damageTaken > this.crippleThreshold() && this.crippleThreshold() > 0
     }
     crippleThreshold() {
-        const pools = this.sheet.pools;
+        const pools = this.sheet.get(this.sheet.pools$) || {};
         return (pools["hit points"]?.calculateLevel() / this.keys.crippleRatio) || Number.POSITIVE_INFINITY
     }
 }

@@ -1,10 +1,9 @@
-<script>
-    import defaultPortrait from "@ui/assets/silhouette.png";
-
+<script lang="ts">
+    const defaultPortrait = require("@ui/assets/silhouette.png");
     import { getContext } from "svelte";
-    import { Appearance } from "@internal";
+    import { Appearance, Sheet } from "@internal";
     import Cropper from "@ui/cropper/Cropper.svelte";
-    const { character } = getContext("editor");
+    const sheet = getContext<Sheet>("sheet");
 </script>
 
 <style>
@@ -40,50 +39,48 @@
         <div class="flex flex-col">
             <div class="section-header">GENERAL</div>
             <label for="">Name
-                <input
-                    type="text"
-                    bind:value={$character.profile.name} /></label>
+                <input type="text" bind:value={$sheet.profile.name} /></label>
             <label for="">Nickname
                 <input
                     type="text"
-                    bind:value={$character.profile.nickName} /></label>
+                    bind:value={$sheet.profile.nickName} /></label>
             <div class="flex">
                 <label for="">Sex
                     <input
                         type="text"
-                        bind:value={$character.profile.sex} /></label>
+                        bind:value={$sheet.profile.sex} /></label>
                 <label for="">Gender
                     <input
                         type="text"
-                        bind:value={$character.profile.gender} /></label>
+                        bind:value={$sheet.profile.gender} /></label>
             </div>
             <div class="flex">
                 <label for="" class="flex-1">Race<input
                         type="text"
-                        bind:value={$character.profile.race} /></label>
+                        bind:value={$sheet.profile.race} /></label>
                 <label for="" class="flex-1">Size
                     <input
                         type="number"
                         placeholder="0"
-                        bind:value={$character.profile.sizeModifier} /></label>
+                        bind:value={$sheet.profile.sizeModifier} /></label>
             </div>
             <div class="flex">
                 <label for="">Handedness
                     <input
                         type="text"
-                        bind:value={$character.profile.handedness} /></label>
+                        bind:value={$sheet.profile.handedness} /></label>
                 <label for="" class="flex-1">Reach <input type="text" /></label>
             </div>
             <label class="w-full text-center" for="">Reaction
                 <textarea
                     rows="4"
-                    bind:value={$character.profile.reaction} /></label>
+                    bind:value={$sheet.profile.reaction} /></label>
         </div>
         <div class="row-span-2">
             <Cropper
                 fallback={defaultPortrait}
-                bind:src={$character.profile.portrait}
-                bind:cropped={$character.profile.cropped} />
+                bind:src={$sheet.profile.portrait}
+                bind:cropped={$sheet.profile.cropped} />
         </div>
         <div class="flex flex-col">
             <div class="section-header">PHYSICAL</div>
@@ -91,16 +88,16 @@
                 <label for="">Age
                     <input
                         type="text"
-                        bind:value={$character.profile.age} /></label>
+                        bind:value={$sheet.profile.age} /></label>
                 <label for="">Appearance
                     <select
                         name=""
                         id=""
-                        bind:value={$character.profile.appearance}>
+                        bind:value={$sheet.profile.appearance}>
                         <option value={Appearance.Horrific}>Horrific</option>
                         <option value={Appearance.Monstrous}>Monstrous</option>
                         <option value={Appearance.Hideous}>Hideous</option>
-                        <option value={Appearance.Unnatractive}>
+                        <option value={Appearance.Unattractive}>
                             Unattractive
                         </option>
                         <option value={Appearance.Average} selected>
@@ -124,50 +121,50 @@
                 <label for="" class="flex-1">Weight
                     <input
                         type="text"
-                        bind:value={$character.profile.weight} /></label>
+                        bind:value={$sheet.profile.weight} /></label>
                 <label for="" class="flex-1">Height
                     <input
                         type="text"
-                        bind:value={$character.profile.height} /></label>
+                        bind:value={$sheet.profile.height} /></label>
             </div>
             <div class="flex">
                 <label for="">Build
                     <input
                         type="text"
-                        bind:value={$character.profile.build} /></label>
+                        bind:value={$sheet.profile.build} /></label>
                 <label for="">Skin
                     <input
                         type="text"
-                        bind:value={$character.profile.skin} /></label>
+                        bind:value={$sheet.profile.skin} /></label>
             </div>
 
             <div class="flex">
                 <label for="">Hair
                     <input
                         type="text"
-                        bind:value={$character.profile.hair} /></label>
+                        bind:value={$sheet.profile.hair} /></label>
                 <label for="">Facial Hair
                     <input
                         type="text"
-                        bind:value={$character.profile.facialHair} /></label>
+                        bind:value={$sheet.profile.facialHair} /></label>
             </div>
 
             <div class="flex">
                 <label for="">Eyes
                     <input
                         type="text"
-                        bind:value={$character.profile.eyes} /></label>
+                        bind:value={$sheet.profile.eyes} /></label>
                 <label for="">Voice
                     <input
                         type="text"
-                        bind:value={$character.profile.voice} /></label>
+                        bind:value={$sheet.profile.voice} /></label>
             </div>
 
             <label class="text-center" for="">Features<textarea
                     name=""
                     id=""
                     rows="4"
-                    bind:value={$character.profile.appearanceFeatures} /></label>
+                    bind:value={$sheet.profile.appearanceFeatures} /></label>
         </div>
         <div class="flex flex-col">
             <div class="section-header">BACKGROUND</div>
@@ -175,62 +172,62 @@
                 <label for="">Birthday
                     <input
                         type="text"
-                        bind:value={$character.profile.birthday} /></label>
+                        bind:value={$sheet.profile.birthday} /></label>
                 <label for="">Birthplace
                     <input
                         type="text"
-                        bind:value={$character.profile.birthPlace} /></label>
+                        bind:value={$sheet.profile.birthPlace} /></label>
             </div>
             <div class="flex">
                 <label for="">Status<input
                         type="text"
-                        bind:value={$character.profile.status} /></label>
+                        bind:value={$sheet.profile.status} /></label>
                 <label for="">Wealth<input
                         type="text"
-                        bind:value={$character.profile.wealth} /></label>
+                        bind:value={$sheet.profile.wealth} /></label>
             </div>
             <div class="flex">
                 <label for="">Income<input
                         type="text"
-                        bind:value={$character.profile.income} /></label>
+                        bind:value={$sheet.profile.income} /></label>
                 <label for="">Expenses<input
                         type="text"
-                        bind:value={$character.profile.expenses} /></label>
+                        bind:value={$sheet.profile.expenses} /></label>
             </div>
             <div class="flex">
                 <label for="">Affiliation<input
                         type="text"
-                        bind:value={$character.profile.affiliation} /></label>
+                        bind:value={$sheet.profile.affiliation} /></label>
                 <label for="">Base<input
                         type="text"
-                        bind:value={$character.profile.base} /></label>
+                        bind:value={$sheet.profile.base} /></label>
             </div>
             <label class="text-center" for="">Family
                 <textarea
                     name=""
                     id=""
                     rows="4"
-                    bind:value={$character.profile.family} /></label>
+                    bind:value={$sheet.profile.family} /></label>
         </div>
         <div class="flex flex-col">
             <div class="section-header">MISC</div>
             <label for="">Religion<input
                     type="text"
-                    bind:value={$character.profile.religion} /></label>
+                    bind:value={$sheet.profile.religion} /></label>
             <label for="">Education<input
                     type="text"
-                    bind:value={$character.profile.education} /></label>
+                    bind:value={$sheet.profile.education} /></label>
             <label for="">Citizenship<input
                     type="text"
-                    bind:value={$character.profile.citizenship} /></label>
+                    bind:value={$sheet.profile.citizenship} /></label>
             <label for="">Orientation<input
                     type="text"
-                    bind:value={$character.profile.orientation} /></label>
+                    bind:value={$sheet.profile.orientation} /></label>
             <label class="text-center" for="">Other<textarea
                     name=""
                     id=""
                     rows="4"
-                    bind:value={$character.profile.other} /></label>
+                    bind:value={$sheet.profile.other} /></label>
         </div>
     </div>
 </section>

@@ -1,20 +1,21 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte";
-  import List from "@ui/lists/List";
+  import List from "@ui/lists/List.svelte";
 
-  import MeleeWeaponEntity from "@ui/entities/MeleeWeapon";
-  import RangedWeaponEntity from "@ui/entities/RangedWeapon";
+  import MeleeWeaponEntity from "@ui/entities/MeleeWeapon.svelte";
+  import RangedWeaponEntity from "@ui/entities/RangedWeapon.svelte";
 
-  import Silhouette from "@ui/widgets/Silhouette";
-  import SizeRange from "@ui/widgets/SizeRange";
+  import Silhouette from "@ui/widgets/Silhouette.svelte";
+  import SizeRange from "@ui/widgets/SizeRange.svelte";
+  import { Sheet } from "@internal";
 
-  const { character } = getContext("editor");
+  const sheet = getContext<Sheet>("sheet");
   const {
     encumbranceLevel$,
     attributes$,
     meleeWeapons$,
     rangedWeapons$,
-  } = character;
+  } = sheet;
 
   $: dodge = $attributes$["dodge"]
     ? $attributes$["dodge"].calculateLevel() || 5
@@ -42,12 +43,11 @@
 <div class="flex">
   <div>
     <div class="flex mx-4">
-      <button
-        on:click={() => character.executeAction('dodge')}
-        class="button">Dodge ({encumberedDodge})</button>
+      <button on:click={() => sheet.executeAction('dodge')} class="button">Dodge
+        ({encumberedDodge})</button>
       <button
         class="button"
-        on:click={() => character.executeAction('dodge+')}>Dodge+ ({encumberedDodge + 3})</button>
+        on:click={() => sheet.executeAction('dodge+')}>Dodge+ ({encumberedDodge + 3})</button>
     </div>
     <div class="my-4">
       <List {...meleeWeaponProps}>

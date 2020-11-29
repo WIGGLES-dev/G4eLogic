@@ -57,7 +57,6 @@
 
     export let content;
 
-    let iconHolder;
     let view;
     let prosemirror;
     let editorState = state;
@@ -83,10 +82,6 @@
     }
 
     onMount(() => {
-        let icons = document.querySelector("#ProseMirror-icon-collection");
-        if (icons) {
-            iconHolder.appendChild(icons.cloneNode(true));
-        }
         try {
             editorState = fromJSON(content, mySchema, plugins);
         } catch (err) {
@@ -112,7 +107,6 @@
         }
     }} />
 <section on:mousedown={() => prosemirror.focus()}>
-    <div bind:this={iconHolder} />
     <ProsemirrorEditor
         debounceChangeEventsInterval={2000}
         on:keydown={(e) => console.log(e)}

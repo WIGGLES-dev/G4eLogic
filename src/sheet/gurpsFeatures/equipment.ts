@@ -5,6 +5,7 @@ import {
     FeatureType,
     Feature,
     Sheet,
+    entityConfig
 } from "@internal";
 import { Observable, Observer, Subscriber } from "rxjs";
 import { map } from "rxjs/operators";
@@ -29,12 +30,12 @@ export const equipmentData = (): EquipmentData => ({
     quantity: 1
 })
 
+@entityConfig(FeatureType.Equipment)
 export class Equipment extends Feature<FeatureType.Equipment, EquipmentData> {
+    static type: FeatureType.Equipment = FeatureType.Equipment
     type: FeatureType.Equipment = FeatureType.Equipment
 
-    constructor(id: string) {
-        super(id);
-    }
+    constructor(id: string) { super(id); }
     get equipped$(): Observable<boolean> { return this.instance$.pipe(map(data => !data.keys.disabled)) }
     get value() { return (this.keys.value || null) * (this.keys.quantity || 1) }
     get extendedValue(): number {
@@ -73,7 +74,8 @@ export class Equipment extends Feature<FeatureType.Equipment, EquipmentData> {
         })
     }
 
-    defaultData() { return equipmentData() }
+    static defaultData = equipmentData()
+    get defaultData() { return Feature.clone(Equipment.defaultData) }
 
     get contextMenuOptions() {
         return [

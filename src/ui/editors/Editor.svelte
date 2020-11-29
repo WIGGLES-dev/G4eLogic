@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import { setContext } from "svelte";
 
     import EquipmentEditor from "@ui/editors/EquipmentEditor.svelte";
@@ -11,11 +11,12 @@
     import TraitEditor from "@ui/editors/TraitEditor.svelte";
     import TraitModifierEditor from "@ui/editors/TraitModifierEditor.svelte";
 
-    import Modal from "@ui/Modal.svelte";
+    import { FeatureType, Entity } from "@internal";
 
-    import { FeatureType } from "@internal";
+    export let id: string;
+    export let type: string;
 
-    export let entity;
+    $: entity = new (Entity.getCollection(type)?.entity)(id);
 
     function editorType(type) {
         switch (type) {
@@ -40,4 +41,4 @@
 <style>
 </style>
 
-<svelte:component this={editorType(entity.type)} {entity} />
+<svelte:component this={editorType(type)} {entity} />

@@ -1,6 +1,6 @@
 import Schema from "validate"
 import { produce } from 'immer';
-import { EntityState, EntityStore, QueryEntity, transaction, createEntityStore, EntityStateHistoryPlugin } from "@datorama/akita";
+import { EntityState, EntityStore, QueryEntity, transaction, createEntityStore, EntityStateHistoryPlugin, EntityDirtyCheckPlugin } from "@datorama/akita";
 import { Observable } from 'rxjs';
 import { map, takeWhile } from 'rxjs/operators';
 import {
@@ -8,7 +8,6 @@ import {
     Equipment,
     FeatureType,
     Sheet,
-    sheetQuery,
     Skill,
     Spell,
     Technique,
@@ -17,12 +16,9 @@ import {
     MeleeWeapon,
     RangedWeapon,
     FeatureBonuses,
-    EmbeddableEntity,
-    Repo,
-    Lookup,
-    SkillData,
-    TechniqueData,
-    TraitData,
+    Entity,
+    getEntityCollection,
+    entitiesFromIds,
 } from '@internal';
 import { SpellData } from './gurpsFeatures/skill';
 import { EquipmentData } from './gurpsFeatures/equipment';
@@ -87,75 +83,7 @@ export const featureData = () => ({
     ui: {}
 });
 
-export class FeatureQuery<T extends FeatureType, K extends FeatureData, I extends Feature> extends QueryEntity<FeatureState<T, K>> {
-    type: FeatureType
-    constructor(type: FeatureType, store: EntityStore<FeatureState<T, K>>) {
-        super(store);
-        this.type = type;
-    }
-
-    get class() { return featureClassFromType(this.type) as unknown as new (id: string) => I }
-    get instances$() { return this.selectAll().pipe(map(features => features.map(feature => new this.class(feature.id)))) }
-
-    static get allSkills$(): Observable<Skill[]> { return Feature.getCollection<FeatureType.Skill, SkillData, Skill>(FeatureType.Skill).embeddedQuery.instances$ }
-    static get allTechniques$() { return Feature.getCollection<FeatureType.Technique, TechniqueData, Technique>(FeatureType.Technique).embeddedQuery.instances$ }
-    static get allSpells$() { return Feature.getCollection<FeatureType.Spell, SpellData, Spell>(FeatureType.Spell).embeddedQuery.instances$ }
-    static get allTraits$() { return Feature.getCollection<FeatureType.Trait, TraitData, Trait>(FeatureType.Trait).embeddedQuery.instances$ }
-    static get allEquipment$() { return Feature.getCollection<FeatureType.Equipment, EquipmentData, Equipment>(FeatureType.Equipment).embeddedQuery.instances$ }
-}
-
-interface FeatureCollection<T extends FeatureType, K extends FeatureData, I extends Feature> {
-    store: Repo<T, K>,
-    embeddedStore: Repo<T, K>
-    query: FeatureQuery<T, K, I>
-    state: EntityStateHistoryPlugin<FeatureState<T, K>>
-    embeddedQuery: FeatureQuery<T, K, I>
-    embeddedState: EntityStateHistoryPlugin<FeatureState<T, K>>
-}
-
-function createFeatureCollection<T extends FeatureType, K extends FeatureData<T>, I extends Feature>(type: T, keys: K): FeatureCollection<T, K, I> {
-    const store = createEntityStore<FeatureState<T, K>>(keys, { name: `${type}`, producerFn: produce });
-    const embeddedStore = createEntityStore<FeatureState<T, K>>(keys, { name: `embedded ${type}`, producerFn: produce });
-    const query = new FeatureQuery<T, K, I>(type, store);
-    const embeddedQuery = new FeatureQuery<T, K, I>(type, embeddedStore);
-    return {
-        store,
-        embeddedStore,
-        query,
-        state: new EntityStateHistoryPlugin(query),
-        embeddedQuery,
-        embeddedState: new EntityStateHistoryPlugin(embeddedQuery)
-    }
-}
-function createFeatureStores() {
-    return {
-        [FeatureType.Skill]: createFeatureCollection(FeatureType.Skill, {} as SkillData),
-        [FeatureType.Technique]: createFeatureCollection(FeatureType.Technique, {} as TechniqueData),
-        [FeatureType.Spell]: createFeatureCollection(FeatureType.Spell, {} as SpellData),
-        [FeatureType.Trait]: createFeatureCollection(FeatureType.Trait, {} as TraitData),
-        [FeatureType.Equipment]: createFeatureCollection(FeatureType.Equipment, {} as EquipmentData)
-    }
-}
-
-export abstract class Feature<T extends FeatureType = FeatureType, K extends FeatureData<T> = FeatureData<T>> extends EmbeddableEntity<T, K, Sheet, Repo<T, K>, Lookup<T, K>> {
-    static collections = createFeatureStores()
-    static getCollection<T extends FeatureType, K extends FeatureData, I extends Feature>(type: T) {
-        return this.collections[type as string] as FeatureCollection<T, K, I>
-    }
-
-    get collection() { return Feature.getCollection<T, K, this>(this.type) }
-    get store() { return this.collection?.store }
-    get query() { return this.collection?.query }
-    get stateHistory() { return this.collection?.state }
-    get state() { return this._forwardStateToEntity(this.stateHistory) }
-
-    get embeddedStore() { return this.collection?.embeddedStore }
-    get embeddedQuery() { return this.collection?.embeddedQuery }
-    get embeddedStateHistory() { return this.collection?.embeddedState }
-    get embeddedState() { return this._forwardStateToEntity(this.embeddedState) }
-
-    readonly sheetQuery = sheetQuery
-
+export abstract class Feature<T extends FeatureType = FeatureType, K extends FeatureData<T> = FeatureData<T>> extends Entity<T, K> {
     get schema() {
         const schema = super.schema;
         schema.path("keys", featureSchema())
@@ -166,32 +94,24 @@ export abstract class Feature<T extends FeatureType = FeatureType, K extends Fea
         super(id);
     }
 
-    get sheet() { return this.parent }
-    get parent() { return new Sheet(this.data?.rootEntityId) }
+    get sheet() { const parent = this.parent; if (parent instanceof Sheet) return parent }
 
-    get config$() { return this.embedded ? this.sheet.config$ : Valor.data$.pipe(map(valor => valor.globalConfig)) }
+    get config$() { return this.embedded ? this.sheet.config$ : Valor.state$.pipe(map(valor => valor.globalConfig)) }
 
     get bonuses() { return this.keys.bonuses }
     get bonuses$(): Observable<FeatureBonuses[]> { return this.instance$.pipe(map(instance => instance.bonuses)) }
-    get owner() {
-        const owner = Feature.getCollection<FeatureType | T, FeatureData | K, this>(this.keys.ownedByType || this.type)?.embeddedQuery?.getEntity(this.keys?.ownedById)
-        if (!owner) return null
-        return featuresFromData([owner])[0]
-    }
-    get owner$() { return this.instance$.pipe(takeWhile(instance => instance.owner.exists), map(instance => { return instance.owner })) }
-    recursiveOwners(owners = []) {
-        if (this.owner) {
-            owners.push(this.owner);
-            this.owner.recursiveOwners(owners);
-        }
-        return owners
-    }
 
-    get sameChildren(): this[] { return this.children.filter(child => child instanceof this.constructor) as this[] }
-    get children() {
-        return this.keys.children.map(child => featuresFromIds(child.type || this.type, [child.id])[0])
+    get ownerCollection() { const { ownedByType } = this.data.keys; return getEntityCollection<FeatureType | T, FeatureData | K, Feature>(ownedByType || this.type) }
+    get owner() { const { ownedById } = this.data.keys; return this.ownerCollection?.instance(ownedById) }
+    get owner$() { const { ownedById } = this.data.keys; return this.ownerCollection?.instance$(ownedById) }
+    recursiveOwners(owners = []) {
+        if (!this.owner) return owners
+        owners.push(this.owner);
+        this.owner.recursiveOwners(owners);
     }
-    get children$(): Observable<Feature[]> { return this.instance$.pipe(map(instance => instance.children)) }
+    get sameChildren(): this[] { return this.children.filter(child => child instanceof this.constructor) as this[] }
+    get children() { return this.keys.children.map((child) => entitiesFromIds(child.type, [child.id])[0]).filter((val): val is Feature => val && val.exists && val instanceof Feature) }
+    get children$(): Observable<Feature[]> { return null }
     recursiveChildren(children = []) {
         this.children.forEach(child => {
             children.push(child);
@@ -234,7 +154,7 @@ export abstract class Feature<T extends FeatureType = FeatureType, K extends Fea
 
     @transaction()
     slot(type: FeatureType, ...ids: string[]) {
-        const features = featuresFromIds(type, ids);
+        const features = entitiesFromIds(type, ids).filter((entity): entity is Feature => entity instanceof Feature);
         features.forEach(feature => {
             if (
                 feature.id !== this.id &&
@@ -317,7 +237,7 @@ export abstract class Feature<T extends FeatureType = FeatureType, K extends Fea
             data.keys.children = data.keys.children.filter(child => child.id !== this.id);
             return data
         })
-        super.delete();
+        return super.delete();
     }
 
     get contextMenuOptions() {
@@ -347,29 +267,4 @@ export abstract class Feature<T extends FeatureType = FeatureType, K extends Fea
             ...super.contextMenuOptions
         ]
     }
-}
-
-export function featureClassFromType<T extends FeatureType>(featureType: T) {
-    switch (featureType) {
-        case FeatureType.Skill: return Skill
-        case FeatureType.Technique: return Technique
-        case FeatureType.Spell: return Spell
-        case FeatureType.Trait: return Trait
-        case FeatureType.Equipment: return Equipment
-    }
-}
-
-export function featuresFromData<D extends EntityData<FeatureType, FeatureData>>(data: D[]): Feature[] {
-    return data.map(feature => {
-        const cls = featureClassFromType(feature.type);
-        if (cls) return new cls(feature.id);
-    }).filter(cls => cls && cls.exists)
-}
-
-export function featuresFromIds<T extends FeatureType>(type: T, ids: string[]): Feature[] {
-    const cls = featureClassFromType(type);
-    if (!cls) return []
-    return ids.map(id => {
-        return new cls(id)
-    }).filter(cls => cls.exists)
 }

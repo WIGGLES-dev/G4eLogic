@@ -1,3 +1,5 @@
+import ContextMenu from "@ui/context-menu/ContextMenu.svelte";
+
 export function upload() {
     return new Promise<FileList>((resolve, reject) => {
         Object.assign(document.createElement("input"), {
@@ -82,3 +84,17 @@ export function getRoot(element: HTMLElement) {
         return document.body
     }
 }
+
+export function createContextMenu(e: MouseEvent, options = []) {
+    if (!(e.target instanceof HTMLElement) || !(options.length > 0)) return
+    const menu = new ContextMenu({
+        target: getRoot(e.target),
+        props: {
+            e,
+            options
+        }
+    });
+    menu.$on("close", () => menu.$destroy());
+    return menu
+}
+export function createTooltip() { }

@@ -1,6 +1,5 @@
-<script lang="ts">
-  import { setContext, createEventDispatcher } from "svelte";
-  const dispatch = createEventDispatcher();
+<script>
+  import { setContext } from "svelte";
   import { Tabs, Tab, TabPanel, TabList } from "@ui/tabs/tabs";
 
   import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
@@ -14,18 +13,14 @@
   import Grimoire from "@ui/layouts/dedicated/Grimoire.svelte";
   import Combat from "@ui/layouts/dedicated/Combat.svelte";
 
-  import { Sheet } from "@internal";
+  import { Sheet, Entity } from "@internal";
 
-  export let id;
-  export let editor = null;
+  export let id
+  const activeId =  Entity.getCollection("sheet").query.getActiveId();
 
-  const character = new Sheet(id);
-  console.log(character);
+  const sheet = new Sheet(id || activeId);
 
-  setContext("editor", {
-    character,
-    editor,
-  });
+  setContext("sheet", sheet);
 </script>
 
 <style>
@@ -37,7 +32,7 @@
 <svelte:head />
 
 <section class="valor-sheet-editor">
-  {#if character.exists}
+  {#if sheet.exists}
     <Tabs>
       <TabList>
         <Tab>General</Tab>
@@ -57,7 +52,7 @@
       <TabPanel component={Traits} />
       <TabPanel component={Bio} />
       <TabPanel>
-        <ProseMirror bind:content={$character.notes} />
+        <ProseMirror bind:content={$sheet.notes} />
       </TabPanel>
       <TabPanel component={Grimoire} />
       <TabPanel component={Settings} />
