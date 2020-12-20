@@ -3,7 +3,7 @@
 </script>
 
 <script>
-  export let tabIndex = $selectedTab || 0;
+  export let tabIndex = 0;
   import { setContext, onDestroy, onMount } from "svelte";
   import { writable } from "svelte/store";
 
@@ -51,6 +51,7 @@
       const i = tabs.indexOf(tab);
       selectedTab.set(tab);
       selectedPanel.set(panels[i]);
+      tabIndex = i;
       dispatch("tabchange", i);
     },
 

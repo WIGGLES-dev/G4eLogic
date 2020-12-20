@@ -7,9 +7,9 @@
 
   import Silhouette from "@ui/widgets/Silhouette.svelte";
   import SizeRange from "@ui/widgets/SizeRange.svelte";
-  import { Sheet } from "@internal";
+  import { Character } from "@internal";
 
-  const sheet = getContext<Sheet>("sheet");
+  const sheet = getContext<Character>("sheet");
   const {
     encumbranceLevel$,
     attributes$,
@@ -17,11 +17,9 @@
     rangedWeapons$,
   } = sheet;
 
-  $: dodge = $attributes$["dodge"]
-    ? $attributes$["dodge"].calculateLevel() || 5
-    : 5;
+  const dodge$ = sheet.selectAttribute$("dodge");
+  $: dodge = $dodge$?.calculateLevel() ?? 5;
   $: encumberedDodge = dodge + ($encumbranceLevel$ || 0);
-
   $: rangedWeaponProps = {
     addItem: false,
     component: RangedWeaponEntity,
@@ -91,9 +89,9 @@
         <th scope="col">ST</th>
       </tr>
     </List>
-    <SizeRange />
   </div>
   <div class="flex-1">
-    <Silhouette maxHeight="600px" minWidth="225px" viewBox="200 0 400 800" />
+    <Silhouette maxHeight="800px" minWidth="450px" viewBox="200 0 400 800" />
   </div>
+  <SizeRange />
 </div>

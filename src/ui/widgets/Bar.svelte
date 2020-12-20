@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   export let max = 10;
   export let min = 0;
   export let current = 0;

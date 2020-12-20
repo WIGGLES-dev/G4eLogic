@@ -1,11 +1,23 @@
 <script>
   import { getContext } from "svelte";
-  import { string } from "@ui/utils/formatting";
+  import { string } from "@internal";
+
+  import AttributeOptions from "@ui/options/AttributeOptions";
+  import DifficultyOptions from "@ui/options/DifficultyOptions.svelte";
   import Toggle from "./Toggle";
+  import { FeatureType } from "@internal";
 
   export let depth;
   export let entity = {};
-  $: ({ level$, relativeLevel$, exists, id, disabled, hidden } = entity);
+  $: ({
+    metadata$,
+    level$,
+    relativeLevel$,
+    exists,
+    id,
+    disabled,
+    hidden,
+  } = entity);
 
   export let display = "table";
 </script>
@@ -17,15 +29,22 @@
   {#if display === 'table'}
     <td><input class="w-12" type="text" bind:value={$entity.reference} /></td>
     <td>
-      {#if !entity.isContainer()}
-        <input
-          class="text-center w-10"
-          type="number"
-          bind:value={$entity.points} />
-      {/if}
+      <input
+        class="text-center w-10"
+        type="number"
+        bind:value={$entity.points} />
+    </td>
+    <td>
+      <DifficultyOptions bind:difficulty={$entity.difficulty} />
+    </td>
+    <td>
+      <AttributeOptions
+        {entity}
+        signaturesOnly={true}
+        bind:attribute={$entity.signature} />
     </td>
     <td class="text-center">
-      {$entity.signature || '10'}{$relativeLevel$ > -1 ? '+' : ''}{Math.floor($relativeLevel$)}
+      {$relativeLevel$ > -1 ? '+' : ''}{Math.floor($relativeLevel$)}
     </td>
     <td>
       <input class="w-10 text-center" type="number" bind:value={$entity.mod} />

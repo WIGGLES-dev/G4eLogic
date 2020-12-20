@@ -1,14 +1,14 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 
-  import ListItem from "./ListItem";
+  import ListItem from "./ListItem.svelte";
 
   export let display = "table";
   export let addItem = false;
   export let draggable = false;
   export let list = [];
-  export let getRoot = (list) => list;
+  export let getRoot = (list) => (list instanceof Array ? list : []);
   export let accessChildren = (entity) => [];
   export let component = null;
 

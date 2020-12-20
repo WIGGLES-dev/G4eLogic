@@ -1,8 +1,8 @@
-<script>
+<script lang="ts">
     import { getContext } from "svelte";
-    import { tooltip } from "@internal";
-    const { character } = getContext("editor");
-    const { basicLift$ } = character;
+    import { tooltip, Character } from "@internal";
+    const character = getContext<Sheet>("sheet");
+    const basicLift$ = character.selectBasicLift();
     $: lift = $basicLift$;
 </script>
 

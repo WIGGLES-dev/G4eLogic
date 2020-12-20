@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte";
-  import { string } from "@ui/utils/formatting";
+  import { string } from "@internal";
   import Toggle from "./Toggle";
   export let depth;
   export let entity = {};

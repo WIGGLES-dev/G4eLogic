@@ -3,8 +3,9 @@
   import Form from "@ui/form/Form";
   import CategoryList from "@ui/form/CategoryList";
 
-  import ProseMirror from "@ui/prosemirror/ProseMirror";
-  import AttributeOptions from "@ui/options/AttributeOptions";
+  import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
+  import AttributeOptions from "@ui/options/AttributeOptions.svelte";
+  import DifficultyOptions from "@ui/options/DifficultyOptions.svelte";
 
   import Features from "./panels/Features";
   import MeleeWeapons from "./panels/MeleeWeapons.svelte";
@@ -52,14 +53,7 @@
           </label>
           <label for="">
             Difficulty
-            <select bind:value={$entity.difficulty}>
-              <option value={undefined} />
-              <option value="E">E</option>
-              <option value="A">A</option>
-              <option value="H">H</option>
-              <option value="VH">VH</option>
-              <option value="W">W</option>
-            </select>
+            <DifficultyOptions bind:difficulty={$entity.difficulty} />
           </label>
           <label for="">Points
             <input

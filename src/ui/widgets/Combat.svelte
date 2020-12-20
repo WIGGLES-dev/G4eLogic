@@ -1,13 +1,13 @@
-<script>
+<script lang="ts">
   import { getContext } from "svelte";
-  import { tooltip } from "@internal";
+  import { tooltip, Character } from "@internal";
   import {
     sizeModifierTooltip,
     swingDamageTooltip,
     thrustDamageTooltip,
   } from "@ui/tooltips/index";
 
-  const { character } = getContext("editor");
+  const character = getContext<Character>("sheet");
   const { swingDamage$, thrustDamage$ } = character;
 </script>
 
@@ -30,7 +30,7 @@
     </label>
     <div class="flex w-1/2">
       <input
-        bind:value={$character.sizeModifier}
+        bind:value={$character.profile.sizeModifier}
         placeholder="0"
         class="w-12 outline-none border-b border-solid border-red-700 rounded-r-md text-center"
         type="number" />

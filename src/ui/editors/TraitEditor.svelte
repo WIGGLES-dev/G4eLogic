@@ -87,7 +87,7 @@
             <input type="number" value={$adjustedValue$} disabled />
           </label>
 
-          <CategoryList {entity} />
+          <CategoryList bind:categories={$entity.categories} />
 
           <label for="">Reference
             <input type="text" bind:value={$entity.reference} /></label>

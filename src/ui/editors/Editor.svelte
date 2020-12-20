@@ -11,34 +11,52 @@
     import TraitEditor from "@ui/editors/TraitEditor.svelte";
     import TraitModifierEditor from "@ui/editors/TraitModifierEditor.svelte";
 
-    import { FeatureType, Entity } from "@internal";
+    import {
+        Resource,
+        Collection,
+        Sheet,
+        Valor,
+        GurpsResources,
+    } from "@internal";
 
     export let id: string;
     export let type: string;
 
-    $: entity = new (Entity.getCollection(type)?.entity)(id);
+    $: entity = Collection.types.get(type).instance(id);
+    $: sheet = entity.getNearest("sheet", Sheet);
 
     function editorType(type) {
         switch (type) {
-            case FeatureType.Equipment:
+            case GurpsResources.Equipment:
                 return EquipmentEditor;
-            case FeatureType.Skill:
+            case GurpsResources.Skill:
                 return SkillEditor;
-            case FeatureType.Spell:
+            case GurpsResources.Spell:
                 return SpellEditor;
-            case FeatureType.Technique:
+            case GurpsResources.Technique:
                 return TechniqueEditor;
-            case FeatureType.Trait:
+            case GurpsResources.Trait:
                 return TraitEditor;
-            case FeatureType.MeleeWeapon:
+            case GurpsResources.MeleeWeapon:
                 return MeleeWeaponEditor;
-            case FeatureType.RangedWeapon:
+            case GurpsResources.RangedWeapon:
                 return RangedWeaponEditor;
         }
     }
 </script>
 
 <style>
+    div {
+        min-height: 20rem;
+    }
 </style>
 
-<svelte:component this={editorType(type)} {entity} />
+<div class="m-2">
+    {#if sheet}
+        <button
+            on:click={(e) => sheet.edit()}
+            class="w-full bg-gray-700 text-white rounded">Back To Sheet</button>
+    {/if}
+
+    <svelte:component this={editorType(type)} {entity} />
+</div>

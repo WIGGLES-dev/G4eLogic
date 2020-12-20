@@ -9,9 +9,7 @@
   const { spells$ } = sheet;
 
   async function addSpell() {
-    Valor.addEntities(FeatureType.Spell, [
-      sheet.embed(new Spell(null).wrapData()),
-    ]);
+    sheet.embed(new Spell(null).wrapData());
   }
   function getRoot(entities) {
     return entities

@@ -6,7 +6,7 @@ export function hitLocationTemplate(location: HitLocation) {
         <strong>${capitalize(location.location)} (${location.keys.hitPenalty || 0})</strong>,` +
         (location.keys.hitRange?.length > 0 ? ` hits on ${location.keys.hitRange.join(", ")} on 3d6` : "") +
         `<br/>
-        <strong> DR ${location.armorBonus || 0}</strong>`
+        <strong> DR ${location.context.armorBonus || 0}</strong>`
         // + ` - ${"PLACEHOLDER"} from natural DR.` 
         // + `</br>`
         // + `<strong>${location.damageTaken || 0}</strong> out of ${Math.floor(location.crippleThreshold())} to cripple<br/>`

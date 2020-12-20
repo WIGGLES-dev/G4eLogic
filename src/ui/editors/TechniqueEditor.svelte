@@ -1,17 +1,17 @@
-<script>
-    import CategoryList from "@ui/form/CategoryList";
-    import Form from "@ui/form/Form";
+<script lang="ts">
+    import CategoryList from "@ui/form/CategoryList.svelte";
+    import Form from "@ui/form/Form.svelte";
     import { Tabs, Tab, TabPanel, TabList } from "@ui/tabs/tabs";
-
-    import AttributeOptions from "@ui/options/AttributeOptions";
-
-    import ProseMirror from "@ui/prosemirror/ProseMirror";
-    import Features from "./panels/Features";
+    import AttributeOptions from "@ui/options/AttributeOptions.svelte";
+    import DifficultyOptions from "@ui/options/DifficultyOptions.svelte";
+    import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
+    import Features from "./panels/Features.svelte";
     import MeleeWeapons from "./panels/MeleeWeapons.svelte";
     import RangedWeapons from "./panels/RangedWeapons.svelte";
-    import SkillDefaults from "./panels/SkillDefaults";
+    import SkillDefaults from "./panels/SkillDefaults.svelte";
+    import { Technique } from "@internal";
 
-    export let entity = null;
+    export let entity = {} as Technique;
     const { level$ } = entity;
 </script>
 
@@ -45,7 +45,7 @@
                         <AttributeOptions
                             {entity}
                             signaturesOnly={true}
-                            bind:attribute={$entity.signature}>
+                            bind:attribute={$entity.default.type}>
                             <option value="Skill">Skill Named</option>
                         </AttributeOptions>
                     </label>
@@ -80,10 +80,9 @@
                 <div class="flex">
                     <label for="">
                         Difficulty
-                        <select bind:value={$entity.difficulty}>
-                            <option value="A">A</option>
-                            <option value="H">H</option>
-                        </select>
+                        <DifficultyOptions
+                            technique={true}
+                            bind:difficulty={$entity.difficulty} />
                     </label>
                     <label for="">Points
                         <input type="number" bind:value={$entity.points} />
@@ -99,7 +98,8 @@
                 </div>
 
                 <div class="flex">
-                    <CategoryList {entity} />
+                    <CategoryList bind:categories={$entity.categories} />
+
                     <label for="">Reference
                         <input
                             type="number"

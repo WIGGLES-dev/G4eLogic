@@ -1,18 +1,18 @@
 <script lang="ts">
   import { getContext } from "svelte";
-  import { Sheet, tooltip } from "@internal";
+  import { Character, tooltip } from "@internal";
 
-  const { character }: { character: Sheet } = getContext("editor");
-  const {
-    carriedWeight$,
-    encumbranceLevel$,
-    attributes$,
-    basicLift$,
-  } = character;
+  const character = getContext<Character>("sheet");
 
-  $: move = $attributes$?.move?.displayLevel ?? 5;
+  const basicLift$ = character.selectBasicLift();
+  const move$ = character.selectAttribute("move")
+  const dodge$ = character.selectAttribute("dodge");
+  const carriedWeight$ = character.selectCarriedWeight();
+  const encumbranceLevel$ = character.selectEncumbranceLevel();
+
+  $: move = $move$.displayLevel ?? 5;
   $: lift = $basicLift$;
-  $: dodge = $attributes$?.dodge.displayLevel ?? 8;
+  $: dodge = $dodge$.displayLevel ?? 8;
 </script>
 
 <style>

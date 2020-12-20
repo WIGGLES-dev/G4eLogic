@@ -1,6 +1,4 @@
 <script>
-  import { getContext } from "svelte";
-  import { string, formatRSL } from "@ui/utils/formatting";
   import Toggle from "./Toggle";
 
   export let depth;
@@ -32,7 +30,7 @@
           style="padding-left:{depth * 2}rem;">&thinsp;</span>
         <Toggle
           visible={$entity.ui.canContainChildren}
-          bind:toggled={$entity.ui.hidden} />
+          bind:off={$entity.ui.hidden} />
         <input class="flex-1" type="text" bind:value={$entity.name} />
       </div>
     </td>

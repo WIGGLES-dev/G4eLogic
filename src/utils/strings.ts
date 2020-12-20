@@ -41,3 +41,15 @@ export function capitalize(string) {
 export function strEncodeUTF16(str: string) {
     return [...str].reduce((prev, cur) => prev + cur.charCodeAt(0), 0);
 }
+
+export function string(string, { beforeStart = "", afterEnd = "", fallback = "", toFixed = 3 } = {}) {
+    let output = string;
+    try {
+        if (string === null) return fallback
+        if (string === undefined) return fallback
+        if (typeof string === "number" && +string > Number.NEGATIVE_INFINITY && toFixed > -1) output = +string?.toFixed(toFixed)
+    } catch (err) {
+        output = fallback;
+    }
+    return beforeStart + output + afterEnd
+}

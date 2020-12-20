@@ -1,5 +1,3 @@
-import ContextMenu from "@ui/context-menu/ContextMenu.svelte";
-
 export function upload() {
     return new Promise<FileList>((resolve, reject) => {
         Object.assign(document.createElement("input"), {
@@ -16,6 +14,33 @@ export function download(href: string, filename: string) {
         href,
         filename
     }).click();
+}
+
+function createFrame(target: HTMLElement, props) {
+    const frame = target.appendChild(Object.assign(document.createElement("iframe"), {
+        width: props.height || "100%",
+        height: props.width || "100%",
+        src: props.src || "about:blank",
+        name: props.name,
+    }));
+    const meta = document.createElement("meta");
+    meta.setAttribute("charset", "utf-8")
+    const styles = props.styles?.map(href => {
+        return Object.assign(document.createElement("link"), {
+            rel: "stylesheet",
+            href
+        })
+    });
+    const scripts = props.scripts?.map(src => {
+        return Object.assign(document.createElement("script"), {
+            src
+        })
+    });
+    frame.contentDocument.head.append(meta, ...styles, ...scripts);
+    frame.onmouseenter = () => frame.focus();
+    frame.onmouseleave = () => window.focus();
+    bubbleFrameEvents(frame);
+    return frame
 }
 
 export function bubbleFrameEvents(frame: HTMLIFrameElement) {
@@ -85,16 +110,17 @@ export function getRoot(element: HTMLElement) {
     }
 }
 
-export function createContextMenu(e: MouseEvent, options = []) {
-    if (!(e.target instanceof HTMLElement) || !(options.length > 0)) return
-    const menu = new ContextMenu({
-        target: getRoot(e.target),
-        props: {
-            e,
-            options
+export function handleMessage<P>(message: MessageEvent, proxy: P) {
+    try {
+        const { data, source, origin } = message;
+        if (source instanceof BroadcastChannel) {
+
+        } else if (source instanceof Window) {
+
         }
-    });
-    menu.$on("close", () => menu.$destroy());
-    return menu
+        const { call, args } = data;
+        if (typeof proxy[call] === "function") proxy[call].call(proxy, ...args)
+    } catch (err) {
+        console.log("An error occured while receiving a message", err);
+    }
 }
-export function createTooltip() { }

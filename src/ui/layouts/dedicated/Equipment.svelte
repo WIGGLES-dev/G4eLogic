@@ -15,9 +15,7 @@
   $: displayedLocation = "carried";
 
   function createEquipment() {
-    Valor.addEntities(FeatureType.Equipment, [
-      sheet.embed(new Equipment(null).wrapData()),
-    ]);
+    sheet.embed(new Equipment(null).wrapData());
   }
   function getRoot(entities) {
     return entities

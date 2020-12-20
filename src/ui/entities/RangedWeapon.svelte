@@ -1,13 +1,9 @@
-<script>
-  import attackIco from "@ui/assets/sword-svgrepo-com.svg";
-
-  import { getContext, createEventDispatcher } from "svelte";
-  import { string } from "@ui/utils/formatting";
-  export let entity = {};
-  $: ({ bestAttackLevel$, owner$, exists, id, disabled, hidden } = entity);
+<script lang="ts">
+  import { string, Valor, RangedWeapon } from "@internal";
+  const { attackIco } = Valor.assets;
+  export let entity = {} as RangedWeapon;
+  $: ({ bestAttackLevel$, parent$, exists, id, disabled, hidden } = entity);
   export let display = "table";
-
-  const { character } = getContext("editor") || {};
 </script>
 
 <style>
@@ -17,8 +13,8 @@
 </style>
 
 {#if display === 'table'}
-  <td>{string(entity.owner.name)}</td>
-  <td>{string(entity.usage)}</td>
+  <td>{string($parent$.keys.name)}</td>
+  <td>{string($entity.usage)}</td>
   <td on:click={() => entity.executeAction('roll', { for: 'attack' })}>
     <div>
       <img src={attackIco} alt="" />
@@ -39,10 +35,10 @@
   <td>{string($entity.shots)}</td>
   <td>{string($entity.bulk)}</td>
   <td>{string($entity.recoil)}</td>
-  <td>{string($entity.strength)}</td>
+  <td>{string($entity.strengthRequirement)}</td>
 {:else if display === 'list'}
   <li class="text-sm italic hover:underline">
-    {string($owner$.keys.name, {
+    {string($parent$.keys.name, {
       afterEnd:
         ' - ' +
         string($entity.usage, {

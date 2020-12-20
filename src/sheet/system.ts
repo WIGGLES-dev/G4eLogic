@@ -1,0 +1,5 @@
+const Registry = {};
+
+class System {
+
+}

@@ -4,6 +4,7 @@
     import { Tabs, Tab, TabPanel, TabList } from "@ui/tabs/tabs";
 
     import AttributeOptions from "@ui/options/AttributeOptions";
+    import DifficultyOptions from "@ui/options/DifficultyOptions.svelte";
 
     import ProseMirror from "@ui/prosemirror/ProseMirror";
 
@@ -50,13 +51,8 @@
                     </label>
                     <label for="">
                         Difficulty
-                        <select bind:value={$entity.difficulty}>
-                            <option value="E">E</option>
-                            <option value="A">A</option>
-                            <option value="H">H</option>
-                            <option value="VH">VH</option>
-                            <option value="W">W</option>
-                        </select>
+                        <DifficultyOptions
+                            bind:difficulty={$entity.difficulty} />
                     </label>
                     <label for="">Points
                         <input type="number" bind:value={$entity.points} />
@@ -96,7 +92,8 @@
                         bind:value={$entity.durations} /></label>
 
                 <div class="flex">
-                    <CategoryList {entity} />
+                    <CategoryList bind:categories={$entity.categories} />
+
                     <label for="">Reference
                         <input
                             type="text"

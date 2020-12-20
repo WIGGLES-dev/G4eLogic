@@ -1,9 +1,8 @@
 <script>
   import { getContext } from "svelte";
-  import { string } from "@ui/utils/formatting";
 
   import Toggle from "./Toggle";
-  import { ControlRating } from "@internal";
+  import { ControlRating, string } from "@internal";
 
   export let depth;
   export let entity = {};

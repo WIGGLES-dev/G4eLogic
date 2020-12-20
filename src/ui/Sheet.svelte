@@ -13,13 +13,14 @@
   import Grimoire from "@ui/layouts/dedicated/Grimoire.svelte";
   import Combat from "@ui/layouts/dedicated/Combat.svelte";
 
-  import { Sheet, Entity } from "@internal";
+  import { Registry } from "@internal";
 
-  export let id
-  const activeId =  Entity.getCollection("sheet").query.getActiveId();
+  export let id;
+  export let type;
 
-  const sheet = new Sheet(id || activeId);
-
+  const cast = Registry.classes.get(type);
+  const sheet = new cast({ id, type });
+  console.log(sheet);
   setContext("sheet", sheet);
 </script>
 
@@ -33,7 +34,7 @@
 
 <section class="valor-sheet-editor">
   {#if sheet.exists}
-    <Tabs>
+    <Tabs bind:tabIndex={$sheet.activeTab}>
       <TabList>
         <Tab>General</Tab>
         <Tab>Combat</Tab>

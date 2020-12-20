@@ -1,14 +1,14 @@
-<script>
-  import List from "@ui/lists/List";
-  import MeleeWeaponEntity from "@ui/entities/MeleeWeapon";
+<script lang="ts">
+  import List from "@ui/lists/List.svelte";
+  import MeleeWeaponEntity from "@ui/entities/MeleeWeapon.svelte";
 
-  import { MeleeWeapon } from "@internal";
+  import { MeleeWeapon, Resource } from "@internal";
 
-  export let entity = {};
-  $: ({ meleeWeapons$ } = entity);
+  export let entity: Resource;
+  const meleeWeapons$ = entity.embedsOfType$(MeleeWeapon.type, MeleeWeapon);
 
   function addWeapon() {
-    entity.splice(new MeleeWeapon(null, null));
+    entity.embed();
   }
 
   $: props = {

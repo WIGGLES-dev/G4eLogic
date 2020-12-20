@@ -2,7 +2,7 @@
   import { getContext } from "svelte";
   import { Attribute, Sheet, tooltip, SheetData } from "@internal";
 
-  const { character }: { character: Sheet } = getContext("editor");
+  const character = getContext<Sheet>("sheet");
   const { orderedAttributes$ } = character;
 
   function isPrimary(attr) {

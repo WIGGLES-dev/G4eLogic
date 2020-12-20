@@ -1,23 +1,11 @@
-<script>
-  import attackIco from "@ui/assets/sword-svgrepo-com.svg";
-  import parryIco from "@ui/assets/tai-chi-chuan-person-silhouette-with-a-fight-sword-svgrepo-com.svg";
-  import blockIco from "@ui/assets/shield-svgrepo-com.svg";
+<script lang="ts">
+  import { getContext } from "svelte";
+  import { string, Valor, MeleeWeapon } from "@internal";
 
-  import { getContext, createEventDispatcher } from "svelte";
-  import { string } from "@ui/utils/formatting";
-  export let i;
-  export let depth;
-  export let entity = {};
-  $: ({
-    bestAttackLevel$,
-    parryLevel$,
-    blockLevel$,
-    owner$,
-    exists,
-    id,
-    disabled,
-    hidden,
-  } = entity);
+  const { attackIco, parryIco, blockIco } = Valor.assets;
+
+  export let entity = {} as MeleeWeapon;
+  $: ({ bestAttackLevel$, parryLevel$, blockLevel$, parent$, exists } = entity);
   export let display = "table";
   const { character } = getContext("editor") || {};
 </script>
@@ -30,7 +18,7 @@
 
 {#if exists}
   {#if display === 'table'}
-    <td>{string($owner$.keys.name)}</td>
+    <td>{string($parent$.keys.name)}</td>
     <td class="break-all">{string($entity.usage)}</td>
     <td
       class="text-center cell-click"
@@ -65,12 +53,12 @@
       {string($entity.damageType)}
     </td>
     <td>{$entity.reach}</td>
-    <td>{$entity.strength}</td>
+    <td>{$entity.strengthRequirement}</td>
   {:else if display === 'list'}
     <li class="text-sm italic hover:underline">
       <div class="flex">
         <span>
-          {string($owner$.keys.name, {
+          {string($parent$.keys.name, {
             afterEnd:
               ' - ' +
               string($entity.usage, {

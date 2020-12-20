@@ -1,13 +1,14 @@
-<script>
-  import List from "@ui/lists/List";
-  import RangedWeaponEntity from "@ui/entities/RangedWeapon";
+<script lang="ts">
+  import List from "@ui/lists/List.svelte";
+  import RangedWeaponEntity from "@ui/entities/RangedWeapon.svelte";
 
-  import { RangedWeapon } from "@internal";
-  export let entity = {};
-  $: ({ rangedWeapons$ } = entity);
+  import { RangedWeapon, Resource } from "@internal";
+
+  export let entity: Resource;
+  const rangedWeapons$ = entity.embedsOfType$(RangedWeapon.type, RangedWeapon);
 
   function addWeapon() {
-    entity.splice(new RangedWeapon(null, null));
+    entity.embed();
   }
 
   $: props = {

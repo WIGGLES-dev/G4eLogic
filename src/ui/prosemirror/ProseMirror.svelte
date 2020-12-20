@@ -64,7 +64,7 @@
     $: if (
         view &&
         typeof view.hasFocus === "function" &&
-        view.hasFocus() &&
+        !view.hasFocus() &&
         content
     ) {
         try {
@@ -92,9 +92,6 @@
 </script>
 
 <style>
-    :global(.ProseMirror-focused) {
-        @apply outline-none;
-    }
     section {
         @apply p-1;
     }

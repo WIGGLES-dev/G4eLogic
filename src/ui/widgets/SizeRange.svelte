@@ -33,6 +33,9 @@
     tbody tr:nth-child(even) {
         @apply bg-gray-100;
     }
+    table {
+        @apply m-0;
+    }
 </style>
 
 <section>

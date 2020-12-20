@@ -1,9 +1,6 @@
 <script lang="ts">
   import { getContext } from "svelte";
-  import { Sheet } from "@internal";
-
-  const { character }: { character: Sheet } = getContext("editor");
-
+  const character = getContext("sheet");
   const { pointTotal$ } = character;
   $: totals = $pointTotal$;
 </script>

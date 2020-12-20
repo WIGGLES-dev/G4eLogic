@@ -1,9 +1,9 @@
-<script>
+<script lang="ts">
     import { getContext } from "svelte";
     import { tooltip } from "@internal";
-    import Bar from "./Bar";
+    import Bar from "./Bar.svelte";
 
-    const { character } = getContext("editor");
+    const character = getContext("sheet");
     const { orderedPools$ } = character;
 </script>
 

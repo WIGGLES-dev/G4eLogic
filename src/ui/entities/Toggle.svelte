@@ -1,12 +1,16 @@
-<script>
+<script lang='ts'>
+    import { createEventDispatcher } from 'svelte';
+    const dispatch = createEventDispatcher();
     export let off = true;
-    export let toggled = !off;
     export let on = !off;
-
     export let visible;
-    function toggle() {
-        toggled = !toggled;
+    function toggle(e) {
         off = !off;
+        on = !on;
+        dispatch('toggle', {
+            off,
+            on
+        });
     }
 </script>
 
@@ -15,9 +19,9 @@
 
 {#if visible}
     <span
-        data-container-toggle
+        data-toggle
         on:click={toggle}
         class="fas text-red-700"
-        class:fa-angle-right={!toggled}
-        class:fa-angle-down={toggled} />
+        class:fa-angle-right={!!off}
+        class:fa-angle-down={!!!off} />
 {/if}

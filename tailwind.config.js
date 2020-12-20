@@ -2,10 +2,11 @@
 module.exports = {
   purge: [],
   theme: {
-    extend: {},
   },
   variants: {
-
+    extend: {
+      backgroundColor: ['even'],
+    },
   },
   plugins: [],
 }

@@ -27,12 +27,12 @@
   function handleOverToggle(e: MouseEvent) {
     const target = e.target as HTMLElement;
     try {
-      if (target.matches("[data-container-toggle]")) {
+      if (target.matches("[data-toggle]")) {
         target.classList.add("text-3xl");
       } else {
         target
           .closest("[data-id]")
-          .querySelector("[data-container-toggle]")
+          .querySelector("[data-toggle]")
           .classList.remove("text-3xl");
       }
     } catch (err) {}
@@ -59,7 +59,7 @@
   function onDrop(e) {
     try {
       const selectedId = e.dataTransfer.getData("text/plain");
-      const isOnToggle = e.target.matches("[data-container-toggle]");
+      const isOnToggle = e.target.matches("[data-toggle]");
       if (entity.isContainer()) {
         entity.slot(entity.type, selectedId);
       }
@@ -73,8 +73,8 @@
   function handleItemClick(e) {
     try {
       console.log(entity);
-      if (e.target.matches("input")) return;
-      e.target.closest("[data-id]").querySelector("input").focus();
+      if (e.target.matches("input,select")) return;
+      e.target.closest("input,select").focus();
     } catch (err) {}
   }
 </script>

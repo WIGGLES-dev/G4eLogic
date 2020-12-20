@@ -1,5 +1,5 @@
 import { createPopper } from "@popperjs/core";
-import { getRoot } from "@internal";
+import { getRoot, VirtualElement } from "@internal";
 
 export function tooltip(node: HTMLElement, params: any = {}) {
     let component;
@@ -15,7 +15,7 @@ export function tooltip(node: HTMLElement, params: any = {}) {
         tooltip.style.zIndex = "1000";
     }
 
-    const virtualElement = popperVirtualElement();
+    const virtualElement = new VirtualElement();
     const popper = createPopper(virtualElement, tooltip, {
         placement: params.placement || "bottom-start",
         strategy: "fixed",
@@ -75,26 +75,6 @@ export function tooltip(node: HTMLElement, params: any = {}) {
             if (component) component.$destroy();
         }
     }
-}
-export function popperVirtualElement() {
-    return {
-        getBoundingClientRect() {
-            return this.generateGetBoundingClientRect();
-        },
-        generateGetBoundingClientRect(x = 0, y = 0) {
-            return () => ({
-                width: 0,
-                height: 0,
-                top: y,
-                right: x,
-                bottom: y,
-                left: x,
-            });
-        },
-        update(x, y) {
-            this.getBoundingClientRect = this.generateGetBoundingClientRect(x, y);
-        },
-    };
 }
 function interpolate(input: string, context: any) {
     const brackets = /(\[([^\[\]]*|(\[[^\[\]]*\]))*\])/g

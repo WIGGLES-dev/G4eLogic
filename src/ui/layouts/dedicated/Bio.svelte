@@ -1,9 +1,8 @@
 <script lang="ts">
-    const defaultPortrait = require("@ui/assets/silhouette.png");
     import { getContext } from "svelte";
-    import { Appearance, Sheet } from "@internal";
-    import Cropper from "@ui/cropper/Cropper.svelte";
-    const sheet = getContext<Sheet>("sheet");
+    import { Appearance, Character, Valor } from "@internal";
+    import Cropper from "@components/Cropper.svelte";
+    const sheet = getContext<Character>("sheet");
 </script>
 
 <style>
@@ -78,7 +77,7 @@
         </div>
         <div class="row-span-2">
             <Cropper
-                fallback={defaultPortrait}
+                fallback={Valor.assets.silhouette}
                 bind:src={$sheet.profile.portrait}
                 bind:cropped={$sheet.profile.cropped} />
         </div>

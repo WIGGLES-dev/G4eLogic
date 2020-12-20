@@ -1,17 +1,16 @@
 <script>
-    import { Valor, EntityType } from "@internal";
-    import Sheet from "@ui/sheet.svelte";
-    import Editor from "@ui/editors/Editor.svelte";
-    const { state$ } = Valor;
-    $: id = $state$.currentlyEditingId;
-    $: type = $state$.currentlyEditingType;
+    export function pack() {
+        
+    }
 </script>
 
 <style>
+
 </style>
 
-{#if type === EntityType.Sheet}
-    <Sheet {id} />
-{:else}
-    <Editor {id} {type} />
-{/if}
+<section>
+    <div data-place="top"></div>
+    <div data-place="bottom"></div>
+    <div data-place="left"></div>
+    <div data-place="right"></div>
+</section>

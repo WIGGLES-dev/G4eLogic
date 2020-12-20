@@ -1,13 +1,15 @@
-<script>
+<script lang="ts">
   import { Tabs, Tab, TabPanel, TabList } from "@ui/tabs/tabs";
-  import Form from "@ui/form/Form";
-  import CategoryList from "@ui/form/CategoryList";
+  import Form from "@ui/form/Form.svelte";
+  import CategoryList from "@ui/form/CategoryList.svelte";
 
-  export let entity = {};
+  import { Equipment } from "@internal";
+
+  export let entity: Equipment;
   $: ({ equipped$, exists } = entity);
 
-  import ProseMirror from "@ui/prosemirror/ProseMirror";
-  import Features from "./panels/Features";
+  import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
+  import Features from "./panels/Features.svelte";
   import MeleeWeapons from "./panels/MeleeWeapons.svelte";
   import RangedWeapons from "./panels/RangedWeapons.svelte";
   import EquipmentModifiers from "./panels/EquipmentModifiers.svelte";
@@ -37,9 +39,7 @@
           <label for="">Equipped
             <input
               type="checkbox"
-              on:change={(e) => entity.update((entity) => {
-                  entity.keys.disabled = !e.target.checked;
-                })}
+              on:change={(e) => entity.set({ disabled: !e.target.checked })}
               checked={$equipped$} />
           </label>
           <label for="">Ignore for Skills
@@ -72,7 +72,7 @@
             <input type="number" bind:value={$entity.maxUses} />
           </label>
 
-          <CategoryList {entity} />
+          <CategoryList bind:categories={$entity.categories} />
 
           <label for="">Reference
             <input type="text" bind:value={$entity.reference} />

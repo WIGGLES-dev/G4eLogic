@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, getContext } from "svelte";
-    import { Sheet, tooltip } from "@internal";
+    import { tooltip } from "@internal";
     import { hitLocationTemplate } from "@ui/tooltips/templates/HitLocation";
     import { frameInViewbox } from "@ui/utils/silhouette";
     import Bar from "./Bar.svelte";
@@ -10,21 +10,22 @@
         extend as SVGextend,
         Element as SVGElement,
     } from "@svgdotjs/svg.js";
+    import { HitLocation } from "src/gurps/resources/hitLocation";
 
-    const { character }: { character: Sheet } = getContext("editor");
+    const character = getContext<Sheet>("sheet");
     const { hitLocations$ } = character;
 
     export let height = "100%";
     export let width = "100%";
-    export let minWidth = null;
-    export let maxHeight = null;
+    export let minWidth: string = null;
+    export let maxHeight: string = null;
     export let viewBox = "0 0 800 800";
     export let scale = "1";
 
     const hud = {};
     const tooltips = {};
 
-    let focusedLocation = null;
+    let focusedLocation: HitLocation = null;
     let hiddenNodes = [];
 
     function hideAllUnfocusedNodes() {
@@ -149,7 +150,7 @@
                     ...silhoueteLocations,
                     location,
                     ...($hitLocations$[location]?.subLocations?.map(
-                        (location) => location.location
+                        (location) => location?.location
                     ) ?? []),
                 ];
             },
@@ -247,7 +248,7 @@
                         <div class="location-name">{location.location}</div>
                         <div>
                             <span
-                                class="fas fa-shield">{location.armorBonus}</span>
+                                class="fas fa-shield">{location.context.armorBonus}</span>
                             <input
                                 type="number"
                                 class="damage-input"
@@ -516,7 +517,7 @@
                         <div class="location-name">{location.location}</div>
                         <div>
                             <span
-                                class="fas fa-shield">{location.armorBonus}</span>
+                                class="fas fa-shield">{location.context.armorBonus}</span>
                             <input
                                 type="number"
                                 class="w-5 outline-none text-black"
@@ -547,7 +548,8 @@
                     bind:this={hud[location.location]}>
                     <div class="location-name">{location.location}</div>
                     <div>
-                        <span class="fas fa-shield">{location.armorBonus}</span>
+                        <span
+                            class="fas fa-shield">{location.context.armorBonus}</span>
                         <input
                             type="number"
                             class="damage-input"

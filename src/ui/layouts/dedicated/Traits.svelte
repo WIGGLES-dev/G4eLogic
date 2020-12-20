@@ -14,8 +14,7 @@
     Sheet,
     FeatureType,
   } from "@internal";
-  const sheet = getContext<Sheet>("editor");
-
+  const sheet = getContext<Sheet>("sheet");
   const { traits$ } = sheet;
 
   function languages(traits) {
@@ -29,16 +28,13 @@
       .sort((a, b) => strEncodeUTF16(b.name) - strEncodeUTF16(a.name));
   }
   function addItem(categories = []) {
-    Valor.sendMessage(window, "addEntity", {});
-    Valor.addEntities(FeatureType.Trait, [
-      sheet.embed(
-        new Trait(null).wrapData({
-          keys: {
-            categories,
-          },
-        })
-      ),
-    ]);
+    sheet.embed(
+      new Trait(null).wrapData({
+        keys: {
+          categories,
+        },
+      })
+    );
   }
   function getRoot(entities = []) {
     return entities

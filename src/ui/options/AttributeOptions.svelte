@@ -1,15 +1,18 @@
 <script lang="ts">
-    import { Feature } from "@internal";
+    import { SkillLike } from "@internal";
 
     export let attribute: string;
-    export let entity: Feature;
+    export let entity: SkillLike;
     export let signaturesOnly = false;
 
-    const { config$ } = entity;
-    $: attributes = Object.entries($config$.attributes);
+    const host$ = entity.getNearest("sheet");
+    $: attributes = $host$.config.attributes;
 </script>
 
 <style>
+    select {
+        @apply text-black bg-white;
+    }
 </style>
 
 <select bind:value={attribute}>

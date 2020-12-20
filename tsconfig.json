@@ -1,11 +1,11 @@
 {
     "compilerOptions": {
+        "moduleResolution": "node",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "noImplicitAny": false,
         "removeComments": true,
         "preserveConstEnums": true,
-        "moduleResolution": "node",
         "sourceMap": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
@@ -18,18 +18,23 @@
             "ES2019"
         ],
         "types": [
-            "deep-diff",
-            "webpack",
             "webpack-dev-server",
+            "deep-diff",
             "svelte",
         ],
         "baseUrl": "./",
         "paths": {
+            "@assets/*": [
+                "./assets/*"
+            ],
             "@internal": [
                 "./src/internal.ts"
             ],
             "@ui/*": [
                 "./src/ui/*"
+            ],
+            "@components/*": [
+                "./src/components/*"
             ]
         },
         "target": "ES2015",
@@ -38,8 +43,8 @@
     "include": [
         "types",
         "src",
-        "../foundryVTT/GURPS/src/svelte/tabs",
-        "src/rxjs-test"
+        "test", 
+        "webpack"
     ],
     "exclude": [
         "node_modules",

@@ -1,11 +1,61 @@
-export function filterKeys<T>(object: Record<string, T>, predicate: (key: string, value: T, src: Record<string, T>) => boolean) {
-    return Object.entries(object)
-        .filter(([key, value]) => predicate(
-            key, value, object)
-        )
-        .reduce((object, [key, value]) => (
-            { ...object, [key]: value }
-        ), {} as Record<string, T>)
+import * as jp from "jsonpath";
+export function filterKeys<T extends Record<string, any>>(object: T, predicate: (key: string, value: any, src: T) => boolean): T {
+    const filteredEntires =
+        Object.entries(object)
+            .filter(([key, value]) => predicate(key, value, object));
+    return Object.fromEntries(filteredEntires) as T;
 }
-
 export function flatFilter() { }
+export function reduceToPathRecord(path: string) {
+    return function (record, target) {
+        const key = jp.value(target, path);
+        const arr = record[key] || [];
+        return {
+            ...record,
+            [key]: [...arr, target]
+        }
+    }
+}
+export function each<T, U>(project: (value: T) => U): (array: T[]) => U[] {
+    return function (array: T[]): U[] {
+        try {
+            return array?.map(project) ?? []
+        } catch (err) {
+            return []
+        }
+    }
+}
+export function filterEach<T>(project: (value: T) => boolean): (array: T[]) => T[] {
+    return function (array: T[]) {
+        try {
+            return array.filter(project)
+        } catch (err) {
+            console.warn(err);
+        }
+    }
+}
+export function reduceEach() {
+
+}
+export function safeCall<V>(fn: () => V, fallback?: any): V {
+    try {
+        return fn()
+    } catch (err) {
+        console.log(err);
+        return fallback
+    }
+}
+export function hook<T, M extends (...args) => any = (...args) => any>(target: T, method: string, hook: (fn: M, args: Parameters<M>) => ReturnType<M>) {
+    const fn: M = jp.value(target, method);
+    if (typeof fn !== "function") return
+    jp.value(target, method, function (...args: Parameters<M>) {
+        const original = fn.bind(this) as M
+        return hook(original, args);
+    });
+
+}
+export type OrArray<T> = T | T[]
+export function orArray<T>(input: OrArray<T>): T[] {
+    return input instanceof Array ? input : [input]
+}
+export type Length<array extends any[]> = array extends { length: infer L } ? L : never;

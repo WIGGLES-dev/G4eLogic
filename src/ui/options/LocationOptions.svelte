@@ -1,8 +1,11 @@
 <script lang="ts">
-    import { parseHitLocations, Feature } from "@internal";
+    import { parseHitLocations, Resource } from "@internal";
     export let location: string;
-    export let entity: Feature = null;
-    const { config$ } = entity;
+    export let entity: Resource = null;
+    const host$ = entity.getNearest("sheet");
+    $: hitLocations = Object.entries(
+        parseHitLocations($host$.config.locations)
+    );
 </script>
 
 <style>
@@ -10,7 +13,7 @@
 
 <select bind:value={location}>
     <option value={undefined} />
-    {#each Object.entries(parseHitLocations($config$.locations)) as [location, { isGroup, subLocations }], i (i)}
+    {#each hitLocations as [location, { isGroup, subLocations }], i (i)}
         {#if isGroup}
             <option class="text-2xl" value={location}>{location}</option>
             {#each subLocations as subLocation, i (i)}

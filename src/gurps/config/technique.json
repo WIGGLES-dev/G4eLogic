@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema","type":"object","allOf":[{"$ref":"skill.json"}],"properties":{"type":{"const":"technique","default":"technique"},"version":{"const":1,"default":1},"difficulty":{"enum":["A","H"],"default":"A"},"limit":{"type":"number","default":0}},"$id":"http://valorsheet/systems/gurps/technique.json"}

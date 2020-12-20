@@ -1,7 +1,7 @@
 <script>
     export let entity;
     $: ({ adjustedPoints$, exists, id, disabled, hidden } = entity);
-    import { string } from "@ui/utils/formatting";
+    import { string } from "@internal";
 </script>
 
 <style>
@@ -11,7 +11,7 @@
     <td class="text-left">
         <div>{$entity.name}</div>
         <div class="text-xs italic pl-2">
-            {@html $entity.userDescription}
+            {@html $entity.notes || ''}
         </div>
     </td>
     <td>{string($adjustedPoints$)}</td>
