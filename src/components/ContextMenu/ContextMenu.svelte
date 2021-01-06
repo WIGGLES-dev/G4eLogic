@@ -1,9 +1,10 @@
 <script context="module" lang="ts">
     export interface ContextMenuOption {
         label: string
-        callback: () => void
-        show: () => boolean
+        callback?: () => void
+        show?: () => boolean
         options?: ContextMenuOption[]
+        interactive?: boolean
     }
 </script>
 <script lang="ts">
@@ -58,9 +59,9 @@
 />
 
 {#if options instanceof Array && rendered}
-    <ul bind:this={list}>
+    <ul class='rounded bg-gray-500' bind:this={list}>
         {#each options as option, i (i)}
-            <Option {option} /> 
+            <Option {option} {close}/> 
         {/each}
     </ul>
 {/if}

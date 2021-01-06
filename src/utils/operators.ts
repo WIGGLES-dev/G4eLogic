@@ -3,6 +3,7 @@ import { asyncScheduler, concat, from, merge, MonoTypeOperatorFunction, Observab
 import { reduce, map, filter, mergeMap, debounceTime, distinctUntilChanged, publish, take, concatAll, tap } from "rxjs/operators";
 import * as searchjs from "searchjs";
 import * as jp from "jsonpath";
+
 export function total(src: Observable<number>): Observable<number> {
     return src.pipe(
         reduce((total, number) => total + number, 0)
@@ -35,37 +36,20 @@ export function collapse<T>(src: Observable<T[]>): Observable<T> {
     )
 }
 
-export function reduceToArray<T>(src: Observable<T>): Observable<T[]> {
-    return src.pipe(
-        reduce((arr, v) => [...arr, v], [])
-    )
-}
-
-export function debounceTimeAfter<T>(
-    amount: number,
-    dueTime: number,
-    scheduler: SchedulerLike = asyncScheduler,
-): OperatorFunction<T, T> {
-    return publish(value =>
-        concat(
-            value.pipe(take(amount)),
-            value.pipe(debounceTime(dueTime, scheduler))),
-    );
-}
-
-export function debounceTimeAfterFirst<T>(
-    dueTime: number,
-    scheduler: SchedulerLike = asyncScheduler,
-): OperatorFunction<T, T> {
-    return debounceTimeAfter(1, dueTime, scheduler);
-}
-
 export function log<T>(tag: string): MonoTypeOperatorFunction<T> {
     return function (source: Observable<T>): Observable<T> {
         return source.pipe(
             tap(function (t) {
                 console.log(tag, t)
             }),
+        )
+    }
+}
+
+export function spread<T extends any[], U>(fn: (...args: Partial<T>) => U): OperatorFunction<T, U> {
+    return function (source: Observable<T>): Observable<U> {
+        return source.pipe(
+            map(args => fn(...args))
         )
     }
 }

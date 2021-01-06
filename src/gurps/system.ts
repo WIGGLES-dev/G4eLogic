@@ -1,9 +1,7 @@
-import { UI, Registry } from "@internal";
+import { View, System } from "@internal";
 import "@ui/styles.css";
 import "./registerAll";
-const gui = new UI(document)
-//@ts-ignore
-window.Registry = Registry
+System.init();
 window.onload = function () {
-    gui.render();
+    new View(document.body).render('main');
 }

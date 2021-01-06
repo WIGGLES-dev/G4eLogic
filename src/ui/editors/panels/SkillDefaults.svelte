@@ -1,13 +1,14 @@
-<script>
+<script lang='ts'>
     import Boxes from "@ui/semantic-boxes/Boxes.svelte";
-    import Box from "@ui/semantic-boxes/Box";
-    import AttributeOptions from "@ui/options/AttributeOptions";
+    import Box from "@ui/semantic-boxes/Box.svelte";
+    import AttributeOptions from "@ui/options/AttributeOptions.svelte";
 
-    export let entity;
-    export let defaults = [];
+    import { Resource, SkillDefault } from '@internal';
+    export let entity: Resource;
+    export let defaults: SkillDefault[] = [];
 
     function addDefault() {
-        defaults = [...defaults, {}];
+        defaults = [...defaults, {} as SkillDefault];
     }
     function removeDefault(i) {
         defaults = defaults.filter((skillDefault, i1) => i !== i1);

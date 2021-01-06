@@ -1,12 +1,29 @@
 <script lang="ts">
-    import { SkillLike } from "@internal";
+    import { Resource, Character, AttributeData } from "@internal";
+    import { map, mergeMap } from "rxjs/operators";
 
     export let attribute: string;
-    export let entity: SkillLike;
+    export let entity: Resource;
     export let signaturesOnly = false;
 
-    const host$ = entity.getNearest("sheet");
-    $: attributes = $host$.config.attributes;
+    const host$ = entity.selectNearest("character", Character);
+    const attributes$ = host$.pipe(
+        mergeMap(c => c.sub('config').sub('attributes')),
+        map(i => Object.entries(i || {})),
+        map(i => {
+            if (i.length === 0) {
+                return ([
+                    ['dexterity', {abbreviation: 'DX'}],
+                    ['strength', {abbreviation: 'ST'}]
+                ] as [string,AttributeData][])
+                    .map(set => {
+                        set[1].skillSignature = true;
+                        return set
+                    })
+            }
+            return i
+        })
+    )
 </script>
 
 <style>
@@ -17,8 +34,8 @@
 
 <select bind:value={attribute}>
     <option value={undefined} />
-    {#each attributes as [signature, attribute], i (i)}
-        {#if signaturesOnly ? attribute.skillSignature : true}
+    {#each $attributes$ as [signature, {skillSignature, abbreviation}], i (i)}
+        {#if signaturesOnly ? skillSignature : true}
             <option value={signature}>{signature}</option>
         {/if}
     {/each}

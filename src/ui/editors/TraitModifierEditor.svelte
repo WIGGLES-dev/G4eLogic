@@ -1,5 +1,4 @@
 <script>
-  import Form from "@ui/form/Form";
   import { TraitModifierAffects, TraitModifierType } from "@internal";
   export let entity = null;
 </script>
@@ -7,20 +6,29 @@
 <style>
 </style>
 
-<Form>
-  <div class="flex">
-    <label for="">Name<input
+<form>
+  <fieldset>
+    <label>
+      <span>Name</span>
+      <input
         class="flex-1"
         type="text"
-        bind:value={$entity.name} /></label>
+        bind:value={$entity.name} />
+    </label>
 
-    <label for="">Enabled<input
+    <label>
+      <span>Enabled</span>
+      <input
         type="checkbox"
-        bind:checked={$entity.enabled} /></label>
-  </div>
+        bind:checked={$entity.enabled} />
+    </label>
+  </fieldset>
 
-  <div class="flex">
-    <label for="">Cost <input type="number" bind:value={$entity.cost} /></label>
+  <fieldset>
+    <label>
+      <span>Cost</span> 
+      <input type="number" bind:value={$entity.cost} />
+    </label>
 
     <select bind:value={$entity.type}>
       {#each Object.entries(TraitModifierType) as [key, value], i (i)}
@@ -28,24 +36,31 @@
       {/each}
     </select>
 
-    <label for="">Level<input
+    <label>
+      <span>Level</span>
+      <input
         type="number"
         bind:value={$entity.level}
-        disabled={!$entity.hasLevels && $entity.type !== TraitModifierType.percentage} /></label>
+        disabled={!$entity.hasLevels && $entity.type !== TraitModifierType.percentage} />
+    </label>
 
-    <label for="">Has Levels
+    <label>
+      <span>Has Levels</span>
       <input
         type="checkbox"
         bind:checked={$entity.hasLevels}
-        disabled={$entity.type !== TraitModifierType.percentage} /></label>
-  </div>
+        disabled={$entity.type !== TraitModifierType.percentage} />
+    </label>
+  </fieldset>
 
-  <div class="flex">
-    <label for="">Final Modifier
-      <input type="number" value={$entity.costModifier()} /></label>
+  <fieldset>
+    <label>
+      <span>Final Modifier</span>
+      <input type="number" value={$entity.costModifier()} />
+    </label>
 
-    <label for="">
-      Affects
+    <label>
+      <span>Affects</span>
       <select bind:value={$entity.affects}>
         {#each Object.entries(TraitModifierAffects) as [key, value], i (i)}
           <option {value}>{key}</option>
@@ -53,10 +68,14 @@
       </select>
     </label>
 
-    <label for="">Reference
-      <input type="text" bind:value={$entity.reference} /></label>
-  </div>
+    <label>
+      <span>Reference</span>
+      <input type="text" bind:value={$entity.reference} />
+    </label>
+  </fieldset>
 
-  <label for="">Notes </label>
-  <textarea bind:value={$entity.notes} name="" id="" rows="3" />
-</Form>
+  <label>
+    <span>Notes</span> 
+    <textarea bind:value={$entity.notes} />
+  </label>
+</form>

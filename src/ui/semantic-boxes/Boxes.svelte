@@ -1,4 +1,4 @@
-<script>
+<script lang='ts'>
   import { createEventDispatcher, afterUpdate } from "svelte";
   const dispatch = createEventDispatcher();
 

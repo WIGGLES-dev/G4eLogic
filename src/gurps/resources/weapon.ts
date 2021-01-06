@@ -7,6 +7,8 @@ import {
 } from "@internal";
 import { combineLatest, Observable } from "rxjs";
 import { map, takeWhile } from "rxjs/operators";
+import { GResource } from "src/sheet/resource";
+import { staticImplements } from "src/utils/decorators";
 
 export enum BaseDamage {
     Swing = "sw",
@@ -47,8 +49,7 @@ export interface RangedWeaponData extends WeaponKeys, Data {
     bulk: string
 }
 
-export interface Weapon<K extends WeaponKeys & Data> extends Resource<K> { }
-export abstract class Weapon<K> extends Resource<K> {
+export abstract class Weapon<K extends WeaponKeys & Data = WeaponKeys & Data> extends Resource<K> {
     constructor(identity: Weapon<K>["identity"]) {
         super(identity);
     }
@@ -58,11 +59,13 @@ export abstract class Weapon<K> extends Resource<K> {
     }
 }
 
+@staticImplements<GResource<MeleeWeapon>>()
 export class MeleeWeapon extends Weapon<MeleeWeaponData> {
     static version = 1 as const
     static type = "melee weapon" as const
     constructor(identity: MeleeWeapon["identity"]) {
         super(identity);
+
     }
     get parryLevel$() {
         return combineLatest([
@@ -81,6 +84,8 @@ export class MeleeWeapon extends Weapon<MeleeWeaponData> {
         )
     }
 }
+
+@staticImplements<GResource<RangedWeapon>>()
 export class RangedWeapon extends Weapon<RangedWeaponData> {
     static version = 1 as const
     static type = "ranged weapon" as const

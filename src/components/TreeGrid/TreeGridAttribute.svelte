@@ -5,7 +5,6 @@
     import {TreeItem} from "./TreeGrid.svelte";
     import Cell from "@components/Cell.svelte";
     import Toggle from "@components/Toggle.svelte";
-    import ContextMenu from "@components/ContextMenu/ContextMenu.svelte";
     import { createEventDispatcher } from "svelte";
     const dispatch = createEventDispatcher();
     export let depth: number;
@@ -13,13 +12,21 @@
     export let toggle: string;
     export let widths: Record<string,string>
     export let item: TreeItem;
+    const {
+        showToggle,
+        toggled
+    } = item;
     export let group: string;
-    let contextMenu: ContextMenu; 
-    async function launchContextMenu(e: MouseEvent) {
-        await contextMenu.update(e);
-        contextMenu.$set({
-            rendered: true
-        });
+    export let attributeClassList: string = ''
+    $: attribute = item.attributes[group];
+    async function onContextMenu(mouseEvent: MouseEvent) {
+        dispatch(
+            'contextmenu',
+            {
+                options: (item.attributes[group] || {})['context'] || item.context,
+                mouseEvent
+            }
+        );
     }
     function onDrop(e: DragEvent) {
         const data = JSON.parse(e.dataTransfer.getData('application/json'));
@@ -45,11 +52,12 @@
     function onDragOver(e: DragEvent) {
         e.preventDefault();
     }
-    function onToggle(e: CustomEvent) {
+    function onToggle({detail}) {
         dispatch('toggle', {
                 id: item.id,
                 depth,
-                index
+                index,
+                toggled: detail
             }
         );
     }
@@ -63,23 +71,18 @@
     on:drop={onDrop}
     on:dragstart={onDrag}
     on:dragover={onDragOver}
-    on:contextmenu|preventDefault={launchContextMenu}
+    on:contextmenu|preventDefault={onContextMenu}
     draggable="true"
-    class="table-cell px-2 py-1 border-b border-solid border-black" 
+    class='{attributeClassList}'
     style="width: {widths[group]}"
 >
-    {#if group instanceof Array}
-        {#each group as subGroup}
-            <svelte:self {depth} {toggle} group={subGroup} {item} {widths} />
-        {/each}
-    {:else}
-            <div class="flex items-baseline">
-                {#if toggle === group}
-                    <span style="padding-left: {depth*30}px;"></span>
-                {/if}
-                <Toggle on:toggle={onToggle} visible={toggle === group && item.showToggle} on={item.toggled} />
-                <Cell value={item.attributes[group]} />
-            </div>
-        <ContextMenu options={(item.attributes[group] || {})['context'] || item.context} bind:this={contextMenu} />
-    {/if}
+    <div class="flex items-baseline">
+        {#if toggle === group}
+            <span style="padding-left: {depth*30}px;"></span>
+        {/if}
+        <Toggle class='px-1 text-red-700' on:toggle={onToggle} visible={toggle === group && $showToggle} toggled={$toggled} />
+        <slot name='cell' value={attribute} {item} {group}>
+            <Cell value={attribute} />
+        </slot>
+    </div>
 </div>

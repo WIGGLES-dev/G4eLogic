@@ -1,17 +1,14 @@
 <script>
-    export let off = true;
-    export let on = !off;
+    import { createEventDispatcher } from 'svelte';
+    const dispatch = createEventDispatcher();
+    export let toggled = false;
     export let visible = true;
     let classList = "";
     export {classList as class}
     export let style;
     function toggle(e) {
-        off = !off;
-        on = !on;
-        dispatch('toggle', {
-            off,
-            on
-        });
+        toggled = !toggled
+        dispatch('toggle', toggled);
     }
 </script>
 
@@ -26,8 +23,8 @@
         data-toggle
         on:click={toggle}
         class="fas toggle {classList}"
-        class:fa-angle-right={!!off}
-        class:fa-angle-down={!!!off}
-        {style}    
+        class:fa-angle-right={!toggled}
+        class:fa-angle-down={!!toggled}
+        {style}
     />
 {/if}

@@ -1,7 +1,9 @@
 import { combineLatest, from, merge, Observable } from "rxjs";
-import { catchError, filter, map, mergeAll, mergeMap, pluck, reduce, switchMap, toArray } from "rxjs/operators";
+import { catchError, filter, map, mergeAll, mergeMap, mergeScan, pluck, reduce, startWith, switchMap, toArray } from "rxjs/operators";
 import {
     Resource,
+    MeleeWeapon,
+    RangedWeapon,
     Config,
     AttributeLevel,
     Attribute,
@@ -17,10 +19,12 @@ import {
     Equipment,
     TraitCategory,
     Data,
-    reduceToArray,
     matchArray,
     each,
+    log,
+    GResource,
 } from "@internal";
+import { staticImplements } from "src/utils/decorators";
 export interface CharacterData extends Data {
     version: typeof Character["version"]
     type: typeof Character["type"]
@@ -80,20 +84,37 @@ export enum Appearance {
     Transcendent
 }
 
+@staticImplements<GResource<Character>>()
 export class Character extends Resource<CharacterData> {
     static type = "character"
     static version = 1
     constructor(identity: Character["identity"]) {
         super(identity);
     }
-    selectRangedWeapons() { return this.selectAllChildren().pipe() }
-    selectMeleeWeapons() { }
+    selectRangedWeapons() {
+        return this.selectChildren({
+            type: 'rangedWeapon',
+            caster: RangedWeapon,
+            maxDepth: Number.POSITIVE_INFINITY
+        })
+    }
+    selectMeleeWeapons() {
+        return this.selectChildren({
+            type: 'meleeWeapon',
+            caster: MeleeWeapon,
+            maxDepth: Number.POSITIVE_INFINITY
+        })
+    }
     selectWeapons() { }
     selectCarriedWeight() {
-        return this.selectChildren("equipment", Equipment, { activeOnly: true }).pipe(
+        return this.selectChildren({
+            type: 'equipment',
+            caster: Equipment,
+            activeOnly: true
+        }).pipe(
             mergeMap(each(item => item.selectExtendedWeight())),
-            mergeAll(),
-            reduce((t, w) => t + w, 0)
+            mergeScan((t, w) => w.pipe(map(o => o + t)), 0),
+            startWith(0)
         )
     }
     selectEncumbranceLevel() {
@@ -105,25 +126,28 @@ export class Character extends Resource<CharacterData> {
     }
 
     selectAttributes() {
+        const attributes$ = this.sub('config').sub('attributes');
+        const attributeLevels$ = this.sub('attributeLevels');
+        const bonuses$ = this.selectAllFeatures()
+            .pipe(
+                matchArray({
+                    type: 'attribute bonus'
+                })
+            );
         return combineLatest([
-            this.selectKeys().pipe(
-                pluck("config", "attributes"),
-            ),
-            this.selectAllFeatures()
-                .pipe(
-                    matchArray({
-                        type: "attribute bonus",
-                    }),
-                )
+            attributes$,
+            bonuses$,
+
+            attributeLevels$
         ]).pipe(
-            //log("selecting all attributes"),
             map(([attributes, bonuses]) =>
-                Object.entries(attributes)
+                Object.entries(attributes || {})
                     .reduce((collection, [signature, data]) => {
                         const finalBonus = bonuses
-                            .filter(b => b.constraint.attribute === signature)
-                            .map(f => f.bonus)
-                            .reduce((t, b) => t + b, 0)
+                            ?.filter(b => b['attribute'] === signature)
+                            ?.map(f => f['amount'])
+                            ?.reduce((t, b) => t + b, 0)
+                            ?? 0;
                         collection[signature] = new Attribute(this, data, signature, collection, finalBonus)
                         return collection
                     }, {} as Record<string, Attribute>)
@@ -131,40 +155,21 @@ export class Character extends Resource<CharacterData> {
         )
     }
     selectAttribute(key: string) {
-        return this.selectAttributes().pipe(
-            pluck(key)
-        )
-    }
-    get attributes$() {
-        return this.selectAttributes().pipe(
-            map(collection => Object.values(collection)),
-            mergeMap(i => i),
-            filter(attr => !attr.keys.isPool),
-            reduceToArray
-        )
+        return this.selectAttributes()
+            .pipe(
+                pluck(key)
+            )
     }
     get orderedAttributes$(): Observable<Attribute[]> {
+        const order$ = this.sub('config').sub('ui').sub('attributeOrder');
         return combineLatest([
-            this.selectKeys().pipe(
-                pluck("config", "ui", "attributeOrder"),
-            ),
+            order$,
             this.selectAttributes()
         ]).pipe(
             map(([order, collection]) => order
                 .map(attr => collection[attr])
                 .filter(i => i)
-            ),
-            catchError(err => this.selectAttributes().pipe(
-                map(collection => Object.values(collection))
-            ))
-        )
-    }
-    get pools$() {
-        return this.selectAttributes().pipe(
-            map(collection => Object.values(collection)),
-            mergeMap(i => i),
-            filter(attr => attr.keys.isPool),
-            reduceToArray
+            )
         )
     }
     get orderedPools$() {
@@ -177,33 +182,33 @@ export class Character extends Resource<CharacterData> {
             map(([order, collection]) => order
                 .map(attr => collection[attr])
                 .filter(i => i)
-            ),
-            catchError(err => this.pools$)
+            )
         )
     }
-    selectHitLocations$(): Observable<Record<string, HitLocation>> {
+    selectHitLocations(): Observable<Record<string, HitLocation>> {
+        const locations$ = this.sub('config').sub('locations').pipe(map(parseHitLocations));
+        const hitPoints$ = this.selectAttribute('hit points').pipe(map(hp => hp?.calculateLevel() ?? 10));
+        const damageTaken$ = this.sub('hitLocationDamage');
         return combineLatest([
-            this.selectKeys().pipe(
-                pluck("config", "locations"),
-                map(parseHitLocations)
-            ),
-            this.selectAttributes(),
+            locations$,
+            hitPoints$,
             this.selectAllFeatures().pipe(
                 matchArray({
                     type: "armor bonus"
                 })
-            )
+            ),
+            damageTaken$
         ]).pipe(
-            map(([locations, attributes, bonuses]) => Object.entries(locations)
+            map(([locations, hitPoints, bonuses]) => Object.entries(locations)
                 .reduce((locations, [location, data]) => {
                     const armorBonus = bonuses
-                        ?.filter(b => b?.constraint?.location === location)
-                        ?.map(b => b?.bonus)
+                        ?.filter(f => f['location'] === location)
+                        ?.map(b => b['amount'])
                         ?.reduce((t, b) => t + b, 0)
-                        ?? 0
+                        ?? 0;
                     locations[location] = new HitLocation(this, data, location, locations, {
                         armorBonus,
-                        hitPoints: attributes["hit points"].calculateLevel()
+                        hitPoints
                     })
                     return locations
                 }, {} as Record<string, HitLocation>)
@@ -211,12 +216,12 @@ export class Character extends Resource<CharacterData> {
         )
     }
     selectHitLocation(key: string) {
-        return this.selectHitLocations$()
+        return this.selectHitLocations()
             .pipe(
                 pluck(key)
             )
     }
-    get hitLocations$() { return this.selectHitLocations$() }
+    get hitLocations$() { return this.selectHitLocations() }
     get swingDamage$() {
         return this
             .selectAttribute("striking strength")
@@ -261,15 +266,14 @@ export class Character extends Resource<CharacterData> {
             map(n => n.reduce((t, p) => t + p, 0))
         )
         return combineLatest([
-            this.selectKeys(),
+            this.keys$,
             this.selectAttributes() as Observable<Record<string, Attribute>>,
-            this.selectChildren("trait", Trait).pipe(map(split)),
-            this.selectChildren("skill", Skill).pipe(sumSkillLike),
-            this.selectChildren("technique", Technique).pipe(sumSkillLike),
-            this.selectChildren("spell", Spell).pipe(sumSkillLike)
+            this.selectChildren({ type: "trait", caster: Trait }).pipe(map(split)),
+            this.selectChildren({ type: "skill", caster: Skill }).pipe(sumSkillLike),
+            this.selectChildren({ type: "technique", caster: Technique }).pipe(sumSkillLike),
+            this.selectChildren({ type: "spell", caster: Spell }).pipe(sumSkillLike)
         ]).pipe(
             map(([data, attributes, traits, skills, techniques, spells]) => {
-                //console.log("summing point total");
                 const total = data.pointTotal;
                 const attributePoints = Object.values(attributes).reduce(
                     (points, attribute) => points + (attribute.pointsSpent() || 0), 0

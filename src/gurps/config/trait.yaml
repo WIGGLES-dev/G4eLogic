@@ -1,4 +1,5 @@
 $schema: http://json-schema.org/draft-07/schema
+$id: http://valorsheet/systems/gurps/trait.yaml
 type: object
 properties:
   type:
@@ -18,7 +19,7 @@ properties:
       gcs: basePoints
   hasLevels:
     type: boolean
-    default: no
+    default: false
   levels:
     type: integer
     map:
@@ -29,12 +30,12 @@ properties:
       gcs: points_per_level
   allowHalfLevel:
     type: boolean
-    default: no
+    default: false
     map:
       gcs:
   roundDown:
     type: boolean
-    default: no
+    default: false
     map:
       gcs: round_down
   controlRating:
@@ -45,7 +46,7 @@ properties:
       - 12
       - 15
       - n/a
-    default: none
+    default: n/a
     map:
       gcs: control_rating
   types:

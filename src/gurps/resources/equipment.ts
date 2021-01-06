@@ -1,12 +1,14 @@
-import { transaction } from "@datorama/akita";
 import {
     Data,
     each,
     Resource,
-    AutoSubscriber
+    AutoSubscriber,
+    mapEach
 } from "@internal";
 import { Observable, combineLatest, from } from "rxjs";
-import { expand, map, mergeAll, mergeMap, mergeScan, reduce, scan } from "rxjs/operators";
+import { expand, map, mergeAll, mergeMap, switchMap, mergeScan, reduce, scan } from "rxjs/operators";
+import { GResource } from "src/sheet/resource";
+import { staticImplements } from "src/utils/decorators";
 
 export interface EquipmentData extends Data {
     type: typeof Equipment["type"]
@@ -15,52 +17,57 @@ export interface EquipmentData extends Data {
     quantity: number
     weight: number
     value: number
-    storedLocation: string
+    location: string
     uses?: number
     maxUses?: number
     ignoreForSkills?: boolean
 }
+@staticImplements<GResource<Equipment>>()
 export class Equipment extends Resource<EquipmentData> {
     static type = "equipment" as const
     static version = 1 as const
     constructor(identifier: Equipment["identity"]) {
         super(identifier);
     }
-    selectEquipped() { return this.selectEnabled() }
+    selectEquipped() { return this.enabled$ }
     equip() { }
     unequip() { }
-    selectValue() { return this.selectKeys().pipe(map(k => k.value * k.quantity)) }
+    get quantity$() { return this.sub('quantity') }
+    get value$() { return this.sub('value') }
+    get eValue$() {
+        return combineLatest([this.quantity$, this.value$])
+            .pipe(map(([q, v]) => q * v))
+    }
     selectExtendedValue(): Observable<number> {
-        const value$ = this.selectValue();
-        const children$ = this.selectChildren(this.type, this.class);
-        const extendedValue$ = children$.pipe(
-            expand(each(child => child.selectExtendedValue())),
-            mergeAll()
-        );
-        const branch$ = combineLatest([value$, extendedValue$]);
-        return branch$.pipe(
-            map(([value, eValue]) => value + eValue)
+        const children$ = this.selectChildren({
+            type: this.type,
+            caster: this.class,
+            maxDepth: Number.POSITIVE_INFINITY
+        });
+        return children$.pipe(
+            mapEach(e => e.eValue$),
+            switchMap(values$ => combineLatest([this.eValue$, ...values$])),
+            map(values => values.reduce((a, b) => a + b, 0))
         )
     }
-    selectWeight() { return this.selectKeys().pipe(map(k => k.weight * k.quantity)) }
+    get weight$() { return this.sub('weight') }
+    get eWeight$() {
+        return combineLatest([this.quantity$, this.weight$])
+            .pipe(map(([q, w]) => q * w))
+    }
     selectExtendedWeight(): Observable<number> {
-        const weight$ = this.selectWeight();
-        const children$ = this.selectChildren(this.type, this.class);
-        const extendedWeight$ = children$.pipe(
-            expand(each(child => child.selectExtendedWeight())),
-            mergeAll()
-        )
-        const branch$ = combineLatest([weight$, extendedWeight$]);
-        return branch$.pipe(
-            map(([weight, eWeight]) => weight + eWeight)
+        const children$ = this.selectChildren({ type: this.type, caster: this.class, maxDepth: Number.POSITIVE_INFINITY });
+        return children$.pipe(
+            mapEach(e => e.eWeight$),
+            switchMap(weights$ => combineLatest([this.eWeight$, ...weights$])),
+            map(values => values.reduce((a, b) => a + b, 0))
         )
     }
-    @transaction()
     moveToLocation(location: string) {
         this.set({
-            storedLocation: location
+            location
         });
-        const children = AutoSubscriber.get(this.selectChildren(this.type, this.class))
+        const children = AutoSubscriber.get(this.selectSameChildren())
         children.forEach(child => {
             child.moveToLocation(location)
         });

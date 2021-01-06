@@ -21,10 +21,6 @@
 </script>
 
 <style>
-  input,
-  .features-editor :global(select) {
-    @apply border-b border-solid border-black p-1;
-  }
 </style>
 
 <div class="features-editor">
@@ -37,8 +33,8 @@
             type="number"
             placeholder="amount"
             bind:value={feature.amount} />
-          <label for="">
-            Per Level
+          <label>
+            <span>Per Level</span>
             <input type="checkbox" bind:checked={feature.leveled} />
           </label>
         </div>
@@ -55,7 +51,8 @@
             <input
               type="text"
               placeholder="name"
-              bind:value={feature.nameCriteria} />
+              bind:value={feature.name}
+            />
           </div>
           <div class="flex">
             <span>and whose specialization</span>
@@ -63,7 +60,7 @@
             <input
               type="text"
               placeholder="specialization"
-              bind:value={feature.specializationCriteria} />
+              bind:value={feature.specialization} />
           </div>
         {:else if feature.type === FeatureBonusType.Armor}
           <div class="flex">

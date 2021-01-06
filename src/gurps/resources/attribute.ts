@@ -24,7 +24,6 @@ export class Attribute {
     signature: string
     attributes: Record<string, Attribute>
     bonus: number
-
     selector = "attributeLevels"
     get attribute() { return this.host.getKeys().attributeLevels[this.signature] }
 

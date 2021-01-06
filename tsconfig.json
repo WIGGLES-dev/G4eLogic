@@ -37,13 +37,13 @@
                 "./src/components/*"
             ]
         },
-        "target": "ES2015",
+        "target": "ES2017",
         "allowJs": false
     },
     "include": [
         "types",
         "src",
-        "test", 
+        "test",
         "webpack"
     ],
     "exclude": [

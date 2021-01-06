@@ -1,19 +1,22 @@
-<script>
-  import { Tabs, Tab, TabPanel, TabList } from "@ui/tabs/tabs";
-  import Form from "@ui/form/Form";
-  import CategoryList from "@ui/form/CategoryList";
-
+<script lang='ts'>
+  import { Tabs, Tab, TabPanel, TabList } from "@components/Tabs/tabs";
+  import CategoryList from "@components/Form/CategoryList.svelte";
   import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
   import AttributeOptions from "@ui/options/AttributeOptions.svelte";
   import DifficultyOptions from "@ui/options/DifficultyOptions.svelte";
 
-  import Features from "./panels/Features";
+  import Features from "./panels/Features.svelte";
   import MeleeWeapons from "./panels/MeleeWeapons.svelte";
   import RangedWeapons from "./panels/RangedWeapons.svelte";
-  import SkillDefaults from "./panels/SkillDefaults";
+  import SkillDefaults from "./panels/SkillDefaults.svelte";
+  import { Skill } from '@internal';
 
-  export let entity = {};
-  $: ({ level$, exists } = entity);
+  export let id: string
+  export let entity: Skill = new Skill({id, type: Skill.type})
+  $: ({ 
+    level$,
+    exists 
+    } = entity);
 </script>
 
 <style>
@@ -31,43 +34,52 @@
       <Tab>User Description</Tab>
     </TabList>
     <TabPanel>
-      <Form>
-        <div class="flex">
-          <label for="">Name
+      <form>
+        <fieldset>
+          <div class="field">
+            <label for="">Name</label>
             <input
               class="flex-1"
               type="text"
               placeholder="name"
-              bind:value={$entity.name} /></label>
-          <label for="">Specialization<input
-              type="text"
-              bind:value={$entity.specialization} /></label>
-        </div>
-        <div class="flex">
-          <label for="">
-            Signature
+              bind:value={$entity.name} />
+          </div>
+          <div class="field">
+              <label for="">Specialization</label>
+              <input
+                type="text"
+                bind:value={$entity.specialization} />
+          </div>
+        </fieldset>
+       
+        <fieldset>
+          <div class="field">
+            <label for="">Signature</label>
             <AttributeOptions
               {entity}
               signaturesOnly={true}
               bind:attribute={$entity.signature} />
-          </label>
-          <label for="">
-            Difficulty
+          </div>
+          <div class="field">
+            <label for="">Difficulty</label>
             <DifficultyOptions bind:difficulty={$entity.difficulty} />
-          </label>
-          <label for="">Points
+          </div>
+          <div class="field">
+            <label for="">Points</label>
             <input
               type="number"
               placeholder="points"
               bind:value={$entity.points} />
-          </label>
-          <label for="">Final Level
-            <input type="number" disabled value={Math.floor($level$)} /></label>
-        </div>
+          </div>
+          <div class="field">
+            <label for="">Final Level</label>
+            <output>{Math.floor($level$)}</output>
+          </div>
+        </fieldset>
 
-        <div class="flex">
-          <label for="">
-            Encumbrance
+        <fieldset>
+          <div class="field">
+            <label for="">Encumbrance</label>
             <select bind:value={$entity.encumbrancePenaltyMultiple}>
               <option value={undefined} />
               <option value={0}>No penalty due to encumbrance</option>
@@ -80,38 +92,44 @@
                 </option>
               {/each}
             </select>
-          </label>
+          </div>
 
-          <label for="">TL
+          <div class="field">
+            <label for="">TL</label>
             <input
               type="text"
               placeholder="tech level"
               bind:value={$entity.techLevel} />
-          </label>
+          </div>
 
-          <label for="">Disabled
+          <div class="field">
+            <label for="">Disabled</label>
             <input type="checkbox" bind:checked={$entity.disabled} />
-          </label>
-        </div>
+          </div>
+        </fieldset>
 
-        <div class="flex">
+        <fieldset>
           <CategoryList bind:categories={$entity.categories} />
-          <label for="">Reference
+          <div class="field">
+            <label for="">Reference</label>
             <input
               type="text"
               placeholder="reference"
-              bind:value={$entity.reference} /></label>
-        </div>
-        <label for="">Notes </label>
-        <textarea bind:value={$entity.notes} placeholder="notes" rows="3" />
-      </Form>
+              bind:value={$entity.reference} />
+          </div>
+          <div class="field">
+            <label for="">Notes</label>
+            <textarea bind:value={$entity.notes} placeholder="notes" rows="3" />
+          </div>
+        </fieldset>
+      </form>
     </TabPanel>
     <TabPanel>
       <SkillDefaults {entity} bind:defaults={$entity.defaults} />
     </TabPanel>
     <TabPanel />
     <TabPanel>
-      <Features {entity} bind:features={$entity.bonuses} />
+      <Features {entity} bind:features={$entity.features} />
     </TabPanel>
     <TabPanel component={MeleeWeapons} {entity} />
     <TabPanel component={RangedWeapons} {entity} />

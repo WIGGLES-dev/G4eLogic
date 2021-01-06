@@ -5,12 +5,14 @@ import CopyPlugin from "copy-webpack-plugin";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import { TsConfigPathsPlugin } from "awesome-typescript-loader";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import {
     cssLoaderConfig,
     htmlLoaderConfig,
     svelteLoaderConfig,
     tsLoaderConfig,
     urlLoaderConfig,
+    yamlLoaderConfig,
 } from "./common";
 
 const cwd = process.cwd();
@@ -24,7 +26,8 @@ const config: webpack.Configuration = {
         contentBase: output,
         compress: true,
         port: 3000,
-        writeToDisk: true
+        writeToDisk: true,
+        hot: true
     },
     entry: {
         'gurps': 'src/gurps/system.ts',
@@ -32,7 +35,7 @@ const config: webpack.Configuration = {
     },
     resolve: {
         alias: {
-            ...prod ? rxPaths() : {},
+            ...rxPaths(),
         },
         plugins: [
             new TsConfigPathsPlugin({
@@ -53,6 +56,7 @@ const config: webpack.Configuration = {
             tsLoaderConfig,
             urlLoaderConfig,
             htmlLoaderConfig,
+            yamlLoaderConfig
         ]
     },
     mode,
@@ -62,11 +66,10 @@ const config: webpack.Configuration = {
                 { from: 'assets', to: output }
             ]
         }),
+        // new BundleAnalyzerPlugin(),
         new CleanWebpackPlugin(),
         new MiniCssExtractPlugin(),
-        new webpack.ProvidePlugin({
-            //Frappe: "frappe-datatable"
-        })
+        new webpack.ProvidePlugin({})
     ],
     devtool: prod ? false : 'source-map'
 }

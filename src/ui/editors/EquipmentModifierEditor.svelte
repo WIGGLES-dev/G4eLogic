@@ -1,5 +1,4 @@
 <script>
-  import Form from "@ui/form/Form";
   import {
     EquipmentModifierWeightType,
     EquipmentModifierWeightValueType,
@@ -11,7 +10,7 @@
 <style>
 </style>
 
-<Form>
+<form>
   <label for="">Name<input type="text" bind:value={$entity.name} /></label>
   <label for="">Tech Level<input
       type="text"
@@ -39,4 +38,4 @@
   <label for="">Notes<textarea bind:value={$entity.notes} /></label>
   <label for="">Reference
     <input type="text" bind:value={$entity.reference} /></label>
-</Form>
+  </form>

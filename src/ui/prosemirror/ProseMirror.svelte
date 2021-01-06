@@ -42,14 +42,13 @@
             },
         }),
     ];
-
     const state = EditorState.create({
         doc: DOMParser.fromSchema(mySchema).parse(""),
         plugins,
     });
 </script>
 
-<script>
+<script lang='ts'>
     import { onMount } from "svelte";
     import { transplant } from "@internal";
     import ProsemirrorEditor from "prosemirror-svelte";
@@ -69,7 +68,9 @@
     ) {
         try {
             editorState = fromJSON(content, mySchema, plugins);
-        } catch (err) {}
+        } catch (err) {
+            console.log(err);
+        }
     }
 
     function handleChange(event) {
@@ -92,9 +93,6 @@
 </script>
 
 <style>
-    section {
-        @apply p-1;
-    }
 </style>
 
 <svelte:window
@@ -103,13 +101,11 @@
             e.stopImmediatePropagation();
         }
     }} />
-<section on:mousedown={() => prosemirror.focus()}>
-    <ProsemirrorEditor
-        debounceChangeEventsInterval={2000}
-        on:keydown={(e) => console.log(e)}
-        bind:view
-        bind:this={prosemirror}
-        placeholder="Go ahead and type something"
-        {editorState}
-        on:change={handleChange} />
-</section>
+
+<ProsemirrorEditor
+    debounceChangeEventsInterval={2000}
+    bind:view
+    bind:this={prosemirror}
+    placeholder="Go ahead and type something"
+    {editorState}
+    on:change={handleChange} />

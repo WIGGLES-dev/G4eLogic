@@ -13,16 +13,16 @@ export interface HitLocationData {
 export class HitLocation {
     host: Resource
     keys: HitLocationData
-    location: string
+    name: string
     locations: Record<string, HitLocation>
     context: {
         armorBonus: number
         hitPoints: number
     }
-    constructor(host: Resource, keys: HitLocationData, location: string, locations: Record<string, HitLocation>, context: HitLocation["context"]) {
+    constructor(host: Resource, keys: HitLocationData, name: string, locations: Record<string, HitLocation>, context: HitLocation["context"]) {
         this.host = host;
         this.keys = keys;
-        this.location = location;
+        this.name = name;
         this.locations = locations;
         this.context = context
     }
@@ -30,20 +30,16 @@ export class HitLocation {
         return this.keys.subLocations?.map(
             subLocation => this.locations[subLocation]) ?? []
     }
-    get damageTaken() { return this.host.getKeys().hitLocationDamage[this.location] || 0 }
+    get damageTaken() { return this.host.getKeys().hitLocationDamage[this.name] || 0 }
     set damageTaken(damage) { this.setDamageTaken(damage) }
     @debounce(220)
     setDamageTaken(damage: number) {
-        this.host.set({
-            hitLocationDamage: {
-                [this.location]: damage
-            }
-        })
+        this.host.sub('hitLocationDamage').sub(this.name).value = damage;
     }
     isCrippled() {
         return this.crippleThreshold() > 0 && this.damageTaken > this.crippleThreshold()
     }
     crippleThreshold() {
-        return (this.context?.hitPoints / this.keys.crippleDivisor) || Number.POSITIVE_INFINITY
+        return (this.context?.hitPoints / this.keys.crippleDivisor) || 0
     }
 }

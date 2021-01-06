@@ -3,13 +3,16 @@ import {
     AutoSubscriber,
     Data,
     each,
+    GResource,
     Resource,
+    staticImplements,
 } from "@internal"
 import { Observable } from "rxjs";
 import { map, mergeAll, mergeMap, reduce } from "rxjs/operators"
 export interface TraitModifierData {
     type: "trait"
     enabled: boolean
+    name: string
     cost: number,
     costType: TraitModifierType
     levels: number
@@ -54,13 +57,19 @@ export interface TraitData extends Data {
     types: TraitType[]
     modifiers: TraitModifierData[]
 }
+
+@staticImplements<GResource<Trait>>()
 export class Trait extends Resource<TraitData> {
     static version = 1
     static type = "trait"
     constructor(identity: Trait["identity"]) {
         super(identity);
     }
-    getAdjustedPoints$() { return this.selectKeys().pipe(map(calculateTraitCost)) }
+    selectAdjustedPoints() {
+        return this.selectKeys().pipe(
+            map(calculateTraitCost)
+        )
+    }
 }
 
 export function calculateTraitCost(
@@ -81,7 +90,7 @@ export function calculateTraitCost(
     let levelLim = 0;
     let multiplier = getControlRatingMultipland(controlRating);
 
-    modifiers.forEach(modifier => {
+    modifiers?.forEach(modifier => {
         if (modifier.enabled) {
             let mod = costModifier(modifier);
             switch (modifier.costType) {
@@ -223,8 +232,8 @@ export function isFeature(trait: TraitData) {
         && calculateTraitCost(trait) === 0
 }
 
-export function getCategory(trait: TraitData) {
-    const categories = trait.categories?.join(" ");
+export function getCategory(tags: string[]) {
+    const categories = tags.join(' ');
     if (/meta/i.test(categories)) return TraitCategory.Meta
     if (/racial/i.test(categories)) return TraitCategory.Racial
     if (/quirk/i.test(categories)) return TraitCategory.Quirk
@@ -271,51 +280,36 @@ export function getContainerType(traits: Trait[]) {
     return TraitCategory.Meta;
 }
 
-function selectTraitType(trait: Trait): Observable<TraitCategory> {
-    const children$ = trait.selectSameChildren();
-    const childrenTypes$ = children$.pipe(
-        map(each(child => child.selectKeys())),
-        mergeMap(each(trait => trait.pipe(map(getCategory)))),
-        mergeAll(),
-        reduce((types, type) => types.add(type), new Set<TraitCategory>())
-    )
-    const type$ = trait.selectKeys().pipe(map(getCategory));
-    return type$
-}
-
 export function getTraitType(trait: Trait) {
     const keys = trait.getKeys();
-    const children = AutoSubscriber.get(trait.selectChildren("trait", Trait))
-    let type = getCategory(keys);
-
+    if (!keys) return TraitCategory.Never
+    const children = AutoSubscriber.get(trait.selectChildren({
+        type: 'trait',
+        caster: Trait,
+        maxDepth: 1
+    }));
+    let type = getCategory(keys.categories);
     if (children.length > 0) {
         return getContainerType(children)
     }
-    if (type > TraitCategory.Never) return type
-
-    const advantage = isAdvantage(keys)
-    const perk = isPerk(keys)
-
-    const disadvantage = isDisadvantage(keys)
-    const quirk = isQuirk(keys)
-
-    const feature = isFeature(keys)
-
+    if (type !== TraitCategory.Never) return type
+    const advantage = isAdvantage(keys);
+    const perk = isPerk(keys);
+    const disadvantage = isDisadvantage(keys);
+    const quirk = isQuirk(keys);
+    const feature = isFeature(keys);
     if (disadvantage) return TraitCategory.Disadavantage;
     if (quirk) return TraitCategory.Quirk;
-
     if (advantage) return TraitCategory.Advantage;
     if (perk) return TraitCategory.Perk;
-
     if (feature) return TraitCategory.Feature;
-
     type = TraitCategory.Meta;
     return type
 }
 
 export function split(traits: Trait[]) {
     if (!traits) return {}
-    return removeDuplicates({
+    const splits = {
         [TraitCategory.Advantage]: traits.filter(trait => getTraitType(trait) === TraitCategory.Advantage),
         [TraitCategory.Disadavantage]: traits.filter(trait => getTraitType(trait) === TraitCategory.Disadavantage),
         [TraitCategory.Racial]: traits.filter(trait => getTraitType(trait) === TraitCategory.Racial),
@@ -323,7 +317,8 @@ export function split(traits: Trait[]) {
         [TraitCategory.Perk]: traits.filter(trait => getTraitType(trait) === TraitCategory.Perk),
         [TraitCategory.Quirk]: traits.filter(trait => getTraitType(trait) === TraitCategory.Quirk),
         [TraitCategory.Feature]: traits.filter(trait => getTraitType(trait) === TraitCategory.Feature)
-    })
+    }
+    return removeDuplicates(splits);
 }
 
 export function sumTraitArray(traits: Trait[]) {
@@ -338,13 +333,16 @@ export function sumTraitArray(traits: Trait[]) {
  */
 export function removeDuplicates(lists: { [key: string]: Trait[] }) {
     const checked = new Set();
-    return Object.entries(lists).reduce((prev, [key, list]) => {
-        checked.add(key);
-        const checkAgainst = Object.entries(lists).filter(([key1, list]) => {
-            key !== key1 && !checked.has(key1)
-        }).map(values => values[1]).flat().map(list => list.id);
+    return Object.entries(lists).reduce((prev, [type, list]) => {
+        checked.add(type);
+        const checkAgainst = Object.entries(lists)
+            .filter(([key1, list]) => {
+                type !== key1 && !checked.has(key1)
+            })
+            .flatMap(values => values[1])
+            .map(list => list.id);
         let newCollection = list.filter(item => !checkAgainst.includes(item.id));
-        lists[key] = newCollection;
+        prev[type] = newCollection;
         return prev
-    }, lists)
+    }, {} as Record<string, Trait[]>)
 }

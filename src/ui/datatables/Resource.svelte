@@ -1,119 +1,101 @@
 <script context="module" lang="ts">
-    import { Observable } from 'rxjs';
-    import { map, tap } from 'rxjs/operators'
-    import { Resource, GConstructor, Registry } from "@internal";
-    import TreeGrid, { ItemAttribute, Label, TreeItem } from "@components/TreeGrid/TreeGrid.svelte";
+    import { Observable } from "rxjs";
+    import { map, tap } from "rxjs/operators";
+    import { 
+        Resource,
+        keyMap,
+        System,
+        Resolver, 
+        Resolvable 
+    } from "@internal";
+    import TreeGrid, {
+        ItemAttribute,
+        TreeItem
+    } from "@components/TreeGrid/TreeGrid.svelte";
     import { ContextMenuOption } from "@components/ContextMenu/ContextMenu.svelte";
-    import { Resolver, Resolvable } from '@ui/fieldConfig';
     export interface ResourceTreeMap {
         attributes: {
             [key: string]: {
-                header?: ItemAttribute
-                width?: string
-            } & ItemAttribute
-        }
-        context?: ContextMenuOption[]
-        classList?: string
-        headerContext?: ContextMenuOption[]
-        headerClassList?: string
+                header?: ItemAttribute;
+                width?: string;
+            } & ItemAttribute;
+        };
+        context?: ContextMenuOption[];
+        classList?: string;
+        headerContext?: ContextMenuOption[];
+        headerClassList?: string;
     }
-    function resourceToAttribute(resource: Resource, treeMap: Resolvable<ResourceTreeMap>): TreeItem {
+    function resourceToAttribute(
+        resource: Resource,
+        treeMap: Resolvable<ResourceTreeMap>
+    ): TreeItem {
+        const children$ = resource.selectSameChildren();
         const resolvedMap = Resolver.deepResolve(treeMap, [resource]);
-        const {
-            id,
-            canContainChildren,
-            flags: {
-                ui: {
-                    weight = null,
-                    toggled = false
-                } = {}
-            } = {}
-        } = resource.getMetadata();
-        const attributes =
-            Object.fromEntries(
-                Object.entries(resolvedMap.attributes).map(([key, attribute]) => [
-                    key,
-                    attribute
-                ])
-            );
+        const toggled = resource.subFlag('ui', 'toggled');
+        const showToggle = resource.index.sub('canContainChildren');
+        const disabled = resource.index.sub('enabled').pipe(map(b => !b))
         return {
-            attributes,
+            ctx: resource,
+            attributes: resolvedMap.attributes,
             context: resolvedMap.context,
-            weight,
-            id,
+            id: resource.id,
             toggled,
-            showToggle: canContainChildren,
+            showToggle,
             classList: resolvedMap.classList,
-            children: resourceToTree(resource, resource.type, resource.class, treeMap).pipe(
-                map(t => t.slice(1))
+            disabled,
+            children: resourceToTree(
+                children$,
+                treeMap
             )
-        }
+        };
     }
-    function resourceToTree(resource: Resource, type: string, cast: GConstructor<Resource>, treeMap: Resolvable<ResourceTreeMap>): Observable<TreeItem[]> {
-        const resolvedMap = Resolver.deepResolve(treeMap, [resource]);
-        const children$ = resource.selectChildren(type, cast);
-        return children$.pipe(
-            map(ra => {
-                const header = 
-                    Object.fromEntries(
-                        Object.entries(resolvedMap.attributes).map(([key, { header }]) => [key, header || key])
-                    );
-                return [{
-                        attributes: header,
-                        context: resolvedMap.headerContext,
-                        classList: resolvedMap.headerClassList
-                    },
-                    ...ra.map(
-                        r => resourceToAttribute(r, resolvedMap)
-                    )]
-            }),
-        ) as Observable<TreeItem[]>;
+    function resourceToTree(
+        resources$: Observable<Resource[]>,
+        treeMap: Resolvable<ResourceTreeMap>
+    ): Observable<TreeItem[]> {
+        return resources$.pipe(
+            map((ra) => ra.map(r => resourceToAttribute(r, treeMap)))
+        );
     }
 </script>
+
 <script lang="ts">
-    import { applyTransaction } from "@datorama/akita";
-    export let host: Resource;
-    export let type: string;
-    export let cast: GConstructor<Resource>;
+    export let host: Resource
+    export let type: string
+    export let resources: Observable<Resource[]>
     export let treeMap: Resolvable<ResourceTreeMap>;
     export let toggle;
-    $: widths = Object.fromEntries(
-        Object.entries(treeMap.attributes).map(([key,value]) => [
-            key,
-            value.width
-        ])
-    );
-    const items$ = resourceToTree(host, type, cast, treeMap);
-    $: items = $items$;
-    function sortList(e) {
-        const {
-            from,
-            to,
-            newList,
-            currentList
-        } = e.detail;
-        applyTransaction(() => {
-            if (from.id === to.id) return
-            newList.forEach((item,i) => {
-                if (item) {
-                    new Resource({
-                        type,
-                        id: item.id
-                    }).setFlag('ui', 'weight', i)
-                }
-            });
-            new Resource({
-                    type,
-                    id: from.id
-                }).transfer({
-                    type,
-                    id: to.id
-                });
+    export let createMergeData = {};
+    const resolvedMap = Resolver.deepResolve(treeMap, [host]);
+    $: headers = [{
+        attributes: keyMap(resolvedMap.attributes, (k,{header}) => [k, header||k]),
+        context: resolvedMap.headerContext,
+        classList: resolvedMap.headerClassList
+    }];
+    $: widths =  keyMap(resolvedMap.attributes, (key,value) => [key,value.width]);
+    const items$ = resourceToTree(resources, treeMap);
+    function sortList({detail: {from, to, newList, currentList}}) {
+        if (from.id === to.id) return;
+        const reorders = newList.map((item, i) => ({
+            id: item.id,
+            order: i
+        }))
+        System.index.update(reorders);
+        new Resource({
+            type,
+            id: from.id,
+        }).transfer({
+            type,
+            id: to.id,
         });
+    }
+    function onToggle({detail: {id, depth, index, toggled}}) {
+        new Resource({id,type}).setFlag('ui', 'toggled', toggled)
     }
     function addItem() {
         host.embed({
-            type
+            type,
+            ...createMergeData
         });
     }
 </script>
@@ -121,7 +103,10 @@
 <TreeGrid
     on:additem={addItem}
     on:sortlist={sortList}
+    on:toggle={onToggle}
     {toggle}
     {widths}
-    {items}
+    {headers}
+    items={$items$}
+    groupBy={Object.keys(headers[0].attributes)}
 />

@@ -1,4 +1,5 @@
 $schema: http://json-schema.org/draft-07/schema
+$id: http://valorsheet/systems/gurps/skill.yaml
 type: object
 properties:
   type:
@@ -50,7 +51,10 @@ properties:
   defaults:
     type: array
     items:
-      $ref: definitions.json#/default
+      $ref: definitions.yaml#/default
   mod:
     type: integer
+    default: 0
+  encumbrancePenaltyMultiple:
+    type: number
     default: 0

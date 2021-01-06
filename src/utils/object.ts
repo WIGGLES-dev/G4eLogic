@@ -1,9 +1,16 @@
 import * as jp from "jsonpath";
-export function filterKeys<T extends Record<string, any>>(object: T, predicate: (key: string, value: any, src: T) => boolean): T {
+import searchjs from 'searchjs';
+type AnyObject = Record<string | number | symbol, any>
+export function filterKeys<T extends AnyObject>(object: T, predicate: (key: string, value: any, src: T) => boolean): T {
     const filteredEntires =
         Object.entries(object)
             .filter(([key, value]) => predicate(key, value, object));
     return Object.fromEntries(filteredEntires) as T;
+}
+export function keyMap<T extends AnyObject, U>(object: T, map: <P extends keyof T>(key: P, value: T[P], i: number, src: T) => [key: string | number | symbol, value: U]) {
+    const entries = Object.entries(object);
+    const mapped = entries.map(([key, value], i) => map(key, value, i, object))
+    return Object.fromEntries(mapped);
 }
 export function flatFilter() { }
 export function reduceToPathRecord(path: string) {

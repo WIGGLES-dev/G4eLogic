@@ -7,7 +7,7 @@
 </style>
 
 <select bind:value={feature}>
-  <option value={undefined} />
+  <option value={undefined}>Select A Feature</option>
   <option value={FeatureBonusType.Attribute}>
     Gives an attribute bonus of
   </option>

@@ -1,16 +1,21 @@
 <script context="module" lang="ts">
-  
+    import { Observable } from 'rxjs';
+    import { SvelteComponent } from 'svelte';
+    export interface Component {
+        component: typeof SvelteComponent
+        props?: Record<string,any>
+    }
+    export type CellValue = string | number | Component | (() => CellValue) | Observable<CellValue>;
 </script>
 <script lang="ts">
     import Observe, {isStore} from "@components/Observe.svelte";
-    import { SvelteComponent } from "svelte";
-    export let value: any;
+    export let value: CellValue;
 </script>
 
 {#if value == null}
     <!--  -->
 {:else if typeof value === "string"}
-    {value}
+    {@html value}
 {:else if typeof value === "number"}
     {value}
 {:else if typeof value === "function"}
@@ -21,8 +26,6 @@
             <svelte:self value={nestedValue}/>
         </Observe>
     {:else if value.component}
-        <svelte:component this={value.component} {...value.props} {...value} />
-    {:else}
-        <svelte:component this={value} />
+        <svelte:component this={value.component} {...value} {...value.props} />
     {/if}
 {/if}

@@ -1,4 +1,4 @@
-<script>
+<script lang='ts'>
   import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 </script>
@@ -11,7 +11,7 @@
     @apply absolute top-0 right-0 text-sm;
   }
   li {
-    @apply border-b border-black border-dotted pb-2;
+    @apply py-2 my-2 border-b border-solid;
   }
 </style>
 

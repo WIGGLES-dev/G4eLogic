@@ -58,10 +58,52 @@
   }
 
   .ProseMirror {
+    @apply w-full p-2 max-h-full overflow-auto;
+    height: 800px;
     ol > li {
-      @apply list-decimal
+      @apply list-decimal;
     }
     ul > li {
-      @apply list-disc
+      @apply list-disc;
     }
+  }
+
+  body {
+    @apply h-screen flex flex-col;
+  }
+
+  input, textarea, select {
+    @apply outline-none bg-transparent;
+  }
+
+  form {
+    @apply h-full flex flex-wrap;
+  }
+
+  form .field {
+    @apply p-1;
+  }
+
+  form fieldset {
+    @apply p-3;
+  }
+
+  form label {
+    @apply block p-1;
+  }
+  
+  form label span {
+    @apply px-2;
+  }
+
+  form label textarea {
+    @apply block w-full h-60;
+  }
+
+  form label output {
+    @apply bg-gray-300 p-1;
+  }
+
+  form input, form select, form textarea {
+    @apply border-2 border-solid;
   }

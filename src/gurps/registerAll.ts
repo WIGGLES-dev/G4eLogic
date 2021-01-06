@@ -7,71 +7,79 @@ import {
     Character,
     RangedWeapon,
     MeleeWeapon,
-    Registry
+    System
 } from "@internal";
-
-import characterSchema from "./config/character.json";
-import equipmentSchema from "./config/equipment.json";
-import skillSchema from "./config/skill.json";
-import techniqueSchema from "./config/technique.json";
-import spellSchema from "./config/spell.json";
-import traitSchema from "./config/trait.json";
-import attributeSchema from "./config/attribute.json";
-import hitLocationSchema from "./config/hitLocation.json";
-import definitions from "./config/definitions.json";
-import meleeWeaponSchema from "./config/meleeWeapon.json";
-import rangedWeaponSchema from "./config/rangedWeapon.json";
-
+import characterSchema from "./config/character.yaml";
+import defaultCharacterConfig from './config/characterConfig.yaml';
+import equipmentSchema from "./config/equipment.yaml";
+import skillSchema from "./config/skill.yaml";
+import techniqueSchema from "./config/technique.yaml";
+import spellSchema from "./config/spell.yaml";
+import traitSchema from "./config/trait.yaml";
+import attributeSchema from "./config/attribute.yaml";
+import hitLocationSchema from "./config/hitLocation.yaml";
+import definitions from "./config/definitions.yaml";
+import meleeWeaponSchema from "./config/meleeWeapon.yaml";
+import rangedWeaponSchema from "./config/rangedWeapon.yaml";
+characterSchema.properties.config.default = defaultCharacterConfig;
+import Editor from '@ui/Editors/Editor.svelte';
+import Home from '@ui/Home.svelte';
+import Main from '@ui/Main.svelte';
+import View from '@components/View.svelte';
+System.components.set('editor', Editor);
+System.components.set('home', Home);
+System.components.set('main', Main)
+System.components.set('view', View)
 const resources = [
     {
         type: "character",
-        cast: Character,
+        caster: Character,
         schema: characterSchema,
     },
     {
         type: "equipment",
-        cast: Equipment,
+        caster: Equipment,
         schema: equipmentSchema
     },
     {
         type: "skill",
-        cast: Skill,
+        caster: Skill,
         schema: skillSchema
     },
     {
         type: "spell",
-        cast: Spell,
+        caster: Spell,
         schema: spellSchema
     },
     {
         type: "technique",
-        cast: Technique,
+        caster: Technique,
         schema: techniqueSchema
     },
     {
         type: "trait",
-        cast: Trait,
+        caster: Trait,
         schema: traitSchema
     },
     {
         type: "melee weapon",
-        cast: MeleeWeapon,
+        caster: MeleeWeapon,
         schema: meleeWeaponSchema
     },
     {
         type: "ranged weapon",
-        cast: RangedWeapon,
+        caster: RangedWeapon,
         schema: rangedWeaponSchema
     }
 ]
 try {
-    Registry
+    System
         .register(...resources);
 } catch (err) {
     console.error(err);
 }
 try {
-    Registry.validator
+    System.validator
         .addSchema(definitions, "definitions")
         .addSchema(hitLocationSchema, "hitLocation")
         .addSchema(attributeSchema, "attribute")

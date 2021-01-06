@@ -1,25 +1,31 @@
-<script>
-    import CategoryList from "@ui/form/CategoryList";
-    import Form from "@ui/form/Form";
-    import { Tabs, Tab, TabPanel, TabList } from "@ui/tabs/tabs";
+<script lang='ts'>
+    import CategoryList from "@components/Form/CategoryList.svelte";
+    import { Tabs, Tab, TabPanel, TabList } from "@components/Tabs/tabs";
 
-    import AttributeOptions from "@ui/options/AttributeOptions";
+    import AttributeOptions from "@ui/options/AttributeOptions.svelte";
     import DifficultyOptions from "@ui/options/DifficultyOptions.svelte";
 
-    import ProseMirror from "@ui/prosemirror/ProseMirror";
+    import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
 
-    import Features from "./panels/Features";
+    import Features from "./panels/Features.svelte";
     import MeleeWeapons from "./panels/MeleeWeapons.svelte";
     import RangedWeapons from "./panels/RangedWeapons.svelte";
 
-    export let entity = null;
-    const { level$ } = entity;
+    import { Spell } from '@internal';
+
+    export let id: string
+    export let entity = new Spell({id, type: Spell.type})
+    $: ({
+        exists,
+        level$
+    } = entity);
 </script>
 
 <style>
+
 </style>
 
-{#if entity.exists}
+{#if exists}
     <Tabs>
         <TabList>
             <Tab>Data</Tab>
@@ -31,82 +37,117 @@
             <Tab>User Description</Tab>
         </TabList>
         <TabPanel>
-            <Form>
-                <div class="flex">
-                    <label for="">Name<input
+            <form>
+                <fieldset>
+                    <div class="field">
+                        <label for="">Name</label>
+                        <input
                             class="flex-1"
                             type="text"
-                            bind:value={$entity.name} /></label>
-                    <label for="">Specialization<input
+                            bind:value={$entity.name} />
+                    </div>
+                    <div class="field">
+                        <label for="">Specialization</label>
+                        <input
                             type="text"
-                            bind:value={$entity.specialization} /></label>
-                </div>
-                <div class="flex">
-                    <label for="">
-                        Signature
+                            bind:value={$entity.specialization} />
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <div class="field">
+                        <label for="">Signature</label>
                         <AttributeOptions
                             {entity}
                             signaturesOnly={true}
                             bind:attribute={$entity.signature} />
-                    </label>
-                    <label for="">
-                        Difficulty
+                    </div>
+                    <div class="field">
+                        <label for="">Difficulty</label>
                         <DifficultyOptions
                             bind:difficulty={$entity.difficulty} />
-                    </label>
-                    <label for="">Points
+                    </div>
+                    <div class="field">
+                        <label for="">Points</label>
                         <input type="number" bind:value={$entity.points} />
-                    </label>
-                    <label for="">Final Level
+                    </div>
+                    <div class="field">
+                        <label for="">Final Level</label>
+                        <output>{Math.floor($level$)}</output>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <div class="field">
+                        <label for="">TL</label>
                         <input
-                            type="number"
-                            disabled
-                            value={Math.floor($level$)} /></label>
-                </div>
-                <div class="flex">
-                    <label for="">TL<input
                             type="text"
-                            bind:value={$entity.techLevel} /></label>
-
-                    <label for="">Disabled<input
+                            bind:value={$entity.techLevel} />
+                    </div>
+                    <div class="field">
+                        <label for="">Disabled</label>
+                        <input
                             type="checkbox"
-                            bind:checked={$entity.disabled} /></label>
-                </div>
-                <label for="">Resist<input
-                        type="text"
-                        bind:value={$entity.resist} /></label>
-                <label for="">Class<input
-                        type="text"
-                        bind:value={$entity.class} /></label>
-                <label for="">Cost<input
-                        type="text"
-                        bind:value={$entity.castingCost} /></label>
-                <label for="">Maintain<input
-                        type="text"
-                        bind:value={$entity.maintenanceCost} /></label>
-                <label for="">Time<input
-                        type="text"
-                        bind:value={$entity.castingTime} /></label>
-                <label for="">Duration<input
-                        type="text"
-                        bind:value={$entity.durations} /></label>
-
-                <div class="flex">
-                    <CategoryList bind:categories={$entity.categories} />
-
-                    <label for="">Reference
+                            bind:checked={$entity.disabled} />
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <div class="field">
+                        <label for="">Resist</label>
                         <input
                             type="text"
-                            bind:value={$entity.reference} /></label>
-                </div>
-                <label for="">Notes </label>
-                <textarea bind:value={$entity.notes} name="" id="" rows="3" />
-            </Form>
+                            bind:value={$entity.resist} />
+                    </div>
+                    <div class="field">
+                        <label for="">Class</label>
+                        <input
+                                type="text"
+                                bind:value={$entity.class} />
+                    </div>
+                    <div class="field">
+                        <label for="">Cost</label>
+                        <input
+                            type="text"
+                            bind:value={$entity.castingCost} />
+                    </div>
+                    <div class="field">
+                        <label for="">Maintain</label>
+                        <input
+                                type="text"
+                                bind:value={$entity.maintenanceCost} />
+                    </div>
+                    <div class="field">
+                        <label for="">Time</label>
+                        <input
+                                type="text"
+                                bind:value={$entity.castingTime} />
+                    </div>
+                    <div class="field">
+                        <label for="">Duration</label>
+                        <input
+                            type="text"
+                            bind:value={$entity.durations} />
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <CategoryList bind:categories={$entity.categories} />
+                    <div class="field">
+                        <label for="">Reference</label>
+                        <input
+                            type="text"
+                            bind:value={$entity.reference} />
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <div class="field">
+                        <label for="">Notes</label>
+                        <textarea bind:value={$entity.notes} name="" id="" rows="3" />
+                    </div>
+                </fieldset>
+            </form>
         </TabPanel>
         <TabPanel />
         <TabPanel />
         <TabPanel>
-            <Features {entity} bind:features={$entity.bonuses} />
+            <Features {entity} bind:features={$entity.features} />
         </TabPanel>
         <TabPanel component={MeleeWeapons} props={{ entity }} />
         <TabPanel component={RangedWeapons} props={{ entity }} />

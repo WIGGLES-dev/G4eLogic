@@ -3,7 +3,7 @@ import { capitalize, HitLocation } from "@internal";
 export function hitLocationTemplate(location: HitLocation) {
     if (!location) return `Location Not Found`;
     return `
-        <strong>${capitalize(location.location)} (${location.keys.hitPenalty || 0})</strong>,` +
+        <strong>${capitalize(location.name)} (${location.keys.hitPenalty || 0})</strong>,` +
         (location.keys.hitRange?.length > 0 ? ` hits on ${location.keys.hitRange.join(", ")} on 3d6` : "") +
         `<br/>
         <strong> DR ${location.context.armorBonus || 0}</strong>`

@@ -59,3 +59,9 @@ export const htmlLoaderConfig = {
     test: /\.html$/i,
     loader: 'html-loader',
 }
+
+export const yamlLoaderConfig = {
+    test: /\.ya?ml$/,
+    type: 'json' as const,
+    use: 'yaml-loader'
+}

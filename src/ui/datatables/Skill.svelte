@@ -4,45 +4,32 @@
     import { Character, Skill, SkillLike, mapEach, each, AutoSubscriber } from "@internal";
     import Resource, { ResourceTreeMap } from './Resource.svelte';
     import {
-        reference,
-        points,
-        difficulty,
-        signature,
-        mod,
-        rsl,
-        level,
-        name
-    } from "@ui/fieldConfig";
-    import {
+        skill,
         deleteResource,
+        editResource,
         makeContainer,
         undoMakeContainer
-    } from "@ui/contextMenuOptions"
+    } from "@ui/fieldConfig";
     export const skillMap= {
         attributes: {
-            reference,
-            points,
-            difficulty,
-            signature,
-            mod,
-            rsl,
-            level,
-            name
+            ...skill
         },
         context: [
-            deleteResource,
+            editResource,
             makeContainer,
-            undoMakeContainer
+            undoMakeContainer,
+            deleteResource
         ]
     }
 </script>
 <script lang="ts">
     export let character: Character;
+    const skills$ = character.selectChildren({type: 'skill', caster: Skill, maxDepth: 1})
 </script>
 
 <Resource 
     type="skill"
-    cast={Skill}
+    resources={skills$}
     host={character}
     treeMap={skillMap}
     toggle="name"
