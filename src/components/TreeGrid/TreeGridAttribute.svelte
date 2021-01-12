@@ -82,7 +82,7 @@
         {/if}
         <Toggle class='px-1 text-red-700' on:toggle={onToggle} visible={toggle === group && $showToggle} toggled={$toggled} />
         <slot name='cell' value={attribute} {item} {group}>
-            <Cell value={attribute} />
+            <Cell value={attribute} {...attribute} />
         </slot>
     </div>
 </div>

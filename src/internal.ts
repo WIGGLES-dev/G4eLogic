@@ -1,3 +1,4 @@
+import 'dexie-observable';
 import './extend.ts';
 export * from "./utils/strings";
 export * from "./utils/dom";

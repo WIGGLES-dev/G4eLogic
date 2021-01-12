@@ -4,10 +4,8 @@
   "description": "Character sheet builder for the GURPS4e System",
   "main": "lib/index.js",
   "scripts": {
-    "build-app": "webpack --config webpack/buildApp.ts",
-    "build-library": "webpack --config webpack/builLibrary.ts",
-    "buildConfig": "ts-node src/gurps/config/build.ts",
-    "dev": "webpack serve --config webpack/buildApp.ts --env prod=false --env UV_THREADPOOL_SIZE=100",
+    "build": "webpack --config webpack/build.ts",
+    "dev": "webpack serve --config webpack/build.ts --env prod=false",
     "test": "mocha -r ts-node/register -r tsconfig-paths/register test/**.ts",
     "karma": "karma start karma.config.ts"
   },
@@ -88,6 +86,7 @@
     "svelte-loader": "^2.13.6",
     "svelte-preprocess": "^4.5.1",
     "svelte-select": "^3.14.3",
+    "svelte-spa-router": "^3.1.0",
     "tailwindcss": "^2.0.2",
     "ts-node": "^9.0.0",
     "tsconfig-paths": "^3.9.0",

@@ -18,17 +18,25 @@
     $: if (subMenuElement instanceof HTMLElement) {
         createPopper(menuItemElement, subMenuElement, {
             placement: 'right-start',
-            strategy: 'fixed'
+            strategy: 'fixed',
+            modifiers: [
+                {
+                    name: 'offset',
+                    options: {
+                        offset: [5,5]
+                    }
+                }
+            ]
         })
     }
 </script>
 
 <style>
-
+    
 </style>
-   
+
 {#if typeof option.show === 'function' ? option.show() : true }
-    <li class="px-1 text-white flex" on:click|stopPropagation={click} bind:this={menuItemElement}>
+    <li class="p-1 text-white flex hover:bg-red-700" on:click|stopPropagation={click} bind:this={menuItemElement}>
         <Cell value={option.label}/>
         {#if option.options instanceof Array}
             <div class="px-1 h-full" on:click|capture|stopPropagation={renderSubMenu} style=''>

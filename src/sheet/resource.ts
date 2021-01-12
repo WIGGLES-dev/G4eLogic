@@ -136,9 +136,9 @@ export class Resource<T extends Data = Data> {
     get parent$() { return this.index.sub('parent') }
     descendants$
     ancestors$
-    sub<P extends keyof T>(prop: P) { return this.state.sub(prop) }
-    set(value: Partial<T>) { this.state.set(value) }
-    next(value: T) { this.state.next(value) }
+    sub(...keys: string[]) { return this.state.sub(...keys) }
+    set(v) { return this.state.set(v) }
+    next(v) { return this.state.next(v) }
     async update(value: Partial<T>) {
         return this.system.crud.update({
             ...value,
@@ -212,24 +212,12 @@ export class Resource<T extends Data = Data> {
             [key]: value
         }
     }
-    subFlag(scope: string, key: string) {
-        const currentValue = !!this.index.value.flags[scope]
-        if (!currentValue) {
-            this.index.sub('flags').sub(scope).value = {}
-        }
-        return this.index.sub('flags').sub(scope).sub(key);
-    }
     getFlag(scope: string, key: string) {
         return this.index.value.flags[scope][key]
     }
     do(...args) { }
-    edit() {
-        this.system.state.sub('view').value = {
-            component: 'editor',
-            props: {
-                type: this.type,
-                id: this.id
-            }
-        }
+    dump() {
+        const dump = this.system.dumps(this.identity)
+        console.log(dump);
     }
 }

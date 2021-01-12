@@ -1,11 +1,11 @@
 import db from 'dexie';
-import 'dexie-observable';
 import { DatabaseChangeType, IDatabaseChange } from 'dexie-observable/api';
 import { Collection, GConstructor, Resource, orArray, OrArray, Component, GResource } from "@internal"
 import { map, filter, distinctUntilChanged } from 'rxjs/operators';
 import Ajv from "ajv"
 import { State, reverse } from "rxdeep";
 import { v4 as uuidv4 } from 'uuid';
+import $RefParser from '@apidevtools/json-schema-ref-parser';
 export interface Identity {
     type: string
     id: string
@@ -48,11 +48,12 @@ export class Crud {
     }
     static async create<C extends OrArray<{ [key: string]: any, type: string }>>(resources: C, options?: CreateOptions) {
         const created: Resource[] = []
-        const createdOn = this.stamp();
+        const stamp = this.stamp();
         for (let resource of orArray(resources)) {
             const {
                 id = this.tag(),
-                type
+                type,
+                createdOn = stamp
             } = resource;
             const collection = System.collections.get(type);
             if (!collection) continue
@@ -65,6 +66,7 @@ export class Crud {
                 type,
                 id,
                 alternativeIds: {},
+                source: 'Valor',
                 createdOn,
                 lastEdit: undefined,
                 enabled: true,
@@ -78,6 +80,9 @@ export class Crud {
             created.push(new Resource({ id, type: resource.type }));
         }
         return created
+    }
+    static async read(resources) {
+
     }
     static async update(updates: OrArray<Record<string, any> & Identity>, options?: UpdateOptions) {
         const lastEdit = this.stamp();
@@ -139,6 +144,7 @@ export class Crud {
         const { } = options || {};
         for (const embed of orArray(embeds)) {
             const { type, parent } = embed;
+            delete embed.parent;
             if (!System.check(parent.id)) continue
             const id = this.tag();
             await this.create({
@@ -246,12 +252,12 @@ export class Crud {
             }
         }
     }
-    static save() { }
-    static load() { }
 }
-export type TypeCollection = Record<string, Record<string, Identity>>
+export type TypeCollection<D extends Identity = Identity> = Record<string, Record<string, D>>
 export interface MetaData extends Identity {
     alternativeIds: Record<string, string>
+    source: string
+    progenitor?: Identity
     enabled: boolean
     flags: Record<string, any>
     parent: Identity
@@ -261,45 +267,30 @@ export interface MetaData extends Identity {
     createdOn: number
     lastEdit: number
 }
+interface DataDump<K = any> extends MetaData {
+    parent: DataDump
+    children: TypeCollection<DataDump>
+    keys: K
+}
 export interface ResourceRegister {
     type: string
     caster: GResource
-    schema: Record<string, any>
-}
-interface SystemState {
-    view: {
-        component: string
-        props?: Record<string, any>
-    }
-    transacting: boolean
-}
-const defaultState: SystemState = {
-    view: {
-        component: 'home'
-    },
-    transacting: true
+    schema: Record<string, any> | string
 }
 export class System {
     static db = new db('valor')
-    static state: State<SystemState> = new State(defaultState)
-    static view = {
-        state: System.state.sub('view').downstream.subscribe((change) => System.view.changes.push(change)),
-        changes: [],
-        last() {
-            const last = this.changes.pop()
-            const reversed = reverse(last);
-            System.state.sub('view').upstream.next(reversed as any);
-            this.changes.pop();
-        }
-    }
     static crud = Crud
     static validator = new Ajv({
         strict: false,
         coerceTypes: true,
         useDefaults: true,
     })
+    static parser = new $RefParser()
     static components: Map<string, Component> = new Map()
     static casters: Map<string, GResource> = new Map()
+    static async getCaster(type: string) { }
+    static async getComponent(component: string) { }
+    static async getSchema(schema: string) { }
     static index = new Collection<MetaData>({
         type: 'index'
     })
@@ -349,21 +340,50 @@ export class System {
         }
         return trail
     }
-    static register(...resources: ResourceRegister[]) {
+    static async register(...resources: ResourceRegister[]) {
         for (const { type, caster, schema } of resources) {
             this.casters.set(type, caster);
             this.collections.set(type, new Collection({
                 type
             }));
-            this.validator.addSchema(schema, type);
+            const _schema = await this.parser.dereference(schema);
+            this.validator.addSchema(_schema, type);
         }
     }
     static validate<D>(type: string, data: any): data is D {
         return this.validator.validate(type, data)
     }
     static check(id: string) { return this.index.check(id) }
-    static deReferenceSchema(type: string) {
-
+    static dumps(ident: Identity) {
+        const { id, type } = ident;
+        const collection = this.collections.get(type);
+        if (!collection) return
+        const root = System.index.read(id);
+        const keys = collection.read(id);
+        const dump = { ...root, keys };
+        const children = root.children;
+        for (const type in children) {
+            const collection = children[type] || {};
+            for (const [_id, identity] of Object.entries(collection)) {
+                const _dump = this.dumps(identity);
+                dump.children[type][_id] = _dump
+            }
+        }
+        return dump
+    }
+    static loads(data: DataDump) {
+        const { id, type, children } = data;
+        const collection = this.collections.get(type);
+        if (!collection) return
+        const load: MetaData = { ...data }
+        for (const type in children) {
+            const collection = children[type] || {};
+            for (const [_id, resource] of Object.entries(collection)) {
+                load.children[type][_id] = System.crud.extractIdentity(resource);
+                this.loads(resource);
+            }
+        }
+        System.crud.create(load);
     }
     private static _handleChange(changes: IDatabaseChange[]) {
         for (const change of changes) {
@@ -384,14 +404,18 @@ export class System {
             }
         }
     }
-    private static _loadTables() {
+    private static async _loadTables() {
+        const loading = [];
         for (const collection of [...this.collections.values(), this.index]) {
             const table = collection.table;
             if (!table) continue;
-            table.each(collection.create.bind(collection));
+            const promise = table.each(collection.create.bind(collection));
+            loading.push(promise);
         }
+        return Promise.all(loading);
     }
-    static init() {
+    static async init(fn: () => Promise<void> = async () => { }) {
+        await fn();
         const stores = {
             'index': 'id,type'
         };
@@ -400,17 +424,10 @@ export class System {
         }
         this.db.version(1).stores(stores);
         //this.db.on('changes', this._handleChange.bind(this));
-        this._loadTables();
+        await this._loadTables();
+        //@ts-ignore
+        window.system = this;
     }
-}
-const stdObject = {
-    type: "object",
-    patternProperties: {
-        ".": {
-            type: "string"
-        }
-    },
-    default: {}
 }
 const metaDataSchema = {
     $id: "http://valorsheet/systems/gurps/resource.json",

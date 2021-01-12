@@ -1,0 +1,24 @@
+$schema: http://json-schema.org/draft-07/schema
+$id: http://valorsheet/systems/gurps/attribute.yaml
+type: object
+properties:
+  abbreviation:
+    type: string
+  tooltip:
+    type: string
+  costPerLevel:
+    type: integer
+  basedOn:
+    type: string
+  skillSignature:
+    type: boolean
+  tags:
+    type: array
+    items:
+      enum:
+        - primary
+        - sub-stat
+        - secondary
+        - derived
+        - tertiary
+        - optional

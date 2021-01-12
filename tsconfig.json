@@ -37,7 +37,7 @@
                 "./src/components/*"
             ]
         },
-        "target": "ES2017",
+        "target": "ES2015",
         "allowJs": false
     },
     "include": [

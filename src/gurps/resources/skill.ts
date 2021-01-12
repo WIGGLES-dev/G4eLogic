@@ -45,6 +45,7 @@ export abstract class SkillLike<Model extends SkillLikeKeys & Data = SkillLikeKe
     constructor(identity: SkillLike<Model>["identity"]) {
         super(identity);
     }
+    static selectBestDefault() {  }
     selectHighestDefault$(this: Resource<{ defaults: SkillDefault[] } & Data>) {
         const character$ = this.selectNearest('character');
         const defaults$ = this.sub('defaults');

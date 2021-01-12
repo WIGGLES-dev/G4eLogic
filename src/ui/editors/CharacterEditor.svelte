@@ -17,7 +17,6 @@
   
     export let id;
     export let entity = new Character({id, type: Character.type});
-    console.log(entity);
     setContext("sheet", entity);
   </script>
   

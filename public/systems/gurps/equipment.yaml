@@ -1,0 +1,44 @@
+$schema: http://json-schema.org/draft-07/schema
+$id: http://valorsheet/systems/gurps/equipment.yaml
+type: object
+require:
+  - type
+properties:
+  type:
+    const: equipment
+    default: equipment
+  version:
+    const: 1
+    default: 1
+  name:
+    type: string
+  weight:
+    type: number
+    default: 1
+  value:
+    type: number
+    default: 0
+  location:
+    type: string
+    default: carried
+  quantity:
+    type: integer
+    default: 1
+  uses:
+    type: integer
+    default: 0
+  maxUses:
+    type: integer
+    default: 0
+  ignoreForSkills:
+    type: boolean
+    default: false
+example:
+  name: Reinforced Leather Satchel
+  weight: 2.15
+  value: 40.25
+  location: carried
+  quantity: 1
+  uses: null
+  maxUses: null
+  ignoreForSkills: false

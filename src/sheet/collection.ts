@@ -19,10 +19,6 @@ import {
     takeWhile,
     debounceTime
 } from 'rxjs/operators';
-interface CollectionConfig {
-    type: string
-}
-
 export class Collection<T extends Identity> {
     private _subscriptions: Subscription[] = []
     get system() { return System }
@@ -32,20 +28,21 @@ export class Collection<T extends Identity> {
     schema
     state: State<Record<string, T>> = new State({})
     constructor({
-        type
-    }: CollectionConfig) {
+        type = undefined as string
+    }) {
         this.type = type;
         this._createInitialSubscription();
     }
     private _createInitialSubscription() {
         const sub1 = this.state.pipe(
             debounceTime(300)
-        ).subscribe((store) => {
-            for (const [key, value] of Object.entries(store)) {
-                this.table.update(key, value);
-            }
-        });
+        ).subscribe(this._writeTable.bind(this))
         this._subscriptions.push(sub1);
+    }
+    private _writeTable(state) {
+        for (const [key, value] of Object.entries(state)) {
+            this.table.update(key, value);
+        }
     }
     async create(data: Partial<T>) {
         const {

@@ -32,20 +32,20 @@
     {/each}
 {:else}
     <slot name='above'>
-        <Cell value={above} /> 
+        <Cell value={above} {...above} /> 
     </slot>
     <div class="flex flex-wrap">
         <slot name="left">
-            <Cell value={left} /> 
+            <Cell value={left} {...left} /> 
         </slot>
         <slot>
-            <Cell value={main}/>
+            <Cell value={main} {...main}/>
         </slot>
         <slot name="right">
-            <Cell value={right} />
+            <Cell value={right} {...right} />
         </slot>
     </div>
     <slot name="below">
-        <Cell value={below} />
+        <Cell value={below} {...below} />
     </slot>
 {/if}

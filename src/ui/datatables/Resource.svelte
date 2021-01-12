@@ -30,8 +30,10 @@
         treeMap: Resolvable<ResourceTreeMap>
     ): TreeItem {
         const children$ = resource.selectSameChildren();
-        const resolvedMap = Resolver.deepResolve(treeMap, [resource]);
-        const toggled = resource.subFlag('ui', 'toggled');
+        const resolvedMap = Resolver.deepResolve(treeMap, {
+            context:[resource]
+        });
+        const toggled = resource.index.sub('flags','ui', 'toggled');
         const showToggle = resource.index.sub('canContainChildren');
         const disabled = resource.index.sub('enabled').pipe(map(b => !b))
         return {
@@ -66,9 +68,11 @@
     export let treeMap: Resolvable<ResourceTreeMap>;
     export let toggle;
     export let createMergeData = {};
-    const resolvedMap = Resolver.deepResolve(treeMap, [host]);
+    const resolvedMap = Resolver.deepResolve(treeMap, { 
+        context: [ host ]
+    });
     $: headers = [{
-        attributes: keyMap(resolvedMap.attributes, (k,{header}) => [k, header||k]),
+        attributes: keyMap(resolvedMap.attributes, (k, { header }) => [k, header||k]),
         context: resolvedMap.headerContext,
         classList: resolvedMap.headerClassList
     }];
@@ -90,7 +94,7 @@
         });
     }
     function onToggle({detail: {id, depth, index, toggled}}) {
-        new Resource({id,type}).setFlag('ui', 'toggled', toggled)
+        new Resource({id,type}).index.sub('flags', 'ui', 'toggled').value = toggled;
     }
     function addItem() {
         host.embed({

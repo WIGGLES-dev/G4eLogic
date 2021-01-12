@@ -29,8 +29,8 @@
     };
 </script>
 <script lang='ts'>
-    export let type: string
-    export let id: string
+    export let params;
+    $: console.log(params);
 </script>
 
-<svelte:component this={editors[type]} {id} {type} />
+<svelte:component this={editors[params.type]} id={params.id} type={params.type} />

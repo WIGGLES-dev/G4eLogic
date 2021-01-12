@@ -8,6 +8,7 @@ import { Resource, Skill, Equipment, Trait, Character, log, Resolver } from "@in
 import { from, Observable } from "rxjs";
 import { map, mergeMap } from 'rxjs/operators';
 import { State } from 'rxdeep';
+import { push, pop, replace } from 'svelte-spa-router'
 function handleDeleteData(data: Resource | State<any[]>) {
     if (data instanceof Resource) {
         return function () {
@@ -26,7 +27,7 @@ export const deleteResource = {
 }
 export const editResource = {
     label: 'Edit',
-    callback: new Resolver((src: Resource) => () => src.edit()),
+    callback: new Resolver((src: Resource) => () => push(`/edit/${src.type}/${src.id}/`)),
     show() { return true }
 }
 export const makeContainer = {
@@ -86,8 +87,7 @@ export const skill = {
         options: new Resolver((skill: Skill) => {
             return skill.selectNearest('character', Character)
                 .pipe(
-                    log('character'),
-                    mergeMap(char => char.sub('config').sub('attributes')),
+                    mergeMap(char => char.state.sub('config', 'attributes')),
                     map(attributes => Object.entries(attributes || {})),
                     map(attributes => attributes.filter(([key, value]) => value.skillSignature)),
                     map(attributes => attributes.map(([value, attr]) => ({ value, label: attr.abbreviation || value })))
@@ -248,11 +248,13 @@ export const equipment = {
             right: "<span class='px-3'>Equipment</span>",
             main: {
                 component: Select,
-                options: new Resolver((char: Character) => from([[
-                    { label: 'Carried', value: 'carried' },
-                    { label: 'Other', value: 'other' }
-                ]])),
-                value: new Resolver((char: Character) => char.subFlag('ui', 'equipmentFilter')),
+                options: new Resolver((char: Character) => from([
+                    [
+                        { label: 'Carried', value: 'carried' },
+                        { label: 'Other', value: 'other' }
+                    ]
+                ])),
+                value: new Resolver((char: Character) => char.index.sub('flags', 'ui', 'equipmentFilter')),
             }
         }
     },

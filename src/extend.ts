@@ -1,4 +1,4 @@
-import { State, Change } from 'rxdeep';
+import { State, Change, KeyedState, VerifiedState } from 'rxdeep';
 import deepmerge from 'deepmerge'
 import searchjs, { AnyObject } from 'searchjs';
 declare module 'rxdeep/dist/es6/state' {
@@ -11,6 +11,8 @@ declare module 'rxdeep/dist/es6/state' {
         sub<K1 extends keyof T, K2 extends keyof T[K1], K3 extends keyof T[K1][K2], K4 extends keyof T[K1][K2][K3], K5 extends keyof T[K1][K2][K3][K4]>(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5): State<T[K1][K2][K3][K4][K5]>
         sub<K1 extends keyof T, K2 extends keyof T[K1], K3 extends keyof T[K1][K2], K4 extends keyof T[K1][K2][K3], K5 extends keyof T[K1][K2][K3][K4], K6 extends keyof T[K1][K2][K3][K4][K5]>(k1: K1, k2: K2, k3: K3, k4: K4, k5: K5, k6: K6): State<T[K1][K2][K3][K4][K5][K6]>
         sub(...keys: string[]): State<any>
+        verified()
+        keyed()
     }
 }
 State.prototype.set = function <T>(this: State<T>, value: Partial<T>) {
@@ -26,9 +28,9 @@ State.prototype.set = function <T>(this: State<T>, value: Partial<T>) {
 }
 const sub = State.prototype.sub;
 State.prototype.sub = function <T>(this: State<T>, ...keys: string[]) {
-    const _sub = sub(keys.shift());
-    if (keys.length > 0) {
-        return this.sub(...keys)
+    let _sub: State<any> = this
+    for (const key of keys) {
+        _sub = sub.call(_sub, key);
     }
     return _sub
 }

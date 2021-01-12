@@ -1,22 +1,20 @@
 <script lang='ts'>
     import Sidebar from '@components/Sidebar/Sidebar.svelte';
     import { System } from '@internal';
-    const view$ = System.state.sub('view');
-    $: view = {
-        component: System.components.get($view$.component),
-        props: $view$.props
-    }
+    import Router from 'svelte-spa-router'
+    import Editor from '@ui/editors/Editor.svelte';
+    import Home from '@ui/Home.svelte';
+    import { push, pop, replace } from 'svelte-spa-router'
     function setViewHome() {
-        System.state.sub('view').value = {
-            component: 'home'
-        }
+        push('/')
     }
     function createCharacter() {
         System.crud.create({type: 'character'});
     }
-    function gotoLastView() {
-        System.view.last();
-    }
+    const routes = {
+        '/': Home,
+        '/edit/:type/:id/*': Editor
+    };
 </script>
 
 <style>
@@ -40,12 +38,12 @@
             <button class='sidebar-button disabled'>Upload GCS Files</button>
             <button class='sidebar-button disabled'>View Documentation</button>
             <div slot="bottom" class='flex text-center text-white'>
-                <span class="fas fa-arrow-left flex-1 hover:bg-gray-400 p-3" on:click={gotoLastView}></span>
+                <span class="fas fa-arrow-left flex-1 hover:bg-gray-400 p-3" on:click={pop}></span>
                 <span class="fas fa-home flex-1 hover:bg-gray-400 p-3" on:click={setViewHome}></span>
             </div>
         </Sidebar>
         <div class='flex-1'>
-            <svelte:component this={view.component} {...view.props} />
+            <Router {routes} /> 
         </div>
     </div>
 </main>

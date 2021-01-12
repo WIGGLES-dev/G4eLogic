@@ -13,7 +13,14 @@ export class Resolver<C extends any[] = any[], R = any> {
             console.log(err);
         }
     }
-    static deepResolve<T, C extends any[]>(target: Resolvable<T>, context: C, maxDepth = 10, currentDepth = 0): T {
+    static replace() {
+
+    }
+    static deepResolve<T>(target: Resolvable<T>, {
+        context = [],
+        maxDepth = 10,
+        currentDepth = 0,
+    }): T {
         const clone = {} as T
         if (currentDepth > maxDepth) return target as T
         if (target == undefined || typeof target === 'string' || typeof target === 'number') return target as T
@@ -21,9 +28,17 @@ export class Resolver<C extends any[] = any[], R = any> {
             if (value instanceof Resolver) {
                 clone[key] = value.resolve(...context)
             } else if (value instanceof Array) {
-                clone[key] = value.map(value => Resolver.deepResolve(value, context, maxDepth, currentDepth + 1));
+                clone[key] = value.map(value => Resolver.deepResolve(value, {
+                    context,
+                    maxDepth,
+                    currentDepth: currentDepth + 1
+                }));
             } else if (typeof value === 'object') {
-                clone[key] = Resolver.deepResolve(value, context, maxDepth, currentDepth + 1);
+                clone[key] = Resolver.deepResolve(value, {
+                    context,
+                    maxDepth,
+                    currentDepth: currentDepth + 1
+                });
             } else {
                 clone[key] = value
             }
