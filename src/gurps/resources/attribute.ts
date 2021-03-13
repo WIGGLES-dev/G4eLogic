@@ -25,7 +25,7 @@ export class Attribute {
     attributes: Record<string, Attribute>
     bonus: number
     selector = "attributeLevels"
-    get attribute() { return this.host.getKeys().attributeLevels[this.signature] }
+    get attribute() { return this.host.value.attributeLevels[this.signature] }
 
     constructor(
         host: Resource,
@@ -45,31 +45,19 @@ export class Attribute {
     set level(level) { this.updateLevel(level) }
     @debounce(220)
     updateLevel(level) {
-        this.host.update({
-            [this.selector]: {
-                [this.signature]: {
-                    level
-                }
-            }
-        });
+        this.host.sub(this.selector, this.signature).assign({ level })
     }
 
     get modifier(): number { return this.attribute?.mod ?? null }
     set modifier(mod) { this.updateModifier(mod) }
     @debounce(220)
     updateModifier(mod) {
-        this.host.set({
-            [this.selector]: {
-                [this.signature]: {
-                    mod
-                }
-            }
-        });
+        this.host.sub(this.selector, this.signature).assign({ mod })
     }
     get unmodifiedLevel(): number { return this.calculateLevel() - this.modifier - this.bonus }
     get displayLevel(): number { return this.calculateLevel() }
-    set displayLevel(level) { this.level = level - this.modifier - this.basedOn() - this.bonus }
-    calculateLevel(): number { return this.level + this.modifier + this.basedOn() + this.bonus }
+    set displayLevel(level) { this.level = level - (this.modifier || 0) - (this.basedOn() || 0) - (this.bonus || 0) }
+    calculateLevel(): number { return (this.level || 0) + (this.modifier || 0) + (this.basedOn() || 0) + (this.bonus || 0) }
     basedOn(): number {
         const { basedOn } = this.keys;
         if (basedOn?.startsWith("return")) {
@@ -92,12 +80,6 @@ export class Attribute {
     set currentValue(val) { this.setCurrentValue(val) }
     @debounce(220)
     setCurrentValue(currentValue: number) {
-        this.host.set({
-            [this.selector]: {
-                [this.signature]: {
-                    currentValue
-                }
-            },
-        })
+        this.host.sub(this.selector, this.signature).assign({ currentValue })
     }
 }

@@ -1,5 +1,8 @@
 {
     "compilerOptions": {
+        "target": "es6",
+        "allowJs": true,
+        "noImplicitThis": true,
         "moduleResolution": "node",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
@@ -9,19 +12,20 @@
         "sourceMap": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "outDir": "lib",
         "resolveJsonModule": true,
         "declaration": true,
+        "useDefineForClassFields": true,
+        "jsx": "preserve",
         "lib": [
             "WebWorker",
             "DOM",
-            "ES2019"
+            "ES2020"
         ],
         "types": [
             "webpack-dev-server",
-            "deep-diff",
             "svelte",
         ],
+        "outDir": "./public",
         "baseUrl": "./",
         "paths": {
             "@assets/*": [
@@ -36,18 +40,19 @@
             "@components/*": [
                 "./src/components/*"
             ]
-        },
-        "target": "ES2015",
-        "allowJs": false
+        }
     },
     "include": [
-        "types",
-        "src",
-        "test",
-        "webpack"
+        "./types/**/*",
+        "./src/**/*",
+        "./test/**/*",
+        "./webpack/**/*"
     ],
     "exclude": [
         "node_modules",
         "**/*.spec.ts",
+    ],
+    "files": [
+        "./types/shims.d.ts"
     ]
 }

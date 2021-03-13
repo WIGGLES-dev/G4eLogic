@@ -1,20 +1,30 @@
-$schema: http://json-schema.org/draft-07/schema
-$id: http://valorsheet/systems/gurps/technique.yaml
-type: object
+# $schema: http://json-schema.org/draft-07/schema
+# $id: http://valorsheet/systems/gurps/technique.yaml
 allOf:
-  - $ref: skill.yaml
-properties:
-  type:
-    const: technique
-    default: technique
-  version:
-    const: 1
-    default: 1
-  difficulty:
-    enum:
-      - A
-      - H
-    default: A
-  limit:
-    type: number
-    default: 0
+  - $ref: definitions.yaml#/skill
+  - $ref: ../definitions.yaml#/resource
+  - type: object
+    properties:
+      type:
+        const: technique
+        default: technique
+      version:
+        const: 1
+        default: 1
+      difficulty:
+        enum:
+          - A
+          - H
+        default: A
+      limit:
+        type: number
+        default: 0
+      default:
+        $ref: definitions.yaml#/default
+      children:
+        type: object
+        properties:
+          technique:
+            type: array
+            items:
+              $ref: technique.yaml

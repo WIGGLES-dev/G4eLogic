@@ -1,8 +1,8 @@
-import { View, System } from "@internal";
+import { System } from "@internal";
 import "@ui/styles.css";
 import { register } from './register';
 async function init() {
-    await System.init(register);
-    new View(document.body).render('main');
+    await register();
+    await System.init();
 }
 window.onload = init

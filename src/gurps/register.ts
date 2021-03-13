@@ -9,16 +9,7 @@ import {
     MeleeWeapon,
     System
 } from "@internal";
-import Editor from '@ui/Editors/Editor.svelte';
-import Home from '@ui/Home.svelte';
-import Main from '@ui/Main.svelte';
-import View from '@components/View.svelte';
 const resources = [
-    {
-        type: "character",
-        caster: Character,
-        schema: `systems/gurps/character.yaml`,
-    },
     {
         type: "equipment",
         caster: Equipment,
@@ -45,6 +36,11 @@ const resources = [
         schema: 'systems/gurps/trait.yaml'
     },
     {
+        type: "character",
+        caster: Character,
+        schema: `systems/gurps/character.yaml`,
+    },
+    {
         type: "melee weapon",
         caster: MeleeWeapon,
         schema: 'systems/gurps/meleeWeapon.yaml'
@@ -56,10 +52,6 @@ const resources = [
     }
 ];
 export async function register() {
-    System.components.set('editor', Editor);
-    System.components.set('home', Home);
-    System.components.set('main', Main);
-    System.components.set('view', View);
     try {
         await System.register(...resources);
     } catch (err) {

@@ -1,17 +1,35 @@
 <script>
   import { getContext } from "svelte";
   import { TABS } from "./Tabs.svelte";
-
   export let disabled = false;
   export let identifier = null;
   const tab = { identifier, disabled };
-  const { registerTab, selectTab, selectedTab } = getContext(TABS);
+  const {
+    registerTab,
+    selectTab,
+    selectedTab,
+    addPrefetch,
+    removePrefetch,
+  } = getContext(TABS);
   registerTab(tab);
-
+  export function select() {
+    if (!disabled) selectTab(tab);
+  }
   $: selected = $selectedTab === tab && !disabled;
 </script>
 
-<style>
+<div
+  class="text-center flex-1 select-none"
+  data-tab="n/a"
+  class:selected
+  class:disabled
+  class:hovered={!selected && !disabled}
+  on:click={select}
+>
+  <slot />
+</div>
+
+<style lang="postcss">
   .disabled {
     @apply text-red-700 line-through;
   }
@@ -22,19 +40,3 @@
     @apply bg-gray-300;
   }
 </style>
-
-<div
-  class="text-center flex-1 select-none truncate"
-  data-tab="n/a"
-  on:mouseover={(e) => {}}
-  on:dragenter={(e) => {
-    if (!disabled) selectTab(tab);
-  }}
-  class:selected
-  class:disabled
-  class:hovered={!selected && !disabled}
-  on:click={() => {
-    if (!disabled) selectTab(tab);
-  }}>
-  <slot />
-</div>

@@ -3,12 +3,13 @@ import {
     each,
     Resource,
     AutoSubscriber,
-    mapEach
+    mapEach,
+    GResource,
+    staticImplements,
+    Character
 } from "@internal";
 import { Observable, combineLatest, from } from "rxjs";
-import { expand, map, mergeAll, mergeMap, switchMap, mergeScan, reduce, scan } from "rxjs/operators";
-import { GResource } from "src/sheet/resource";
-import { staticImplements } from "src/utils/decorators";
+import { expand, map, mergeAll, mergeMap, switchMap, mergeScan, reduce, scan, distinctUntilChanged } from "rxjs/operators";
 
 export interface EquipmentData extends Data {
     type: typeof Equipment["type"]
@@ -26,12 +27,12 @@ export interface EquipmentData extends Data {
 export class Equipment extends Resource<EquipmentData> {
     static type = "equipment" as const
     static version = 1 as const
-    constructor(identifier: Equipment["identity"]) {
-        super(identifier);
+    constructor(state: Equipment["state"]) {
+        super(state);
     }
-    selectEquipped() { return this.enabled$ }
-    equip() { }
-    unequip() { }
+    selectEquipped() { return this.sub('metadata', 'enabled') }
+    equip() { return this.selectEquipped().value = true }
+    unequip() { return this.selectEquipped().value = false }
     get quantity$() { return this.sub('quantity') }
     get value$() { return this.sub('value') }
     get eValue$() {
@@ -47,7 +48,8 @@ export class Equipment extends Resource<EquipmentData> {
         return children$.pipe(
             mapEach(e => e.eValue$),
             switchMap(values$ => combineLatest([this.eValue$, ...values$])),
-            map(values => values.reduce((a, b) => a + b, 0))
+            map(values => values.reduce((a, b) => a + b, 0)),
+            distinctUntilChanged()
         )
     }
     get weight$() { return this.sub('weight') }
@@ -56,21 +58,19 @@ export class Equipment extends Resource<EquipmentData> {
             .pipe(map(([q, w]) => q * w))
     }
     selectExtendedWeight(): Observable<number> {
-        const children$ = this.selectChildren({ type: this.type, caster: this.class, maxDepth: Number.POSITIVE_INFINITY });
+        const children$ = this.selectChildren({ type: this.type, caster: this.class });
         return children$.pipe(
             mapEach(e => e.eWeight$),
             switchMap(weights$ => combineLatest([this.eWeight$, ...weights$])),
-            map(values => values.reduce((a, b) => a + b, 0))
+            map(values => values.reduce((a, b) => a + b, 0)),
+            distinctUntilChanged()
         )
     }
     moveToLocation(location: string) {
-        this.set({
-            location
-        });
-        const children = AutoSubscriber.get(this.selectSameChildren())
-        children.forEach(child => {
-            child.moveToLocation(location)
-        });
+        const character = AutoSubscriber.get(this.root$<Character>());
+        this.sub('location').value = location;
+        character.sub('children', 'equipment').value = [...character.value.children.equipment, this.value];
+        this.delete();
     }
 }
 

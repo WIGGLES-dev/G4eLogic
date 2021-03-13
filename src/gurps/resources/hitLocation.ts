@@ -30,11 +30,13 @@ export class HitLocation {
         return this.keys.subLocations?.map(
             subLocation => this.locations[subLocation]) ?? []
     }
-    get damageTaken() { return this.host.getKeys().hitLocationDamage[this.name] || 0 }
+    get damageTaken() { return this.host.value.hitLocationDamage[this.name] || 0 }
     set damageTaken(damage) { this.setDamageTaken(damage) }
     @debounce(220)
     setDamageTaken(damage: number) {
-        this.host.sub('hitLocationDamage').sub(this.name).value = damage;
+        this.host.sub('hitLocationDamage').assign({
+            [this.name]: damage
+        })
     }
     isCrippled() {
         return this.crippleThreshold() > 0 && this.damageTaken > this.crippleThreshold()

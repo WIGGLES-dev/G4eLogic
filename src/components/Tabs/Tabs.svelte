@@ -3,27 +3,26 @@
 </script>
 
 <script>
-  export let tabIndex = 0;
   import { setContext, onDestroy, onMount } from "svelte";
   import { writable } from "svelte/store";
   import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
 
+  export let tabIndex = 0;
   const tabs = [];
   const panels = [];
-  const selectedTab = writable(null);
-  const selectedPanel = writable(null);
-
+  const selectedTab = writable(tabIndex);
+  const selectedPanel = writable(tabIndex);
+  const prefetched = writable([]);
   onMount(() => {
+    tabIndex = tabIndex || 0;
     selectedTab.set(tabs[tabIndex]);
     selectedPanel.set(panels[tabIndex]);
   });
-
   setContext(TABS, {
     registerTab: (tab) => {
       tabs.push(tab);
       selectedTab.update((current) => current || tab);
-
       onDestroy(() => {
         const i = tabs.indexOf(tab);
         tabs.splice(i, 1);
@@ -32,8 +31,7 @@
         );
       });
     },
-
-    registerPanel: (panel) => {
+    registerPanel(panel) {
       panels.push(panel);
       selectedPanel.update((current) => current || panel);
 
@@ -45,26 +43,33 @@
         );
       });
     },
-    selectTab: (tab) => {
+    selectTab(tab) {
       const i = tabs.indexOf(tab);
       selectedTab.set(tab);
       selectedPanel.set(panels[i]);
       tabIndex = i;
       dispatch("tabchange", i);
     },
+    addPrefetch(tab) {
+      prefetched.update((current) => [...current, tab]);
+    },
+    removePrefetch(tab) {
+      prefetched.update((current) => current.filter((_tab) => tab !== tab));
+    },
     selectedTab,
     selectedPanel,
+    prefetched,
   });
 
   export function selectTab() {}
 </script>
 
-<style>
+<div class="tabs">
+  <slot />
+</div>
+
+<style lang="postcss">
   .tabs {
     @apply flex flex-col h-full w-full;
   }
 </style>
-
-<div class="tabs">
-  <slot />
-</div>

@@ -4,12 +4,6 @@
     export let difficulty: TechniqueDifficulty | SkillDifficulty;
 </script>
 
-<style>
-    select {
-        @apply text-black bg-white;
-    }
-</style>
-
 <select bind:value={difficulty}>
     <option value={undefined} />
     {#if technique}
@@ -23,3 +17,6 @@
         {/each}
     {/if}
 </select>
+
+<style lang="postcss">
+</style>

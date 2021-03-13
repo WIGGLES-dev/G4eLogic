@@ -1,15 +1,16 @@
-<script lang='ts'>
+<script context="module" lang="ts">
     import { Tabs, Tab, TabPanel, TabList } from "@components/Tabs/tabs";
     import SkillDefaults from "./panels/SkillDefaults.svelte";
     import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
-    import { RangedWeapon } from '@internal';
-    export let id: string
-    export let entity = new RangedWeapon({id, type: RangedWeapon.type});
+    import { RangedWeapon } from "@internal";
+    import { State } from "rxdeep";
 </script>
 
-<style>
-
-</style>
+<script lang="ts">
+    export let state$: RangedWeapon;
+    const defaults$ = state$.sub("defaults");
+    const userDescription$ = state$.sub("userDescription");
+</script>
 
 <Tabs>
     <TabList>
@@ -19,62 +20,61 @@
     </TabList>
     <TabPanel>
         <form>
-            <div class="field">
-                <label for="">Usage</label>
-                <input type="text" bind:value={$entity.usage} />
-            </div>
+            <label>
+                <span>Usage</span>
+                <input type="text" bind:value={$state$.usage} />
+            </label>
             <fieldset>
-                <div class="field">
-                    <label for="">Damage</label>
-                    <input type="text" bind:value={$entity.damage} />
-                </div>
-                <div class="field">
-                    <label for="">Damage Type</label>
+                <label>
+                    <span>Damage</span>
+                    <input type="text" bind:value={$state$.damage} />
+                </label>
+                <label>
+                    <span>Damage Type</span>
                     <input type="text" />
-                </div>
-                <div class="field">
-                    <label for="">AD</label>
+                </label>
+                <label>
+                    <span>AD</span>
                     <input type="number" min="0" />
-                </div>
+                </label>
             </fieldset>
-            <div class="field">
-                <label for="">ROF</label>
-                <input type="text" bind:value={$entity.rateOfFire} />
-            </div>
-            <div class="field">
-                <label for="">Range</label>
-                <input type="text" bind:value={$entity.range} />
-            </div>
-            <div class="field">
-                <label for=''>Acc</label>
-                <input
-                    type="text"
-                    bind:value={$entity.accuracy} />
-            </div>
-            <div class="field">
-                <label for="">Shots</label>
-                <input type="text" bind:value={$entity.shots} />
-            </div>
-            <div class="field">
-                <label for="">Bulk</label>
-                <input type="number" bind:value={$entity.bulk} />
-            </div>
-            <div class="field">
-                <label for="">Recoil</label>
-                <input
-                    type="text"
-                    bind:value={$entity.recoil} />
-            </div>
-            <div class="field">
-                <label for="">Strength</label>
-                <input type="text" bind:value={$entity.strength} />
-            </div>
+            <label>
+                <span>ROF</span>
+                <input type="text" bind:value={$state$.rateOfFire} />
+            </label>
+            <label>
+                <span>Range</span>
+                <input type="text" bind:value={$state$.range} />
+            </label>
+            <label>
+                <span>Acc</span>
+                <input type="text" bind:value={$state$.accuracy} />
+            </label>
+            <label>
+                <span>Shots</span>
+                <input type="text" bind:value={$state$.shots} />
+            </label>
+            <label>
+                <span>Bulk</span>
+                <input type="number" bind:value={$state$.bulk} />
+            </label>
+            <label>
+                <span>Recoil</span>
+                <input type="text" bind:value={$state$.recoil} />
+            </label>
+            <label>
+                <span>Strength</span>
+                <input type="text" bind:value={$state$.strength} />
+            </label>
         </form>
     </TabPanel>
     <TabPanel>
-        <SkillDefaults {entity} bind:defaults={$entity.defaults} />
+        <SkillDefaults bind:defaults={$defaults$} />
     </TabPanel>
     <TabPanel>
-        <ProseMirror bind:content={$entity.userDescription} />
+        <ProseMirror bind:content={$userDescription$} />
     </TabPanel>
 </Tabs>
+
+<style>
+</style>

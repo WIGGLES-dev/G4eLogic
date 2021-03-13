@@ -1,41 +1,57 @@
-<script>
+<script context="module" lang="ts">
   import {
     EquipmentModifierWeightType,
     EquipmentModifierWeightValueType,
     EquipmentModifierCostValueType,
   } from "@internal";
+</script>
+
+<script lang="ts">
   export let entity = null;
 </script>
 
-<style>
-</style>
-
 <form>
-  <label for="">Name<input type="text" bind:value={$entity.name} /></label>
-  <label for="">Tech Level<input
-      type="text"
-      bind:value={$entity.techLevel} /></label>
-  <label for="">Enabled<input
-      type="checkbox"
-      bind:value={$entity.enabled} /></label>
-  <label for="">Cost Modifier<input
-      type="number"
-      bind:value={$entity.cost} /></label>
-  <label for="">Cost Modifier Type
+  <label>
+    <span>Name</span>
+    <input type="text" bind:value={$entity.name} />
+  </label>
+  <label>
+    <span>Tech Level</span>
+    <input type="text" bind:value={$entity.techLevel} />
+  </label>
+  <label>
+    <span>Enabled</span>
+    <input type="checkbox" bind:value={$entity.enabled} />
+  </label>
+  <label>
+    <span>Cost Modifier</span>
+    <input type="number" bind:value={$entity.cost} />
+  </label>
+  <label>
+    <span>Cost Modifier Type</span>
     <select bind:value={$entity.costType}>
       {#each Object.entries(EquipmentModifierCostValueType) as [key, value], i (i)}
         <option {value}>{key}</option>
       {/each}
     </select>
   </label>
-  <label for="">Weight Modifier Type
+  <label>
+    <span>Weight Modifier Type</span>
     <select bind:value={$entity.affects}>
       {#each Object.entries(EquipmentModifierWeightValueType) as [key, value], i (i)}
         <option {value}>{key}</option>
       {/each}
     </select>
   </label>
-  <label for="">Notes<textarea bind:value={$entity.notes} /></label>
-  <label for="">Reference
-    <input type="text" bind:value={$entity.reference} /></label>
-  </form>
+  <label>
+    <span>Notes</span>
+    <textarea bind:value={$entity.notes} />
+  </label>
+  <label>
+    <span>Reference</span>
+    <input type="text" bind:value={$entity.reference} />
+  </label>
+</form>
+
+<style>
+</style>

@@ -7,25 +7,27 @@ import {
     Resource,
     Data,
     mapEach,
-    collapse,
-    log,
     spread,
     staticImplements,
-    matchArray
+    GResource,
+    Attribute
 } from "@internal";
-import { combineLatest, from, Observable, scheduled } from "rxjs";
+import { Downstream, Upstream } from "rxdeep";
+import { combineLatest, from, iif, Observable, Observer } from "rxjs";
 import {
-    filter,
-    pluck,
+    defaultIfEmpty,
+    distinctUntilChanged,
     map,
-    switchMap,
+    max,
     mergeMap,
-    combineAll,
+    mergeScan,
+    pluck,
+    scan,
     startWith,
-    scan
+    switchMap,
+    tap,
+    withLatestFrom
 } from "rxjs/operators";
-import { GResource } from "src/sheet/resource";
-import * as searchjs from 'searchjs';
 export interface SkillLikeKeys {
     points: number
     name: string
@@ -42,60 +44,70 @@ export interface SkillData extends Data, SkillLikeKeys {
     version: 1
 }
 export abstract class SkillLike<Model extends SkillLikeKeys & Data = SkillLikeKeys & Data> extends Resource<Model> {
-    constructor(identity: SkillLike<Model>["identity"]) {
-        super(identity);
+    constructor(state: Resource<Model>["state"]) {
+        super(state);
     }
-    static selectBestDefault() {  }
-    selectHighestDefault$(this: Resource<{ defaults: SkillDefault[] } & Data>) {
-        const character$ = this.selectNearest('character');
-        const defaults$ = this.sub('defaults');
-        const matches$ = combineLatest([defaults$, character$])
-            .pipe(
-                mergeMap(([sds, c]) => {
-                    const matches: [number, Observable<Resource[]>][] = sds?.map(
-                        ({ name, specialization, modifier }) =>
-                            [
-                                modifier,
-                                c.lookup({
-                                    type: 'skill',
-                                    name,
-                                    specialization: specialization
-                                })
-                            ]
-                    ) ?? [];
-                    return matches
-                }),
-                mergeMap(([mod, matches]) =>
-                    matches.pipe(
-                        mapEach(r => r.cast(Skill)),
-                        mapEach(skill => skill.baseRelativeLevel$),
-                        mapEach(lvl$ => lvl$.pipe(
-                            map(lvl => lvl + mod)
-                        )),
-                        mergeMap(lvls$ => combineLatest(lvls$)),
-                        spread(Math.max),
-                    )
+    static selectBestDefault() { }
+    selectHighestDefault$(): Observable<number> {
+        const character$ = this.root$<Character>();
+        const attributes$ = character$.pipe(switchMap(c => c.selectAttributes()));
+        const defaults$ = this.sub("defaults");
+        return combineLatest([
+            defaults$,
+            attributes$,
+        ]).pipe(
+            withLatestFrom(character$),
+            map(([[sds, attrs], c]) =>
+                sds?.map(
+                    ({ type, name, specialization, modifier = null }) =>
+                        attrs[type] instanceof Attribute ?
+                            from([attrs[type].calculateLevel() + modifier]) :
+                            c.lookup<Skill>({
+                                type: 'skill',
+                                name,
+                                specialization
+                            }).pipe(
+                                map(skills => skills.map(s => s.baseRelativeLevel$.pipe(
+                                    map(lvl => lvl + modifier)))
+                                ),
+                                switchMap(observables => combineLatest(observables).pipe(
+                                    defaultIfEmpty([Number.NEGATIVE_INFINITY])
+                                )),
+                                map(levels => Math.max(...levels)),
+                                distinctUntilChanged(),
+                            )
+                ) ?? []
+            ),
+            switchMap(observables => combineLatest(observables)
+                .pipe(
+                    defaultIfEmpty([Number.NEGATIVE_INFINITY])
                 )
-            );
-        return matches$.pipe(
-            startWith(Number.NEGATIVE_INFINITY)
+            ),
+            map(values => Math.max(...values)),
+            distinctUntilChanged(),
+            defaultIfEmpty(Number.NEGATIVE_INFINITY)
         )
     }
     getRelativeLevel() {
-        return calculateRelativeSkillLevel(this.getKeys())
+        return calculateRelativeSkillLevel(this.value)
     }
     get attribute$() {
-        const character$ = this.selectNearest('character', Character);
+        const character$ = this.root$<Character>()
         const signature$ = this.sub('signature');
-        const attribute$ = signature$.pipe(
-            mergeMap(s => character$.pipe(
-                mergeMap(c => c.selectAttribute(s)),
+        return signature$.pipe(
+            withLatestFrom(character$),
+            switchMap(([s, character]) => character.selectAttribute(s).pipe(
                 map(a => a?.calculateLevel())
-            ))
+            )),
+            distinctUntilChanged()
         )
-        return attribute$
     }
-    get relativeLevel$() { return this.keys$.pipe(map(calculateRelativeSkillLevel)) }
+    get relativeLevel$() {
+        return this.pipe(
+            map(calculateRelativeSkillLevel),
+            distinctUntilChanged()
+        )
+    }
     get baseRelativeLevel$() {
         const observables = [
             this.relativeLevel$,
@@ -105,30 +117,30 @@ export abstract class SkillLike<Model extends SkillLikeKeys & Data = SkillLikeKe
             map(([rsl, attr]) => rsl + attr)
         )
     }
-    get level$(): Observable<number> {
-        const character$ = this.selectNearest("character", Character);
-        const keys$: Observable<SkillLikeKeys & Data> = this.keys$;
-        const encumbranceLevel$ = character$.pipe(
-            mergeMap(character => character.selectEncumbranceLevel())
-        );
-        const bonus$ = combineLatest([keys$, character$]).pipe(
-            mergeMap(([keys, c]) =>
-                c.selectAllFeatures()
-                    .pipe(
-                        map(fa => fa
-                            .filter(f => f.type === 'skill bonus')
-                            .filter(f => skillBonusMatchesSkill(keys, f as unknown as SkillBonus))
-                            .reduce((a, b) => a + b.amount as number || null, 0)
-                        ),
-                    )
-            ),
-            startWith(0)
+    get bonus$(): Observable<number> {
+        const character$ = this.root$<Character>();
+        return combineLatest([this, character$]).pipe(
+            switchMap(([keys, c]) => c.selectFeatures().pipe(
+                map(fa => fa
+                    .filter(f => f.type === 'skill bonus')
+                    .filter(f => skillBonusMatchesSkill(keys, f as unknown as SkillBonus))
+                    .reduce((a, b) => a + b.amount as number || null, 0)
+                ),
+            )),
+            distinctUntilChanged(),
+            defaultIfEmpty(0),
         )
+    }
+    get level$(): Observable<number> {
+        const character$ = this.root$<Character>()
+        const encumbranceLevel$ = character$.pipe(
+            switchMap(character => character.selectEncumbranceLevel()),
+        );
         const lvl$ = combineLatest([
-            keys$,
+            this,
             this.attribute$,
             encumbranceLevel$,
-            bonus$
+            this.bonus$
         ]).pipe(
             spread(calculateSkillLevel)
         );
@@ -137,7 +149,10 @@ export abstract class SkillLike<Model extends SkillLikeKeys & Data = SkillLikeKe
             lvl$,
             bestDefault$
         ]).pipe(
-            spread(Math.max)
+            map(([lvl, d]) => {
+                return Math.max(lvl, d)
+            }),
+            distinctUntilChanged()
         )
     }
 }
@@ -145,11 +160,10 @@ export abstract class SkillLike<Model extends SkillLikeKeys & Data = SkillLikeKe
 export class Skill extends SkillLike<SkillData> {
     static version = 1 as const
     static type = "skill" as const
-    constructor(identity: Skill["identity"]) {
-        super(identity);
+    constructor(state: Skill["state"]) {
+        super(state);
     }
 }
-
 export enum SkillDifficulty {
     Easy = "E",
     Average = "A",
@@ -173,10 +187,11 @@ export interface SkillBonus extends FeatureBonus {
     category: string
 }
 export function skillBonusMatchesSkill(skill: SkillLikeKeys, skillBonus: SkillBonus) {
+    if (!skill) return false
     const {
         name,
         specialization
-    } = skill
+    } = skill;
     const nameMatches = stringCompare(name, skillBonus.name, skillBonus.nameCompare);
     const specializationMatches = stringCompare(specialization, skillBonus.specialization, skillBonus.specializationCompare);
     const categoryMatches = true;
@@ -216,7 +231,9 @@ function calculateBaseRelativeLevel(difficulty: SkillDifficulty) {
             return -3
     }
 }
-export function calculateRelativeSkillLevel({ points, difficulty }: Pick<SkillLikeKeys, "points" | "difficulty">) {
+export function calculateRelativeSkillLevel(
+    { points, difficulty } = {} as Pick<SkillLikeKeys, "points" | "difficulty">
+) {
     let relativeLevel = calculateBaseRelativeLevel(difficulty);
     if (points === 1) {
 

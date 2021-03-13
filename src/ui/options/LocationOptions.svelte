@@ -3,17 +3,13 @@
     import { map, mergeMap } from "rxjs/operators";
     export let location: string;
     export let entity: Resource = null;
-    const host$ = entity.selectNearest("character", Character);
+    const host$ = entity.root$<Character>();
     const hitLocations$ = host$.pipe(
-        mergeMap(char => char.sub('config').sub('locations')),
+        mergeMap((char) => char.sub("config").sub("locations")),
         map(parseHitLocations),
-        map(hl => Object.entries(hl))
-    )
+        map((hl) => Object.entries(hl))
+    );
 </script>
-
-<style>
-
-</style>
 
 <select bind:value={location}>
     <option value={undefined} />
@@ -26,3 +22,6 @@
         {/if}
     {/each}
 </select>
+
+<style>
+</style>

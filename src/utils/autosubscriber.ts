@@ -9,9 +9,9 @@ export class AutoSubscriber {
 
     }
     addSubscription(key: string, subscription: Subscription) {
-
+        this.subscriptions[key] = subscription
     }
-    subscribe<T>(observable: Observable<T>, key: string) {
+    subscribe<T>(key: string, observable: Observable<T>,) {
         const subscription = observable.subscribe();
     }
     unsubscribe(key: string) {

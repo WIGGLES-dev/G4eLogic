@@ -1,24 +1,26 @@
-$schema: http://json-schema.org/draft-07/schema
-$id: http://valorsheet/systems/gurps/rangedWeapon.yaml
+# $schema: http://json-schema.org/draft-07/schema
+# $id: http://valorsheet/systems/gurps/rangedWeapon.yaml
 type: object
 allOf:
+  - $ref: ../definitions.yaml#/resource
   - $ref: definitions.yaml#/weapon
-properties:
-  type:
-    const: ranged weapon
-    default: ranged weapon
-  version:
-    const: 1
-    default: 1
-  accuracy:
-    type: string
-  range:
-    type: string
-  rateOfFire:
-    type: string
-  shots:
-    type: string
-  recoil:
-    type: integer
-  bulk:
-    type: string
+  - type: object
+    properties:
+      type:
+        const: ranged weapon
+        default: ranged weapon
+      version:
+        const: 1
+        default: 1
+      accuracy:
+        type: string
+      range:
+        type: string
+      rateOfFire:
+        type: string
+      shots:
+        type: string
+      recoil:
+        type: integer
+      bulk:
+        type: string

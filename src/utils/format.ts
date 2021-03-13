@@ -4,10 +4,13 @@ export enum CaseConvention {
     camelCase = "camelCase"
 }
 export class Formatter {
-    strings: string[]
+    sections: ((text: string) => string)[] = []
 
     static checkCharType(char: string) {
 
+    }
+    static fallback(string, fallback) {
+        return typeof string === 'string' ? string : fallback
     }
     static getCaseConvention(key: string): CaseConvention {
         const includesSpaces = key.includes(" ");
@@ -20,14 +23,20 @@ export class Formatter {
 
     }
 
-    startString() {
-
+    add(segment: string, {
+        fallback = '',
+        before = '',
+        after = '',
+        capitalize = false
+    }) {
+        const section = (text) =>
+            typeof segment === 'string' ?
+                + Formatter.fallback(before, fallback)
+                + Formatter.fallback(segment, fallback)
+                + Formatter.fallback(after, fallback) : '';
+        this.sections.push(section);
     }
-
-    after() { }
-    before() { }
-
     output(): string {
-        return ""
+        return this.sections.reduce((text, section) => section(text), '')
     }
 }

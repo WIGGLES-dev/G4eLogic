@@ -1,162 +1,40 @@
-<script context='module' lang='ts'>
- import {
-        trait,
-        deleteResource,
-        makeContainer,
-        undoMakeContainer,
-        editResource,
-        changeTraitCategory
-    } from "@ui/fieldConfig";
-  export const traitMap= {
-      attributes: {
-          ...trait
-      },
-      context: [
-          editResource,
-          changeTraitCategory,
-          makeContainer,
-          undoMakeContainer,
-          deleteResource,
-      ]
-    }
-  export const advantageMap = {
-    attributes: {
-      ...trait,
-      name: {
-        ...trait.name,
-        header: 'Advantages'
-      }
-    },
-    context: traitMap.context
-  };
-  export const perkMap = {
-    attributes: {
-      ...trait,
-      name: {
-        ...trait.name,
-        header: 'Perks'
-      }
-    },
-    context: traitMap.context
-  };
-  export const disadvantageMap = {
-    attributes: {
-      ...trait,
-      name: {
-        ...trait.name,
-        header: 'Disadvantages'
-      }
-    },
-    context: traitMap.context
-  };
-  export const quirkMap = {
-    attributes: {
-      ...trait,
-      name: {
-        ...trait.name,
-        header: 'Quirks'
-      }
-    },
-    context: traitMap.context
-  };
-  export const languageMap = {
-    attributes: {
-      ...trait,
-      name: {
-        ...trait.name,
-        header: 'Languages'
-      }
-    },
-    context: traitMap.context
-  };
-  export const cultureMap = {
-    attributes: {
-      ...trait,
-      name: {
-        ...trait.name,
-        header: 'Culture'
-      }
-    },
-    context: traitMap.context
-  };
-  export const racialMap = {
-    attributes: {
-      ...trait,
-      name: {
-        ...trait.name,
-        header: 'Racial'
-      }
-    },
-    context: traitMap.context
-  };
-  export const metaMap = {
-    attributes: {
-      ...trait,
-      name: {
-        ...trait.name,
-        header: 'Meta'
-      }
-    },
-    context: traitMap.context
-  };
-  export const featureMap = {
-    attributes: {
-      ...trait,
-      name: {
-        ...trait.name,
-        header: 'Feature'
-      }
-    },
-    context: traitMap.context
-  };
-</script>
-<script lang="ts">
+<script context="module" lang="ts">
   import { getContext } from "svelte";
-  import {
-    map,
-    mergeMap,
-    pluck,
-    startWith
-  } from 'rxjs/operators';
+  import { map, mergeMap, pluck, startWith } from "rxjs/operators";
   import {
     split,
     Character,
     Trait,
     TraitCategory,
-    log
+    getTraitType,
   } from "@internal";
-  import Resource from '@ui/datatables/Resource.svelte';
-import { combineLatest } from "rxjs";
+  import TraitList from "@ui/datatables/Trait.svelte";
+</script>
+
+<script lang="ts">
   const character = getContext<Character>("sheet");
-  const traits$ = character.selectChildren({type:'trait', caster: Trait, maxDepth: 1});
-  const splits$ = traits$.pipe(
-    mergeMap(
-      ta => ta.length > 0 ? combineLatest(ta.map(t => t.instance$)) : [[]]
-    ),
-    map(split)
-  );
-  const advantages = splits$.pipe(pluck(TraitCategory.Advantage));
-  const disadvantages = splits$.pipe(pluck(TraitCategory.Disadavantage));
-  const racial = splits$.pipe(pluck(TraitCategory.Racial));
-  const meta = splits$.pipe(pluck(TraitCategory.Meta));
-  const perks = splits$.pipe(pluck(TraitCategory.Perk));
-  const quirks = splits$.pipe(pluck(TraitCategory.Quirk));
-  const features = splits$.pipe(pluck(TraitCategory.Feature));
+  const advantages = (trait) => getTraitType(trait) === TraitCategory.Advantage;
+  const disadvantages = (trait) =>
+    getTraitType(trait) === TraitCategory.Disadavantage;
+  const racial = (trait) => getTraitType(trait) === TraitCategory.Racial;
+  const meta = (trait) => getTraitType(trait) === TraitCategory.Meta;
+  const perks = (trait) => getTraitType(trait) === TraitCategory.Perk;
+  const quirks = (trait) => getTraitType(trait) === TraitCategory.Quirk;
+  const features = (trait) => getTraitType(trait) === TraitCategory.Feature;
 </script>
 
 <div class="lg:flex">
   <div class="flex-1">
     <!-- ADVANTAGES -->
-    <Resource 
-      type='trait'
-      toggle='name'
-      host={character}
-      resources={advantages}
-      treeMap={advantageMap}
+    <TraitList
+      root={character}
+      filterfunc={advantages}
       createMergeData={{
-        categories: [TraitCategory.Advantage]
+        categories: [TraitCategory.Advantage],
       }}
-    />
+    >
+      Advantages
+    </TraitList>
   </div>
   <div class="w-1/5">
     <!-- LANGUAGES -->
@@ -164,86 +42,80 @@ import { combineLatest } from "rxjs";
   </div>
   <div class="flex-1">
     <!-- DISADVANTAGES -->
-    <Resource
-      type='trait'
-      toggle='name'
-      host={character}
-      resources={disadvantages}
-      treeMap={disadvantageMap}
+    <TraitList
+      root={character}
+      filterfunc={disadvantages}
       createMergeData={{
-        categories: [TraitCategory.Disadavantage]
+        categories: [TraitCategory.Disadavantage],
       }}
-    />
+    >
+      Disadvantages
+    </TraitList>
   </div>
 </div>
 
 <div class="lg:flex">
   <div class="lg:flex-1">
     <!-- RACIAL -->
-    <Resource
-      type='trait'
-      toggle='name'
-      host={character}
-      resources={racial}
-      treeMap={racialMap}
+    <TraitList
+      root={character}
+      filterfunc={racial}
       createMergeData={{
-        categories: [TraitCategory.Racial]
+        categories: [TraitCategory.Racial],
       }}
-    />
+    >
+      Racial
+    </TraitList>
   </div>
 
   <div class="flex-1">
     <!-- META -->
-    <Resource 
-      type='trait'
-      toggle='name'
-      host={character}
-      resources={meta}
-      treeMap={metaMap}
+    <TraitList
+      root={character}
+      filterfunc={meta}
       createMergeData={{
-        categories: [TraitCategory.Meta]
+        categories: [TraitCategory.Meta],
       }}
-    />
+    >
+      Meta
+    </TraitList>
   </div>
 </div>
 <div class="lg:flex">
   <div class="flex-1">
     <!-- PERKS -->
-    <Resource 
-      type='trait'
-      toggle='name'
-      host={character}
-      resources={perks}
-      treeMap={perkMap}
+    <TraitList
+      root={character}
+      filterfunc={perks}
       createMergeData={{
-        categories: [TraitCategory.Perk]
+        categories: [TraitCategory.Perk],
       }}
-    />
+    >
+      Perks
+    </TraitList>
   </div>
   <div class="lg:flex-1">
     <!-- QUIRKS -->
-    <Resource
-      type='trait'
-      toggle='name'
-      host={character}
-      resources={quirks}
-      treeMap={quirkMap}
+    <TraitList
+      root={character}
+      filterfunc={quirks}
       createMergeData={{
-        categories: [TraitCategory.Quirk]
+        categories: [TraitCategory.Quirk],
       }}
-    />
+    >
+      Quirks
+    </TraitList>
   </div>
   <div class="flex-1">
     <!-- FEATURES -->
-    <Resource
-      type='trait'
-      toggle='name'
-      host={character}
-      resources={features}
-      treeMap={featureMap}
+    <TraitList
+      root={character}
+      filterfunc={features}
       createMergeData={{
-        categories: [TraitCategory.Feature]
+        categories: [TraitCategory.Feature],
       }}
-    />
+    >
+      Features
+    </TraitList>
   </div>
 </div>

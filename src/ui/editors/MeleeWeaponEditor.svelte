@@ -1,76 +1,74 @@
-<script lang='ts'>
+<script context="module" lang="ts">
     import { Tabs, Tab, TabPanel, TabList } from "@components/Tabs/tabs";
     import SkillDefaults from "./panels/SkillDefaults.svelte";
     import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
-    import { MeleeWeapon } from '@internal';
-    export let id: string
-    export let entity: MeleeWeapon = new MeleeWeapon({id, type: MeleeWeapon.type});
+    import { MeleeWeapon } from "@internal";
+    import { State } from "rxdeep";
 </script>
 
+<script lang="ts">
+    export let state$: MeleeWeapon;
+</script>
+
+<Tabs>
+    <TabList>
+        <Tab>Data</Tab>
+        <Tab>Defaults</Tab>
+        <Tab>User Description</Tab>
+    </TabList>
+    <TabPanel>
+        <form>
+            <fieldset>
+                <label>
+                    <span>Usage</span>
+                    <input type="text" bind:value={$state$.usage} />
+                </label>
+                <label>
+                    <span>Info</span>
+                    <input type="text" bind:value={$state$.info} />
+                </label>
+            </fieldset>
+            <fieldset>
+                <label>
+                    <span>Damage</span>
+                    <input type="text" bind:value={$state$.damage} />
+                </label>
+                <label>
+                    <span>Damage Type</span>
+                    <input type="text" bind:value={$state$.damageType} />
+                </label>
+                <label>
+                    <span>AD</span>
+                    <input type="number" min="0" />
+                </label>
+            </fieldset>
+            <fieldset>
+                <label>
+                    <span>Parry</span>
+                    <input type="number" bind:value={$state$.parry} />
+                </label>
+                <label>
+                    <span>Block</span>
+                    <input type="number" bind:value={$state$.block} />
+                </label>
+            </fieldset>
+            <label>
+                <span>Reach</span>
+                <input type="text" bind:value={$state$.reach} />
+            </label>
+            <label>
+                <span>Strength</span>
+                <input type="text" bind:value={$state$.strength} />
+            </label>
+        </form>
+    </TabPanel>
+    <TabPanel>
+        <SkillDefaults bind:defaults={$state$.defaults} />
+    </TabPanel>
+    <TabPanel>
+        <ProseMirror bind:content={$state$.userDescription} />
+    </TabPanel>
+</Tabs>
+
 <style>
-
 </style>
-
-{#if entity.exists}
-    <Tabs>
-        <TabList>
-            <Tab>Data</Tab>
-            <Tab>Defaults</Tab>
-            <Tab>User Description</Tab>
-        </TabList>
-        <TabPanel>
-            <form>
-                <fieldset>
-                    <div class="field">
-                        <label for="">Usage</label>
-                        <input type="text" bind:value={$entity.usage} />
-                    </div>
-                    <div class="field">
-                        <label for=""></label>
-                        <input type="text" bind:value={$entity.info} />
-                    </div>
-                </fieldset>
-                <fieldset>
-                    <div class="field">
-                        <label for="">Damage</label>
-                        <input type="text" bind:value={$entity.damage} />
-                    </div>
-                    <div class="field">
-                        <label for="">Damage Type</label>
-                        <input
-                            type="text"
-                            bind:value={$entity.damageType} />
-                    </div>
-                    <div class="field">
-                        <label for="">AD</label>
-                        <input type="number" min="0" />
-                    </div>
-                </fieldset>
-                <fieldset>
-                    <div class="field">
-                        <label for="">Parry</label>
-                        <input type="number" bind:value={$entity.parry} />
-                    </div>
-                    <div class="field">
-                        <label for="">Block</label>
-                        <input type="number" bind:value={$entity.block} />
-                    </div>
-                </fieldset>
-                <div class="field">
-                    <label for="">Reach</label>
-                    <input type="text" bind:value={$entity.reach} />
-                </div>
-                <div class="field">
-                    <label for="">Strength</label>
-                    <input type="text" bind:value={$entity.strength} />
-                </div>
-            </form>
-        </TabPanel>
-        <TabPanel>
-            <SkillDefaults {entity} bind:defaults={$entity.defaults} />
-        </TabPanel>
-        <TabPanel>
-            <ProseMirror bind:content={$entity.userDescription} />
-        </TabPanel>
-    </Tabs>
-{/if}

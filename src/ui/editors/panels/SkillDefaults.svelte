@@ -1,12 +1,11 @@
-<script lang='ts'>
-    import Boxes from "@ui/semantic-boxes/Boxes.svelte";
-    import Box from "@ui/semantic-boxes/Box.svelte";
+<script lang="ts">
+    import Boxes from "@components/semantic-boxes/Boxes.svelte";
+    import Box from "@components/semantic-boxes/Box.svelte";
     import AttributeOptions from "@ui/options/AttributeOptions.svelte";
 
-    import { Resource, SkillDefault } from '@internal';
+    import { Resource, SkillDefault } from "@internal";
     export let entity: Resource;
     export let defaults: SkillDefault[] = [];
-
     function addDefault() {
         defaults = [...defaults, {} as SkillDefault];
     }
@@ -15,43 +14,54 @@
     }
 </script>
 
-<style>
-    input {
-        @apply border-b border-solid border-black;
-    }
-</style>
-
 <Boxes on:addbox={addDefault}>
     {#each defaults as skillDefault, i (i)}
         <Box on:addbox={addDefault} on:deletebox={() => removeDefault(i)}>
-            <div class="flex">
+            <fieldset>
                 <AttributeOptions {entity} bind:attribute={skillDefault.type}>
                     <option value="Skill">Skill Named</option>
                 </AttributeOptions>
-
-                {#if skillDefault.type !== 'Skill'}
-                    <input
-                        type="number"
-                        placeholder="modifier"
-                        bind:value={skillDefault.modifier} />
+                {#if skillDefault.type !== "Skill"}
+                    <label>
+                        <input
+                            type="number"
+                            placeholder="modifier"
+                            bind:value={skillDefault.modifier}
+                        />
+                    </label>
                 {/if}
-            </div>
-            {#if skillDefault.type === 'Skill'}
-                <div class="flex">
-                    <input
-                        type="text"
-                        placeholder="name"
-                        bind:value={skillDefault.name} />
-                    <input
-                        type="text"
-                        placeholder="specialization"
-                        bind:value={skillDefault.specialization} />
-                    <input
-                        type="number"
-                        placeholder="modifier"
-                        bind:value={skillDefault.modifier} />
-                </div>
+            </fieldset>
+            {#if skillDefault.type === "Skill"}
+                <fieldset>
+                    <label>
+                        <input
+                            type="text"
+                            placeholder="name"
+                            bind:value={skillDefault.name}
+                        />
+                    </label>
+                    <label>
+                        <input
+                            type="text"
+                            placeholder="specialization"
+                            bind:value={skillDefault.specialization}
+                        />
+                    </label>
+                    <label>
+                        <input
+                            type="number"
+                            placeholder="modifier"
+                            bind:value={skillDefault.modifier}
+                        />
+                    </label>
+                </fieldset>
             {/if}
         </Box>
     {/each}
 </Boxes>
+
+<style lang="postcss">
+    fieldset {
+        @apply flex;
+    }
+</style>

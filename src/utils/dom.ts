@@ -124,3 +124,81 @@ export function handleMessage<P>(message: MessageEvent, proxy: P) {
         console.log("An error occured while receiving a message", err);
     }
 }
+
+export class VirtualElement {
+    element: ClientRect | DOMRect
+
+    constructor(element?: Partial<ClientRect | DOMRect> | HTMLElement | MouseEvent) {
+        if (element instanceof MouseEvent) {
+            const { clientX, clientY } = element;
+            this.element = this.generateGetBoundingClientRect(clientX, clientY);
+        }
+        else {
+            const bb = element instanceof HTMLElement ? element.getBoundingClientRect() : element;
+            this.element = Object.assign(this.generateGetBoundingClientRect(), bb);
+        }
+    }
+    getBoundingClientRect(): ClientRect | DOMRect {
+        return this.element
+    }
+    generateGetBoundingClientRect(x = 0, y = 0): ClientRect | DOMRect {
+        return {
+            width: 0,
+            height: 0,
+            top: y,
+            right: x,
+            bottom: y,
+            left: x,
+        };
+    }
+    update(x, y) {
+        this.element = this.generateGetBoundingClientRect(x, y);
+        return this
+    }
+}
+export interface EventHandlerOptions {
+    target
+    coerce: typeof Number | typeof Boolean | typeof String
+}
+export function handleEvent(options: EventHandlerOptions) {
+    function doChange(value, cast?) {
+        const { target, coerce } = options;
+        if (target) {
+            const toSend = coerce || cast ? (coerce || cast)(value) : value
+            if (typeof target.next === "function") {
+                target.next(toSend);
+            } else if (typeof target.set === "function") {
+                target.set(toSend);
+            }
+        }
+    }
+    return function (this: Event, e: Event) {
+        const target = e.target;
+        if (target instanceof HTMLElement) {
+            if (target instanceof HTMLInputElement) {
+                if (target.type === "number") {
+                    doChange(target.value, Number)
+                } else if (target.type === "checkbox") {
+                    doChange(target.value, Boolean)
+                } else if (target.type === "text") {
+                    doChange(target.value, String)
+                }
+            } else if (target instanceof HTMLSelectElement || target instanceof HTMLTextAreaElement) {
+                doChange(target.value, String);
+            } else if (target.isContentEditable) {
+                doChange(target.innerHTML)
+            }
+        }
+    }
+}
+
+function component(component) {
+    return class extends HTMLElement {
+        constructor() {
+            super();
+            return new Proxy(this, {
+
+            })
+        }
+    }
+}

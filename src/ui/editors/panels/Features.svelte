@@ -1,6 +1,6 @@
 <script>
-  import Boxes from "@ui/semantic-boxes/Boxes.svelte";
-  import Box from "@ui/semantic-boxes/Box";
+  import Boxes from "@components/semantic-boxes/Boxes.svelte";
+  import Box from "@components/semantic-boxes/Box";
 
   import LocationOptions from "@ui/options/LocationOptions";
   import AttributeOptions from "@ui/options/AttributeOptions";
@@ -20,57 +20,68 @@
   }
 </script>
 
-<style>
-</style>
-
 <div class="features-editor">
   <Boxes on:addbox={addFeature}>
     {#each features as feature, i (i)}
       <Box on:addbox={addFeature} on:deletebox={() => removeFeature(i)}>
-        <div class="flex">
+        <fieldset>
           <FeatureOptions bind:feature={feature.type} />
-          <input
-            type="number"
-            placeholder="amount"
-            bind:value={feature.amount} />
+          <label>
+            <input
+              type="number"
+              placeholder="amount"
+              bind:value={feature.amount}
+            />
+          </label>
           <label>
             <span>Per Level</span>
             <input type="checkbox" bind:checked={feature.leveled} />
           </label>
-        </div>
+        </fieldset>
         {#if feature.type === FeatureBonusType.Attribute}
-          <div class="flex">
+          <fieldset>
             <AttributeOptions {entity} bind:attribute={feature.attribute} />
-          </div>
+          </fieldset>
         {:else if feature.type === FeatureBonusType.Skill}
-          <div class="flex">
+          <fieldset>
             <select>
               <option>to skills whose name</option>
             </select>
             <StringCompareOptions bind:option={feature.nameCompare} />
-            <input
-              type="text"
-              placeholder="name"
-              bind:value={feature.name}
-            />
-          </div>
-          <div class="flex">
-            <span>and whose specialization</span>
-            <StringCompareOptions bind:option={feature.specializationCompare} />
-            <input
-              type="text"
-              placeholder="specialization"
-              bind:value={feature.specialization} />
-          </div>
+            <input type="text" placeholder="name" bind:value={feature.name} />
+          </fieldset>
+          <fieldset>
+            <!-- svelte-ignore a11y-label-has-associated-control -->
+            <label>
+              <span>and whose specialization</span>
+              <StringCompareOptions
+                bind:option={feature.specializationCompare}
+              />
+            </label>
+            <label>
+              <input
+                type="text"
+                placeholder="specialization"
+                bind:value={feature.specialization}
+              />
+            </label>
+          </fieldset>
         {:else if feature.type === FeatureBonusType.Armor}
-          <div class="flex">
-            To Location(s)
-            <span class="pl-1">
+          <fieldset>
+            <!-- svelte-ignore a11y-label-has-associated-control -->
+            <label>
+              <span> To Location(s)</span>
               <LocationOptions {entity} bind:location={feature.location} />
-            </span>
-          </div>
+            </label>
+          </fieldset>
         {/if}
       </Box>
     {/each}
   </Boxes>
 </div>
+
+<style lang="postcss">
+  fieldset {
+    @apply flex;
+  }
+</style>

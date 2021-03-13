@@ -1,5 +1,5 @@
 import { combineLatest, from, merge, Observable } from "rxjs";
-import { catchError, filter, map, mergeAll, mergeMap, mergeScan, pluck, reduce, startWith, switchMap, toArray } from "rxjs/operators";
+import { catchError, defaultIfEmpty, distinctUntilChanged, filter, map, mergeAll, mergeMap, mergeScan, pluck, reduce, startWith, switchMap, tap, toArray, withLatestFrom } from "rxjs/operators";
 import {
     Resource,
     MeleeWeapon,
@@ -83,39 +83,44 @@ export enum Appearance {
     Very_Handsome_Beautiful,
     Transcendent
 }
-
 @staticImplements<GResource<Character>>()
 export class Character extends Resource<CharacterData> {
-    static type = "character"
-    static version = 1
-    constructor(identity: Character["identity"]) {
-        super(identity);
+    static type = "character" as const
+    static version = 1 as const
+    constructor(state: Character["state"]) {
+        super(state);
+    }
+    selectWeapons() {
+        return combineLatest([this.selectRangedWeapons(), this.selectMeleeWeapons()])
     }
     selectRangedWeapons() {
         return this.selectChildren({
-            type: 'rangedWeapon',
-            caster: RangedWeapon,
-            maxDepth: Number.POSITIVE_INFINITY
+            type: 'ranged weapon',
+            caster: RangedWeapon
         })
     }
     selectMeleeWeapons() {
         return this.selectChildren({
-            type: 'meleeWeapon',
-            caster: MeleeWeapon,
-            maxDepth: Number.POSITIVE_INFINITY
+            type: 'melee weapon',
+            caster: MeleeWeapon
         })
     }
-    selectWeapons() { }
+
     selectCarriedWeight() {
-        return this.selectChildren({
-            type: 'equipment',
-            caster: Equipment,
-            activeOnly: true
-        }).pipe(
-            mergeMap(each(item => item.selectExtendedWeight())),
-            mergeScan((t, w) => w.pipe(map(o => o + t)), 0),
-            startWith(0)
-        )
+        return this
+            .selectChildren({
+                type: 'equipment',
+                maxDepth: 1,
+                caster: Equipment,
+                activeOnly: true
+            }).pipe(
+                map(items => items.map(item => item.selectExtendedWeight())),
+                switchMap(weights => combineLatest(weights).pipe(
+                    defaultIfEmpty([])
+                )),
+                map(weights => weights.reduce((a, b) => a + b, 0)),
+                distinctUntilChanged()
+            )
     }
     selectEncumbranceLevel() {
         return combineLatest([
@@ -128,7 +133,7 @@ export class Character extends Resource<CharacterData> {
     selectAttributes() {
         const attributes$ = this.sub('config').sub('attributes');
         const attributeLevels$ = this.sub('attributeLevels');
-        const bonuses$ = this.selectAllFeatures()
+        const bonuses$ = this.selectFeatures()
             .pipe(
                 matchArray({
                     type: 'attribute bonus'
@@ -137,7 +142,6 @@ export class Character extends Resource<CharacterData> {
         return combineLatest([
             attributes$,
             bonuses$,
-
             attributeLevels$
         ]).pipe(
             map(([attributes, bonuses]) =>
@@ -174,7 +178,7 @@ export class Character extends Resource<CharacterData> {
     }
     get orderedPools$() {
         return combineLatest([
-            this.selectKeys().pipe(
+            this.pipe(
                 pluck("config", "ui", "poolOrder")
             ),
             this.selectAttributes()
@@ -192,7 +196,7 @@ export class Character extends Resource<CharacterData> {
         return combineLatest([
             locations$,
             hitPoints$,
-            this.selectAllFeatures().pipe(
+            this.selectFeatures().pipe(
                 matchArray({
                     type: "armor bonus"
                 })
@@ -247,32 +251,33 @@ export class Character extends Resource<CharacterData> {
             )
     }
     selectBasicLift() {
-        return this
-            .selectAttribute("lifting strength")
-            .pipe(
-                map(attribute =>
-                    Gurps
-                        .basicLift(
-                            attribute
-                                ?.calculateLevel()
-                            ?? 10
-                        ))
-            )
+        return this.selectAttribute("lifting strength").pipe(
+            map(attribute =>
+                Gurps
+                    .basicLift(
+                        attribute
+                            ?.calculateLevel()
+                        ?? 10
+                    )
+            ),
+            distinctUntilChanged()
+        )
     }
     get pointTotal$() {
-        const sumSkillLike = (src: Observable<(Skill | Technique | Spell)[]>) => src.pipe(
-            map(each(s => s.getKeys())),
-            map(each(s => s.points)),
-            map(n => n.reduce((t, p) => t + p, 0))
-        )
-        return combineLatest([
-            this.keys$,
-            this.selectAttributes() as Observable<Record<string, Attribute>>,
-            this.selectChildren({ type: "trait", caster: Trait }).pipe(map(split)),
-            this.selectChildren({ type: "skill", caster: Skill }).pipe(sumSkillLike),
-            this.selectChildren({ type: "technique", caster: Technique }).pipe(sumSkillLike),
-            this.selectChildren({ type: "spell", caster: Spell }).pipe(sumSkillLike)
-        ]).pipe(
+        const sumSkillLike = (src: Observable<(Skill | Technique | Spell)[]>) => src
+            .pipe(
+                map(each(s => s.value)),
+                map(each(s => s.points)),
+                map(n => n.reduce((t, p) => t + p, 0))
+            )
+        return this.pipe(
+            withLatestFrom(
+                this.selectAttributes() as Observable<Record<string, Attribute>>,
+                this.selectChildren({ type: "trait", caster: Trait }).pipe(map(ta => ta.map(t => t.value)), map(split)),
+                this.selectChildren({ type: "skill", caster: Skill }).pipe(sumSkillLike),
+                this.selectChildren({ type: "technique", caster: Technique }).pipe(sumSkillLike),
+                this.selectChildren({ type: "spell", caster: Spell }).pipe(sumSkillLike)
+            ),
             map(([data, attributes, traits, skills, techniques, spells]) => {
                 const total = data.pointTotal;
                 const attributePoints = Object.values(attributes).reduce(

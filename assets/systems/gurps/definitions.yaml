@@ -1,5 +1,3 @@
-$schema: http://json-schema.org/draft-07/schema
-$id: http://valorsheet/systems/gurps/definitions.yaml
 default:
   type: object
   properties: {}
@@ -9,24 +7,79 @@ weapon:
   properties:
     usage:
       type: string
-    damage:
+      damage:
+        type: string
+      damageType:
+        enum:
+          - imp
+          - cr
+          - cut
+          - fat
+          - tox
+      info:
+        type: string
+        default: ""
+      strengthRequirement:
+        type: string
+        default: 10
+      attackBonus:
+        type: integer
+      defaults:
+        $ref: "definitions.yaml#/skill/properties/defaults"
+skill:
+  type: object
+  properties:
+    name:
       type: string
-    damageType:
+    specialization:
+      type: string
+    techLevel:
+      type: string
+    points:
+      type: integer
+      default: 1
+    difficulty:
       enum:
-        - imp
-        - cr
-        - cut
-        - fat
-        - tox
-    info:
+        - E
+        - A
+        - H
+        - VH
+        - WC
+      default: A
+    signature:
+      type: string
+      default: "intelligence"
+    defaults:
       type: array
       items:
-        type: string
+        $ref: "definitions.yaml#/default"
       default: []
-    strengthRequirement:
-      type: string
-      default: 10
-    attackBonus:
+    mod:
       type: integer
-    defaults:
-      $ref: "#/default"
+      default: 0
+    encumbrancePenaltyMultiple:
+      type: number
+      default: 0
+traitModifier:
+  type: object
+  properties:
+    enabled:
+      type: boolean
+    cost:
+      type: integer
+    name:
+      type: string
+    costType:
+      enum:
+        - percentage
+        - points
+        - multiplier
+    levels:
+      type: integer
+    hasLevels:
+      type: boolean
+    affects:
+      enum:
+        - base only
+        - levels only
+        - total

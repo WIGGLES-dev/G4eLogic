@@ -1,0 +1,22 @@
+import { OrArray } from "@internal";
+import { Subject } from "rxjs";
+export declare const posts$: Subject<unknown>;
+export declare const foundryConnectionMethods: {
+    createItem(data: OrArray<createData>, options?: Options): Promise<OrArray<BaseData>>;
+    updateItem(data: OrArray<updateData>, options?: Options): Promise<OrArray<BaseData>>;
+    deleteItem(data: OrArray<string>, options?: Options): Promise<OrArray<BaseData>>;
+    createActor(data: OrArray<createData>, options?: Options): Promise<OrArray<BaseData>>;
+    updateActor(data: OrArray<updateData>, options?: Options): Promise<OrArray<BaseData>>;
+    deleteActor(data: OrArray<string>, options?: Options): Promise<any>;
+    createOwnedItem(actorId: string, item: OrArray<createData>, options?: Options): Promise<OrArray<BaseData>>;
+    updateOwnedItem(actorId: string, item: OrArray<updateData>, options?: Options): Promise<OrArray<BaseData>>;
+    deleteOwnedItem(actorId: string, itemId: OrArray<string>, options?: Options): Promise<OrArray<BaseData>>;
+    getGameData(): any;
+    getActorData(actorId: string): BaseData;
+    getItemData(itemId: string): BaseData;
+    getOwnedItemData(actorId: string, itemId: string): any;
+    notify(): void;
+    roll(): void;
+    openPDF(code: string, options: any): void;
+    post(data: any): void;
+};

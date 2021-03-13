@@ -1,15 +1,15 @@
-<script context='module' lang='ts'>
-    import { CellValue } from '@components/Cell.svelte';
+<script context="module" lang="ts">
+    import Value from "@components/Value.svelte";
     export interface Composite {
-        above: Composite | CellValue
-        left: Composite | CellValue
-        main: Composite | CellValue
-        right: Composite | CellValue
-        below: Composite | CellValue
+        above;
+        left;
+        main;
+        right;
+        below;
     }
 </script>
-<script lang='ts'>
-    import Cell from '@components/Cell.svelte';
+
+<script lang="ts">
     export let compose: Composite[];
     export let above;
     export let left;
@@ -18,34 +18,38 @@
     export let below;
 </script>
 
-<style>
-
-</style>
-
 {#if compose}
     {#each compose as composite}
         {#if composite instanceof Array}
-            <svelte:self compose={composite}></svelte:self>
+            <svelte:self compose={composite} />
         {:else}
-            <svelte:self {...composite}></svelte:self>
+            <svelte:self {...composite}>
+                <slot name="left" />
+                <slot />
+                <slot name="right" />
+                <slot name="below" />
+            </svelte:self>
         {/if}
     {/each}
 {:else}
-    <slot name='above'>
-        <Cell value={above} {...above} /> 
+    <slot name="above">
+        <Value value={above} {...above} />
     </slot>
     <div class="flex flex-wrap">
         <slot name="left">
-            <Cell value={left} {...left} /> 
+            <Value value={left} {...left} />
         </slot>
         <slot>
-            <Cell value={main} {...main}/>
+            <Value value={main} {...main} />
         </slot>
         <slot name="right">
-            <Cell value={right} {...right} />
+            <Value value={right} {...right} />
         </slot>
     </div>
     <slot name="below">
-        <Cell value={below} {...below} />
+        <Value value={below} {...below} />
     </slot>
 {/if}
+
+<style>
+</style>

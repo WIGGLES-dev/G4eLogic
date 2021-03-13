@@ -1,0 +1,49 @@
+resource:
+  type: object
+  properties:
+    version:
+      type: number
+    id:
+      type: string
+    type:
+      type: string
+    name:
+      type: string
+      default: ""
+    categories:
+      type: array
+      items:
+        type: string
+      default: []
+    children:
+      type: object
+      patternProperties:
+        .:
+          type: array
+          items:
+            type: object
+      default: {}
+    metadata:
+      $ref: definitions.yaml#/metadata
+metadata:
+  type: object
+  properties:
+    alternativeIds:
+      type: object
+    source:
+      type: string
+    progenitor:
+      type: string
+    enabled:
+      type: boolean
+      default: true
+    flags:
+      type: object
+    createdOn:
+      type: number
+    lastEdit:
+      type: number
+  default:
+    alternativeIds: {}
+    enabled: true
+    flags: {}

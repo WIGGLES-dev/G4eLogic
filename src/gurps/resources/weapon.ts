@@ -4,11 +4,12 @@ import {
     Character,
     Resource,
     Data,
+    GResource,
+    staticImplements
 } from "@internal";
+import { Downstream, Upstream } from "rxdeep";
 import { combineLatest, Observable } from "rxjs";
 import { map, takeWhile } from "rxjs/operators";
-import { GResource } from "src/sheet/resource";
-import { staticImplements } from "src/utils/decorators";
 
 export enum BaseDamage {
     Swing = "sw",
@@ -50,12 +51,11 @@ export interface RangedWeaponData extends WeaponKeys, Data {
 }
 
 export abstract class Weapon<K extends WeaponKeys & Data = WeaponKeys & Data> extends Resource<K> {
-    constructor(identity: Weapon<K>["identity"]) {
-        super(identity);
+    constructor(state: Resource<K>["state"]) {
+        super(state);
     }
-    selectHighestDefault$ = Skill.prototype.selectHighestDefault$
     get bestAttackLevel$(): Observable<number> {
-        return this.selectHighestDefault$()
+        return Skill.prototype.selectHighestDefault$.call(this)
     }
 }
 
@@ -63,14 +63,13 @@ export abstract class Weapon<K extends WeaponKeys & Data = WeaponKeys & Data> ex
 export class MeleeWeapon extends Weapon<MeleeWeaponData> {
     static version = 1 as const
     static type = "melee weapon" as const
-    constructor(identity: MeleeWeapon["identity"]) {
-        super(identity);
-
+    constructor(state: MeleeWeapon["state"]) {
+        super(state);
     }
     get parryLevel$() {
         return combineLatest([
             this.bestAttackLevel$,
-            this.selectKeys()
+            this
         ]).pipe(
             map(([level, keys]) => level / 2 + 3 + (keys.parryBonus || null))
         )
@@ -78,7 +77,7 @@ export class MeleeWeapon extends Weapon<MeleeWeaponData> {
     get blockLevel$() {
         return combineLatest([
             this.bestAttackLevel$,
-            this.selectKeys()
+            this
         ]).pipe(
             map(([level, keys]) => level / 2 + 3 + (keys.blockBonus || null))
         )
@@ -89,7 +88,7 @@ export class MeleeWeapon extends Weapon<MeleeWeaponData> {
 export class RangedWeapon extends Weapon<RangedWeaponData> {
     static version = 1 as const
     static type = "ranged weapon" as const
-    constructor(identity: RangedWeapon["identity"]) {
-        super(identity);
+    constructor(state: RangedWeapon["state"]) {
+        super(state);
     }
 }

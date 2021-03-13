@@ -5,12 +5,11 @@
     }
 </script>
 <script lang="ts">
-    import { isStore } from '@components/Observe.svelte';
-    import { Observable } from 'rxjs';
+    import { Observable, from } from 'rxjs';
     import Option from "./Option.svelte";
     export let value;
     export let multiple: boolean
-    export let options: Observable<(SelectOption |string)[]>;
+    export let options: Observable<(SelectOption |string)[]> = from([[]]);
 </script>
 
 <style>
@@ -18,15 +17,25 @@
 </style>
 
 {#if multiple}
-    <select multiple bind:value={$value}>
-        {#each $options as option, i (i)}
-            <Option {option}/>
-        {/each}
-    </select>
+    <label>
+        <select multiple bind:value={$value}>
+            {#each $options as option, i (i)}
+                <Option {option}/>
+            {/each}
+        </select>
+    </label>
 {:else}
-    <select bind:value={$value}>
-        {#each $options as option, i (i)}
-            <Option {option} />
-        {/each}
-    </select>
+    <label>
+        <select bind:value={$value}>
+            {#each $options as option, i (i)}
+                <Option {option} />
+            {/each}
+        </select>
+    </label>
+{/if}
+
+{#if false}
+    <div>
+        
+    </div>
 {/if}

@@ -2,108 +2,83 @@
   @import "~prosemirror-example-setup/style/style.css";
   @import "~prosemirror-gapcursor/style/gapcursor.css";
   @import "~prosemirror-menu/style/menu.css";
-  
   @import "~jsoneditor/dist/jsoneditor.css";
   @import "~cropperjs/dist/cropper.css";
- 
   @tailwind base;
   @tailwind components;
   @tailwind utilities;
-
   @layer utilities {
-    @responsive {
-      .screen-center {
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+      @responsive {
+          .screen-center {
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+          }
+          .w-min {
+              width: min-content;
+          }
+          .h-min {
+              height: min-content;
+          }
+          .w-max {
+              width: min-content;
+          }
+          .h-max {
+              height: min-content;
+          }
       }
-      .w-min {
-        width: min-content;
-      }
-      .h-min {
-        height: min-content;
-      }
-      .w-max {
-        width: min-content;
-      }
-      .h-max {
-        height: min-content;
-      }
-    }
   }
   
-  .button {
-    @apply bg-gray-700 text-white p-1 m-1;
-    &.disabled {
-      @apply bg-white text-red-700 cursor-not-allowed pointer-events-none;
-    }
-    &:focus {
-      @apply bg-green-500 outline-none;
-    }
-  }
-
   blockquote {
-    @apply mx-3 my-2;
-  }
-
-  .cell-click {
-    @apply bg-red-700 text-white;
-  }
-  .cell-click:hover {
-    @apply bg-green-500 text-white;
-  }
-
-  .ProseMirror-focused {
-    @apply outline-none;
-  }
-
-  .ProseMirror {
-    @apply w-full p-2 max-h-full overflow-auto;
-    height: 800px;
-    ol > li {
-      @apply list-decimal;
-    }
-    ul > li {
-      @apply list-disc;
-    }
-  }
-
-  body {
-    @apply h-screen flex flex-col;
-  }
-
-  input, textarea, select {
-    @apply outline-none bg-transparent;
-  }
-
-  form {
-    @apply h-full flex flex-wrap;
-  }
-
-  form .field {
-    @apply p-1;
-  }
-
-  form fieldset {
-    @apply p-3;
-  }
-
-  form label {
-    @apply block p-1;
+      @apply mx-3 my-2;
   }
   
-  form label span {
-    @apply px-2;
+  .ProseMirror-focused {
+      @apply outline-none;
   }
-
-  form label textarea {
-    @apply block w-full h-60;
+  
+  .ProseMirror {
+      @apply w-full p-2 max-h-full overflow-auto;
+      height: 800px;
+      ol>li {
+          @apply list-decimal;
+      }
+      ul>li {
+          @apply list-disc;
+      }
   }
-
-  form label output {
-    @apply bg-gray-300 p-1;
+  
+  .fas {
+      font-weight: 200 !important;
   }
-
-  form input, form select, form textarea {
-    @apply border-2 border-solid;
+  
+  body {
+      @apply h-screen flex flex-col;
+  }
+  
+  label {
+      @apply shadow m-1 p-1 border border-solid rounded block;
+  }
+  
+  [contenteditable="true"]:focus,
+  input,
+  textarea,
+  select {
+      @apply outline-none;
+  }
+  
+  textarea {
+      @apply block w-full;
+  }
+  
+  output {
+      @apply bg-gray-200 p-2 rounded;
+  }
+  
+  th {
+      @apply px-2 font-normal underline;
+  }
+  
+  table>tbody>tr>td {
+      @apply border-b border-solid;
   }

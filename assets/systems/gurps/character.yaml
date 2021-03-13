@@ -1,97 +1,124 @@
-$schema: http://json-schema.org/draft-07/schema
-$id: http://valorsheet/systems/gurps/character.yaml
-type: object
-required:
-  - type
-properties:
-  type:
-    const: character
-    default: character
-  version:
-    const: 1
-    default: 1
-  config:
-    type: object
+# $schema: http://json-schema.org/draft-07/schema
+# $id: http://valorsheet/systems/gurps/character.yaml
+allOf:
+  - $ref: ../definitions.yaml#/resource
+  - type: object
     properties:
-      ui:
+      type:
+        const: character
+        default: character
+      version:
+        const: 1
+        default: 1
+      children:
         type: object
         properties:
-          rolling:
-            type: boolean
-          attributeOrder:
+          trait:
             type: array
             items:
-              type: string
-          poolOrder:
+              $ref: trait.yaml
+          skill:
             type: array
             items:
-              type: string
-      equipment:
+              $ref: skill.yaml
+          technique:
+            type: array
+            items:
+              $ref: technique.yaml
+          spell:
+            type: array
+            items:
+              $ref: spell.yaml
+          equipment:
+            type: array
+            items:
+              $ref: equipment.yaml
+      categories:
+        type: array
+        items:
+          type: string
+        default: []
+      config:
         type: object
         properties:
+          ui:
+            type: object
+            properties:
+              rolling:
+                type: boolean
+              attributeOrder:
+                type: array
+                items:
+                  type: string
+              poolOrder:
+                type: array
+                items:
+                  type: string
+          equipment:
+            type: object
+            properties:
+              locations:
+                type: array
+                items:
+                  type: string
+          rulesets:
+            type: object
+            properties:
+              useMultiplicativeModifiers:
+                type: boolean
+                default: false
+              useKnowingYourOwnStrength:
+                type: boolean
+                default: false
+              useReducedSwingDamage:
+                type: boolean
+                default: false
+              useNoSchoolGrognardReducedSwingDamage:
+                type: boolean
+                defualt: false
+          attributes:
+            type: object
+            patternProperties:
+              .:
+                $ref: attribute.yaml
           locations:
-            type: array
-            items:
-              type: string
-      rulesets:
+            type: object
+            patternProperties:
+              .:
+                $ref: hitLocation.yaml
+        default:
+          $ref: defaultCharacterConfig.yaml
+      profile:
         type: object
-        properties:
-          useMultiplicativeModifiers:
-            type: boolean
-            default: false
-          useKnowingYourOwnStrength:
-            type: boolean
-            default: false
-          useReducedSwingDamage:
-            type: boolean
-            default: false
-          useNoSchoolGrognardReducedSwingDamage:
-            type: boolean
-            defualt: false
-      attributes:
-        type: object
-        patternProperties:
-          .:
-            $ref: attribute.yaml
-      locations:
-        type: object
-        patternProperties:
-          .:
-            $ref: hitLocation.yaml
-    default:
-      $ref: characterConfig.yaml
-  profile:
-    type: object
-    properties: {}
-    default: {}
-  pointTotal:
-    type: integer
-    default: 150
-  hitLocationDamage:
-    type: object
-    patternProperties:
-      .:
+        default: {}
+      pointTotal:
         type: integer
-    default: {}
-  attributeLevels:
-    type: object
-    patternProperties:
-      .:
+        default: 150
+      hitLocationDamage:
         type: object
-        properties:
-          mod:
+        patternProperties:
+          .:
             type: integer
-    default: {}
-example:
-  config:
-  profile:
-    name: Samantha
-    nickName: Sammy
-  pointTotal: 250
-  hitLocationDamage:
-    left arm: 5
-    right leg: 7
-  attributeLevels:
-    strength:
-      mod: 2
-      current: 12
+        default: {}
+      attributeLevels:
+        type: object
+        patternProperties:
+          .:
+            type: object
+            properties:
+              mod:
+                type: integer
+        default: {}
+    example:
+      config:
+      profile:
+        name: Samantha
+        nickName: Sammy
+      pointTotal: 250
+      hitLocationDamage:
+        left arm: 5
+        right leg: 7
+      attributeLevels:
+        strength:
+          mod: 2
+          current: 12

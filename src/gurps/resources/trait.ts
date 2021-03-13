@@ -62,11 +62,11 @@ export interface TraitData extends Data {
 export class Trait extends Resource<TraitData> {
     static version = 1
     static type = "trait"
-    constructor(identity: Trait["identity"]) {
-        super(identity);
+    constructor(state: Trait["state"]) {
+        super(state);
     }
     selectAdjustedPoints() {
-        return this.selectKeys().pipe(
+        return this.pipe(
             map(calculateTraitCost)
         )
     }
@@ -162,7 +162,7 @@ export function calculateTraitCost(
     } else {
         modifiedBasePoints += (leveledPoints);
     }
-    return applyRounding((modifiedBasePoints * multiplier), Boolean(roundDown))
+    return applyRounding((modifiedBasePoints * multiplier), Boolean(roundDown)) || 0
 }
 
 function getControlRatingMultipland(cr: ControlRating) {
@@ -244,7 +244,7 @@ export function getCategory(tags: string[]) {
     return -1
 }
 
-export function getContainerType(traits: Trait[]) {
+export function getContainerType(traits: Trait["value"][]) {
     let racial = false;
     let perk = false;
     let advantage = false;
@@ -280,24 +280,20 @@ export function getContainerType(traits: Trait[]) {
     return TraitCategory.Meta;
 }
 
-export function getTraitType(trait: Trait) {
-    const keys = trait.getKeys();
-    if (!keys) return TraitCategory.Never
-    const children = AutoSubscriber.get(trait.selectChildren({
-        type: 'trait',
-        caster: Trait,
-        maxDepth: 1
-    }));
-    let type = getCategory(keys.categories);
+export function getTraitType(trait: Trait["value"]) {
+    if (!trait) return TraitCategory.Never;
+    const { categories } = trait;
+    const children = (trait?.children?.trait ?? []) as Trait["value"][]
+    let type = getCategory(categories);
     if (children.length > 0) {
         return getContainerType(children)
     }
     if (type !== TraitCategory.Never) return type
-    const advantage = isAdvantage(keys);
-    const perk = isPerk(keys);
-    const disadvantage = isDisadvantage(keys);
-    const quirk = isQuirk(keys);
-    const feature = isFeature(keys);
+    const advantage = isAdvantage(trait);
+    const perk = isPerk(trait);
+    const disadvantage = isDisadvantage(trait);
+    const quirk = isQuirk(trait);
+    const feature = isFeature(trait);
     if (disadvantage) return TraitCategory.Disadavantage;
     if (quirk) return TraitCategory.Quirk;
     if (advantage) return TraitCategory.Advantage;
@@ -307,7 +303,7 @@ export function getTraitType(trait: Trait) {
     return type
 }
 
-export function split(traits: Trait[]) {
+export function split(traits: Trait["value"][]) {
     if (!traits) return {}
     const splits = {
         [TraitCategory.Advantage]: traits.filter(trait => getTraitType(trait) === TraitCategory.Advantage),
@@ -321,8 +317,8 @@ export function split(traits: Trait[]) {
     return removeDuplicates(splits);
 }
 
-export function sumTraitArray(traits: Trait[]) {
-    return traits?.reduce((total, trait) => calculateTraitCost(trait.getKeys()) + total, 0) ?? 0
+export function sumTraitArray(traits: Trait["value"][]) {
+    return traits?.reduce((total, trait) => calculateTraitCost(trait) + total, 0) ?? 0
 }
 
 /**
@@ -331,7 +327,7 @@ export function sumTraitArray(traits: Trait[]) {
  * be overridden by things later in the list. Be sure to account for that when using this function.
  * @param lists A series of lists to remove the duplicates from
  */
-export function removeDuplicates(lists: { [key: string]: Trait[] }) {
+export function removeDuplicates<T extends { id: string }>(lists: { [key: string]: T[] }) {
     const checked = new Set();
     return Object.entries(lists).reduce((prev, [type, list]) => {
         checked.add(type);
@@ -344,5 +340,5 @@ export function removeDuplicates(lists: { [key: string]: Trait[] }) {
         let newCollection = list.filter(item => !checkAgainst.includes(item.id));
         prev[type] = newCollection;
         return prev
-    }, {} as Record<string, Trait[]>)
+    }, {} as Record<string, T[]>)
 }

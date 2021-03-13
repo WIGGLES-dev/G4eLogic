@@ -5,7 +5,8 @@ import {
     SkillDefault,
     SkillLike,
     staticImplements,
-    GResource
+    GResource,
+    Resource
 } from "@internal";
 import {
     Observable,
@@ -24,8 +25,8 @@ export interface TechniqueData extends Data, SkillLikeKeys {
 export class Technique extends SkillLike<TechniqueData> {
     static type = 'technique' as const
     static version = 1 as const
-    constructor(identifier: Technique["identity"]) {
-        super(identifier);
+    constructor(state: Technique["state"]) {
+        super(state);
     }
     get level$(): Observable<number> {
         return from([0])

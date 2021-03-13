@@ -1,0 +1,32 @@
+{
+    "name": "GURPS",
+    "title": "GURPS 4th Edition",
+    "description": "GURPS 4e system.",
+    "minimumCoreVersion": "0.6.6",
+    "compatibleCoreVersion": "0.6.6",
+    "version": "1.3.2",
+    "templateVersion": 2,
+    "author": "Ian Bell",
+    "scripts": [
+        "valor.js",
+        "foundryValor.js"
+    ],
+    "styles": [
+        "foundryValor.css"
+    ],
+    "packs": [],
+    "languages": [{
+        "lang": "en",
+        "name": "English",
+        "path": "lang/en.json"
+    }],
+    "socket": true,
+    "initiative": "@initiative",
+    "gridDistance": 1,
+    "gridUnits": "yards",
+    "primaryTokenAttribute": "attributes.hit_points",
+    "secondaryTokenAttribute": "attributes.fatigue_points",
+    "url": "https://github.com/WIGGLES-dev/GURPSFoundrySystem",
+    "manifest": "https://github.com/WIGGLES-dev/GURPSFoundrySystem/releases/latest/download/system.json",
+    "download": "https://github.com/WIGGLES-dev/GURPSFoundrySystem/releases/latest/download/GURPS.zip"
+}

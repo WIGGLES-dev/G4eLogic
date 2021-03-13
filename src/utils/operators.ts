@@ -53,3 +53,6 @@ export function spread<T extends any[], U>(fn: (...args: Partial<T>) => U): Oper
         )
     }
 }
+export function preventDefault<T extends Event>(source: Observable<T>): Observable<T> {
+    return source.pipe(tap(e => e.preventDefault()))
+}

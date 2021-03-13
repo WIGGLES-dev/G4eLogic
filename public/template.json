@@ -1,0 +1,17 @@
+{
+    "Actor": {
+        "types": [
+            "sheet"
+        ],
+        "templates": {}
+    },
+    "Item": {
+        "types": [
+            "equipment",
+            "skill",
+            "spell",
+            "technique",
+            "trait"
+        ]
+    }
+}

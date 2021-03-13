@@ -1,7 +1,6 @@
 <script lang="ts">
-    import { isStore } from "@components/Observe.svelte";
     export let value: any;
-    export let width;
+    export let width = '3rem';
     export let disabled: boolean
     $: style = `
         flex: 1;

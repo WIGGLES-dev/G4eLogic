@@ -1,22 +1,25 @@
 import 'dexie-observable';
-import './extend.ts';
+import './extend/rxdeep';
+
 export * from "./utils/strings";
 export * from "./utils/dom";
 export * from "./utils/object";
 export * from "./utils/mixin";
 export * from "./utils/calculator";
-export * from "./utils/timestamp";
 export * from "./utils/operators";
 export * from "./utils/autosubscriber";
-export * from "./utils/virtualElement";
 export * from "./utils/decorators";
 export * from './utils/abbreviate';
 export * from './utils/resolver';
+export * from './utils/array';
+export * from './utils/use';
+export * from './utils/tree';
 
-export * from './sheet/collection';
-export * from './sheet/system';
-export * from "./sheet/ui";
-export * from './sheet/resource';
+export * from "./database";
+export * from "./app";
+export * from './system';
+export * from "./resource"
+export * from "./mask";
 
 export * from "./gurps/resources/interfaces";
 
@@ -35,3 +38,4 @@ export * from "./gurps/resources/hitLocation";
 export * from "./gurps/resources/attribute";
 
 export * from "./ui/utils/use";
+export { default as Main } from "./Main.svelte";
