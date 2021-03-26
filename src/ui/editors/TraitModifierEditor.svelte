@@ -1,5 +1,8 @@
 <script context="module" lang="ts">
-  import { TraitModifierAffects, TraitModifierType } from "@internal";
+  import {
+    TraitModifierAffects,
+    TraitModifierType,
+  } from "@app/gurps/resources/trait";
   import { State } from "rxdeep";
   import { Tabs, TabList, Tab, TabPanel } from "@components/Tabs/tabs";
   import Features from "@ui/editors/panels/Features.svelte";

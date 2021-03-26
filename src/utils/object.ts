@@ -26,11 +26,11 @@ export function merge(src: any, ...objects: any[]) {
         }
     }
     for (const object of objects) {
-        join(src, object)
+        join(src, object);
     }
     return src
 }
-export function getPath(obj, value): string[] {
+export function getPath(obj, value: any): string[] {
     if (obj.constructor !== Object) {
         throw new TypeError('getPath() can only operate on object with Object as constructor');
     }
@@ -40,7 +40,12 @@ export function getPath(obj, value): string[] {
     function search(haystack) {
         for (let key of Object.keys(haystack || {})) {
             path.push(key);
-            if (haystack[key] === value) {
+            if (typeof value === 'function') {
+                if (value(haystack[key])) {
+                    found = true;
+                    break;
+                }
+            } else if (haystack[key] === value) {
                 found = true;
                 break;
             }
@@ -95,6 +100,22 @@ export function setValueAtPath(src: any, path: string, value: any) {
         context.objects.push(obj);
         return obj[prop]
     }, src);
+}
+export function getValue(object, key) {
+    return object[key]
+}
+export function getValueAtPath(object, path) {
+    return path.reduce(getValue, object);
+}
+export function deleteValueAtPath(object, path) {
+    const key = path.pop();
+    const value = getValue(object, path);
+    delete value[key];
+}
+export function updateValueAtPath(object, path, update) {
+    const key = path.pop();
+    const value = getValue(object, path);
+    value[key] = update(value);
 }
 export function safeCall<
     P extends any[] = any[],

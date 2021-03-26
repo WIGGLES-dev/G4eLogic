@@ -1,5 +1,6 @@
-import { SkillDifficulty, Data, SkillLikeKeys, SkillDefault, SkillLike } from "@internal";
-import { Observable } from 'rxjs';
+import type { Data } from "@app/entity";
+import type { SkillLikeKeys, SkillDefault } from "./skill";
+import { SkillDifficulty } from "./skill";
 export declare type TechniqueDifficulty = SkillDifficulty.Average | SkillDifficulty.Hard;
 export interface TechniqueData extends Data, SkillLikeKeys {
     type: "technique";
@@ -9,10 +10,8 @@ export interface TechniqueData extends Data, SkillLikeKeys {
     default: SkillDefault;
     defaults: undefined;
 }
-export declare class Technique extends SkillLike<TechniqueData> {
+export declare class Technique {
     static type: "technique";
     static version: 1;
-    constructor(state: Technique["state"]);
-    get level$(): Observable<number>;
 }
 export declare function calculateTechniqueLevel(technique: TechniqueData, baseLevel?: number, bonus?: number): number;

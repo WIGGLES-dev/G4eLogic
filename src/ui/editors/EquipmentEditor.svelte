@@ -1,18 +1,16 @@
 <script context="module" lang="ts">
   import { Tabs, Tab, TabPanel, TabList } from "@components/Tabs/tabs";
   import CategoryList from "@components/Form/CategoryList.svelte";
-  import { Equipment } from "@internal";
   import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
   import Features from "./panels/Features.svelte";
-  import Weapon from "@ui/datatables/Weapon.svelte"
+  import Weapon from "@ui/datatables/Weapon.svelte";
   import EquipmentModifiers from "./panels/EquipmentModifiers.svelte";
 </script>
 
 <script lang="ts">
-  export let entity: Equipment;
+  export let entity;
   const equipped$ = entity.sub("metadata", "enabled");
   const modifiers$ = entity.sub("modifiers");
-  const { eWeight$, eValue$ } = entity;
 </script>
 
 <Tabs>
@@ -64,7 +62,7 @@
         <label>
           <span>Extended Value</span>
           <output>
-            ${+$eValue$.toFixed(3)}
+            <!-- ${+$eValue$.toFixed(3)} -->
           </output>
         </label>
       </fieldset>
@@ -76,7 +74,7 @@
         <label>
           <span>Extended Weight</span>
           <output>
-            {+$eWeight$.toFixed(3)} lb
+            <!-- {+$eWeight$.toFixed(3)} lb -->
           </output>
         </label>
         <label>
@@ -112,7 +110,11 @@
   <TabPanel>
     <Features bind:features={$entity.features} />
   </TabPanel>
-  <TabPanel component={EquipmentModifiers} state$={modifiers$} />
+  <TabPanel>
+    <!-- <EquipmentModifiers>
+
+    </EquipmentModifiers> -->
+  </TabPanel>
   <TabPanel>
     <Weapon root={entity} type="melee weapon" />
   </TabPanel>

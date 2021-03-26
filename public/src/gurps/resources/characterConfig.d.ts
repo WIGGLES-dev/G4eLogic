@@ -1,4 +1,4 @@
-import { AttributeData, HitLocationData } from "@internal";
+import type { AttributeData, HitLocationData } from "@app/gurps/resources/character";
 export interface Config {
     equipment: {
         locations: string[];

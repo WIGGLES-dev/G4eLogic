@@ -1,10 +1,7 @@
 <script lang="ts">
-  import { FeatureBonusType } from "@internal";
+  import { FeatureBonusType } from "@app/gurps/resources/interfaces";
   export let feature: FeatureBonusType;
 </script>
-
-<style>
-</style>
 
 <select bind:value={feature}>
   <option value={undefined}>Select A Feature</option>
@@ -20,3 +17,6 @@
   <option disabled={true}>Gives a weapon damage bonus of</option>
   <option disabled={true}>Reduces the attribute cost of</option>
 </select>
+
+<style>
+</style>

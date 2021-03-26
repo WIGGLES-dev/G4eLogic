@@ -1,18 +1,25 @@
 <script lang="ts">
   import { getContext } from "svelte";
-  import { Character, tooltip } from "@internal";
+  import { tooltip } from "@ui/utils/use";
+  import { System } from "@internal";
+  import { Character as CharacterWorker } from "@app/gurps/resources/character";
+  import { mergeMap } from "rxjs/operators";
+  import { State } from "rxdeep";
+  import { from, Observable, pipe } from "rxjs";
+  import { Remote } from "comlink";
+  const state = getContext<State<any>>("sheet");
+  const character$ = getContext<Observable<Remote<CharacterWorker>>>("worker");
+  const basicLift$ = character$.pipe(mergeMap((c) => c.getBasicLift()));
+  const move$ = from([{ displayLevel: 5 }]);
+  const dodge$ = from([{ displayLevel: 8 }]);
+  const carriedWeight$ = character$.pipe(mergeMap((c) => c.getCarriedWeight()));
+  const encumbranceLevel$ = character$.pipe(
+    mergeMap((c) => c.getEncumbranceLevel())
+  );
 
-  const character = getContext<Character>("sheet");
-
-  const basicLift$ = character.selectBasicLift();
-  const move$ = character.selectAttribute("move");
-  const dodge$ = character.selectAttribute("dodge");
-  const carriedWeight$ = character.selectCarriedWeight();
-  const encumbranceLevel$ = character.selectEncumbranceLevel();
-
-  $: move = $move$.displayLevel ?? 5;
+  $: move = $move$?.displayLevel ?? 5;
   $: lift = $basicLift$;
-  $: dodge = $dodge$.displayLevel ?? 8;
+  $: dodge = $dodge$?.displayLevel ?? 8;
 </script>
 
 <section>
@@ -31,9 +38,9 @@
       use:tooltip={{
         tipclass: "text-sm",
         tooltip: `
-    Encumbrance is a measure of how much equipment you are carrying versus Lifting Strength. Ref. BS17.<br/>
-    Encumbrance can never reduce Move or Dodge below 1. 
-    `,
+          Encumbrance is a measure of how much equipment you are carrying versus Lifting Strength. Ref. BS17.<br/>
+          Encumbrance can never reduce Move or Dodge below 1. 
+        `,
       }}
     >
       <tr>
@@ -46,12 +53,12 @@
     <tbody>
       <tr
         class:active={$encumbranceLevel$ === 0}
-        class:bg-green-300={$encumbranceLevel$ === 0}
+        class:none={$encumbranceLevel$ === 0}
         use:tooltip={{
           tipclass: "text-sm",
           tooltip: `
-        You are at None if your equipped weight is less than Basic Lift. You take no penalties.
-      `,
+            You are at None if your equipped weight is less than Basic Lift. You take no penalties.
+          `,
         }}
       >
         <td>None [0]</td>
@@ -65,9 +72,9 @@
         use:tooltip={{
           tipclass: "text-sm",
           tooltip: `
-        You are at Light if your equipped weight is above None and less than Basic Lift * 2.<br/>
-	      Your Move is multipled by 0.8x. All encumbrance sensitive skills and Dodge take a -1.
-        `,
+            You are at Light if your equipped weight is above None and less than Basic Lift * 2.<br/>
+	          Your Move is multipled by 0.8x. All encumbrance sensitive skills and Dodge take a -1.
+          `,
         }}
       >
         <td>Light [-1]</td>
@@ -77,13 +84,13 @@
       </tr>
       <tr
         class:active={$encumbranceLevel$ === -2}
-        class:bg-yellow-300={$encumbranceLevel$ === -2}
+        class:medium={$encumbranceLevel$ === -2}
         use:tooltip={{
           tipclass: "text-sm",
           tooltip: `
-        You are at Medium if your equipped weight is above Light and less than Basic Lift * 3.<br/>
-	      Your Move is multipled by 0.6x. All encumbrance sensitive skills and Dodge take a -2.
-        `,
+            You are at Medium if your equipped weight is above Light and less than Basic Lift * 3.<br/>
+            Your Move is multipled by 0.6x. All encumbrance sensitive skills and Dodge take a -2.
+          `,
         }}
       >
         <td>Medium [-2]</td>
@@ -93,13 +100,13 @@
       </tr>
       <tr
         class:active={$encumbranceLevel$ === -3}
-        class:bg-orange-300={$encumbranceLevel$ === -3}
+        class:heavy={$encumbranceLevel$ === -3}
         use:tooltip={{
           tipclass: "text-sm",
           tooltip: `
-        You are at Heavy if your equipped weight is above Medium and less than Basic Lift * 6.<br/>
-        Your Move is multipled by 0.4x. All encumbrance sensitive skills and Dodge take a -3.
-        `,
+            You are at Heavy if your equipped weight is above Medium and less than Basic Lift * 6.<br/>
+            Your Move is multipled by 0.4x. All encumbrance sensitive skills and Dodge take a -3.
+          `,
         }}
       >
         <td>Heavy [-3]</td>
@@ -109,14 +116,14 @@
       </tr>
       <tr
         class:active={$encumbranceLevel$ === -4}
-        class:bg-red-300={$encumbranceLevel$ === -4}
+        class:x-heavy={$encumbranceLevel$ === -4}
         use:tooltip={{
           tipclass: "text-sm",
           tooltip: `
-        You are at Extra Heavy if your equipped weight is above Heavy and less than Basic Lift * 10.<br/>
-        Your Move is multipled by 0.2x. All encumbrance sensitive skills and Dodge take a -4.<br/>
-        This is the maximum weight you can carry over LONG periods of time. See "Carry On Back" in Lifting & Moving for short term weight.
-        `,
+            You are at Extra Heavy if your equipped weight is above Heavy and less than Basic Lift * 10.<br/>
+            Your Move is multipled by 0.2x. All encumbrance sensitive skills and Dodge take a -4.<br/>
+            This is the maximum weight you can carry over LONG periods of time. See "Carry On Back" in Lifting & Moving for short term weight.
+          `,
         }}
       >
         <td>X-Heavy [-4]</td>
@@ -135,13 +142,25 @@
   tr {
     @apply border-b border-solid border-gray-500;
   }
-  .light {
-    background-color: #d1e8a1;
-  }
+
   .active > td {
     @apply p-2 pr-0 pl-0;
   }
-
+  .none {
+    @apply bg-green-300;
+  }
+  .light {
+    background-color: #d1e8a1;
+  }
+  .medium {
+    @apply bg-yellow-300;
+  }
+  .heavy {
+    @apply bg-red-300;
+  }
+  .x-heavy {
+    @apply bg-red-500;
+  }
   tr > td:first-child {
     @apply text-right pr-3;
   }

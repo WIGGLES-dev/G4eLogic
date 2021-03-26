@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { StringCompare } from "@internal";
+    import { StringCompare } from "@utils/strings";
     export let option: string;
 </script>
 

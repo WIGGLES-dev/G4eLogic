@@ -1,6 +1,6 @@
 <script lang="ts">
     import Cropper from "cropperjs";
-    import { upload } from "@internal";
+    import { upload } from "@utils/dom";
 
     export let fallback;
     export let src;
@@ -66,6 +66,34 @@
     }
 </script>
 
+<section class:circular class="flex flex-col">
+    <div class="bg-gray-700 text-white px-4 mb-2">
+        {#if cropper}
+            <span
+                title="cancel"
+                on:click={cancel}
+                class="fas fa-window-close"
+            />
+        {/if}
+        <span
+            title="crop"
+            on:click={cropPortrait}
+            class="fas"
+            class:fa-crop={!cropper}
+            class:fa-check={cropper}
+        />
+        <span title="upload" on:click={newImage} class="fas fa-images" />
+        <span title="uncrop" on:click={reset} class="fas fa-undo" />
+    </div>
+    <img
+        class="object-contain object-center"
+        style="max-height: 80vh;"
+        src={cropped || src || fallback}
+        alt="profile"
+        bind:this={portrait}
+    />
+</section>
+
 <style>
     :global(.cropper-view-box + .circular) {
         box-shadow: 0 0 0 1px #39f;
@@ -77,28 +105,3 @@
         background-color: inherit !important;
     }
 </style>
-
-<section class:circular class="flex flex-col">
-    <div class="bg-gray-700 text-white px-4 mb-2">
-        {#if cropper}
-            <span
-                title="cancel"
-                on:click={cancel}
-                class="fas fa-window-close" />
-        {/if}
-        <span
-            title="crop"
-            on:click={cropPortrait}
-            class="fas"
-            class:fa-crop={!cropper}
-            class:fa-check={cropper} />
-        <span title="upload" on:click={newImage} class="fas fa-images" />
-        <span title="uncrop" on:click={reset} class="fas fa-undo" />
-    </div>
-    <img
-        class="object-contain object-center"
-        style="max-height: 80vh;"
-        src={cropped || src || fallback}
-        alt="profile"
-        bind:this={portrait} />
-</section>

@@ -1,14 +1,5 @@
-
-import {
-    AutoSubscriber,
-    Data,
-    each,
-    GResource,
-    Resource,
-    staticImplements,
-} from "@internal"
-import { Observable } from "rxjs";
-import { map, mergeAll, mergeMap, reduce } from "rxjs/operators"
+import { Data, Entity } from "@app/entity";
+import { CharacterData } from "./character";
 export interface TraitModifierData {
     type: "trait"
     enabled: boolean
@@ -58,17 +49,17 @@ export interface TraitData extends Data {
     modifiers: TraitModifierData[]
 }
 
-@staticImplements<GResource<Trait>>()
-export class Trait extends Resource<TraitData> {
+export class Trait extends Entity<TraitData, CharacterData> {
     static version = 1
     static type = "trait"
-    constructor(state: Trait["state"]) {
-        super(state);
+    constructor(value, root) {
+        super(value, root);
     }
-    selectAdjustedPoints() {
-        return this.pipe(
-            map(calculateTraitCost)
-        )
+    getAdjustedPoints() {
+        return calculateTraitCost(this.value);
+    }
+    getTraitType() {
+        return getTraitType(this.value);
     }
 }
 
@@ -244,7 +235,7 @@ export function getCategory(tags: string[]) {
     return -1
 }
 
-export function getContainerType(traits: Trait["value"][]) {
+export function getContainerType(traits: TraitData[]) {
     let racial = false;
     let perk = false;
     let advantage = false;
@@ -280,10 +271,10 @@ export function getContainerType(traits: Trait["value"][]) {
     return TraitCategory.Meta;
 }
 
-export function getTraitType(trait: Trait["value"]) {
+export function getTraitType(trait: TraitData) {
     if (!trait) return TraitCategory.Never;
     const { categories } = trait;
-    const children = (trait?.children?.trait ?? []) as Trait["value"][]
+    const children = (trait?.children?.trait ?? []) as TraitData[]
     let type = getCategory(categories);
     if (children.length > 0) {
         return getContainerType(children)
@@ -303,7 +294,7 @@ export function getTraitType(trait: Trait["value"]) {
     return type
 }
 
-export function split(traits: Trait["value"][]) {
+export function split(traits: TraitData[]) {
     if (!traits) return {}
     const splits = {
         [TraitCategory.Advantage]: traits.filter(trait => getTraitType(trait) === TraitCategory.Advantage),
@@ -313,11 +304,11 @@ export function split(traits: Trait["value"][]) {
         [TraitCategory.Perk]: traits.filter(trait => getTraitType(trait) === TraitCategory.Perk),
         [TraitCategory.Quirk]: traits.filter(trait => getTraitType(trait) === TraitCategory.Quirk),
         [TraitCategory.Feature]: traits.filter(trait => getTraitType(trait) === TraitCategory.Feature)
-    }
+    };
     return removeDuplicates(splits);
 }
 
-export function sumTraitArray(traits: Trait["value"][]) {
+export function sumTraitArray(traits: TraitData[]) {
     return traits?.reduce((total, trait) => calculateTraitCost(trait) + total, 0) ?? 0
 }
 

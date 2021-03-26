@@ -1,24 +1,48 @@
 <script lang="ts">
+  import { State } from "rxdeep";
   import { getContext } from "svelte";
-  import { Attribute, Character, tooltip, abbreviate } from "@internal";
+  import { System } from "@internal";
+  import { tooltip } from "@ui/utils/use";
+  import { bind } from "@utils/use";
+  import { Character as CharacterWorker } from "@app/gurps/resources/character";
   import Popper from "@components/Popper.svelte";
-  const character = getContext<Character>("sheet");
-  const { orderedAttributes$ } = character;
-
+  import { Remote, proxy, releaseProxy } from "comlink";
+  import {
+    defaultIfEmpty,
+    filter,
+    mergeMap,
+    pluck,
+    startWith,
+    switchMap,
+    tap,
+  } from "rxjs/operators";
+  import { withComlinkProxy } from "@utils/operators";
+  import { from, Observable, using } from "rxjs";
+  const state = getContext<State<any>>("sheet");
+  const order$: Observable<string[]> = state.pipe(
+    pluck("config", "ui", "attributeOrder")
+  );
+  const character$ = getContext<Observable<Remote<CharacterWorker>>>("worker");
+  const attributes$ = character$.pipe(
+    mergeMap((c) => c.getAttributeCollection())
+  );
+  $: attributes =
+    $order$?.map((attr) => ($attributes$ || {})[attr])?.filter((v) => !!v) ??
+    [];
   function isPrimary(attr) {
-    return attr.hasTag("primary");
+    return attr.tags.includes("primary");
   }
   function isSecondary(attr) {
-    return attr.hasTag("secondary");
+    return attr.tags.includes("secondary");
   }
   function isTertiary(attr) {
-    return attr.hasTag("tertiary");
+    return attr.tags.includes("tertiary");
   }
   function isSubstat(attr) {
-    return attr.hasTag("sub-stat");
+    return attr.tags.includes("sub-stat");
   }
   function isPool(attr) {
-    return attr.hasTag("pool");
+    return attr.tags.includes("pool");
   }
 </script>
 
@@ -36,82 +60,81 @@
       }}
     >
       ATTRIBUTE
-      <Popper placement="bottom-start" show="hover">
-        Attributes from the configuration panel. Clicking the dice will roll the
-        styles number.<br />
-        The mod input will adjust the main attribute without adjusting point total.<br
-        />
-        the number in brackets is the amount of points spent modifying the attribute.<br
-        />
-        You can configure these attributes in the configuration panel.
-      </Popper>
     </span>
   </div>
   <span class="text-center text-white bg-gray-700">MOD</span>
   <span class="text-center text-white bg-gray-700 px-2">PTS</span>
-  {#if $orderedAttributes$ instanceof Array}
-    {#each [...$orderedAttributes$] as attr, i (attr.signature)}
-      {#if (!isSubstat(attr) || true) && !isPool(attr)}
-        <div
-          class:primary={isPrimary(attr)}
-          class:secondary={isSecondary(attr)}
-          class:tertiary={isTertiary(attr)}
-          class:sub-stat={isSubstat(attr)}
-          class="truncate uppercase"
-        >
-          <span
-            class="float-right pr-2"
-            use:tooltip={{
-              context: attr,
-              tipclass: "text-xs",
-              placement: "bottom-start",
-              tooltip: `${attr.keys.tooltip || ""}`,
-            }}
-            >{attr.keys.abbreviation}
-          </span>
-        </div>
+  {#each attributes as attr, i (attr.name)}
+    {#if (!isSubstat(attr) || true) && !isPool(attr)}
+      <div
+        class:primary={isPrimary(attr)}
+        class:secondary={isSecondary(attr)}
+        class:tertiary={isTertiary(attr)}
+        class:sub-stat={isSubstat(attr)}
+        class="truncate uppercase"
+      >
         <span
-          class="attribute-text"
-          class:primary={isPrimary(attr)}
-          class:secondary={isSecondary(attr)}
-          class:tertiary={isTertiary(attr)}
-          class:sub-stat={isSubstat(attr)}
-          class:bg-white={isPrimary(attr)}
-          class:text-black={isPrimary(attr)}
-          class:bg-gray-700={!isPrimary(attr)}
-          class:text-white={!isPrimary(attr)}
-        >
-          <input
-            class="main-input"
-            step={attr.keys.increment || 1}
-            type="number"
-            min="0"
-            placeholder="0"
-            bind:value={attr.displayLevel}
-          />
-          <span
-            on:click={() =>
-              character.do("roll", {
-                for: "attribute",
-              })}
-            class="fas fa-dice-d6 hover:text-green-500"
-          />
+          on:click={(e) => System.roll(`3d6ms${attr.level}`)}
+          class="float-right pr-2 cursor-pointer"
+          use:tooltip={{
+            context: attr,
+            tipclass: "text-xs",
+            placement: "bottom-start",
+            tooltip: `${attr.keys.tooltip || ""}`,
+          }}
+          >{attr.keys.abbreviation}
         </span>
+      </div>
+      <span
+        class="attribute-text"
+        class:primary={isPrimary(attr)}
+        class:secondary={isSecondary(attr)}
+        class:tertiary={isTertiary(attr)}
+        class:sub-stat={isSubstat(attr)}
+        class:bg-white={isPrimary(attr)}
+        class:text-black={isPrimary(attr)}
+        class:bg-gray-700={!isPrimary(attr)}
+        class:text-white={!isPrimary(attr)}
+      >
         <input
-          class="mod-input"
+          class="main-input"
           step={attr.keys.increment || 1}
           type="number"
+          min="0"
           placeholder="0"
-          bind:value={attr.modifier}
+          value={attr.level}
+          on:change={(e) =>
+            state.merge({
+              attributeLevels: {
+                [attr.name]: {
+                  level: +e.target["value"] - attr.bonus - attr.mod - attr.base,
+                },
+              },
+            })}
         />
-        <span class="text-sm text-center self-center"
-          >{#if attr.keys.costPerLevel}
-            [{attr.pointsSpent()}]
-          {/if}
-        </span>
-      {/if}
-    {/each}
-  {/if}
+      </span>
+      <input
+        class="mod-input"
+        step={attr.keys.increment || 1}
+        type="number"
+        placeholder="0"
+        value={attr.mod}
+        on:change={(e) =>
+          state.merge({
+            attributeLevels: {
+              [attr.name]: {
+                mod: +e.target["value"],
+              },
+            },
+          })}
+      />
+      <span class="text-sm text-center self-center"
+        >{#if attr.keys.costPerLevel}
+          [{attr.pointsSpent}]
+        {/if}
+      </span>
+    {/if}
+  {/each}
 </section>
 
 <style lang="postcss">

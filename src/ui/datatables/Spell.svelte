@@ -1,27 +1,19 @@
 <script context="module" lang="ts">
-    import { Spell, Character, bind, fragment } from "@internal";
+</script>
+
+<script lang="ts">
+    import { State } from "rxdeep";
+    import { bind, fragment } from "@utils/use";
     import Leaf from "@components/Tree/Leaf.svelte";
     import Value from "@components/Value.svelte";
     import DataTable from "@ui/DataTable.svelte";
     import SpellEditor from "@ui/editors/SpellEditor.svelte";
     import Toggle from "@components/Toggle.svelte";
     import { map } from "rxjs/operators";
-</script>
-
-<script lang="ts">
-    export let character: Character;
-    const signatureOptions$ = character.sub("config", "attributes").pipe(
-        map((attributes) => Object.entries(attributes || {})),
-        map((attributes) =>
-            attributes.filter(([key, value]) => value.skillSignature)
-        ),
-        map((attributes) =>
-            attributes.map(([value, attr]) => ({
-                value,
-                label: attr.abbreviation || value,
-            }))
-        )
-    );
+    import { CharacterData } from "@app/gurps/resources/character";
+    import AttributeOptions from "@ui/options/AttributeOptions";
+    export let character: State<CharacterData>;
+        
 </script>
 
 <DataTable type="spell" root={character} let:node let:children>
@@ -34,26 +26,18 @@
         <th>RSL</th>
         <th>Level</th>
         <th class="w-full">Spell</th>
-        <th>
-            <div>Resist</div>
-            <div>Spell Class</div>
-        </th>
-        <th>
-            <div>Casting Cost</div>
-            <div>Maintenance Cost</div>
-        </th>
-        <th>
-            <div>Casting Time</div>
-            <div>Duration</div>
-        </th>
+        <th>Resist</th>
+        <th>Spell Class</th>
+        <th> Casting Cost </th>
+        <th>Maintenance Cost</th>
+        <th>Casting Time</th>
+        <th> Duration </th>
         <th>Reference</th>
     </tr>
     <td>
         <select use:bind={node.state.sub("signature")}>
-            {#each $signatureOptions$ as { value, label }, i (i)}
-                <option {value}>{label}</option>
-            {/each}
-        </select>
+            <AttributeOptions signaturesOnly={true} optionsOnly={true} />
+        <select>
     </td>
     <td>
         <select use:bind={node.state.sub("difficulty")}>
@@ -94,17 +78,24 @@
     </td>
     <td>
         <input type="text" use:bind={node.state.sub("resist")} />
+    </td>
+    <td>
         <input type="text" use:bind={node.state.sub("spellClass")} />
     </td>
     <td>
         <input type="text" use:bind={node.state.sub("castingCost")} />
+    </td>
+
+    <td>
         <input type="text" use:bind={node.state.sub("maintenanceCost")} />
     </td>
     <td>
         <input type="text" use:bind={node.state.sub("castingTime")} />
+    </td>
+    <td>
         <input type="text" use:bind={node.state.sub("duration")} />
     </td>
-    <Leaf sub="reference" />
+    <Leaf sub="reference" class="table-cell" />
     <template use:fragment slot="expanded">
         <SpellEditor entity={node.state} />
     </template>

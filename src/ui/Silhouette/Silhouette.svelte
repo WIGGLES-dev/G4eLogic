@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, getContext } from "svelte";
-    import { tooltip, Character } from "@internal";
+    import { tooltip } from "@ui/utils/use";
     import { hitLocationTemplate } from "@ui/tooltips/templates/HitLocation";
     import { frameInViewbox } from "@ui/utils/silhouette";
     import LocationBox from "@ui/Silhouette/LocationBox.svelte";
@@ -9,11 +9,21 @@
         extend as SVGextend,
         Element as SVGElement,
     } from "@svgdotjs/svg.js";
-    import { HitLocation } from "src/gurps/resources/hitLocation";
-
-    const character = getContext<Character>("sheet");
-    const { hitLocations$ } = character;
-
+    import {
+        HitLocation,
+        Character,
+        CharacterData,
+    } from "@app/gurps/resources/character";
+    import { Remote } from "comlink";
+    import { Observable } from "rxjs";
+    import { map, mergeMap, startWith, tap } from "rxjs/operators";
+    import { State } from "rxdeep";
+    const state = getContext<State<CharacterData>>("sheet");
+    const character$ = getContext<Observable<Remote<Character>>>("worker");
+    const hitLocations$ = character$.pipe(
+        mergeMap((c) => c.getHitLocationCollection()),
+        startWith({})
+    );
     export let height = "100%";
     export let width = "100%";
     export let minWidth: string = null;
@@ -21,7 +31,10 @@
     export let viewBox = "0 0 800 800";
     export let scale = "1";
 
-    const tooltips = {};
+    const tooltips: Record<
+        string,
+        { update: Function; destroy: Function }
+    > = {};
 
     let focusedLocation: HitLocation = null;
     let hiddenNodes = [];
@@ -53,10 +66,20 @@
         draw.find(`[data-location-group]`).forEach((svg) => {
             const name = svg.node.dataset.locationGroup.split("-").join(" ");
             const location = $hitLocations$[name];
+            if (!location) return;
             const tooltipTemplate = hitLocationTemplate(location);
-            tooltips[location ? location.name : ""] = tooltip(svg.node, {
-                tooltip: tooltipTemplate,
-            });
+            const ref = tooltips[location.name];
+            if (ref) {
+                ref.update({
+                    tooltip: tooltipTemplate,
+                    context: location,
+                });
+            } else {
+                tooltips[location.name] = tooltip(svg.node, {
+                    tooltip: tooltipTemplate,
+                    context: location,
+                });
+            }
         });
     }
 
@@ -70,9 +93,11 @@
         if (focusedLocation && focusedLocation.name === newLocation.name)
             return;
         focusedLocation = newLocation;
+        const nodeName = focusedLocation.name.split(" ").join("-");
         let node = draw.find(`
-            [data-location-group="${focusedLocation.name.split(" ").join("-")}"]
+            [data-location-group="${nodeName}"]
             `)[0];
+        if (!node) return;
         node.addClass("focused");
         hideAllUnfocusedNodes();
         frameInViewbox(node, {
@@ -99,7 +124,6 @@
         const { x, y, width, height } = originalView;
         draw.animate(300).viewbox(x, y, width, height).after(unfocusAll);
     }
-
     let draw;
     let originalView;
     let silhouette;
@@ -107,28 +131,33 @@
         draw = SVG(silhouette);
         originalView = draw.viewbox();
     }
-
     onMount(() => {
         createSVG();
+        return function () {
+            Object.values(tooltips).forEach((tooltip) => tooltip.destroy());
+        };
+    });
+    $: if (Object.values($hitLocations$).length > 0) {
         createTooltips();
-    });
-
-    $: [...Object.values($hitLocations$)].forEach((location) => {
-        if (!draw) return;
-        const svg = draw.find(
-            `[data-location-group="${location.name
-                .split(" ")
-                .join("-")}"],[data-location="${location.name
-                .split(" ")
-                .join("-")}"]`
-        );
-        if (!svg) return;
-        if (location.isCrippled()) {
-            svg.addClass("crippled");
-        } else {
-            svg.removeClass("crippled");
+    }
+    $: [...Object.values($hitLocations$ || {})].forEach(
+        (location: HitLocation) => {
+            if (!draw) return;
+            const svg = draw.find(
+                `[data-location-group="${location.name
+                    .split(" ")
+                    .join("-")}"],[data-location="${location.name
+                    .split(" ")
+                    .join("-")}"]`
+            );
+            if (!svg) return;
+            if (location.isCrippled) {
+                svg.addClass("crippled");
+            } else {
+                svg.removeClass("crippled");
+            }
         }
-    });
+    );
 
     $: leftLocations = ["head", "left arm", "left leg"];
     $: rightLocations = ["torso", "right arm", "right leg"];
@@ -145,7 +174,7 @@
                     (location) => location?.name
                 ) ?? []),
             ];
-        }, []);
+        }, [] as string[]);
         function mapLocations(list): HitLocation[] {
             return [
                 ...list.reduce((_locations, location) => {
@@ -163,9 +192,11 @@
         return {
             left: mapLocations(leftLocations),
             right: mapLocations(rightLocations),
-            other: [...Object.values($hitLocations$)].filter(
-                (location) => !allSilhoueteLocations.includes(location.name)
-            ),
+            other: [...Object.values($hitLocations$ || {})].filter(
+                (location: HitLocation) => {
+                    return !allSilhoueteLocations.includes(location.name);
+                }
+            ) as HitLocation[],
         };
     };
     $: style = `min-width:${minWidth};
@@ -461,7 +492,7 @@
         </div>
 
         <div class="w-full grid grid-cols-4">
-            {#each getLocations().other as location, i (location.name)}
+            {#each getLocations().other as location, i (location)}
                 <LocationBox {location} />
             {/each}
         </div>

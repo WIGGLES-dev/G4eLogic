@@ -1,25 +1,36 @@
 <script lang="ts">
-    import { parseHitLocations, Resource, Character } from "@internal";
-    import { map, mergeMap } from "rxjs/operators";
+    import { load } from "js-yaml";
+    import { parseHitLocations } from "@app/gurps/resources/characterConfig";
+    import { Remote } from "comlink";
+    import { iif, Observable } from "rxjs";
+    import { map, mergeMap, startWith, switchMap } from "rxjs/operators";
+    import { getContext } from "svelte";
     export let location: string;
-    export let entity: Resource = null;
-    const host$ = entity.root$<Character>();
-    const hitLocations$ = host$.pipe(
-        mergeMap((char) => char.sub("config").sub("locations")),
+    const worker = getContext<Observable<Remote<any>>>("worker");
+    const hitLocations$ = worker.pipe(
+        mergeMap(async (worker) => {
+            const { type, config } = await worker.getValue();
+            if (type === "character") {
+                return config?.locations;
+            } else {
+                const request = await fetch(
+                    "systems/gurps/defaultCharacterConfig.yaml"
+                );
+                const text = await request.text();
+                const config = load(text);
+                return config?.locations;
+            }
+        }),
         map(parseHitLocations),
-        map((hl) => Object.entries(hl))
+        map(Object.entries),
+        startWith([])
     );
 </script>
 
 <select bind:value={location}>
     <option value={undefined} />
     {#each $hitLocations$ as [location, { isGroup, subLocations }], i (i)}
-        {#if isGroup}
-            <option class="text-2xl" value={location}>{location}</option>
-            {#each subLocations as subLocation, i (i)}
-                <option value={subLocation}>{subLocation}</option>
-            {/each}
-        {/if}
+        <option class="" value={location}>{location}</option>
     {/each}
 </select>
 

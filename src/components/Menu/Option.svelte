@@ -2,7 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import Menu, { MenuOption } from "./Menu.svelte";
     import Cell from "@components/Value.svelte";
-    import { safeCall } from "@internal";
+    import { safeCall } from "@utils/object";
 </script>
 
 <script lang="ts">
@@ -25,7 +25,7 @@
 
 {#if safeCall(show)}
     <li
-        class="px-1 flex hover:shadow-inner hover:bg-gray-400 text-sm items-center {classList}"
+        class="{classList} p-1 flex hover:shadow-inner hover:bg-gray-300 text-sm items-center "
         {style}
         on:click|capture={click}
         on:mouseenter={(e) =>

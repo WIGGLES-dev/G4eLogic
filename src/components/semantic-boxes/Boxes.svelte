@@ -5,13 +5,7 @@
 <script lang="ts">
   const dispatch = createEventDispatcher();
   let boxList;
-  let showInitialAdder = false;
-  function listHasItems() {
-    return boxList.querySelectorAll("li").length > 0;
-  }
-  afterUpdate(() => {
-    showInitialAdder = !listHasItems();
-  });
+  export let showInitialAdder = false;
 </script>
 
 <ul bind:this={boxList}>

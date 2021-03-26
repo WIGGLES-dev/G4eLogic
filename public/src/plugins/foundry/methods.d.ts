@@ -1,7 +1,5 @@
-import { OrArray } from "@internal";
-import { Subject } from "rxjs";
-export declare const posts$: Subject<unknown>;
-export declare const foundryConnectionMethods: {
+import type { OrArray } from "@utils/object";
+export declare const foundryMethods: {
     createItem(data: OrArray<createData>, options?: Options): Promise<OrArray<BaseData>>;
     updateItem(data: OrArray<updateData>, options?: Options): Promise<OrArray<BaseData>>;
     deleteItem(data: OrArray<string>, options?: Options): Promise<OrArray<BaseData>>;
@@ -16,7 +14,6 @@ export declare const foundryConnectionMethods: {
     getItemData(itemId: string): BaseData;
     getOwnedItemData(actorId: string, itemId: string): any;
     notify(): void;
-    roll(): void;
+    roll(formula: any, data: any): void;
     openPDF(code: string, options: any): void;
-    post(data: any): void;
 };

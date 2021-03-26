@@ -1,4 +1,4 @@
-import { SkillBonus } from "@internal";
+import type { SkillBonus } from "@app/gurps/resources/skill";
 export declare enum FeatureBonusType {
     Skill = "skill bonus",
     Armor = "armor bonus",

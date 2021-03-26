@@ -3,12 +3,12 @@
   import { TABS } from "./Tabs.svelte";
   export let component = null;
   const panel = {};
-  const { registerPanel, selectedPanel, prefetched } = getContext(TABS);
+  const { registerPanel, selectedPanel } = getContext(TABS);
   registerPanel(panel);
 </script>
 
-{#if $selectedPanel === panel || $prefetched.includes(panel)}
-  <div class="tab-panel" class:hidden={!($selectedPanel === panel)}>
+{#if $selectedPanel === panel}
+  <div class="tab-panel">
     <slot>
       <svelte:component this={component} {...$$props} />
     </slot>

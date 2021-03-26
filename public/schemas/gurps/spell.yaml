@@ -1,0 +1,52 @@
+# $schema: http://json-schema.org/draft-07/schema
+# $id: http://valorsheet/systems/gurps/spell.yaml
+allOf:
+  - $ref: definitions.yaml#/skill
+  - $ref: ../definitions.yaml#/resource
+  - type: object
+    properties:
+      type:
+        const: spell
+        default: spell
+      version:
+        const: 1
+      requiresConcentration:
+        type: boolean
+        default: false
+      currentlyActive:
+        type: boolean
+        default: false
+      college:
+        type: string
+        default: ""
+      class:
+        type: string
+        default: ""
+      resist:
+        type: string
+        default: ""
+      powerSource:
+        type: string
+        default: ""
+      spellClass:
+        type: string
+        default: ""
+      castingCost:
+        type: string
+        default: ""
+      maintenanceCost:
+        type: string
+        default: ""
+      castingTime:
+        type: string
+        default: "1s"
+      duration:
+        type: string
+        default: 1m
+      children:
+        type: object
+        properties:
+          spell:
+            type: array
+            items:
+              $ref: spell.yaml

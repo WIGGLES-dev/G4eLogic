@@ -1,37 +1,17 @@
 <script context="module" lang="ts">
     import { reduce, map, pluck, mergeMap, tap } from "rxjs/operators";
     import { combineLatest, EMPTY, from } from "rxjs";
-    import {
-        Character,
-        Technique,
-        SkillLike,
-        mapEach,
-        each,
-        AutoSubscriber,
-        bind,
-        fragment,
-    } from "@internal";
+    import { bind, fragment } from "@utils/use";
     import ResourceTable from "@ui/DataTable.svelte";
     import Value from "@components/Value.svelte";
     import Leaf from "@components/Tree/Leaf.svelte";
     import Toggle from "@components/Toggle.svelte";
     import TechniqueEditor from "@ui/editors/TechniqueEditor.svelte";
+    import AttributeOptions from "@ui/options/AttributeOptions";
 </script>
 
 <script lang="ts">
-    export let character: Character;
-    const signatureOptions$ = character.sub("config", "attributes").pipe(
-        map((attributes) => Object.entries(attributes || {})),
-        map((attributes) =>
-            attributes.filter(([key, value]) => value.skillSignature)
-        ),
-        map((attributes) =>
-            attributes.map(([value, attr]) => ({
-                value,
-                label: attr.abbreviation || value,
-            }))
-        )
-    );
+    export let character;
 </script>
 
 <ResourceTable type="technique" root={character} let:node let:children>
@@ -49,10 +29,8 @@
 
     <td>
         <select use:bind={node.state.sub("signature")}>
-            {#each $signatureOptions$ as { value, label }, i (i)}
-                <option {value}>{label}</option>
-            {/each}
-        </select>
+            <AttributeOptions signaturesOnly={true} optionsOnly={true} />
+        <select>
     </td>
     <td>
         <select use:bind={node.state.sub("difficulty")}>

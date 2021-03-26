@@ -1,7 +1,5 @@
-import { OrArray } from "@internal";
-import { Subject } from "rxjs";
-export const posts$ = new Subject();
-export const foundryConnectionMethods = {
+import type { OrArray } from "@utils/object";
+export const foundryMethods = {
     async createItem(data: OrArray<createData>, options?: Options): Promise<OrArray<BaseData>> {
         try {
             const item = await Item.create(data, options);
@@ -83,7 +81,9 @@ export const foundryConnectionMethods = {
         return game.actors.get(actorId)?.getOwnedItem(itemId)?.data
     },
     notify() { },
-    roll() { },
+    roll(formula, data) {
+        Roll.create(formula, data).toMessage();
+    },
     openPDF(code: string, options: any) {
         const api = ui.PDFoundry;
         if (!api) return
@@ -92,8 +92,5 @@ export const foundryConnectionMethods = {
         } catch (err) {
             console.log(err);
         }
-    },
-    post(data) {
-        posts$.next(data)
     }
 }

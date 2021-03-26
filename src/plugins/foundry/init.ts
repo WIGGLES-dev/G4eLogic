@@ -1,268 +1,82 @@
-import { Data, OrArray, Resource, System, treeFlatten } from "@internal"
-import { connectToChild, connectToParent } from "penpal"
-import { Connection } from "penpal/lib/types"
-import { fromEvent, observable, Observable, Subject, Subscription } from "rxjs"
-import { IDatabaseChange, DatabaseChangeType, ICreateChange, IDeleteChange, IUpdateChange } from 'dexie-observable/api';
-import { posts$, foundryConnectionMethods } from "./methods";
-
-const settings = {
-    types: {
-        character: "Actor",
-        equipment: "Item",
-        skill: "Item",
-        trait: "Item"
-    }
-};
-const vSheetDefaultOptions = {
-    classes: ["foundry-Crud"],
-    template: "systems/GURPS/assets/templates/holder.html",
-    width: 1330,
-    height: 700,
-    submitOnChange: false
-}
-
-function connect<T extends Record<string, Function>>({
-    slug = "",
-    src = "http://localhost:3000/index.html" + slug,
-    methods = foundryConnectionMethods
-} = {}) {
-    const iframe = document.createElement("iframe")
-    Object.assign(iframe, {
+import { foundryMethods } from "./methods";
+import { expose, wrap, proxy, windowEndpoint, Remote } from "comlink";
+import type { System } from "@internal";
+import { VActor, VActorSheet, VItem, VItemSheet } from './classes';
+import { hookHandlers, FoundryHooks, handleValorEvent } from './hooks';
+import { sync } from "./sync";
+import { makeIframe } from '@app/utils/dom';
+import "./styles.css";
+async function connect<T extends Record<string, any>>(src) {
+    const iframe = makeIframe({
         src,
-        width: "100%",
-        height: "100%"
+        style: {
+            display: "none",
+        },
+        appendTo: document.body
     });
-    const connection = connectToChild<T>({
-        iframe,
-        methods
-    });
+    document.body.appendChild(iframe);
+    await new Promise(resolve => iframe.onload = resolve);
+    const connection = wrap<T>(windowEndpoint(iframe.contentWindow));
     return {
         iframe,
         connection
     }
 }
-const { connection, iframe } = connect<typeof System["methods"]>();
-function onFoundryInit() {
+async function augment() {
+    const dragHandler = SidebarDirectory.prototype["_onDragStart"];
+    SidebarDirectory.prototype["_onDragStart"] = async function (event) {
+        dragHandler.call(this, event);
+        const { id, type } = JSON.parse(event.dataTransfer.getData("text/plain"));
+        const entity = await fromUuid(`${type}.${id}`);
+        const data = Object.assign({}, entity?.data?.data, { id: randomID(), type })
+        event.dataTransfer.setData("application/json", JSON.stringify(data))
+    }
+}
+async function onFoundryInit() {
+    await augment();
+    game.GURPS = {
+        origin: "https://valor-59b11.web.app"
+        //origin: "http://localhost:3000"
+    };
     CONFIG.Combat.initiative = {
         decimals: 2,
         formula: "@initiative"
     };
-    class VActorSheet extends ActorSheet {
-        constructor() {
-            super(...arguments)
-        }
-        static get defaultOptions() {
-            return mergeObject(ActorSheet.defaultOptions, vSheetDefaultOptions)
-        }
-        async activateListeners(html: HTMLElement) {
-            super.activateListeners(html);
-            const { iframe, connection } = connect({
-                slug: `/${this.id}`
-            })
-            html.append(iframe);
-            const { } = await connection.promise;
-        }
-        render() {
-            if (this.rendered) return
-            return super.render(...arguments)
-        }
-    }
-    class VActor extends Actor {
-        data: any
-        constructor() {
-            super(...arguments);
-        }
-        prepareData() {
-            super.prepareData();
-            const speed = 0;
-            const dexterity = 0;
-            const health = 0;
-
-            mergeObject(this.data.data, {
-                initiative: speed + (dexterity + health) / 4
-            });
-        }
-    }
-    class VItemSheet extends ItemSheet {
-        constructor() {
-            super(...arguments)
-        }
-        static get defaultOptions() {
-            return mergeObject(ItemSheet.defaultOptions, vSheetDefaultOptions)
-        }
-        activateListeners(html: HTMLElement) {
-            super.activateListeners(html);
-        }
-        render() {
-            if (this.rendered) return
-            return super.render(...arguments)
-        }
-    }
-    class VApp extends Application {
-        constructor() {
-            super(...arguments)
-        }
-        static get defaultOptions() {
-            return mergeObject(Application.defaultOptions, {
-                classes: ["foundry-Crud"],
-                template: ["systems/GURPS/assets/tempaltes/holder.html"],
-                resizable: true,
-                width: 1330,
-                height: 700
-            })
-        }
-        activateListeners(html: HTMLElement) {
-            super.activateListener(...arguments)
-        }
-        async close() {
-            return super.close(...arguments);
-        }
-    }
     CONFIG.Actor.entityClass = VActor;
-    CONFIG.Item.entityClass;
+    CONFIG.Item.entityClass = VItem;
     Actors.unregisterSheet("core", ActorSheet);
     Items.unregisterSheet("core", ItemSheet);
     Actors.registerSheet("GURPS", VActorSheet, { makeDefault: true });
     Items.registerSheet("GURPS", VItemSheet, { makeDefault: true });
 }
-async function mergeEntityInfo(...args: any[]) {
-    const [entity, options, id] = args;
-    const originalData = entity.data.data;
-    entity.update({
-        data: {
-            id: originalData.id,
-            createdOn: originalData.createdOn || new Date().toJSON()
-        }
-    });
+async function onFoundryReady() {
+
 }
-function onFoundryReady() {
-    const observables = {} as Record<FoundryHooks, Observable<FoundryEvent>>;
-    const subscriptions = {} as Record<FoundryHooks, Subscription>
+async function handleRoll(e) {
+    const {
+        event,
+        data
+    } = e;
+    const roll = Roll.create(...data);
+    const message = await roll.toMessage();
+}
+async function syncWithValor() {
+    const { connection, iframe } = await connect<typeof System>(game?.GURPS?.origin);
     for (const hook of Object.values(FoundryHooks)) {
-        observables[hook] = fromEvent<FoundryEvent>(Hooks, hook);
-        const sub = observables[hook].subscribe(handleFoundryEvent);
-        subscriptions[hook] = sub;
+        Hooks.on(hook, hookHandlers[hook].bind(connection));
     }
-    Hooks.on(FoundryHooks.CreateActor, mergeEntityInfo);
-    Hooks.on(FoundryHooks.CreateItem, mergeEntityInfo);
-    posts$.subscribe(handleValorEvent);
-}
-export async function handleFoundryEvent(event: FoundryEvent) {
-    if (!event || !event.type || !event.data) return
-    const methods = await connection.promise
-    switch (event.type) {
-        case FoundryHooks.CreateActor: {
-            const [actor, options, _id] = event.data as CreateEntityHookParams<BaseData<string, Data>>;
-            const { type, id } = actor.data
-            methods.create({
-                id,
-                type
-            });
-            break
-        }
-        case FoundryHooks.DeleteActor: {
-            const [actor, applications, _id] = event.data as DeleteEntityHookParams<BaseData<string, Data>>;
-            const { type, id } = actor.data
-            methods.delete({ id });
-            break
-        }
-        case FoundryHooks.UpdateActor: {
-            const [actor, changes, options, _id] = event.data as UpdateEntityHookParams<BaseData<string, Data>>;
-            const { type, id } = actor.data;
-            methods.update({
-                id
-            });
-            break
-        }
-        case FoundryHooks.CreateItem: {
-            const [item, options, _id] = event.data as CreateEntityHookParams<BaseData<string, Data>>;
-            const { type, id } = item.data;
-            methods.create({
-                id,
-                type,
-                ...item.data
-            })
-            break
-        }
-        case FoundryHooks.DeleteItem: {
-            const [item, applications, _id] = event.data as DeleteEntityHookParams<BaseData<string, Data>>;
-            const { type, id } = item.data;
-            methods.delete({
-                id
-            });
-            break
-        }
-        case FoundryHooks.UpdateItem: {
-            const [item, changes, options, _id] = event.data as UpdateEntityHookParams<BaseData<string, Data>>;
-            const { type, id } = item.data;
-            methods.update({
-                id,
-                ...item.data
-            });
-            break
-        }
-        case FoundryHooks.CreateOwnedItem: {
-            const [parent, item, options, _id] = event.data as CreateEmbeddedEntityHookParams<BaseData<string, Data>>;
-            const { type, id } = item.data;
-            methods.create({
-                root: _id,
-                id,
-                type
-            });
-            break
-        }
-        case FoundryHooks.UpdateOwnedItem: {
-            const [parent, item, changes, options, _id] = event.data as UpdateEmbeddedEntityHookParams;
-            const { id, type } = item.data;
-            methods.update({
-                root: _id,
-                id
-            })
-            break
-        }
-        case FoundryHooks.DeleteOwnedItem: {
-            const [parent, item, applications, _id] = event.data as DeleteEmbeddedEntityHookParams;
-            const { id, type } = item.data;
-            methods.delete({
-                root: _id,
-                id
-            });
-            break
-        }
-        default: {
-
-        }
-    }
-}
-export async function handleValorEvent(change: IDatabaseChange) {
-    const { key } = change;
-    const isActor = game.actors.get(key).id === key;
-    const entity = game[isActor ? "actors" : "items"].get(key);
-    switch (change.type) {
-        case DatabaseChangeType.Create: {
-            (settings.types[change.obj.type] === "Actor" ? Actor : Item).create(change.obj);
-            break
-        }
-        case DatabaseChangeType.Delete: {
-            entity.delete();
-            break
-        }
-        case DatabaseChangeType.Update: {
-            const nodes = treeFlatten(change.obj);
-            if (isActor) {
-
-            } else {
-
-            }
-            entity.update(change.obj);
-            break
-        }
-    }
+    await sync.call(connection);
+    await connection.on("dbchanges", proxy(handleValorEvent));
+    await connection.on("roll", proxy(handleRoll));
 }
 try {
-    if (window && window["game"] && window["game"]?.system?.id === "GURPS") {
+    if (window && window["Hooks"]) {
         Hooks.on("init", onFoundryInit);
         Hooks.on("ready", onFoundryReady);
+        Hooks.on("ready", syncWithValor);
+        if (window.parent !== window) {
+            expose(foundryMethods, windowEndpoint(window.parent));
+        }
     }
 } catch (err) {
 

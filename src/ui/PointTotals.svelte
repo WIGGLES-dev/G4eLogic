@@ -1,7 +1,15 @@
 <script lang="ts">
+  import { Observable } from "rxjs";
+  import { Remote, proxy, releaseProxy } from "comlink";
+  import {
+    Character as CharacterWorker,
+    Attribute,
+  } from "@app/gurps/resources/character";
   import { getContext } from "svelte";
+  import { mergeMap, startWith } from "rxjs/operators";
   const character = getContext<any>("sheet");
-  const { pointTotal$ } = character;
+  const character$ = getContext<Observable<Remote<CharacterWorker>>>("worker");
+  const pointTotal$ = character$.pipe(mergeMap((c) => c.getPointTotal()));
   $: ({
     unspent,
     spent,
@@ -14,7 +22,7 @@
     skills,
     techniques,
     spells,
-  } = $pointTotal$);
+  } = $pointTotal$ || ({} as any));
 </script>
 
 <section class="text-center">

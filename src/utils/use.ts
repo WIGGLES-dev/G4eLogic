@@ -1,7 +1,7 @@
 import { ignore, State } from 'rxdeep';
 import { fromEvent, Observable } from 'rxjs';
 import { debounceTime, map, tap } from 'rxjs/operators';
-import { preventDefault, AutoSubscriber } from '@internal';
+import { preventDefault } from '@utils/operators';
 export type UseFunction<E extends Element, P = any> = (node: E, params: P) => UseFunctionReturn
 export interface UseFunctionReturn<P = any> {
     update: (params: P) => void
@@ -13,7 +13,7 @@ export function use<E extends Element, P = any>(node: E, fn: UseFunction<E, P>, 
 export function bind(node: HTMLElement, params: State<any>) {
     const {
         dataset: {
-            event = 'blur',
+            event = 'change',
             debounce,
             prop = node['type'] === 'checkbox' ? 'checked' : 'value'
         }
@@ -35,14 +35,13 @@ export function bind(node: HTMLElement, params: State<any>) {
                 } else if (elem instanceof HTMLTextAreaElement) {
                     return elem.value
                 }
-            })
+            }),
         );
         let sub1 = value$.subscribe(params);
-        let sub2 = params.pipe(
-            tap(value => {
-                node[prop] = value;
-            })
-        ).subscribe();
+        let sub2 = params.subscribe(value => node[prop] = value);
+        setTimeout(() => {
+            node[prop] = params.value;
+        }, 500);
         return {
             update(params) {
                 sub1.unsubscribe();

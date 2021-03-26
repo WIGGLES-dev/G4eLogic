@@ -1,5 +1,5 @@
 <script context="module" lang="ts">
-    import { Character, Equipment, Resolver, fragment, bind } from "@internal";
+    import { fragment, bind } from "@utils/use";
     import DataTable from "@ui/DataTable.svelte";
     import Value from "@components/Value.svelte";
     import Leaf from "@components/Tree/Leaf.svelte";
@@ -8,16 +8,28 @@
 </script>
 
 <script lang="ts">
-    export let root: Character;
+    import { System } from "@app/system";
+    import { Observable, pipe } from "rxjs";
+    import { mergeMap } from "rxjs/operators";
+    import { withComlinkProxy } from "@app/utils/operators";
+    import { State } from "rxdeep";
+    import {
+        Trait as TraitWorker,
+        TraitData,
+    } from "@app/gurps/resources/trait";
+    import { map } from "rxjs/operators";
+    export let root: State<any>;
     export let filterfunc;
     export let createMergeData: Record<string, any> = {};
+    const Trait = System.getWorker<typeof TraitWorker>("trait");
+    const makeTrait = pipe(withComlinkProxy((d) => new Trait(d, $root)));
 </script>
 
 <DataTable
     type="trait"
+    {createMergeData}
     {root}
     {filterfunc}
-    {createMergeData}
     let:node
     let:children
 >
@@ -41,9 +53,17 @@
             <Leaf sub="name" class="flex-1" />
         </div>
     </td>
-    <Value value={node.state["selectAdjustedPoints"]()} let:value>
-        <td>{value}</td>
-    </Value>
+    <td>
+        <Value
+            value={node.state.pipe(
+                makeTrait,
+                mergeMap((trait) => trait["getAdjustedPoints"]())
+            )}
+            let:value
+        >
+            {value}
+        </Value>
+    </td>
     <Leaf sub="reference" class="table-cell" />
     <template use:fragment slot="expanded">
         <TraitEditor entity={node.state} />

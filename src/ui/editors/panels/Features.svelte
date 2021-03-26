@@ -1,17 +1,15 @@
-<script>
+<script lang="ts">
   import Boxes from "@components/semantic-boxes/Boxes.svelte";
-  import Box from "@components/semantic-boxes/Box";
+  import Box from "@components/semantic-boxes/Box.svelte";
 
-  import LocationOptions from "@ui/options/LocationOptions";
-  import AttributeOptions from "@ui/options/AttributeOptions";
-  import FeatureOptions from "@ui/options/FeatureOptions";
-  import StringCompareOptions from "@ui/options/StringCompareOptions";
+  import LocationOptions from "@ui/options/LocationOptions.svelte";
+  import AttributeOptions from "@ui/options/AttributeOptions.svelte";
+  import FeatureOptions from "@ui/options/FeatureOptions.svelte";
+  import StringCompareOptions from "@ui/options/StringCompareOptions.svelte";
 
-  import { FeatureBonusType } from "@internal";
-
-  export let entity;
+  import { FeatureBonusType } from "@app/gurps/resources/interfaces";
   export let features = [];
-
+  export let attributes = [];
   function addFeature() {
     features = [...features, {}];
   }
@@ -21,7 +19,7 @@
 </script>
 
 <div class="features-editor">
-  <Boxes on:addbox={addFeature}>
+  <Boxes on:addbox={addFeature} showInitialAdder={features.length === 0}>
     {#each features as feature, i (i)}
       <Box on:addbox={addFeature} on:deletebox={() => removeFeature(i)}>
         <fieldset>
@@ -40,7 +38,7 @@
         </fieldset>
         {#if feature.type === FeatureBonusType.Attribute}
           <fieldset>
-            <AttributeOptions {entity} bind:attribute={feature.attribute} />
+            <AttributeOptions bind:attribute={feature.attribute} />
           </fieldset>
         {:else if feature.type === FeatureBonusType.Skill}
           <fieldset>
@@ -71,7 +69,7 @@
             <!-- svelte-ignore a11y-label-has-associated-control -->
             <label>
               <span> To Location(s)</span>
-              <LocationOptions {entity} bind:location={feature.location} />
+              <LocationOptions bind:location={feature.location} />
             </label>
           </fieldset>
         {/if}

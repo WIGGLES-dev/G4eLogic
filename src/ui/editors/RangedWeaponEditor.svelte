@@ -2,12 +2,11 @@
     import { Tabs, Tab, TabPanel, TabList } from "@components/Tabs/tabs";
     import SkillDefaults from "./panels/SkillDefaults.svelte";
     import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
-    import { RangedWeapon } from "@internal";
     import { State } from "rxdeep";
 </script>
 
 <script lang="ts">
-    export let state$: RangedWeapon;
+    export let state$;
     const defaults$ = state$.sub("defaults");
     const userDescription$ = state$.sub("userDescription");
 </script>

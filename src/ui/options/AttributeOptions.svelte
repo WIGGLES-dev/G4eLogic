@@ -1,39 +1,52 @@
 <script lang="ts">
-    import { Resource, Character, AttributeData } from "@internal";
-    import { map, mergeMap } from "rxjs/operators";
-
+    import { load } from "js-yaml";
+    import { Remote } from "comlink";
+    import { iif, Observable } from "rxjs";
+    import { map, mergeMap, startWith, switchMap } from "rxjs/operators";
+    import { getContext } from "svelte";
     export let attribute: string;
-    export let entity: Resource;
     export let signaturesOnly = false;
-
-    const host$ = entity.root$<Character>()
-    const attributes$ = host$.pipe(
-        mergeMap((c) => c.sub("config").sub("attributes")),
-        map((i) => Object.entries(i || {})),
-        map((i) => {
-            if (i.length === 0) {
-                return ([
-                    ["dexterity", { abbreviation: "DX" }],
-                    ["strength", { abbreviation: "ST" }],
-                ] as [string, AttributeData][]).map((set) => {
-                    set[1].skillSignature = true;
-                    return set;
-                });
+    export let optionsOnly = false;
+    const worker = getContext<Observable<Remote<any>>>("worker");
+    const attributes$ = worker.pipe(
+        mergeMap(async (worker) => {
+            const { type, config } = await worker.getValue();
+            //console.log(worker.getType());
+            if (type === "character") {
+                return config?.attributes;
+            } else {
+                const request = await fetch(
+                    "systems/gurps/defaultCharacterConfig.yaml"
+                );
+                const text = await request.text();
+                const config = load(text);
+                return config?.attributes;
             }
-            return i;
-        })
+        }),
+        map(Object.entries),
+        startWith([])
     );
 </script>
 
-<select bind:value={attribute}>
+{#if optionsOnly}
     <option value={undefined} />
     {#each $attributes$ as [signature, { skillSignature, abbreviation }], i (i)}
         {#if signaturesOnly ? skillSignature : true}
-            <option value={signature}>{signature}</option>
+            <option value={signature}>{abbreviation || signature}</option>
         {/if}
     {/each}
     <slot />
-</select>
+{:else}
+    <select bind:value={attribute}>
+        <option value={undefined} />
+        {#each $attributes$ as [signature, { skillSignature, abbreviation }], i (i)}
+            {#if signaturesOnly ? skillSignature : true}
+                <option value={signature}>{abbreviation || signature}</option>
+            {/if}
+        {/each}
+        <slot />
+    </select>
+{/if}
 
 <style lang="postcss">
     select {

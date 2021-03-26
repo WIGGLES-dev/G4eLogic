@@ -1,16 +1,5 @@
-import {
-    Data,
-    each,
-    Resource,
-    AutoSubscriber,
-    mapEach,
-    GResource,
-    staticImplements,
-    Character
-} from "@internal";
-import { Observable, combineLatest, from } from "rxjs";
-import { expand, map, mergeAll, mergeMap, switchMap, mergeScan, reduce, scan, distinctUntilChanged } from "rxjs/operators";
-
+import { Entity, Data } from "@app/entity";
+import { CharacterData } from "./character";
 export interface EquipmentData extends Data {
     type: typeof Equipment["type"]
     version: typeof Equipment["version"]
@@ -23,55 +12,40 @@ export interface EquipmentData extends Data {
     maxUses?: number
     ignoreForSkills?: boolean
 }
-@staticImplements<GResource<Equipment>>()
-export class Equipment extends Resource<EquipmentData> {
+export class Equipment extends Entity<EquipmentData, CharacterData> {
     static type = "equipment" as const
     static version = 1 as const
-    constructor(state: Equipment["state"]) {
-        super(state);
+    constructor(value, root) {
+        super(value, root);
     }
-    selectEquipped() { return this.sub('metadata', 'enabled') }
-    equip() { return this.selectEquipped().value = true }
-    unequip() { return this.selectEquipped().value = false }
-    get quantity$() { return this.sub('quantity') }
-    get value$() { return this.sub('value') }
-    get eValue$() {
-        return combineLatest([this.quantity$, this.value$])
-            .pipe(map(([q, v]) => q * v))
+    get equipped() {
+        return this.enabled
     }
-    selectExtendedValue(): Observable<number> {
-        const children$ = this.selectChildren({
-            type: this.type,
-            caster: this.class,
-            maxDepth: Number.POSITIVE_INFINITY
-        });
-        return children$.pipe(
-            mapEach(e => e.eValue$),
-            switchMap(values$ => combineLatest([this.eValue$, ...values$])),
-            map(values => values.reduce((a, b) => a + b, 0)),
-            distinctUntilChanged()
-        )
+    get quantity() {
+        return this.value.quantity;
     }
-    get weight$() { return this.sub('weight') }
-    get eWeight$() {
-        return combineLatest([this.quantity$, this.weight$])
-            .pipe(map(([q, w]) => q * w))
+    get _value() {
+        return this.value.value;
     }
-    selectExtendedWeight(): Observable<number> {
-        const children$ = this.selectChildren({ type: this.type, caster: this.class });
-        return children$.pipe(
-            mapEach(e => e.eWeight$),
-            switchMap(weights$ => combineLatest([this.eWeight$, ...weights$])),
-            map(values => values.reduce((a, b) => a + b, 0)),
-            distinctUntilChanged()
-        )
+    get weight() {
+        return this.value.weight;
     }
-    moveToLocation(location: string) {
-        const character = AutoSubscriber.get(this.root$<Character>());
-        this.sub('location').value = location;
-        character.sub('children', 'equipment').value = [...character.value.children.equipment, this.value];
-        this.delete();
+    get eValue() {
+        return this.quantity * this._value;
     }
+    get eWeight() {
+        return this.quantity * this.weight
+    }
+    get containedValue() {
+        const children = Object.values(this.getEmbeds()).filter(e => e.type === "equipment").map(e => new Equipment(e.value, this.root))
+        return children.reduce((weight, item) => weight + item.containedValue, 0) + this.eValue
+    }
+    getContainedValue() { return this.containedValue }
+    get containedWeight() {
+        const children = Object.values(this.getEmbeds()).filter(e => e.type === "equipment").map(e => new Equipment(e.value, this.root))
+        return children.reduce((weight, item) => weight + item.containedWeight, 0) + this.eWeight
+    }
+    getContainedWeight() { return this.containedWeight }
 }
 
 export enum EquipmentModifierWeightType {

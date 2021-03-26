@@ -6,11 +6,10 @@
     import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
     import Features from "./panels/Features.svelte";
     import Weapon from "@ui/datatables/Weapon.svelte";
-    import { Spell } from "@internal";
 </script>
 
 <script lang="ts">
-    export let entity: Spell;
+    export let entity;
     const { level$ } = entity;
     const features$ = entity.sub("features");
 </script>
@@ -46,7 +45,6 @@
                 <label>
                     <span>Signature</span>
                     <AttributeOptions
-                        {entity}
                         signaturesOnly={true}
                         bind:attribute={$entity.signature}
                     />
@@ -117,7 +115,7 @@
     <TabPanel />
     <TabPanel />
     <TabPanel>
-        <Features {entity} bind:features={$features$} />
+        <Features bind:features={$features$} />
     </TabPanel>
     <TabPanel>
         <Weapon root={entity} type="melee weapon" />

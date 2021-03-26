@@ -1,3 +1,4 @@
+import { wrap, expose, windowEndpoint, transferHandlers, Remote } from "comlink";
 export function upload() {
     return new Promise<FileList>((resolve, reject) => {
         Object.assign(document.createElement("input"), {
@@ -15,36 +16,33 @@ export function download(href: string, filename: string) {
         filename
     }).click();
 }
-
-function createFrame(target: HTMLElement, props) {
-    const frame = target.appendChild(Object.assign(document.createElement("iframe"), {
-        width: props.height || "100%",
-        height: props.width || "100%",
-        src: props.src || "about:blank",
-        name: props.name,
-    }));
-    const meta = document.createElement("meta");
-    meta.setAttribute("charset", "utf-8")
-    const styles = props.styles?.map(href => {
-        return Object.assign(document.createElement("link"), {
-            rel: "stylesheet",
-            href
-        })
-    });
-    const scripts = props.scripts?.map(src => {
-        return Object.assign(document.createElement("script"), {
-            src
-        })
-    });
-    frame.contentDocument.head.append(meta, ...styles, ...scripts);
-    frame.onmouseenter = () => frame.focus();
-    frame.onmouseleave = () => window.focus();
-    bubbleFrameEvents(frame);
-    return frame
+export function inIframe() {
+    return window && window.parent !== window
 }
-
-export function bubbleFrameEvents(frame: HTMLIFrameElement) {
-    frame.contentWindow.onmousemove = (e) => {
+export function makeIframe({
+    origin = window.origin,
+    slug = "",
+    src = origin + slug,
+    style = {
+        width: "100%",
+        height: "100%",
+        border: "none"
+    } as any,
+    appendTo = null
+}) {
+    const iframe = document.createElement("iframe");
+    Object.assign(iframe.style, style);
+    iframe.src = src;
+    if (appendTo instanceof HTMLElement) {
+        appendTo.append(iframe);
+    }
+    return iframe;
+}
+export async function bubble(frame: HTMLIFrameElement) {
+    if (!frame.contentDocument) await new Promise(resolve => frame.onload = resolve);
+    console.log(frame, frame.contentDocument);
+    const target = frame?.contentDocument;
+    target.onmousemove = (e) => {
         const bounding = frame.getBoundingClientRect();
         const event = new MouseEvent("mousemove", {
             ...e,
@@ -55,7 +53,7 @@ export function bubbleFrameEvents(frame: HTMLIFrameElement) {
         });
         window.dispatchEvent(event);
     }
-    frame.contentWindow.onclick = (e) => {
+    target.onclick = (e) => {
         const bounding = frame.getBoundingClientRect();
         const event = new MouseEvent("click", {
             ...e,
@@ -64,15 +62,16 @@ export function bubbleFrameEvents(frame: HTMLIFrameElement) {
             screenY: e.clientY + bounding.top,
             clientY: e.clientY + bounding.top,
         });
+        console.log("CLICK");
         window.dispatchEvent(event);
     }
-    frame.contentWindow.onkeypress = (e) => {
+    target.onkeypress = (e) => {
         const event = new MouseEvent("keypress", {
             ...e
         });
         window.dispatchEvent(event);
     }
-    frame.contentWindow.onmouseup = (e) => {
+    target.onmouseup = (e) => {
         const bounding = frame.getBoundingClientRect();
         const event = new MouseEvent("mouseup", {
             ...e,
@@ -83,7 +82,7 @@ export function bubbleFrameEvents(frame: HTMLIFrameElement) {
         });
         window.dispatchEvent(event);
     }
-    frame.contentWindow.onmousedown = (e) => {
+    target.onmousedown = (e) => {
         const bounding = frame.getBoundingClientRect();
         const event = new MouseEvent("mousedown", {
             ...e,
@@ -94,11 +93,10 @@ export function bubbleFrameEvents(frame: HTMLIFrameElement) {
         });
         frame.parentElement.dispatchEvent(event);
     }
-    frame.contentWindow.onscroll = (e) => {
+    target.onscroll = (e) => {
         frame.ownerDocument.body.scrollTop = frame.ownerDocument.body.scrollHeight;
     }
 }
-
 export function getRoot(element: HTMLElement) {
     const rootNode = element.getRootNode()
     if (rootNode instanceof Document || rootNode.nodeName === "#document") {
@@ -109,22 +107,6 @@ export function getRoot(element: HTMLElement) {
         return document.body
     }
 }
-
-export function handleMessage<P>(message: MessageEvent, proxy: P) {
-    try {
-        const { data, source, origin } = message;
-        if (source instanceof BroadcastChannel) {
-
-        } else if (source instanceof Window) {
-
-        }
-        const { call, args } = data;
-        if (typeof proxy[call] === "function") proxy[call].call(proxy, ...args)
-    } catch (err) {
-        console.log("An error occured while receiving a message", err);
-    }
-}
-
 export class VirtualElement {
     element: ClientRect | DOMRect
 
@@ -191,14 +173,19 @@ export function handleEvent(options: EventHandlerOptions) {
         }
     }
 }
-
-function component(component) {
-    return class extends HTMLElement {
-        constructor() {
-            super();
-            return new Proxy(this, {
-
-            })
+export function initiateEvent(event: string, data: EventInit, coordinates: [number, number]) {
+    new Event(event, data)
+}
+export function initProxyEventDispatcher() {
+    try {
+        if (window.parent === window) {
+            expose(initiateEvent, windowEndpoint(window.parent));
         }
+    } catch (err) {
+        
     }
+}
+
+export function dispatchEventToIframe(iframe: HTMLIFrameElement) {
+
 }

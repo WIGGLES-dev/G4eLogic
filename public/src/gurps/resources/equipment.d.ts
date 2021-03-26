@@ -1,5 +1,5 @@
-import { Data, Resource } from "@internal";
-import { Observable } from "rxjs";
+import { Entity, Data } from "@app/entity";
+import { CharacterData } from "./character";
 export interface EquipmentData extends Data {
     type: typeof Equipment["type"];
     version: typeof Equipment["version"];
@@ -12,21 +12,20 @@ export interface EquipmentData extends Data {
     maxUses?: number;
     ignoreForSkills?: boolean;
 }
-export declare class Equipment extends Resource<EquipmentData> {
+export declare class Equipment extends Entity<EquipmentData, CharacterData> {
     static type: "equipment";
     static version: 1;
-    constructor(state: Equipment["state"]);
-    selectEquipped(): import("rxdeep").State<boolean>;
-    equip(): boolean;
-    unequip(): boolean;
-    get quantity$(): import("rxdeep").State<number>;
-    get value$(): import("rxdeep").State<number>;
-    get eValue$(): Observable<number>;
-    selectExtendedValue(): Observable<number>;
-    get weight$(): import("rxdeep").State<number>;
-    get eWeight$(): Observable<number>;
-    selectExtendedWeight(): Observable<number>;
-    moveToLocation(location: string): void;
+    constructor(value: any, root: any);
+    get equipped(): boolean;
+    get quantity(): number;
+    get _value(): number;
+    get weight(): number;
+    get eValue(): number;
+    get eWeight(): number;
+    get containedValue(): any;
+    getContainedValue(): any;
+    get containedWeight(): any;
+    getContainedWeight(): any;
 }
 export declare enum EquipmentModifierWeightType {
     originalWeight = "to_original_weight",

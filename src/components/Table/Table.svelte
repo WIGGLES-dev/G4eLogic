@@ -3,7 +3,8 @@
     import { BehaviorSubject } from "rxjs";
     import { map, pluck } from "rxjs/operators";
     import { setContext, afterUpdate, createEventDispatcher } from "svelte";
-    import { bind, arrayMove, fragment } from "@internal";
+    import { bind, fragment } from "@utils/use";
+    import { arrayMove } from "@utils/array";
     import Menu, { MenuOption } from "@components/Menu/Menu.svelte";
     import Cell from "@components/Value.svelte";
     const components = {

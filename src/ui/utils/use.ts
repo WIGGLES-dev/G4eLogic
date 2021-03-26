@@ -1,5 +1,5 @@
+import { getRoot, VirtualElement } from "@app/utils/dom";
 import { createPopper } from "@popperjs/core";
-import { getRoot, VirtualElement } from "@internal";
 
 export function tooltip(node: HTMLElement, params: any = {}) {
     let component;
@@ -9,7 +9,7 @@ export function tooltip(node: HTMLElement, params: any = {}) {
 
     } else if (params.tooltip) {
         tooltip = Object.assign(document.createElement("div"), {
-            className: 'bg-black text-white text-sm rounded-lg p-2' + ' ' + params.tipclass || "",
+            className: 'bg-gray-700 text-white text-sm p-2' + ' ' + params.tipclass || "",
             innerHTML: interpolate(params.tooltip, params.context)
         });
         tooltip.style.zIndex = "1000";
@@ -77,38 +77,12 @@ export function tooltip(node: HTMLElement, params: any = {}) {
     }
 }
 function interpolate(input: string, context: any) {
-    const brackets = /(\[([^\[\]]*|(\[[^\[\]]*\]))*\])/g
+    if (!context) return input
+    if (!input.startsWith("`")) input = '`' + input;
+    if (!input.endsWith("`")) input = input + '`'
     try {
-        return input.replace(brackets, (match) => {
-            if (brackets.test(match.slice(1, -1))) {
-                let expression = match.slice(1, -1).replace(brackets, (match) => context[match.slice(1, -1)] !== undefined ? context[match.slice(1, -1)] : `[ERROR!]`);
-                let result = new Function(`return ${expression}`)();
-                if (+result > Number.NEGATIVE_INFINITY) result = result.toFixed(0);
-                return result
-            } else {
-                return context[match.slice(1, -1)] || `[ERROR!]`
-            }
-        });
+        return new Function(...Object.keys(context), `return ${input}`)(...Object.values(context))
     } catch (err) {
-        console.log(err);
-        console.log(input)
-        console.log(context);
-        const warning = `Your tooltip interpolation has failed to render:<br/><pre>${err}</pre>`
-        if (typeof input === "string") return input + "<br/>" + warning;
-        return warning
-    }
-}
-
-export function transplant(node: HTMLElement, params: any = {}) {
-    try {
-        const { selectors } = params
-        selectors?.forEach(selector => {
-            if (!selector) return
-            const elem = selector.from?.elem || document.querySelector(selector.from);
-            const target = selector.to?.elem || document.querySelector(selector.to) || node;
-            target.append(target.ownerDocument.adoptNode(elem.cloneNode(true)));
-        });
-    } catch (err) {
-
+        return err
     }
 }

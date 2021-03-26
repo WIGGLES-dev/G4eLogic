@@ -5,13 +5,18 @@
   import Features from "./panels/Features.svelte";
   import Weapon from "@ui/datatables/Weapon.svelte";
   import TraitModifiers from "./panels/TraitModifiers.svelte";
-  import { ControlRating, Trait } from "@internal";
+  import { ControlRating } from "@app/gurps/resources/trait";
 </script>
 
 <script lang="ts">
-  export let entity: Trait;
+  import { getContext } from "svelte";
+  import { map, mergeMap, pluck, startWith } from "rxjs/operators";
+  import { from, Observable } from "rxjs";
+  import { load } from "js-yaml";
+  export let entity;
+  const state = getContext<Observable<any>>("sheet");
   const enabled$ = entity.sub("metadata", "enabled");
-  const adjustedValue$ = entity.selectAdjustedPoints();
+  const features$ = entity.sub("features");
 </script>
 
 <Tabs>
@@ -81,7 +86,9 @@
         </label>
         <label>
           <span>Final Cost</span>
-          <output>{$adjustedValue$}</output>
+          <output>
+            <!-- {$adjustedValue$} -->
+          </output>
         </label>
       </fieldset>
       <CategoryList bind:categories={$entity.categories} />
@@ -118,9 +125,13 @@
   </TabPanel>
   <TabPanel />
   <TabPanel>
-    <Features {entity} bind:features={$entity.features} />
+    <Features bind:features={$features$} />
   </TabPanel>
-  <TabPanel component={TraitModifiers} {entity} />
+  <TabPanel>
+    <!-- <TraitModifiers>
+      
+    </TraitModifiers> -->
+  </TabPanel>
   <TabPanel>
     <Weapon root={entity} type="melee weapon" />
   </TabPanel>

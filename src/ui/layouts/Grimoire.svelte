@@ -1,13 +1,10 @@
 <script lang="ts">
   import { getContext } from "svelte";
-  import { Spell, Character } from "@internal";
-  const character = getContext<Character>("sheet");
-  import SpellList from '@ui/datatables/Spell.svelte';
+  const character = getContext<any>("sheet");
+  import SpellList from "@ui/datatables/Spell.svelte";
 </script>
+
+<SpellList {character} />
 
 <style>
 </style>
-
-<SpellList 
-  {character}
-/>

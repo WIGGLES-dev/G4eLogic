@@ -13,7 +13,6 @@
   const panels = [];
   const selectedTab = writable(tabIndex);
   const selectedPanel = writable(tabIndex);
-  const prefetched = writable([]);
   onMount(() => {
     tabIndex = tabIndex || 0;
     selectedTab.set(tabs[tabIndex]);
@@ -50,15 +49,8 @@
       tabIndex = i;
       dispatch("tabchange", i);
     },
-    addPrefetch(tab) {
-      prefetched.update((current) => [...current, tab]);
-    },
-    removePrefetch(tab) {
-      prefetched.update((current) => current.filter((_tab) => tab !== tab));
-    },
     selectedTab,
     selectedPanel,
-    prefetched,
   });
 
   export function selectTab() {}

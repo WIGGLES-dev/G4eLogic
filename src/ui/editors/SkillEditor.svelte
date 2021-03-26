@@ -7,12 +7,18 @@
   import Features from "./panels/Features.svelte";
   import Weapon from "@ui/datatables/Weapon.svelte";
   import SkillDefaults from "./panels/SkillDefaults.svelte";
-  import { Skill } from "@internal";
+  import { bind } from "@utils/use";
 </script>
 
 <script lang="ts">
-  export let entity: Skill;
-  const { level$ } = entity;
+  import { getContext } from "svelte";
+  import { from, Observable } from "rxjs";
+  import { map, mergeMap, pluck, startWith, tap } from "rxjs/operators";
+  import { load } from "js-yaml";
+  export let entity;
+  const state = getContext<Observable<any>>("sheet");
+  const character$ = getContext<Observable<any>>("worker");
+  const signature$ = entity.sub("signature");
   const defaults$ = entity.sub("defaults");
   const features$ = entity.sub("features");
 </script>
@@ -47,11 +53,10 @@
       <fieldset>
         <!-- svelte-ignore a11y-label-has-associated-control -->
         <label>
-          Signature
+          <span>Siganture</span>
           <AttributeOptions
-            {entity}
+            bind:attribute={$signature$}
             signaturesOnly={true}
-            bind:attribute={$entity.signature}
           />
         </label>
         <!-- svelte-ignore a11y-label-has-associated-control -->
@@ -69,7 +74,9 @@
         </label>
         <label>
           <san>Final Level</san>
-          <output>{Math.floor($level$)}</output>
+          <output>
+            <!-- {Math.floor($level$)} -->
+          </output>
         </label>
       </fieldset>
       <fieldset>
@@ -119,11 +126,11 @@
     </form>
   </TabPanel>
   <TabPanel>
-    <SkillDefaults {entity} bind:defaults={$defaults$} />
+    <SkillDefaults bind:defaults={$defaults$} />
   </TabPanel>
   <TabPanel />
   <TabPanel>
-    <Features {entity} bind:features={$features$} />
+    <Features bind:features={$features$} />
   </TabPanel>
   <TabPanel>
     <Weapon root={entity} type="melee weapon" />

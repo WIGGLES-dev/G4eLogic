@@ -1,27 +1,25 @@
 <script context="module" lang="ts">
+</script>
+
+<script lang="ts">
+    import { State } from "rxdeep";
     import DataTable from "@ui/DataTable.svelte";
-    import { map } from "rxjs/operators";
-    import { Character, fragment, bind } from "@internal";
+    import { map, mergeMap, tap } from "rxjs/operators";
+    import { fragment, bind } from "@utils/use";
     import SkillEditor from "@ui/editors/SkillEditor.svelte";
     import Leaf from "@components/Tree/Leaf.svelte";
     import Value from "@components/Value.svelte";
     import Toggle from "@components/Toggle.svelte";
-</script>
-
-<script lang="ts">
-    export let character: Character;
-    const signatureOptions$ = character.sub("config", "attributes").pipe(
-        map((attributes) => Object.entries(attributes || {})),
-        map((attributes) =>
-            attributes.filter(([key, value]) => value.skillSignature)
-        ),
-        map((attributes) =>
-            attributes.map(([value, attr]) => ({
-                value,
-                label: attr.abbreviation || value,
-            }))
-        )
-    );
+    import { Character, CharacterData } from "@app/gurps/resources/character";
+    import { System } from "@app/system";
+    import { Skill as SkillWorker } from "@app/gurps/resources/skill";
+    import { from, Observable, pipe, using } from "rxjs";
+    import { withComlinkProxy } from "@app/utils/operators";
+    import Dialog from "@components/Dialog.svelte";
+    import AttributeOptions from "@ui/options/AttributeOptions.svelte";
+    const Skill = System.getWorker<typeof SkillWorker>("skill");
+    export let character: State<CharacterData>;
+    const makeSkill = pipe(withComlinkProxy((d) => new Skill(d, $character)));
 </script>
 
 <DataTable type="skill" root={character} let:node let:children>
@@ -38,9 +36,7 @@
     </tr>
     <td>
         <select use:bind={node.state.sub("signature")}>
-            {#each $signatureOptions$ as { value, label }, i (i)}
-                <option {value}>{label}</option>
-            {/each}
+            <AttributeOptions signaturesOnly={true} optionsOnly={true} />
         </select>
     </td>
     <td>
@@ -59,13 +55,30 @@
         <input type="number" use:bind={node.state.sub("mod")} />
     </td>
     <td>
-        <Value value={node.state["relativeLevel$"]} let:value>
+        <Value
+            value={node.state.pipe(
+                makeSkill,
+                mergeMap((skill) => skill["getRelativeLevel"]())
+            )}
+            let:value
+        >
             {Math.floor(value)}
         </Value>
     </td>
-    <td>
-        <Value value={node.state["level$"]} let:value>
-            {Math.floor(value)}
+    <td class="bg-green-500 hover:bg-red-500">
+        <Value
+            value={node.state.pipe(
+                makeSkill,
+                mergeMap((skill) => skill["getLevel"]())
+            )}
+            let:value
+        >
+            <output
+                class="block text-center p-0 bg-transparent text-white cursor-pointer"
+                on:click={(e) => System.roll(`3d6ms${Math.floor(value)}`)}
+            >
+                {Math.floor(value)}
+            </output>
         </Value>
     </td>
     <td>

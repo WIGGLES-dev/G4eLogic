@@ -1,5 +1,7 @@
-import { FeatureBonusType, FeatureBonus, StringCompare, Resource, Data } from "@internal";
-import { Observable } from "rxjs";
+import { Data, Entity } from "@app/entity";
+import type { StringCompare } from "@app/utils/strings";
+import { CharacterData } from "./character";
+import type { FeatureBonus, FeatureBonusType } from "./interfaces";
 export interface SkillLikeKeys {
     points: number;
     name: string;
@@ -15,21 +17,19 @@ export interface SkillData extends Data, SkillLikeKeys {
     type: "skill";
     version: 1;
 }
-export declare abstract class SkillLike<Model extends SkillLikeKeys & Data = SkillLikeKeys & Data> extends Resource<Model> {
-    constructor(state: Resource<Model>["state"]);
-    static selectBestDefault(): void;
-    selectHighestDefault$(): Observable<number>;
+export declare class SkillLike extends Entity<SkillData, CharacterData> {
+    constructor(skill: any, character: any);
+    getAttributeLevel(): number;
+    get bonus(): any;
+    getHighestDefault(): number;
     getRelativeLevel(): number;
-    get attribute$(): Observable<number>;
-    get relativeLevel$(): Observable<number>;
-    get baseRelativeLevel$(): Observable<number>;
-    get bonus$(): Observable<number>;
-    get level$(): Observable<number>;
+    getBaseRelativeLevel(): number;
+    getLevel(): number;
 }
-export declare class Skill extends SkillLike<SkillData> {
+export declare class Skill extends SkillLike {
     static version: 1;
     static type: "skill";
-    constructor(state: Skill["state"]);
+    constructor(skill: any, character: any);
 }
 export declare enum SkillDifficulty {
     Easy = "E",

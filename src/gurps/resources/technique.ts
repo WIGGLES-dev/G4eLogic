@@ -1,17 +1,6 @@
-import {
-    SkillDifficulty,
-    Data,
-    SkillLikeKeys,
-    SkillDefault,
-    SkillLike,
-    staticImplements,
-    GResource,
-    Resource
-} from "@internal";
-import {
-    Observable,
-    from
-} from 'rxjs'
+import type { Data } from "@app/entity";
+import type { SkillLikeKeys, SkillDefault } from "./skill";
+import { SkillDifficulty } from "./skill";
 export type TechniqueDifficulty = SkillDifficulty.Average | SkillDifficulty.Hard;
 export interface TechniqueData extends Data, SkillLikeKeys {
     type: "technique"
@@ -22,15 +11,15 @@ export interface TechniqueData extends Data, SkillLikeKeys {
     defaults: undefined
 }
 
-export class Technique extends SkillLike<TechniqueData> {
+export class Technique {
     static type = 'technique' as const
     static version = 1 as const
-    constructor(state: Technique["state"]) {
-        super(state);
-    }
-    get level$(): Observable<number> {
-        return from([0])
-    }
+    // constructor(state: Technique["state"]) {
+    //     super(state);
+    // }
+    // get level$(): Observable<number> {
+    //     return from([0])
+    // }
 }
 export function calculateTechniqueLevel(
     technique: TechniqueData,

@@ -8,13 +8,15 @@
         show?: () => boolean;
         options?: MenuOption[];
         interactive?: boolean;
-        class: string
-        style: string
+        class: string;
+        style: string;
     }
 </script>
 
 <script lang="ts">
     const dispatch = createEventDispatcher();
+    let classList: string = "";
+    export { classList as class };
     export let reference: HTMLElement | MouseEvent;
     export let rendered = false;
     export let options: MenuOption[];
@@ -45,7 +47,7 @@
     <Popper bind:reference placement="right-start" strategy="fixed" {modifiers}>
         <slot name="menu">
             <ul
-                class="select-none shadow bg-white"
+                class="select-none shadow bg-white {classList}"
                 bind:this={uList}
                 on:contextmenu|preventDefault
             >

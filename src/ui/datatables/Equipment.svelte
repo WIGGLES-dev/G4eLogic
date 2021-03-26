@@ -1,5 +1,5 @@
 <script context="module" lang="ts">
-    import { Character, Equipment, Resolver, fragment, bind } from "@internal";
+    import { fragment, bind } from "@utils/use";
     import DataTable from "@ui/DataTable.svelte";
     import Value from "@components/Value.svelte";
     import Leaf from "@components/Tree/Leaf.svelte";
@@ -8,15 +8,24 @@
 </script>
 
 <script lang="ts">
-    export let character: Character;
+    import { pipe } from "rxjs";
+    import { System } from "@app/system";
+    import { Equipment as EquipmentWorker } from "@app/gurps/resources/equipment";
+    import { withComlinkProxy } from "@app/utils/operators";
+    import { mergeMap, tap } from "rxjs/operators";
+    export let character;
     const filter$ = character.sub("metadata", "flags", "equipmentFilter");
-    function filterfunc(item: Equipment["value"]) {
+    function filterfunc(item) {
         if ($filter$ && typeof item?.location === "string") {
             return $filter$ === item.location;
         } else {
             return true;
         }
     }
+    const Equipment = System.getWorker<typeof EquipmentWorker>("equipment");
+    const makeEquipment = pipe(
+        withComlinkProxy((d) => new Equipment(d, $character))
+    );
 </script>
 
 <DataTable type="equipment" root={character} let:node let:children>
@@ -28,7 +37,7 @@
         </th>
         <th class="w-full">
             Equipment
-            <select bind:value={$filter$}>
+            <select disabled bind:value={$filter$}>
                 <option value="carried">Carried</option>
                 <option value="other">Other</option>
             </select>
@@ -72,12 +81,24 @@
         <input type="number" use:bind={node.state.sub("weight")} />
     </td>
     <td>
-        <Value value={node.state["selectExtendedValue"]()} let:value>
+        <Value
+            value={node.state.pipe(
+                makeEquipment,
+                mergeMap((e) => e["getContainedValue"]())
+            )}
+            let:value
+        >
             {+value.toFixed(3)}
         </Value>
     </td>
     <td>
-        <Value value={node.state["selectExtendedWeight"]()} let:value>
+        <Value
+            value={node.state.pipe(
+                makeEquipment,
+                mergeMap((e) => e["getContainedWeight"]())
+            )}
+            let:value
+        >
             {+value.toFixed(3)}
         </Value>
     </td>

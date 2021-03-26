@@ -1,5 +1,5 @@
-import { Data, Resource } from "@internal";
-import { Observable } from "rxjs";
+import { Data, Entity } from "@app/entity";
+import { CharacterData } from "./character";
 export interface TraitModifierData {
     type: "trait";
     enabled: boolean;
@@ -48,11 +48,12 @@ export interface TraitData extends Data {
     types: TraitType[];
     modifiers: TraitModifierData[];
 }
-export declare class Trait extends Resource<TraitData> {
+export declare class Trait extends Entity<TraitData, CharacterData> {
     static version: number;
     static type: string;
-    constructor(state: Trait["state"]);
-    selectAdjustedPoints(): Observable<number>;
+    constructor(value: any, root: any);
+    getAdjustedPoints(): number;
+    getTraitType(): number | TraitCategory.Advantage | TraitCategory.Perk | TraitCategory.Disadavantage | TraitCategory.Quirk | TraitCategory.Feature | TraitCategory.Racial | TraitCategory.Meta;
 }
 export declare function calculateTraitCost({ basePoints, hasLevels, levels, hasHalfLevel, roundDown, controlRating, pointsPerLevel, modifiers }: TraitData): number;
 export declare function costModifier(modifier: TraitModifier): number;
@@ -85,10 +86,10 @@ export declare function isDisadvantage(trait: TraitData): boolean;
 export declare function isQuirk(trait: TraitData): boolean;
 export declare function isFeature(trait: TraitData): boolean;
 export declare function getCategory(tags: string[]): -1 | TraitCategory.Advantage | TraitCategory.Perk | TraitCategory.Disadavantage | TraitCategory.Quirk | TraitCategory.Feature | TraitCategory.Racial | TraitCategory.Meta;
-export declare function getContainerType(traits: Trait["value"][]): TraitCategory.Advantage | TraitCategory.Perk | TraitCategory.Disadavantage | TraitCategory.Quirk | TraitCategory.Feature | TraitCategory.Racial | TraitCategory.Meta;
-export declare function getTraitType(trait: Trait["value"]): number | TraitCategory.Advantage | TraitCategory.Perk | TraitCategory.Disadavantage | TraitCategory.Quirk | TraitCategory.Feature | TraitCategory.Racial | TraitCategory.Meta;
-export declare function split(traits: Trait["value"][]): Record<string, TraitData[]>;
-export declare function sumTraitArray(traits: Trait["value"][]): number;
+export declare function getContainerType(traits: TraitData[]): TraitCategory.Advantage | TraitCategory.Perk | TraitCategory.Disadavantage | TraitCategory.Quirk | TraitCategory.Feature | TraitCategory.Racial | TraitCategory.Meta;
+export declare function getTraitType(trait: TraitData): number | TraitCategory.Advantage | TraitCategory.Perk | TraitCategory.Disadavantage | TraitCategory.Quirk | TraitCategory.Feature | TraitCategory.Racial | TraitCategory.Meta;
+export declare function split(traits: TraitData[]): Record<string, TraitData[]>;
+export declare function sumTraitArray(traits: TraitData[]): number;
 export declare function removeDuplicates<T extends {
     id: string;
 }>(lists: {

@@ -5,15 +5,22 @@
   import SizeRange from "@ui/SizeRange.svelte";
   // import MeleeWeapons from '@ui/datatables/MeleeWeapon.svelte';
   // import RangedWeapons from '@ui/datatables/RangedWeapon.svelte';
-  import { Character } from "@internal";
 
-  const character = getContext<Character>("sheet");
-  const encumbranceLevel$ = character.selectEncumbranceLevel();
-  const attributes$ = character.selectAttributes();
-
-  const dodge$ = character.selectAttribute("dodge");
-  $: dodge = $dodge$?.calculateLevel() ?? 5;
-  $: encumberedDodge = dodge + ($encumbranceLevel$ || 0);
+  import { Character as CharacterWorker } from "@app/gurps/resources/character";
+  import { map, mergeMap, pluck, tap } from "rxjs/operators";
+  import { State } from "rxdeep";
+  import { Observable } from "rxjs";
+  import { Remote } from "comlink";
+  const state = getContext<State<any>>("sheet");
+  const character$ = getContext<Observable<Remote<CharacterWorker>>>("worker");
+  const dodge$ = character$.pipe(
+    mergeMap((c) => c.getAttribute("dodge")),
+    pluck("level")
+  );
+  const encumbranceLevel$ = character$.pipe(
+    mergeMap((c) => c.getEncumbranceLevel())
+  );
+  $: encumberedDodge = $dodge$ + $encumbranceLevel$;
 </script>
 
 <div class="flex">

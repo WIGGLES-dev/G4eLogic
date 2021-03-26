@@ -1,5 +1,5 @@
 <script context="module" lang="ts">
-    import { Resource, Equipment, Resolver, fragment, bind } from "@internal";
+    import { fragment, bind } from "@utils/use";
     import DataTable from "@ui/DataTable.svelte";
     import Value from "@components/Value.svelte";
     import Leaf from "@components/Tree/Leaf.svelte";
@@ -8,7 +8,7 @@
 </script>
 
 <script lang="ts">
-    export let root: Resource;
+    export let root;
     export let type: string;
 </script>
 

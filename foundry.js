@@ -4521,7 +4521,6 @@ class Application {
 
     // Otherwise render a new app
     else {
-
       // Wrap a popOut application in an outer frame
       if ( this.popOut ) {
         html = await this._renderOuter(options);
@@ -5380,25 +5379,20 @@ class FormApplication extends Application {
     const editor = this.editors[name];
     if ( !editor || !editor.mce ) throw new Error(`${name} is not an active editor name!`);
     editor.active = false;
-
-    // Get the editor data
     const mce = editor.mce;
-    const element = mce.getElement();
-    const content = mce.getContent();
-    element.innerHTML = content;
 
-    // Update the form object
+    // Submit the containing form
+    const unchanged = mce.getContent() === editor.initial;
     const submit = this._onSubmit(new Event("mcesave"));
 
     // Remove the editor and reset the button
     if ( remove ) mce.remove();
     if ( editor.hasButton ) editor.button.style.display = "block";
-
-    // Once submission has finished, destroy the editor
     return submit.then(() => {
       if ( remove ) {
         mce.destroy();
         editor.mce = null;
+        if ( unchanged ) this.render();
       }
       editor.changed = false;
     });
@@ -6842,17 +6836,6 @@ class Game {
       onChange: setting => EntitySheetConfig._updateDefaultSheets(setting)
     });
 
-    // Use the Device Pixel Ratio
-    game.settings.register("core", "devicePixelRatio", {
-      name: "SETTINGS.DevicePixN",
-      hint: "SETTINGS.DevicePixL",
-      scope: "client",
-      config: window.devicePixelRatio > 1,
-      type: Boolean,
-      default: false,
-      onChange: window.location.reload
-    });
-
     // Are Chat Bubbles Enabled?
     game.settings.register("core", "chatBubbles", {
       name: "SETTINGS.CBubN",
@@ -6870,6 +6853,27 @@ class Game {
       scope: "world",
       config: true,
       default: true,
+      type: Boolean
+    });
+
+    // Disable Resolution Scaling
+    game.settings.register("core", "disableResolutionScaling", {
+      name: "SETTINGS.ResScaleN",
+      hint: "SETTINGS.ResScaleL",
+      scope: "client",
+      config: window.devicePixelRatio !== 1,
+      default: false,
+      type: Boolean,
+      onChange: () => window.location.reload()
+    });
+
+    // TODO - legacy setting, remove in 0.8.x
+    game.settings.register("core", "devicePixelRatio", {
+      name: "DEPRECATED DEVICE PIXEL RATIO SETTING",
+      hint: "DEPRECATED DEVICE PIXEL RATIO SETTING",
+      scope: "client",
+      config: false,
+      default: false,
       type: Boolean
     });
 
@@ -7655,13 +7659,11 @@ class Roll {
       return t;
     });
 
-    // Step 2 - if inner rolls occurred, re-compile the formula and re-identify terms
-    if ( hasInner ) {
-      const formula = this.constructor.cleanFormula(this.terms);
-      this.terms = this._identifyTerms(formula, {step: 1});
-    }
+    // Step 2 - re-compile the formula and re-identify terms
+    const formula = this.constructor.cleanFormula(this.terms);
+    this.terms = this._identifyTerms(formula, {step: 1});
 
-    // Step 3 - evaluate any remaining terms
+    // Step 3 - evaluate remaining terms
     this.results = this.terms.map(term => {
       if ( term.evaluate ) return term.evaluate({minimize, maximize}).total;
       else return term;
@@ -8053,9 +8055,7 @@ class Roll {
    * @private
    */
   _safeEval(expression) {
-    const src = 'with (sandbox) { return ' + expression + '}';
-    const evl = new Function('sandbox', src);
-    return evl(this.constructor.MATH_PROXY);
+    return Roll.MATH_PROXY.safeEval(expression);
   }
 
   /* -------------------------------------------- */
@@ -8070,10 +8070,10 @@ class Roll {
     const parts = this.dice.map(d => {
       const cls = d.constructor;
       return {
-        formula: d.formula,
+        formula: d.expression,
         total: d.total,
         faces: d.faces,
-        flavor: d.options.flavor,
+        flavor: d.flavor,
         rolls: d.results.map(r => {
           const hasSuccess = r.success !== undefined;
           const hasFailure = r.failure !== undefined;
@@ -8362,13 +8362,17 @@ Roll.ARITHMETIC = ["+", "-", "*", "/"];
  * @type {Math}
  */
 Roll.MATH_PROXY = new Proxy(Math, {has: () => true, get: (t, k) => k === Symbol.unscopables ? undefined : t[k]});
+Roll.MATH_PROXY.safeEval = function(expression) {
+  const src = 'with (sandbox) { return ' + expression + '}';
+  const evl = new Function('sandbox', src);
+  return evl(this);
+}
 
 /**
  * A regular expression used to identify the Roll formula for parenthetical terms
  * @type {RegExp}
  */
 Roll.PARENTHETICAL_RGX = /^\((.*)\)$/;
-
 Roll.CHAT_TEMPLATE = "templates/dice/roll.html";
 Roll.TOOLTIP_TEMPLATE = "templates/dice/tooltip.html";
 /**
@@ -8425,12 +8429,34 @@ class DiceTerm {
   /* -------------------------------------------- */
 
   /**
-   * Return a standardized representation for the displayed formula associated with this DiceTerm
-   * @return {string}
+   * Return the dice expression portion of the full term formula, excluding any flavor text.
+   * @type {string}
    */
-  get formula() {
+  get expression() {
     const x = this.constructor.DENOMINATION === "d" ? this.faces : this.constructor.DENOMINATION;
     return `${this.number}d${x}${this.modifiers.join("")}`;
+  }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Return a standardized representation for the displayed formula associated with this DiceTerm
+   * @type {string}
+   */
+  get formula() {
+    let f = this.expression;
+    if ( this.flavor ) f += `[${this.flavor}]`;
+    return f;
+  }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Return the flavor text associated with a particular DiceTerm, possibly an empty string if the term is flavorless.
+   * @type {string}
+   */
+  get flavor() {
+    return this.options.flavor || "";
   }
 
   /* -------------------------------------------- */
@@ -8592,13 +8618,15 @@ class DiceTerm {
    */
   static _keepOrDrop(results, number, {keep=true, highest=true}={}) {
 
-    // Determine the direction and the number to discard
+    // Sort remaining active results in ascending (keep) or descending (drop) order
     const ascending = keep === highest;
-    number = keep ? results.length - number : number;
+    const values = results.reduce((arr, r) => {
+      if ( r.active ) arr.push(r.result);
+      return arr;
+    }, []).sort((a, b) => ascending ? a - b : b - a);
 
-    // Determine the cut point to discard
-    const values = results.map(r => r.result);
-    values.sort((a, b) => ascending ? a - b : b - a);
+    // Determine the cut point, beyond which to discard
+    number = Math.clamped(keep ? values.length - number : number, 0, values.length);
     const cut = values[number];
 
     // Track progress
@@ -9933,18 +9961,15 @@ class Canvas {
     // Activate drop handling
     this._dragDrop = new DragDrop({ callbacks: { drop: this._onDrop.bind(this) } }).bind(canvas);
 
-    // Determine the target canvas resolution for the device settings
-    const dpr = game.settings.get("core", "devicePixelRatio") ? Math.max(window.devicePixelRatio, 1) : 1;
-    PIXI.settings.RESOLUTION = PIXI.settings.FILTER_RESOLUTION = dpr;
-
     // Create PIXI Application
+    const resolution = game.settings.get("core", "disableResolutionScaling") ? 1 : window.devicePixelRatio;
     this.app = new PIXI.Application({
       view: canvas,
       width: window.innerWidth,
       height: window.innerHeight,
       antialias: true,
       transparent: false,
-      resolution: dpr,
+      resolution: resolution,
       backgroundColor: null
     });
     this.app.renderer.plugins.interaction.moveWhenInside = true;
@@ -10266,11 +10291,11 @@ class Canvas {
     // Update sources
     this.tokens.placeables.forEach(token => token.updateSource({defer: true}));
     this.lighting.placeables.forEach(light => light.updateSource({defer: true}));
+    this.sounds.initialize();
 
     // Refresh layer displays
     this.lighting.refresh();
     this.sight.refresh({forceUpdateFog: true});
-    this.sounds.refresh();
   }
 
   /* -------------------------------------------- */
@@ -11101,9 +11126,12 @@ class CanvasLayer extends PIXI.Container {
  * @extends {PIXI.Container}
  * @abstract
  * @interface
+ *
+ * @param {object} data     The underlying embedded document data for the placeable type
+ * @param {Scene} [scene]   The parent scene that this object belongs to (if any)
  */
 class PlaceableObject extends PIXI.Container {
-  constructor(data, scene) {
+  constructor(data={}, scene) {
     super();
 
     /**
@@ -11852,7 +11880,8 @@ class PlaceableObject extends PIXI.Container {
   _onClickRight(event) {
     const hud = this.layer.hud;
     if ( hud ) {
-      this.control({releaseOthers: false});
+      const releaseOthers = !this._controlled && !event.data.originalEvent.shiftKey;
+      this.control({releaseOthers});
       if ( hud.object === this) hud.clear();
       else hud.bind(this);
     }
@@ -14189,7 +14218,7 @@ class FilePicker extends Application {
      * The display mode of the FilePicker UI
      * @type {string}
      */
-    this.displayMode = options.displayMode || "list";
+    this.displayMode = options.displayMode || FilePicker.LAST_DISPLAY_MODE;
 
     /**
      * The current set of file extensions which are being filtered upon
@@ -14438,8 +14467,8 @@ class FilePicker extends Application {
 
   /**
    * Browse to a specific location for this FilePicker instance
-   * @param {string} target     The target within the currently active source location.
-   * @param {Object} options    Browsing options
+   * @param {string} [target]   The target within the currently active source location.
+   * @param {Object} [options]  Browsing options
    */
   async browse(target, options={}) {
 
@@ -14672,7 +14701,7 @@ class FilePicker extends Application {
       throw new Error("Invalid display mode requested");
     }
     if ( a.dataset.mode === this.displayMode ) return;
-    this.displayMode = a.dataset.mode;
+    FilePicker.LAST_DISPLAY_MODE = this.displayMode = a.dataset.mode;
     this.render();
   }
 
@@ -14956,9 +14985,24 @@ class FilePicker extends Application {
   }
 }
 
+/**
+ * Record the last-browsed directory path so that re-opening a different FilePicker instance uses the same target
+ * @type {string}
+ */
 FilePicker.LAST_BROWSED_DIRECTORY = "";
 
+/**
+ * Record the last-configured tile size which can automatically be applied to new FilePicker instances
+ * @type {number|null}
+ */
 FilePicker.LAST_TILE_SIZE = null;
+
+
+/**
+ * Record the last-configured display mode so that re-opening a different FilePicker instance uses the same mode.
+ * @type {string}
+ */
+FilePicker.LAST_DISPLAY_MODE = "list";
 
 /**
  * Enumerate the allowed FilePicker display modes
@@ -16792,11 +16836,7 @@ class ActorSheet extends BaseEntitySheet {
    */
   _onConfigureToken(event) {
     event.preventDefault();
-
-    // Determine the Token for which to configure
-    const token = this.token || new Token(this.actor.data.token);
-
-    // Render the Token Config application
+    const token = this.token || new Token(this.actor.data.token || {});
     new TokenConfig(token, {
       left: Math.max(this.position.left - 560 - 10, 10),
       top: this.position.top,
@@ -16827,7 +16867,7 @@ class ActorSheet extends BaseEntitySheet {
   _onEditImage(event) {
     const attr = event.currentTarget.dataset.edit;
     const current = getProperty(this.actor.data, attr);
-    new FilePicker({
+    const fp = new FilePicker({
       type: "image",
       current: current,
       callback: path => {
@@ -16836,7 +16876,8 @@ class ActorSheet extends BaseEntitySheet {
       },
       top: this.position.top + 40,
       left: this.position.left + 10
-    }).browse(current);
+    });
+    return fp.browse();
   }
 
   /* -------------------------------------------- */
@@ -17237,7 +17278,9 @@ class ActiveEffectConfig extends FormApplication {
     formData = expandObject(formData);
     formData.changes = Object.values(formData.changes || {});
     for ( let c of formData.changes ) {
-      if ( Number.isNumeric(c.value) ) c.value = parseFloat(c.value);
+      // TODO - store as numeric when it's unambiguous, remove this later. See #4309
+      const n = parseFloat(c.value)
+      if ( String(n) === c.value ) c.value = n;
     }
     return this.object.update(formData);
   }
@@ -17910,7 +17953,7 @@ class ItemSheet extends BaseEntitySheet {
       top: this.position.top + 40,
       left: this.position.left + 10
     });
-    fp.browse(current);
+    return fp.browse();
   }
 }
 
@@ -18163,7 +18206,7 @@ class MacroConfig extends BaseEntitySheet {
    * @private
    */
   _onEditImage(event) {
-    new FilePicker({
+    const fp = new FilePicker({
       type: "image",
       current: this.object.data.img,
       callback: path => {
@@ -18172,7 +18215,8 @@ class MacroConfig extends BaseEntitySheet {
       },
       top: this.position.top + 40,
       left: this.position.left + 10
-    }).browse(this.object.data.img);
+    })
+    return fp.browse();
   }
 
   /* -------------------------------------------- */
@@ -18444,7 +18488,7 @@ class PlayerConfig extends FormApplication {
    */
   _onEditAvatar(event) {
     event.preventDefault();
-    new FilePicker({
+    const fp = new FilePicker({
       type: "image",
       current: this.user.data.avatar,
       callback: path => {
@@ -18453,7 +18497,8 @@ class PlayerConfig extends FormApplication {
       },
       top: this.position.top + 40,
       left: this.position.left + 10
-    }).browse(this.user.data.avatar);
+    });
+    return fp.browse();
   }
 
   /* -------------------------------------------- */
@@ -23873,7 +23918,11 @@ class SetupConfigurationForm extends FormApplication {
     // Prepare Modules
     const modules = this.modules.map(m => {
       this.constructor.tagPackageAvailability(m);
-      m.dependencies = m.data.dependencies ? m.data.dependencies.map(d => d.name) : null;
+      const deps = (m.data?.dependencies ?? []).reduce((arr, d) => {
+        if ( d?.name ) arr.push(d.name);
+        return arr;
+      }, []);
+      m.dependencies = deps.length ? deps : null;
       return m;
     }).sort((a, b) => a.data.title.localeCompare(b.data.title));
 
@@ -30690,7 +30739,7 @@ class Actor extends Entity {
       try {
         if (prior && prior.has(i._id)) {
           item = prior.get(i._id);
-          item.data = i;
+          item._data = i;
           item.prepareData();
         }
         else item = Item.createOwned(i, this);
@@ -31125,7 +31174,8 @@ class Actor extends Entity {
     // Active effect updates
     if ( embeddedName === "ActiveEffect" ) {
       this.getActiveTokens().forEach(t => {
-        t.drawEffects();
+        t.drawEffects();    // Update active effect icons
+        t.drawBars();       // The active effect may have changed token bar values
         if ( t.inCombat ) ui.combat.render();
         if ( t.hasActiveHUD ) canvas.tokens.hud.render();
       });
@@ -31350,7 +31400,7 @@ class CombatEncounters extends EntityCollection {
    * @private
    */
   async _onDeleteToken(sceneId, tokenId) {
-    const combats = game.combats.entities.filter(c => c.data.sceneId === sceneId);
+    const combats = game.combats.entities.filter(c => c.data.scene === sceneId);
     for ( let c of combats ) {
       const combatants = c.data.combatants.filter(x => x.tokenId === tokenId).map(x => x._id);
       await c.deleteCombatant(combatants);
@@ -31547,7 +31597,7 @@ class Combat extends Entity {
    * @type {number}
    */
   get round() {
-    return this.data.round;
+    return Math.max(this.data.round, 0);
   }
 
   /* -------------------------------------------- */
@@ -31557,7 +31607,7 @@ class Combat extends Entity {
    * @type {number}
    */
   get turn() {
-    return this.data.turn;
+    return Math.max(this.data.turn, 0);
   }
 
   /* -------------------------------------------- */
@@ -32319,8 +32369,10 @@ class Item extends Entity {
 
   /** @override */
   prepareData() {
-    super.prepareData();
+    this.data = duplicate(this._data);
     if (!this.data.img) this.data.img = CONST.DEFAULT_TOKEN;
+    if (!this.data.name) this.data.name = "New " + this.entity;
+    this.prepareEmbeddedEntities();
   }
 
   /* -------------------------------------------- */
@@ -34867,7 +34919,7 @@ class Users extends EntityCollection {
     }
 
     // User control deactivation
-    if ( (active === false) || (user.viewedScene !== canvas.scene.id) ) {
+    if ( (active === false) || (user.viewedScene !== canvas?.scene.id) ) {
       canvas.controls.updateCursor(user, null);
       canvas.controls.updateRuler(user, null);
       user.updateTokenTargets([]);
@@ -36490,6 +36542,9 @@ class MouseInteractionManager {
   _handleMouseDown(event) {
     if ( ![this.states.HOVER, this.states.CLICKED, this.states.DRAG].includes(this.state) ) return;
 
+    // Only support standard left-click
+    if ( event.data.originalEvent.button !== 0 ) return;
+
     // Determine double vs single click
     const now = Date.now();
     const isDouble = (now - this.lcTime) <= 250;
@@ -36552,6 +36607,9 @@ class MouseInteractionManager {
    */
   _handleRightDown(event) {
     if ( ![this.states.HOVER, this.states.CLICKED, this.states.DRAG].includes(this.state) ) return;
+
+    // Only support standard left-click
+    if ( event.data.originalEvent.button !== 2 ) return;
 
     // Determine double vs single click
     const now = Date.now();
@@ -37508,15 +37566,18 @@ class PointSource {
 
   /**
    * Draw the display of this source for the darkness/light container of the SightLayer.
-   * @return {PIXI.Container}       The rendered light container
+   * @param {boolean} [updateChannels=false] Is this drawing initiated because lighting channels have changed?
+   * @return {PIXI.Container}         The rendered light container
    */
-  drawLight() {
-    if ( this._resetIlluminationUniforms ) {
+  drawLight({updateChannels=false}={}) {
+    const iu = this.illumination.shader.uniforms;
+    if ( this._resetIlluminationUniforms || updateChannels ) {
       const channels = canvas.lighting.channels;
-      const iu = this.illumination.shader.uniforms;
-      iu.ratio = this.ratio;
       iu.colorDim = this.darkness ? channels.dark.rgb : channels.dim.rgb;
       iu.colorBright = this.darkness ? channels.black.rgb : channels.bright.rgb;
+    }
+    if ( this._resetIlluminationUniforms ) {
+      iu.ratio = this.ratio;
       this._resetIlluminationUniforms = false;
     }
     return this._drawContainer(this.illumination);
@@ -38395,7 +38456,8 @@ class LightingLayer extends PlaceablesLayer {
    * @param darkness
    */
   refresh(darkness) {
-    this.darknessLevel = darkness = darkness ?? canvas.lighting.darknessLevel;
+    const darknessChanged = darkness && (darkness !== this.darknessLevel)
+    this.darknessLevel = darkness = darkness ?? this.darknessLevel;
     this.channels = this._configureChannels(darkness);
     let refreshVision = false;
 
@@ -38429,7 +38491,7 @@ class LightingLayer extends PlaceablesLayer {
         if ( !source.active ) continue;
 
         // Draw the light update
-        const sc = source.drawLight();
+        const sc = source.drawLight(darknessChanged);
         ilm.lights.addChild(sc);
         const color = source.drawColor();
         if ( color ) col.addChild(color);
@@ -40065,8 +40127,13 @@ class TilesLayer extends PlaceablesLayer {
     const dist = Math.min(Math.abs(dx), Math.abs(dy));
 
     // Update the preview object
-    preview.data.width = originalEvent.altKey ? dist * Math.sign(dx) : dx;
-    preview.data.height = originalEvent.altKey ? dist * Math.sign(dy) : dy;
+    preview.data.width = (originalEvent.altKey ? dist * Math.sign(dx) : dx);
+    preview.data.height = (originalEvent.altKey ? dist * Math.sign(dy) : dy);
+    if ( !originalEvent.shiftKey ) {
+      const half = canvas.dimensions.size / 2;
+      preview.data.width = preview.data.width.toNearest(half);
+      preview.data.height = preview.data.height.toNearest(half);
+    }
     preview.refresh();
 
     // Confirm the creation state
@@ -40083,6 +40150,8 @@ class TilesLayer extends PlaceablesLayer {
     // Require a minimum created size
     const distance = Math.hypot(preview.width, preview.height);
     if (distance < (canvas.dimensions.size / 2) ) return;
+    preview.data.width = Math.round(preview.data.width);
+    preview.data.height = Math.round(preview.data.height);
 
     // Render the preview sheet for confirmation
     preview.sheet.render(true);
@@ -41523,27 +41592,28 @@ class Drawing extends PlaceableObject {
    * @private
    */
   _refreshFrame({x, y, width, height}) {
-    let pad = 10;
-    let bc = 0x555555;
+
+    // Determine the border color
+    const colors = CONFIG.Canvas.dispositionColors;
+    let bc = colors.INACTIVE;
     if ( this._controlled ) {
-      bc = this.data.locked ? 0xE72124 : 0xFF9829;
+      bc = this.data.locked ? colors.HOSTILE : colors.CONTROLLED;
     }
 
     // Draw the border
+    const pad = 6;
+    const t = CONFIG.Canvas.objectBorderThickness;
+    const h = Math.round(t/2);
+    const o = Math.round(h/2) + pad;
     this.frame.border.clear()
-      .lineStyle(6.0, 0x000000).drawRect(x - pad, y - pad, width + (2*pad), height + (2*pad))
-      .lineStyle(2.0, bc).drawRect(x - pad, y - pad, width + (2*pad), height + (2*pad))
-      .beginFill(0x000000, 1.0)
-      .lineStyle(2.0, 0x00000)
-      .drawCircle(x - pad, y - pad, 6)
-      .drawCircle(x + width + pad, y - pad, 6)
-      .drawCircle(x - pad, y + height + pad, 6);
+      .lineStyle(t, 0x000000).drawRect(x - o, y - o, width + (2*o), height + (2*o))
+      .lineStyle(h, bc).drawRect(x - o, y - o, width + (2*o), height + (2*o))
 
     // Draw the handle
-    this.frame.handle.position.set(x + width + pad, y + height + pad);
+    this.frame.handle.position.set(x+width+o, y+height+o);
     this.frame.handle.clear()
-      .beginFill(0x000000, 1.0).lineStyle(4.0, 0x000000).drawCircle(0, 0, 10)
-      .lineStyle(3.0, bc).drawCircle(0, 0, 8);
+      .beginFill(0x000000, 1.0).lineStyle(h, 0x000000).drawCircle(0, 0, pad+h)
+      .lineStyle(h, bc).drawCircle(0, 0, pad);
     this.frame.visible = true;
   }
 
@@ -42987,13 +43057,15 @@ class MeasuredTemplate extends PlaceableObject {
 
   /**
    * Draw the Text label used for the MeasuredTemplate
-   * @return {PIXI.Text}
+   * @return {PreciseText}
    * @private
    */
   _drawRulerText() {
     const style = CONFIG.canvasTextStyle.clone();
     style.fontSize = Math.max(Math.round(canvas.dimensions.size * 0.36 * 12) / 12, 36);
-    return new PreciseText(null, style)
+    const text = new PreciseText(null, style);
+    text.anchor.set(0, 1);
+    return text;
   }
 
   /* -------------------------------------------- */
@@ -43164,7 +43236,7 @@ class MeasuredTemplate extends PlaceableObject {
       text = `${d}${u}`;
     }
     this.ruler.text = text;
-    this.ruler.position.set(this.ray.dx, this.ray.dy);
+    this.ruler.position.set(this.ray.dx + 10, this.ray.dy + 5);
   }
 
   /* -------------------------------------------- */
@@ -43342,15 +43414,20 @@ class Tile extends PlaceableObject {
    * @private
    */
   _cleanData() {
+
+    // Constrain dimensions
+    this.data.width = this.data.width.toNearest(0.1);
+    this.data.height = this.data.height.toNearest(0.1);
+
+    // Constrain canvas coordinates
+    if ( !canvas || !this.scene?.active ) return;
     const d = canvas.dimensions;
-    this.data.width = Math.round(this.data.width);
-    this.data.height = Math.round(this.data.height);
     const minX = 0 - (this.data.width - d.size);
     const minY = 0 - (this.data.height - d.size);
     const maxX = d.width - d.size;
     const maxY = d.height - d.size;
-    this.data.x = Math.clamped(Math.round(this.data.x), minX, maxX);
-    this.data.y = Math.clamped(Math.round(this.data.y), minY, maxY);
+    this.data.x = Math.clamped(this.data.x.toNearest(0.1), minX, maxX);
+    this.data.y = Math.clamped(this.data.y.toNearest(0.1), minY, maxY);
   }
 
   /* -------------------------------------------- */
@@ -43461,16 +43538,19 @@ class Tile extends PlaceableObject {
     const border = this.frame.border;
 
     // Determine border color
-    let bc = 0x555555;
+    const colors = CONFIG.Canvas.dispositionColors;
+    let bc = colors.INACTIVE;
     if ( this._controlled ) {
-      bc = this.data.locked ? 0xE72124 : 0xFF9829;
+      bc = this.data.locked ? colors.HOSTILE : colors.CONTROLLED;
     }
 
     // Draw the tile border
-    const p = 3;
+    const t = CONFIG.Canvas.objectBorderThickness;
+    const h = Math.round(t/2);
+    const o = Math.round(h/2);
     border.clear()
-      .lineStyle(6, 0x000000, 1.0).drawRoundedRect(b.x-p, b.y-p, b.width+(2*p), b.height+(2*p), 3)
-      .lineStyle(2, bc, 1.0).drawRoundedRect(b.x-p, b.y-p, b.width+(2*p), b.height+(2*p), 3);
+      .lineStyle(t, 0x000000, 1.0).drawRoundedRect(b.x-o, b.y-o, b.width+h, b.height+h, 3)
+      .lineStyle(h, bc, 1.0).drawRoundedRect(b.x-o, b.y-o, b.width+h, b.height+h, 3);
     border.visible = this._hover || this._controlled;
   }
 
@@ -43694,7 +43774,9 @@ class Tile extends PlaceableObject {
       x: 0,
       y: 0,
       rotation: 0,
-      z: 0
+      z: 0,
+      width: 0,
+      height: 0
     }, data));
     tile._controlled = true;
 
@@ -43822,9 +43904,13 @@ class Token extends PlaceableObject {
    * @private
    */
   _cleanData() {
+
+    // Constrain dimensions
     this.data.width = Math.max((this.data.width || 1).toNearest(0.5), 0.5);
     this.data.height = Math.max((this.data.height || 1).toNearest(0.5), 0.5);
-    if ( !canvas ) return;
+
+    // Constrain canvas coordinates
+    if ( !canvas || !this.scene?.active ) return;
     const d = canvas.dimensions;
     this.data.x = Math.clamped(Math.round(this.data.x), 0, d.width - this.w);
     this.data.y = Math.clamped(Math.round(this.data.y), 0, d.height - this.h);
@@ -44035,13 +44121,13 @@ class Token extends PlaceableObject {
     const origin = this.getSightOrigin();
     const sourceId = this.sourceId;
     const d = canvas.dimensions;
-    const maxR = canvas.lighting.globalLight ? Math.hypot(d.sceneWidth, d.sceneHeight) : null;
+    const maxR = Math.hypot(d.sceneWidth, d.sceneHeight);
 
     // Update light source
     const isLightSource = this.emitsLight && !this.data.hidden;
     if ( isLightSource && !deleted ) {
-      const bright = this.getLightRadius(this.data.brightLight);
-      const dim = this.getLightRadius(this.data.dimLight);
+      const bright = Math.min(this.getLightRadius(this.data.brightLight), maxR);
+      const dim = Math.min(this.getLightRadius(this.data.dimLight), maxR);
       this.light.initialize({
         x: origin.x,
         y: origin.y,
@@ -44067,9 +44153,9 @@ class Token extends PlaceableObject {
     // Update vision source
     const isVisionSource = this._isVisionSource();
     if ( isVisionSource && !deleted ) {
-      let dim =  maxR ?? this.getLightRadius(this.data.dimSight);
-      const bright = this.getLightRadius(this.data.brightSight);
-      if ((dim === 0) && (bright === 0)) dim = d.size * 0.6;
+      let dim =  canvas.lighting.globalLight ? maxR : Math.min(this.getLightRadius(this.data.dimSight), maxR);
+      const bright = Math.min(this.getLightRadius(this.data.brightSight), maxR);
+      if ((dim === 0) && (bright === 0)) dim = Math.min(this.w, this.h) * 0.5;
       this.vision.initialize({
         x: origin.x,
         y: origin.y,
@@ -44248,21 +44334,23 @@ class Token extends PlaceableObject {
     this.border.clear();
     const borderColor = this._getBorderColor();
     if( !borderColor ) return;
+    const t = CONFIG.Canvas.objectBorderThickness;
 
     // Draw Hex border for size 1 tokens on a hex grid
-    const {width, height} = this.data;
     const gt = CONST.GRID_TYPES;
     const hexTypes = [gt.HEXEVENQ, gt.HEXEVENR, gt.HEXODDQ, gt.HEXODDR];
-    if ( hexTypes.includes(canvas.grid.type) && (width === 1) && (height ===1) ) {
+    if ( hexTypes.includes(canvas.grid.type) && (this.data.width === 1) && (this.data.height === 1) ) {
       const polygon = canvas.grid.grid.getPolygon(-1, -1, this.w+2, this.h+2);
-      this.border.lineStyle(4, 0x000000, 0.8).drawPolygon(polygon);
-      this.border.lineStyle(2, borderColor || 0xFF9829, 1.0).drawPolygon(polygon);
+      this.border.lineStyle(t, 0x000000, 0.8).drawPolygon(polygon);
+      this.border.lineStyle(t/2, borderColor, 1.0).drawPolygon(polygon);
     }
 
     // Otherwise Draw Square border
     else {
-      this.border.lineStyle(4, 0x000000, 0.8).drawRoundedRect(-1, -1, this.w+2, this.h+2, 3);
-      this.border.lineStyle(2, borderColor || 0xFF9829, 1.0).drawRoundedRect(-1, -1, this.w+2, this.h+2, 3);
+      const h = Math.round(t/2);
+      const o = Math.round(h/2);
+      this.border.lineStyle(t, 0x000000, 0.8).drawRoundedRect(-o, -o, this.w+h, this.h+h, 3);
+      this.border.lineStyle(h, borderColor, 1.0).drawRoundedRect(-o, -o, this.w+h, this.h+h, 3);
     }
   }
 
@@ -44270,18 +44358,19 @@ class Token extends PlaceableObject {
 
   /**
    * Get the hex color that should be used to render the Token border
-   * @return {*}
+   * @return {number}   The hex color used to depict the border color
    * @private
    */
   _getBorderColor() {
-    if ( this._controlled ) return 0xFF9829;                    // Controlled
+    const colors = CONFIG.Canvas.dispositionColors;
+    if ( this._controlled ) return colors.CONTROLLED;
     else if ( this._hover ) {
       let d = parseInt(this.data.disposition);
-      if (!game.user.isGM && this.owner) return 0xFF9829;       // Owner
-      else if (this.actor?.hasPlayerOwner) return 0x33BC4E;     // Party Member
-      else if (d === 1) return 0x43DFDF;                        // Friendly NPC
-      else if (d === 0) return 0xF1D836;                        // Neutral NPC
-      else return 0xE72124;                                     // Hostile NPC
+      if (!game.user.isGM && this.owner) return colors.CONTROLLED;
+      else if (this.actor?.hasPlayerOwner) return colors.PARTY;
+      else if (d === CONST.TOKEN_DISPLAY_MODES.FRIENDLY) return colors.FRIENDLY;
+      else if (d === CONST.TOKEN_DISPLAY_MODES.NEUTRAL) return colors.NEUTRAL;
+      else return colors.HOSTILE;
     }
     else return null;
   }
@@ -44543,8 +44632,9 @@ class Token extends PlaceableObject {
     let tex = await loadTexture(src);
     let icon = this.effects.addChild(new PIXI.Sprite(tex));
     icon.width = icon.height = w;
-    icon.x = Math.floor(i / 5) * w;
-    icon.y = (i % 5) * w;
+    const nr = Math.floor(this.data.height * 5);
+    icon.x = Math.floor(i / nr) * w;
+    icon.y = (i % nr) * w;
     if ( tint ) icon.tint = tint;
     bg.drawRoundedRect(icon.x + 1, icon.y + 1, w - 2, w - 2, 2);
     this.effects.addChild(icon);
@@ -45082,7 +45172,7 @@ class Token extends PlaceableObject {
     let perspectiveChange = changed.has("vision") ||
       ((this.data.vision || this.emitsLight) && (visibilityChange || positionChange || rotationChange)) ||
       (this.data.vision && ["dimSight", "brightSight", "sightAngle"].some(k => changed.has(k))) ||
-      ["dimLight", "brightLight", "lightAlpha", "lightAngle", "lightColor", "lightAnimation"].some(k => changed.has(k));
+      ["dimLight", "brightLight", "lightAlpha", "lightAngle", "lightColor", "lightAnimation", "width", "height"].some(k => changed.has(k));
     if ( perspectiveChange ) {
       const animating = positionChange && (options.animate !== false);
       if ( !animating ) {
@@ -45915,11 +46005,16 @@ class Wall extends PlaceableObject {
 
     // Re-draw door icons
     if ( doorChange ) {
-      if ( this.data.door !== CONST.WALL_DOOR_TYPES.NONE ) {
+      const dt = this.data.door;
+      const hasCtrl = (dt === CONST.WALL_DOOR_TYPES.DOOR) || ((dt === CONST.WALL_DOOR_TYPES.SECRET) && game.user.isGM);
+      if ( hasCtrl ) {
         if ( this.doorControl ) this.doorControl.draw();
         else canvas.controls.createDoorControl(this);
       }
-      else if ( this.doorControl ) this.doorControl.parent.removeChild(this.doorControl);
+      else if ( this.doorControl ) {
+        this.doorControl.parent.removeChild(this.doorControl);
+        this.doorControl = null;
+      }
     }
 
     // Re-initialize perception
@@ -47411,11 +47506,11 @@ class DoorControl extends PIXI.Container {
   /**
    * Determine whether the DoorControl is visible to the calling user's perspective.
    * The control is always visible if the user is a GM and no Tokens are controlled.
-   *
    * @see {SightLayer#testVisibility}
    * @type {boolean}
    */
   get isVisible() {
+    if ( (this.wall.data.door === CONST.WALL_DOOR_TYPES.SECRET) && !game.user.isGM ) return false;
     const [x, y] = this.wall.midpoint;
     const point = new PIXI.Point(x, y);
     return canvas.sight.testVisibility(point, {tolerance: 2, object: this});
@@ -48874,10 +48969,6 @@ class HexagonalGrid extends BaseGrid {
     // Draw hex rows
     if ( columns ) this._drawColumns(grid, nrows, ncols);
     else this._drawRows(grid, nrows, ncols);
-
-    // TODO - Temporary PIXI v5 hack for graphics batching overflow (https://github.com/pixijs/pixi.js/issues/6047)
-    grid.geometry.updateBatches();
-    grid.geometry._indexBuffer.update(new Uint32Array(grid.geometry.indices));
     return grid;
   }
 
@@ -49323,6 +49414,15 @@ class GridLayer extends CanvasLayer {
    */
   get h() {
     return this.grid.h;
+  }
+
+  /**
+   * A boolean flag for whether the current grid is hexagonal
+   * @type {boolean}
+   */
+  get isHex() {
+    const gt = CONST.GRID_TYPES;
+    return [gt.HEXODDQ, gt.HEXEVENQ, gt.HEXODDR, gt.HEXEVENR].includes(this.type);
   }
 
   /* -------------------------------------------- */
@@ -51319,6 +51419,14 @@ const CONFIG = window.CONFIG = {
     darknessColor: 0x242448,
     darknessLightPenalty: 0.4,
     daylightColor: 0xEEEEEE,
+    dispositionColors: {
+      HOSTILE: 0xE72124,
+      NEUTRAL: 0xF1D836,
+      FRIENDLY: 0x43DFDF,
+      INACTIVE: 0x555555,
+      PARTY: 0x33BC4E,
+      CONTROLLED: 0xFF9829
+    },
     exploredColor: 0x7f7f7f,
     unexploredColor: 0x000000,
     lightLevels: {
@@ -51328,6 +51436,7 @@ const CONFIG = window.CONFIG = {
     },
     normalLightColor: 0xb86200,
     maxZoom: 3.0,
+    objectBorderThickness: 4,
     lightAnimations: {
       "torch": {
         label: "LIGHT.AnimationTorch",

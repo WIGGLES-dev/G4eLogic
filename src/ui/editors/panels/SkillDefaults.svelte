@@ -2,10 +2,9 @@
     import Boxes from "@components/semantic-boxes/Boxes.svelte";
     import Box from "@components/semantic-boxes/Box.svelte";
     import AttributeOptions from "@ui/options/AttributeOptions.svelte";
-
-    import { Resource, SkillDefault } from "@internal";
-    export let entity: Resource;
+    import { SkillDefault } from "@app/gurps/resources/skill";
     export let defaults: SkillDefault[] = [];
+    export let attributes = [];
     function addDefault() {
         defaults = [...defaults, {} as SkillDefault];
     }
@@ -14,11 +13,11 @@
     }
 </script>
 
-<Boxes on:addbox={addDefault}>
+<Boxes on:addbox={addDefault} showInitialAdder={defaults.length === 0}>
     {#each defaults as skillDefault, i (i)}
         <Box on:addbox={addDefault} on:deletebox={() => removeDefault(i)}>
             <fieldset>
-                <AttributeOptions {entity} bind:attribute={skillDefault.type}>
+                <AttributeOptions bind:attribute={skillDefault.type}>
                     <option value="Skill">Skill Named</option>
                 </AttributeOptions>
                 {#if skillDefault.type !== "Skill"}

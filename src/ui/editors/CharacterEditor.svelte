@@ -1,5 +1,6 @@
 <script context="module" lang="ts">
   import { setContext } from "svelte";
+  import { State } from "rxdeep";
   import { Tabs, Tab, TabPanel, TabList } from "@components/Tabs/tabs";
   import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
   import Traits from "@ui/layouts/Traits.svelte";
@@ -10,11 +11,15 @@
   import General from "@ui/layouts/General.svelte";
   import Grimoire from "@ui/layouts/Grimoire.svelte";
   import Combat from "@ui/layouts/Combat.svelte";
-  import { System, Character } from "@internal";
+  import { System } from "@internal";
 </script>
 
 <script lang="ts">
-  export let entity: Character;
+  import { mergeMap } from "rxjs/operators";
+  import { from, using } from "rxjs";
+  import { releaseProxy } from "comlink";
+  import { withComlinkProxy } from "@app/utils/operators";
+  export let entity: State<CharacterData>;
   setContext("sheet", entity);
 </script>
 
@@ -28,7 +33,7 @@
     <Tab>Bio</Tab>
     <Tab>Notes</Tab>
     <Tab>Grimoire</Tab>
-    <Tab><span class="fas fa-cogs" /></Tab>
+    <Tab>Settings</Tab>
   </TabList>
   <TabPanel component={General} />
   <TabPanel component={Combat} />
@@ -37,7 +42,7 @@
   <TabPanel component={Traits} />
   <TabPanel component={Bio} />
   <TabPanel>
-    <ProseMirror bind:content={$entity.notes} />
+    <ProseMirror bind:content={$entity["notes"]} />
   </TabPanel>
   <TabPanel component={Grimoire} />
   <TabPanel component={Settings} />

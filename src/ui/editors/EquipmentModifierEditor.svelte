@@ -3,7 +3,7 @@
     EquipmentModifierWeightType,
     EquipmentModifierWeightValueType,
     EquipmentModifierCostValueType,
-  } from "@internal";
+  } from "@app/gurps/resources/equipment";
 </script>
 
 <script lang="ts">

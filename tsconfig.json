@@ -29,16 +29,25 @@
         "baseUrl": "./",
         "paths": {
             "@assets/*": [
-                "./assets/*"
+                "./static/assets/*"
             ],
             "@internal": [
                 "./src/internal.ts"
+            ],
+            "@app/*": [
+                "./src/*"
             ],
             "@ui/*": [
                 "./src/ui/*"
             ],
             "@components/*": [
                 "./src/components/*"
+            ],
+            "@utils/*": [
+                "./src/utils/*"
+            ],
+            "@plugins/*": [
+                "./src/plugins/*"
             ]
         }
     },

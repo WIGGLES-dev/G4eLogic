@@ -1,8 +1,17 @@
 declare module 'worker-loader!*' {
-    class WebpackWorker extends Worker {
-        constructor();
+    export class WebpackWorker extends Worker {
+        constructor()
     }
-    export default WebpackWorker;
+}
+declare module '*!shared-worker' {
+    export default class WebpackSharedWorker extends SharedWorker {
+        constructor()
+    }
+}
+declare module '*!worker' {
+    export class WebpackWorker extends Worker {
+        constructor()
+    }
 }
 declare module '*.png' {
     const value: string

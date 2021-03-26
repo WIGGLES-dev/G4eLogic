@@ -10,9 +10,18 @@ declare const ItemSheet: any
 declare const Items: any
 declare const Item: any
 declare const Hooks: any
-
+declare class SidebarDirectory {
+    constructor()
+    private _onDragStart(event: DragEvent)
+}
+declare class Roll {
+    constructor()
+    static create(...args)
+}
 declare function duplicate<T>(data: T): T
 declare function mergeObject<T, D>(i: T, merge: D, options?: any): T & D
+declare function fromUuid(uuid: string): any
+declare function randomID(length?: number): string
 declare interface BaseData<T extends string = string, D = any> {
     data: D,
     effects: any[]
@@ -26,19 +35,6 @@ declare interface BaseData<T extends string = string, D = any> {
     _id: string
 }
 declare interface BaseTokenData { }
-declare enum FoundryHooks {
-    DeleteActor = "deleteActor",
-    CreateActor = "createActor",
-    UpdateActor = "updateActor",
-    DeleteItem = "deleteItem",
-    CreateItem = "createItem",
-    UpdateItem = "updateItem",
-    DeleteOwnedItem = "deleteOwnedItem",
-    CreateOwnedItem = "createOwnedItem",
-    UpdateOwnedItem = "updateOwnedItem",
-    RenderActorSheet = "renderActorSheet",
-    RenderItemSheet = "renderItemSheet"
-}
 declare type UpdateEntityHookParams<D extends BaseData = BaseData> = [entity: D, changes: Partial<D> & Pick<BaseData, "_id">, options: any, id: string]
 declare type DeleteEntityHookParams<D extends BaseData = BaseData> = [entity: D, applications: any, id: string]
 declare type CreateEntityHookParams<D extends BaseData = BaseData> = [entity: D, options: any, id: string]
@@ -52,10 +48,6 @@ declare type HookTuples =
     UpdateEmbeddedEntityHookParams |
     DeleteEmbeddedEntityHookParams |
     CreateEmbeddedEntityHookParams
-declare interface FoundryEvent {
-    type: FoundryHooks,
-    data: HookTuples
-}
 
 declare type createData = Partial<BaseData> & Pick<BaseData, "name" | "type">
 declare type updateData = Partial<BaseData> & Pick<BaseData, "_id" | "data">

@@ -1,10 +1,6 @@
-import {
-    Data,
-    SkillLikeKeys,
-    SkillLike,
-    GResource,
-    staticImplements
-} from '@internal'
+import type { Data } from "@app/entity"
+import type { SkillLikeKeys } from "./skill"
+
 export interface SpellData extends Data, SkillLikeKeys {
     type: "spell"
     version: 1
@@ -21,10 +17,10 @@ export interface SpellData extends Data, SkillLikeKeys {
     duration?: string
 }
 
-export class Spell extends SkillLike<SpellData> {
+export class Spell {
     static type = 'spell' as const
     static version = 1 as const
-    constructor(state: Spell["state"]) {
-        super(state);
-    }
+    // constructor(state: Spell["state"]) {
+    //     super(state);
+    // }
 }

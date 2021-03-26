@@ -40,12 +40,14 @@
   .ProseMirror {
       @apply w-full p-2 max-h-full overflow-auto;
       height: 800px;
-      ol>li {
-          @apply list-decimal;
-      }
-      ul>li {
-          @apply list-disc;
-      }
+  }
+  
+  .ProseMirror>ol>li {
+      @apply list-decimal;
+  }
+  
+  .ProseMirror>ul>li {
+      @apply list-disc;
   }
   
   .fas {
@@ -53,7 +55,7 @@
   }
   
   body {
-      @apply h-screen flex flex-col;
+      @apply h-screen flex flex-col bg-white;
   }
   
   label {
@@ -76,7 +78,7 @@
   }
   
   th {
-      @apply px-2 font-normal underline;
+      @apply px-2 font-normal text-sm;
   }
   
   table>tbody>tr>td {

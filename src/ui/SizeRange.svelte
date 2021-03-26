@@ -1,6 +1,5 @@
 <script>
     import { SSRT } from "gurps-foundry-ssrt-lib/src/js/SSRT";
-
     const measures = [
         "2 inch",
         "3 inch",
@@ -29,15 +28,6 @@
     ];
 </script>
 
-<style>
-    tbody tr:nth-child(even) {
-        @apply bg-gray-100;
-    }
-    table {
-        @apply m-0;
-    }
-</style>
-
 <section>
     <table>
         <thead>
@@ -60,3 +50,12 @@
         </tbody>
     </table>
 </section>
+
+<style>
+    tbody tr:nth-child(even) {
+        @apply bg-gray-100;
+    }
+    table {
+        @apply m-0;
+    }
+</style>

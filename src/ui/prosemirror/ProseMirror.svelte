@@ -48,9 +48,8 @@
     });
 </script>
 
-<script lang='ts'>
+<script>
     import { onMount } from "svelte";
-    import { transplant } from "@internal";
     import ProsemirrorEditor from "prosemirror-svelte";
     import { toJSON, fromJSON } from "prosemirror-svelte/state";
 
@@ -92,15 +91,13 @@
     });
 </script>
 
-<style>
-</style>
-
 <svelte:window
     on:keydown|capture={(e) => {
         if (view.hasFocus()) {
             e.stopImmediatePropagation();
         }
-    }} />
+    }}
+/>
 
 <ProsemirrorEditor
     debounceChangeEventsInterval={2000}
@@ -108,4 +105,8 @@
     bind:this={prosemirror}
     placeholder="Go ahead and type something"
     {editorState}
-    on:change={handleChange} />
+    on:change={handleChange}
+/>
+
+<style>
+</style>
