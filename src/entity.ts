@@ -2,6 +2,7 @@ import { db } from "@app/database";
 import deepmerge from "deepmerge";
 import { proxy } from "comlink";
 import { merge } from "object-mapper";
+import { getPath, getValueAtPath } from "@utils/object";
 export interface Ident {
     rootId?: string
     id: string
@@ -25,28 +26,42 @@ export interface Data extends Record<string, any>, Ident {
     metadata: MetaData
 }
 export class Entity<V extends Data, R extends Data = V> {
-    value: V
+    #value: V
     root: R
     constructor(value: V, root?: R) {
-        this.value = value;
+        this.#value = value;
         this.root = root || value as unknown as R;
     }
     get enabled() {
-        return this?.value?.metadata?.enabled
+        return this?.getValue()?.metadata?.enabled
     }
     get id() {
-        return this.value?.id
+        return this.getValue()?.id
     }
     get type() {
-        return this?.value?.type
+        return this?.getValue()?.type
+    }
+    get path() {
+        return getPath(this.root, v => v.id === this.id)
+    }
+    get name() {
+        return this.getValue()?.name
+    }
+    get parent() {
+        const path = this.path;
+        const length = path.length;
+        const parentPath = path.slice(0, -3);
+        const parentValue = getValueAtPath(this.root, parentPath);
+        return new Entity(parentValue, this.root);
+    }
+    get parentId() {
+        return this.parent.id
     }
     getType() {
-        console.log("GETTING TYPE");
         return this.type
     }
     getValue() {
-        console.log("GETTING VALUE");
-        return this.value
+        return this.#value
     }
     private static hashEmbedded<R extends Data = Data>(root: R, start: Data = root, maxDepth = Number.POSITIVE_INFINITY) {
         let currentDepth: number = 0;
@@ -56,7 +71,7 @@ export class Entity<V extends Data, R extends Data = V> {
             for (const [type, data] of Object.entries(children)) {
                 for (const child of data) {
                     embeds[child.id] = new Entity<Data, R>(child, root);
-                    if (currentDepth++ > maxDepth) descend(child);
+                    if (currentDepth++ < maxDepth) descend(child);
                 }
             }
         }
@@ -66,20 +81,20 @@ export class Entity<V extends Data, R extends Data = V> {
     getRootEmbeds() {
         return Entity.hashEmbedded(this.root);
     }
-    getEmbeds() {
-        return Entity.hashEmbedded(this.root, this.value);
+    getEmbeds(maxDepth?) {
+        return Entity.hashEmbedded(this.root, this.getValue(), maxDepth);
     }
-    getEmbedded(id: string) {
-        return Entity.hashEmbedded(this.root, this.value)[id];
+    getEmbedded(id: string, maxDepth?) {
+        return Entity.hashEmbedded(this.root, this.getValue(), maxDepth)[id];
     }
     getChildren() {
-        return Entity.hashEmbedded(this.root, this.value, 1);
+        return Entity.hashEmbedded(this.root, this.getValue(), 1);
     }
     getFeatures() {
         const root = new Entity<R>(this.root);
         const embedded = root.getRootEmbeds();
         const activeEmbeds: Entity<Data, R>[] = Object.values(embedded).filter(entity => !!entity.enabled)
-        const features = activeEmbeds.flatMap(entity => entity.value.features).filter(v => !!v);
+        const features = activeEmbeds.flatMap(entity => entity.getValue()?.features).filter(v => !!v);
         return features
     }
     async update(value) { }
@@ -88,13 +103,4 @@ export class Entity<V extends Data, R extends Data = V> {
     }
     subscribe() { }
     unsubscribe() { }
-    map(typeMap, nestfunc) {
-        const nodes = this.getEmbeds();
-        const transformed = {};
-        for (const [id, entity] of Object.entries(nodes)) {
-            const map = typeMap[entity.type];
-            if (!map) continue;
-            transformed[id] = merge(entity.value, map);
-        }
-    }
 }

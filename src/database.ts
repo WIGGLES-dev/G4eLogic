@@ -20,10 +20,6 @@ export async function fetchRecord<T extends Record<string, any>>(tableName: stri
     const downstream: Subject<Change<T>> = new Subject<Change<T>>();
     const upstream = {
         async next(change) {
-            // if (JSON.stringify(change?.value) === JSON.stringify(state?.value)) {
-            //     console.log("NO CHANGE");
-            //     return
-            // }
             change.value = stamp(change.value);
             downstream.next(change);
             update(tableName, key, change.value);

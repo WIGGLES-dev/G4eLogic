@@ -1,17 +1,23 @@
 <script context="module" lang="ts">
     import { reduce, map, pluck, mergeMap, tap } from "rxjs/operators";
-    import { combineLatest, EMPTY, from } from "rxjs";
+    import { combineLatest, EMPTY, from, pipe } from "rxjs";
+    import { withComlinkProxy } from "@utils/operators";
     import { bind, fragment } from "@utils/use";
     import ResourceTable from "@ui/DataTable.svelte";
     import Value from "@components/Value.svelte";
     import Leaf from "@components/Tree/Leaf.svelte";
     import Toggle from "@components/Toggle.svelte";
     import TechniqueEditor from "@ui/editors/TechniqueEditor.svelte";
-    import AttributeOptions from "@ui/options/AttributeOptions";
+    import AttributeOptions from "@ui/options/AttributeOptions.svelte";
+   
 </script>
 
 <script lang="ts">
+    import { System } from "@internal";
+    import { Technique as TechniqueWorker } from "@app/gurps/resources/technique";
     export let character;
+    const Technique = System.getWorker<typeof TechniqueWorker>("technique");
+    const makeTechnique = pipe(withComlinkProxy((t) => new Technique(t, $character)));
 </script>
 
 <ResourceTable type="technique" root={character} let:node let:children>
@@ -48,13 +54,19 @@
         <input type="number" use:bind={node.state.sub("mod")} />
     </td>
     <td>
-        <Value value={node.state["relativeLevel$"]} let:value>
+        <Value value={node.state.pipe(
+            makeTechnique,
+            mergeMap(t => t["getRelativeLevel"]())
+        )} let:value>
             {value}
         </Value>
     </td>
 
     <td>
-        <Value value={node.state["level$"]} let:value>
+        <Value value={node.state.pipe(
+            makeTechnique,
+            mergeMap(t => t["getLevel"]())
+        )} let:value>
             {value}
         </Value>
     </td>

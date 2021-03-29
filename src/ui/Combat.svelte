@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext } from "svelte";
+  import { getContext, onMount, onDestroy } from "svelte";
   import { tooltip } from "@ui/utils/use";
   import {
     sizeModifierTooltip,
@@ -15,7 +15,7 @@
   const state = getContext<State<any>>("sheet");
   const character$ = getContext<Observable<Remote<CharacterWorker>>>("worker");
   const swingDamage$ = character$.pipe(mergeMap((c) => c.getSwingDamage()));
-  const thrustDamage$ = character$.pipe(mergeMap((c) => c.getThrustDamage()));
+  const thrustDamage$ = character$.pipe(mergeMap(c => c.getThrustDamage()));
   const sm$ = state.sub("profile", "sizeModifier");
 </script>
 

@@ -4,7 +4,6 @@
   import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
   import Features from "./panels/Features.svelte";
   import Weapon from "@ui/datatables/Weapon.svelte";
-  import TraitModifiers from "./panels/TraitModifiers.svelte";
   import { ControlRating } from "@app/gurps/resources/trait";
 </script>
 
@@ -12,7 +11,6 @@
   import { getContext } from "svelte";
   import { map, mergeMap, pluck, startWith } from "rxjs/operators";
   import { from, Observable } from "rxjs";
-  import { load } from "js-yaml";
   export let entity;
   const state = getContext<Observable<any>>("sheet");
   const enabled$ = entity.sub("metadata", "enabled");
@@ -24,7 +22,7 @@
     <Tab>Trait Data</Tab>
     <Tab disabled={true}>Prerequisites</Tab>
     <Tab>Features</Tab>
-    <Tab>Modifiers</Tab>
+    <Tab disabled={true}>Modifiers</Tab>
     <Tab>Melee Weapons</Tab>
     <Tab>Ranged Weapons</Tab>
     <Tab>User Description</Tab>
@@ -128,9 +126,7 @@
     <Features bind:features={$features$} />
   </TabPanel>
   <TabPanel>
-    <!-- <TraitModifiers>
-      
-    </TraitModifiers> -->
+    <!-- MODIFIERS -->
   </TabPanel>
   <TabPanel>
     <Weapon root={entity} type="melee weapon" />

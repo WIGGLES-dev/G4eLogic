@@ -1,5 +1,5 @@
 import type { Data } from "@app/entity";
-import type { SkillLikeKeys, SkillDefault } from "./skill";
+import { SkillLike, SkillLikeKeys, SkillDefault } from "./skill";
 import { SkillDifficulty } from "./skill";
 export type TechniqueDifficulty = SkillDifficulty.Average | SkillDifficulty.Hard;
 export interface TechniqueData extends Data, SkillLikeKeys {
@@ -11,15 +11,26 @@ export interface TechniqueData extends Data, SkillLikeKeys {
     defaults: undefined
 }
 
-export class Technique {
+export class Technique extends SkillLike<TechniqueData> {
     static type = 'technique' as const
     static version = 1 as const
-    // constructor(state: Technique["state"]) {
-    //     super(state);
-    // }
-    // get level$(): Observable<number> {
-    //     return from([0])
-    // }
+    constructor(technique, character) {
+        super(technique, character);
+    }
+    get defaults() {
+        const df = this.getValue()?.default;
+        return df ? [df] : []
+    }
+    get level() {
+        const value = this.getValue();
+        const bonus = this.bonus
+        const baseLevel = this.getHighestDefault();
+        return calculateTechniqueLevel(
+            value,
+            baseLevel,
+            bonus
+        );
+    }
 }
 export function calculateTechniqueLevel(
     technique: TechniqueData,

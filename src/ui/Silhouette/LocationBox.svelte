@@ -26,7 +26,7 @@
         @apply bg-gray-700 text-white text-center text-xs max-w-full truncate;
     }
     .location-name {
-        @apply break-all text-lg;
+        @apply break-all;
     }
     .location.crippled {
         @apply bg-red-700;

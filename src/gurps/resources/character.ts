@@ -6,6 +6,7 @@ import { Gurps } from "./characterFunctions";
 import { Skill } from "./skill";
 import { Trait, sumTraitArray, split, TraitData, TraitCategory } from "./trait";
 import { Equipment } from "./equipment";
+import { MeleeWeapon, RangedWeapon } from "./weapon";
 export interface CharacterData extends Data {
     version: typeof Character["version"]
     type: typeof Character["type"]
@@ -70,15 +71,26 @@ export class Character extends Entity<CharacterData> {
     constructor(character: CharacterData) {
         super(character);
     }
-    getWeapons() { }
-    getRangedWeapons() { }
-    getMeleeWeapons() { }
+    getWeapons(maxDepth?) {
+        return [...this.getRangedWeapons(maxDepth), ...this.getMeleeWeapons(maxDepth)]
+    }
+    getRangedWeapons(maxDepth?) {
+        const embeds = this.getEmbeds(maxDepth);
+        return Object.values(embeds)
+            .filter(e => e.type === "ranged weapon")
+            .map(e => new RangedWeapon(e.getValue(), e.root))
+    }
+    getMeleeWeapons(maxDepth?) {
+        const embeds = this.getEmbeds(maxDepth)
+        return Object.values(embeds)
+            .filter(e => e.type === "melee weapon")
+            .map(e => new MeleeWeapon(e.getValue(), e.root))
+    }
     getCarriedWeight() {
-        return Object.values(this.getEmbeds())
-            .filter(entity => entity.type === "equipment")
-            .map(entity => new Equipment(entity.value, entity.root))
-            .reduce((weight, item) => weight + item.eWeight, 0)
-        return 0
+        return Object.values(this.getChildren())
+            .filter(e => e.type === "equipment" && e.enabled)
+            .map(entity => new Equipment(entity.getValue(), entity.root))
+            .reduce((weight, item) => weight + item.containedWeight, 0)
     }
     getEncumbranceLevel() {
         const bl = this.getBasicLift();
@@ -111,7 +123,7 @@ export class Character extends Entity<CharacterData> {
                     attributeOrder
                 }
             }
-        } = this.value;
+        } = this.getValue();
         return attributeOrder
     }
     getOrderedPools() {
@@ -121,11 +133,11 @@ export class Character extends Entity<CharacterData> {
                     poolOrder
                 }
             }
-        } = this.value;
+        } = this.getValue();
         return poolOrder
     }
     getHitLocationCollection() {
-        return createHitLocationCollection(this.value)
+        return createHitLocationCollection(this.getValue())
     }
     getSwingDamage() { return Gurps.getSwingDamage(this.getAttribute("striking strength").level) }
     getThrustDamage() { return Gurps.getThrustDamage(this.getAttribute("striking strength").level) }
@@ -133,14 +145,14 @@ export class Character extends Entity<CharacterData> {
     getPointTotal() {
         const sumSkills = (tot, s) => tot + s.points;
         const embeds = Object.values(this.getEmbeds());
-        const total = this.value.pointTotal;
+        const total = this.getValue().pointTotal;
         const attributePoints = Object.values(this.getAttributeCollection()).reduce(
             (points, attribute) => points + (attribute.pointsSpent || 0), 0
         );
-        const skills = embeds.map(entity => entity.value).filter(data => data.type === "skill").reduce(sumSkills, 0);
-        const techniques = embeds.map(entity => entity.value).filter(data => data.type === "technique").reduce(sumSkills, 0);
-        const spells = embeds.map(entity => entity.value).filter(data => data.type === "spell").reduce(sumSkills, 0);
-        const traits = split(embeds.map(entity => entity.value).filter((data): data is TraitData => data.type === "trait"));
+        const skills = embeds.map(entity => entity.getValue()).filter(data => data.type === "skill").reduce(sumSkills, 0);
+        const techniques = embeds.map(entity => entity.getValue()).filter(data => data.type === "technique").reduce(sumSkills, 0);
+        const spells = embeds.map(entity => entity.getValue()).filter(data => data.type === "spell").reduce(sumSkills, 0);
+        const traits = split(embeds.map(entity => entity.getValue()).filter((data): data is TraitData => data.type === "trait"));
         const racialPoints = sumTraitArray(traits[TraitCategory.Racial]);
         const advantages = sumTraitArray(traits[TraitCategory.Advantage]);
         const perks = sumTraitArray(traits[TraitCategory.Perk]);

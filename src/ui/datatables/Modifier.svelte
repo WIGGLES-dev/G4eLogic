@@ -1,10 +1,7 @@
 <script context="module" lang="ts">
     import { fragment, bind } from "@utils/use";
     import DataTable from "@ui/DataTable.svelte";
-    import Value from "@components/Value.svelte";
     import Leaf from "@components/Tree/Leaf.svelte";
-    import MeleeWeaponEditor from "@ui/editors/MeleeWeaponEditor.svelte";
-    import RangedWeaponEditor from "@ui/editors/RangedWeaponEditor.svelte";
 </script>
 
 <script lang="ts">
@@ -16,8 +13,13 @@
     <tr slot="thead">
         <td />
         <th>Enabled</th>
-        <th>Modifier</th>
-        <th>Cost Modifier</th>
+        <th class="w-full">Modifier</th>
+        {#if type === "equipment modifier"}
+            <th>Cost Adjustment</th>
+            <th>Weight Adjustment</th>
+        {:else if type === "trait modifier"}
+            <th>Cost Modifier</th>
+        {/if}
         <th>Ref</th>
     </tr>
     <td>
@@ -26,7 +28,19 @@
             use:bind={node.state.sub("metadata", "enabled")}
         />
     </td>
-    <Leaf sub="name" />
+    <Leaf sub="name" class="table-cell"/>
+    {#if type === "equipment modifier"}
+        <td>
+            <!--  -->
+        </td>    
+        <td>
+            <!--  -->
+        </td> 
+    {:else if type === "trait modifier"}
+        <td>
+            <!--  -->
+        </td>
+    {/if}
     <td>
         <!-- Cost Modifier -->
     </td>

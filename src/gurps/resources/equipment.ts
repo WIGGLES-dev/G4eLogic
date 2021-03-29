@@ -22,28 +22,32 @@ export class Equipment extends Entity<EquipmentData, CharacterData> {
         return this.enabled
     }
     get quantity() {
-        return this.value.quantity;
+        return this.getValue()?.quantity;
     }
-    get _value() {
-        return this.value.value;
+    get value() {
+        return this.getValue()?.value;
     }
     get weight() {
-        return this.value.weight;
+        return this.getValue()?.weight;
     }
     get eValue() {
-        return this.quantity * this._value;
+        return this.quantity * this.value;
     }
     get eWeight() {
         return this.quantity * this.weight
     }
     get containedValue() {
-        const children = Object.values(this.getEmbeds()).filter(e => e.type === "equipment").map(e => new Equipment(e.value, this.root))
+        const children = Object.values(this.getEmbeds())
+            .filter(e => e.type === "equipment" && e.enabled)
+            .map(e => new Equipment(e.getValue(), this.root))
         return children.reduce((weight, item) => weight + item.containedValue, 0) + this.eValue
     }
     getContainedValue() { return this.containedValue }
     get containedWeight() {
-        const children = Object.values(this.getEmbeds()).filter(e => e.type === "equipment").map(e => new Equipment(e.value, this.root))
-        return children.reduce((weight, item) => weight + item.containedWeight, 0) + this.eWeight
+        const children = Object.values(this.getEmbeds())
+            .filter(e => e.type === "equipment" && e.enabled)
+            .map(e => new Equipment(e.getValue(), this.root))
+        return children.reduce((weight, item) => weight + item.eWeight, 0) + this.eWeight
     }
     getContainedWeight() { return this.containedWeight }
 }

@@ -4,7 +4,6 @@
   import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
   import Features from "./panels/Features.svelte";
   import Weapon from "@ui/datatables/Weapon.svelte";
-  import EquipmentModifiers from "./panels/EquipmentModifiers.svelte";
 </script>
 
 <script lang="ts">
@@ -111,9 +110,7 @@
     <Features bind:features={$entity.features} />
   </TabPanel>
   <TabPanel>
-    <!-- <EquipmentModifiers>
-
-    </EquipmentModifiers> -->
+    <!-- MODIFIERS -->
   </TabPanel>
   <TabPanel>
     <Weapon root={entity} type="melee weapon" />

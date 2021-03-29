@@ -14,7 +14,7 @@
                 return config?.locations;
             } else {
                 const request = await fetch(
-                    "systems/gurps/defaultCharacterConfig.yaml"
+                    "schemas/gurps/defaultCharacterConfig.yaml"
                 );
                 const text = await request.text();
                 const config = load(text);

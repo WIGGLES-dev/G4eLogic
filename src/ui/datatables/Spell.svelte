@@ -9,11 +9,16 @@
     import DataTable from "@ui/DataTable.svelte";
     import SpellEditor from "@ui/editors/SpellEditor.svelte";
     import Toggle from "@components/Toggle.svelte";
-    import { map } from "rxjs/operators";
+    import { System } from "@internal";
+    import { pipe } from "rxjs";
+    import { Spell as SpellWorker } from "@app/gurps/resources/spell";
+    import { map, mergeMap } from "rxjs/operators";
     import { CharacterData } from "@app/gurps/resources/character";
-    import AttributeOptions from "@ui/options/AttributeOptions";
+    import AttributeOptions from "@ui/options/AttributeOptions.svelte";
+    import { withComlinkProxy } from "@app/utils/operators";
     export let character: State<CharacterData>;
-        
+    const Spell = System.getWorker<typeof SpellWorker>("technique");
+    const makeSpell = pipe(withComlinkProxy((d) => new Spell(d, $character)));
 </script>
 
 <DataTable type="spell" root={character} let:node let:children>
@@ -55,12 +60,18 @@
         <input type="number" use:bind={node.state.sub("mod")} />
     </td>
     <td>
-        <Value value={node.state["relativeLevel$"]} let:value>
+        <Value value={node.state.pipe(
+            makeSpell,
+            mergeMap(t => t["getRelativeLevel"]())
+        )} let:value>
             {value}
         </Value>
     </td>
     <td>
-        <Value value={node.state["level$"]} let:value>
+        <Value value={node.state.pipe(
+            makeSpell,
+            mergeMap(t => t["getLevel"]())
+        )} let:value>
             {value}
         </Value>
     </td>

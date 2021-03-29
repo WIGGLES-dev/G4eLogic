@@ -1,5 +1,5 @@
 import type { Data } from "@app/entity"
-import type { SkillLikeKeys } from "./skill"
+import { SkillLikeKeys, SkillLike } from "./skill"
 
 export interface SpellData extends Data, SkillLikeKeys {
     type: "spell"
@@ -17,10 +17,10 @@ export interface SpellData extends Data, SkillLikeKeys {
     duration?: string
 }
 
-export class Spell {
+export class Spell extends SkillLike<SpellData>{
     static type = 'spell' as const
     static version = 1 as const
-    // constructor(state: Spell["state"]) {
-    //     super(state);
-    // }
+    constructor(spell, character) {
+        super(spell, character);
+    }
 }

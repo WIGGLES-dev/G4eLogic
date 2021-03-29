@@ -56,10 +56,10 @@ export class Trait extends Entity<TraitData, CharacterData> {
         super(value, root);
     }
     getAdjustedPoints() {
-        return calculateTraitCost(this.value);
+        return calculateTraitCost(this.getValue());
     }
     getTraitType() {
-        return getTraitType(this.value);
+        return getTraitType(this.getValue());
     }
 }
 

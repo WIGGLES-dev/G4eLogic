@@ -104,7 +104,7 @@
     </td>
 
     <td>
-        <select use:bind={node.state.sub("location")}>
+        <select use:bind={node.state.sub("location")} disabled>
             <option default value={undefined}>Select A Location</option>
             <option value="carried">Carried</option>
             <option value="other">Other</option>

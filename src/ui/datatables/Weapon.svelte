@@ -3,13 +3,31 @@
     import DataTable from "@ui/DataTable.svelte";
     import Value from "@components/Value.svelte";
     import Leaf from "@components/Tree/Leaf.svelte";
-    import MeleeWeaponEditor from "@ui/editors/MeleeWeaponEditor.svelte";
-    import RangedWeaponEditor from "@ui/editors/RangedWeaponEditor.svelte";
+    import { 
+        RangedWeapon as RangedWeaponWorker,
+        MeleeWeapon as MeleeWeaponWorker
+    } from "@app/gurps/resources/weapon";
 </script>
 
 <script lang="ts">
-    export let root;
+    import { System } from "@internal";
+    import { pipe } from "rxjs";
+    import { State } from "rxdeep";
+    import { withComlinkProxy } from "@utils/operators";
+    import { mergeMap } from "rxjs/operators";
+    export let root: State<any>;
     export let type: string;
+    const RangedWeapon = System.getWorker<typeof RangedWeaponWorker>("ranged weapon");
+    const MeleeWeapon = System.getWorker<typeof MeleeWeaponWorker>("melee weapon");
+    const makeWeapon = pipe(
+        withComlinkProxy((w) => {
+            if (w["type"] === "melee weapon") {
+                return new MeleeWeapon(null, null)
+            } else if (w["type"] === "ranged weapon") {
+                // return new RangedWeapon(null, null)
+            }
+        })
+    );
 </script>
 
 <DataTable {root} {type} let:node>
@@ -35,11 +53,32 @@
         <th>Ref</th>
     </tr>
     <td>
-        <span />
+        <Value
+            value={node.state.pipe(
+                makeWeapon,
+                mergeMap(async w => {
+                    
+                })
+            )}
+        >
+
+        </Value>
+        <span></span>
     </td>
     <Leaf sub="usage" class="table-cell" />
     <td>
         <input type="text" use:bind={node.state.sub("damage")} />
+    </td>
+    <td>
+        <Value 
+            value={node.state.pipe(
+            makeWeapon,
+            mergeMap(w => w["getBestAttackLevel"]())
+            )} 
+            let:value
+        >
+            <output>{value}</output>
+        </Value>
     </td>
     {#if type === "melee weapon"}
         <td>
@@ -75,14 +114,4 @@
         <input type="text" use:bind={node.state.sub("strength")} />
     </td>
     <Leaf sub="reference" class="table-cell" />
-    <template slot="expanded" use:fragment>
-        <svelte:component
-            this={type === "melee"
-                ? MeleeWeaponEditor
-                : type === "ranged"
-                ? RangedWeaponEditor
-                : undefined}
-            state$={node.state}
-        />
-    </template>
 </DataTable>

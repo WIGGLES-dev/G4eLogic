@@ -18,35 +18,38 @@ export interface SkillData extends Data, SkillLikeKeys {
     type: "skill"
     version: 1
 }
-export class SkillLike extends Entity<SkillData, CharacterData> {
+export class SkillLike<T extends SkillLikeKeys & Data> extends Entity<T, CharacterData> {
     constructor(skill, character) {
         super(skill, character);
     }
     getAttributeLevel() {
-        if (!this.value) return
-        const { signature } = this.value
+        const value = this.getValue();
+        if (value) return
+        const { signature } = value
         const character = new Character(this.root);
         const attribute = character.getAttribute(signature);
         return attribute?.level;
     }
     get bonus() {
         return this.getFeatures()
-            .filter(feature => feature.type === "skill bonus" && skillBonusMatchesSkill(this.value, feature))
+            .filter(feature => feature.type === "skill bonus" && skillBonusMatchesSkill(this.getValue(), feature))
             .reduce((t, b) => t + b.amount, 0);
+    }
+    get defaults() {
+        return this.getValue()?.defaults ?? []
     }
     getHighestDefault() {
         const character = new Character(this.root);
         const attributes = character.getAttributeCollection();
         const allSkills = Object.values(character.getEmbeds()).filter(r => r.type === "skill");
-        const defaults = this.value.defaults;
-        const matches: number[] = defaults.flatMap(sd => {
+        const matches: number[] = this.defaults.flatMap(sd => {
             const { type, modifier = 0 } = sd;
             if (attributes[type]) {
                 return [attributes[sd.type].level + modifier];
             } else {
                 return allSkills
-                    .filter(e => skillMatchesDefault(e.value as any, sd))
-                    .map(e => new Skill(e.value as any, this.root))
+                    .filter(e => skillMatchesDefault(e.getValue() as any, sd))
+                    .map(e => new Skill(e.getValue() as any, this.root))
                     .map(skill => skill.getBaseRelativeLevel() + modifier)
             }
         });
@@ -54,26 +57,31 @@ export class SkillLike extends Entity<SkillData, CharacterData> {
         return highestMatch
     }
     getRelativeLevel() {
-        return calculateRelativeSkillLevel(this.value);
+        return calculateRelativeSkillLevel(this.getValue());
     }
     getBaseRelativeLevel() {
-        if (!this.value) return
-        const { difficulty, signature } = this.value;
+        const value = this.getValue();
+        if (!value) return
+        const { difficulty, signature } = value;
         return this.getRelativeLevel() + this.getAttributeLevel();
     }
-    getLevel() {
-        if (!this.value) return
+    get level() {
+        const value = this.getValue();
+        if (!value) return
         const character = new Character(this.root);
         const level = calculateSkillLevel(
-            this.value,
+            value,
             this.getAttributeLevel(),
             character.getEncumbranceLevel(),
             this.bonus
         );
         return Math.max(level, this.getHighestDefault())
     }
+    getLevel() {
+        return this.level
+    }
 }
-export class Skill extends SkillLike {
+export class Skill extends SkillLike<SkillData> {
     static version = 1 as const
     static type = "skill" as const
     constructor(skill, character) {

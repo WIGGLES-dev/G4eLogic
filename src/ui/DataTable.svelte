@@ -84,6 +84,7 @@
                     <tr
                         data-id={id}
                         use:node.draggable
+                        use:node.droppable
                         on:contextmenu={ctxmenu({
                             options: [
                                 {
@@ -174,7 +175,7 @@
                         <td>
                             <i
                                 on:click={(e) => node.remove()}
-                                class="fas fa-trash hover:text-red-700 "
+                                class="fas fa-trash hover:text-red-700"
                             />
                         </td>
                     </tr>

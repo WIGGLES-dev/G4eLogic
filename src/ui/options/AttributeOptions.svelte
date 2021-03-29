@@ -4,9 +4,11 @@
     import { iif, Observable } from "rxjs";
     import { map, mergeMap, startWith, switchMap } from "rxjs/operators";
     import { getContext } from "svelte";
+    import { State } from "rxdeep";
     export let attribute: string;
     export let signaturesOnly = false;
     export let optionsOnly = false;
+    const record = getContext<State<any>>("record");
     const worker = getContext<Observable<Remote<any>>>("worker");
     const attributes$ = worker.pipe(
         mergeMap(async (worker) => {
@@ -16,7 +18,7 @@
                 return config?.attributes;
             } else {
                 const request = await fetch(
-                    "systems/gurps/defaultCharacterConfig.yaml"
+                    "schemas/gurps/defaultCharacterConfig.yaml"
                 );
                 const text = await request.text();
                 const config = load(text);

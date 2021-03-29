@@ -21,49 +21,53 @@
 
 <script lang="ts">
     import { fetchRecord, validateResource, System } from "@internal";
-    import { from } from "rxjs";
+    import { defer, from, merge, Subject } from "rxjs";
     import {
+concatAll,
+        distinct,
+        distinctUntilChanged,
         map,
         mergeAll,
         mergeMap,
-        startWith,
+multicast,
+refCount,
+                                startWith,
         switchAll,
         tap,
     } from "rxjs/operators";
     import { setContext } from "svelte";
     import { withComlinkProxy } from "@utils/operators";
     import { Remote } from "comlink";
+import { state } from "rxdeep";
     export let params;
     export let id = params.id;
     export let type = params.type;
     export let embed = params.embed;
-    const record = from(fetchRecord<any>("index", params.id));
-    const rootState$ = record;
-    const state$ = record.pipe(
+    const record$ = from(fetchRecord<any>("index", params.id)).pipe(map(state => state.verified(validateResource)));
+    const entity$ = record$.pipe(
         mergeMap((state) =>
             embed
                 ? state.deepSub((obj) => obj && obj.id === embed)
                 : from([state])
-        ),
-        map((state) => state.verified(validateResource))
+        )
     );
-    const exists$ = state$.pipe(
+    const exists$ = entity$.pipe(
         mergeAll(),
         map((value) => value?.id === (embed ? embed : id))
     );
     const Worker = System.getWorker<Remote<typeof Object>>(type);
-    const worker = state$.pipe(
-        mergeAll(),
-        withComlinkProxy((c) => new Worker(c))
+    const value$ = entity$.pipe(mergeAll());
+    const worker = value$.pipe(
+        withComlinkProxy((c) => new Worker(c)),
     );
     setContext("worker", worker);
-    setContext("rootState", $rootState$);
-    setContext("state", $state$);
+    setContext("record", record$);
+    setContext("entity", entity$);
 </script>
 
 {#if $exists$}
     {#key type}
-        <svelte:component this={editors[type]} entity={$state$} />
+        <svelte:component this={editors[type]} entity={$entity$} />
     {/key}
 {:else if $exists$ === false}
     <div class="bg-blue-600 h-screen w-screen">

@@ -49,32 +49,28 @@
         removefunc(item: TreeNode): void;
     }
     export interface TreeNode {
-        tagfunc;
-        keyfunc;
-        branchfunc;
-        resolvefunc;
-        filterfunc;
-        verifyfunc;
-        nested: boolean;
-        parentId: string;
-        state: State<any>;
-        depth: number;
-        showingChildren: boolean;
-        isContainer(): boolean;
-        id: string;
-        i: number;
-        children: State<any[]>;
-        children$: Observable<any[]>;
-        nodes: Record<string, TreeNode>;
-        remove(): void;
-        move;
-        draggable;
-        add;
+        root: State<any>
+        nested: boolean
+        parentId: string
+        state: State<any>
+        depth: number
+        showingChildren: boolean
+        isContainer(): boolean
+        id: string
+        i: number
+        children: State<any[]>
+        children$: Observable<any[]>
+        nodes: Record<string, TreeNode>
+        remove(id?)
+        add(id, data, i)
+        move(fromId, toId, data, i)
+        draggable(node, params)
+        droppable(node, params)
+        bind(...keys: string[])
     }
 </script>
 
 <script lang="ts">
-    const current_component = get_current_component();
     export let nodes: Record<string, TreeNode> = {};
     export let tagfunc = defaults.tagfunc;
     export let keyfunc = defaults.keyfunc;
@@ -85,34 +81,19 @@
     export let createMergeData: Record<string, any> = {};
     export let nested = false;
     export let parentId: string;
+    export let ancestors: string[]= [];
     export let state: State<any>;
     export let root: State<any> = state;
     export let id = keyfunc($state);
-    nodes[id] = current_component;
     export let depth = -1;
     export let i = 0;
     export let showingChildren = true;
-    setContext(TreeSymbol, get_current_component());
     export const children = branchfunc(state);
     export const children$ = children;
     export function isContainer() {
         return $children$ instanceof Array;
     }
     export const isRoot = depth === -1;
-    export function getAncestors(nodeId = id) {
-        const node = nodes[nodeId];
-        let chain: TreeNode[] = [];
-        function crawl(node: TreeNode) {
-            const parentId = node?.parentId;
-            const parent = nodes[parentId];
-            if (parent) {
-                chain.push(parent);
-                crawl(parent);
-            }
-        }
-        if (node) crawl(node);
-        return chain;
-    }
     export function remove(targetId: string = id) {
         nodes[targetId].state.delete();
     }
@@ -122,20 +103,26 @@
         index: number = nodes[toId].i,
         data: any = nodes[fromId].state.value
     ) {
-        const chain = getAncestors(toId);
-        if (fromId === toId || chain.some((node) => node.id === fromId)) {
+        if (fromId === toId || ancestors.includes(fromId)) {
             return;
         }
+        const payload = nodes[fromId];
         const targetNode = nodes[toId];
+        const targetIsContainer = targetNode?.isContainer();
+        const payloadInTarget = targetNode?.children?.value?.some(
+                (value) => keyfunc(value) === fromId
+        );
         const parentId = targetNode?.parentId;
         const targetParentNode = nodes[parentId];
         const payloadInParent = targetParentNode?.children.value?.some(
             (value) => keyfunc(value) === fromId
         );
-        if (!targetParentNode) {
-            return;
-        }
-        if (payloadInParent) {
+        if (!targetParentNode) return;
+        if (targetIsContainer && !payloadInTarget) {
+            payload?.remove();
+            await tick();
+            add(toId, data, i);
+        } else if (payloadInParent) {
             targetParentNode.children.value = arrayMove(
                 [...targetParentNode.children.value],
                 nodes[fromId].i,
@@ -144,23 +131,15 @@
         } else if (Array.isArray(targetParentNode.children.value)) {
             nodes[fromId]?.remove();
             await tick();
-            const targetNode = nodes[toId];
-            const parentId = targetNode?.parentId;
-            const targetIsContainer = targetNode?.isContainer();
-            const payloadInTarget = targetNode?.children?.value?.some(
-                (value) => keyfunc(value) === fromId
-            );
-            if (targetIsContainer && !payloadInTarget) {
-                add(toId, data, i);
-            } else {
-                add(parentId, data, i);
-            }
+            add(parentId, data, i);
         } else {
+
         }
     }
     export function add(targetId = id, data = {}, i?) {
         data = { ...data, ...createMergeData };
         const targetNode = nodes[targetId];
+        if (!targetNode) return
         const id = keyfunc(data);
         if (!id) {
             tagfunc(data);
@@ -190,6 +169,17 @@
                 )
             )
         );
+        subs.push(
+            dragstart.subscribe(),
+        );
+        return {
+            destroy() {
+                subs.forEach((sub) => sub.unsubscribe());
+            },
+        };
+    }
+    export function droppable(node: HTMLElement, params) {
+        const subs = [];
         const dragenter = fromEvent<DragEvent>(node, "dragenter").pipe(
             tap((e) => e.preventDefault())
         );
@@ -197,26 +187,20 @@
             tap((e) => e.preventDefault())
         );
         const drop = fromEvent<DragEvent>(node, "drop").pipe(
-            tap((e) => {
+            tap(async (e) => {
                 const { id: _id } = JSON.parse(
                     e.dataTransfer.getData("text/plain")
                 );
                 const appJson = e.dataTransfer.getData("application/json");
                 try {
-                    const target = nodes[_id];
-                    const data = JSON.parse(appJson);
-                    const rootId = data?.rootId ?? NaN;
-                    if (
-                        nodes[_id]?.id === _id &&
-                        nodes[_id]?.state?.value?.rootId === rootId
-                    ) {
+                    const payload = nodes[_id];
+                    const data = appJson ? JSON.parse(appJson) : payload.state.value
+                    if (payload) {
                         move(
                             _id,
                             id,
                             i,
-                            appJson
-                                ? JSON.parse(appJson)
-                                : nodes[_id].state.value
+                           data
                         );
                     } else if (appJson) {
                         tagfunc(data);
@@ -226,7 +210,6 @@
             })
         );
         subs.push(
-            dragstart.subscribe(),
             dragenter.subscribe(),
             dragover.subscribe(),
             drop.subscribe()
@@ -237,22 +220,52 @@
             },
         };
     }
+    export function bind(...keys: string[]) {
+        return function(this: Event, e: Event) {
+            const target = e.target as HTMLElement;
+            const sub = state.sub(...keys);
+            const value = target["value"];
+            if (value) sub.value = value;
+        }
+    }
+    const node: TreeNode = {
+        root,
+        get nested() { return nested; },
+        set nested(val) { nested = val; },
+        parentId,
+        state,
+        depth,
+        get showingChildren() { return showingChildren },
+        set showingChildren(val) { showingChildren = val },
+        isContainer,
+        id,
+        i,
+        children,
+        children$,
+        nodes,
+        remove,
+        add,
+        move,
+        draggable,
+        droppable,
+        bind
+    };
     onMount(() => {
         if (!id) {
             state.value = { ...tagfunc(state.value) };
         }
+        () => delete nodes[id]
     });
-    onDestroy(() => {
-        delete nodes[id];
-    });
-    $: nodes[id] = get_current_component();
+    nodes[id] = node;
+    $: nodes[id] = node;
+    setContext(TreeSymbol, node);
 </script>
 
 {#if nested}
     <div>
         {#if filterfunc($state)}
             <slot
-                node={get_current_component()}
+                {node}
                 value={$state}
                 children={$children}
                 id={keyfunc($state)}
@@ -261,7 +274,9 @@
         {#if $children$ instanceof Array && showingChildren}
             {#each $children$ as child, i (i)}
                 <svelte:self
+                    {nested}
                     parentId={id}
+                    ancestors={[...ancestors, id]}
                     state={resolvefunc(child, i, children)}
                     id={keyfunc(child)}
                     depth={depth + 1}
@@ -288,7 +303,7 @@
 {:else}
     {#if filterfunc($state)}
         <slot
-            node={get_current_component()}
+            {node}
             value={$state}
             children={$children}
             id={keyfunc($state)}
@@ -297,7 +312,9 @@
     {#if $children$ instanceof Array && showingChildren}
         {#each $children$ as child, i (i)}
             <svelte:self
+                {nested}
                 parentId={id}
+                ancestors={[...ancestors, id]}
                 state={resolvefunc(child, i, children)}
                 id={keyfunc(child)}
                 depth={depth + 1}

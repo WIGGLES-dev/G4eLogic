@@ -1,5 +1,6 @@
-import type { Data } from "@app/entity"
-import type { SkillDefault } from "./skill"
+import { Data, Entity } from "@app/entity"
+import type { CharacterData } from "./character";
+import { Skill, SkillDefault } from "./skill"
 
 export enum BaseDamage {
     Swing = "sw",
@@ -40,43 +41,46 @@ export interface RangedWeaponData extends WeaponKeys, Data {
     bulk: string
 }
 
-export abstract class Weapon {
-    // constructor(state: Resource<K>["state"]) {
-    //     super(state);
-    // }
-    // get bestAttackLevel$(): Observable<number> {
-    //     return Skill.prototype.selectHighestDefault$.call(this)
-    // }
+export class Weapon<T extends WeaponKeys & Data> extends Entity<T, CharacterData> {
+    constructor(weapon, character) {
+        super(weapon, character);
+    }
+    get bestAttackLevel(): number {
+        return Skill.prototype.getHighestDefault.call(this)
+    }
+    getBestAttackLevel() {
+        return this.bestAttackLevel
+    }
 }
 
-export class MeleeWeapon {
+export class MeleeWeapon extends Weapon<MeleeWeaponData> {
     static version = 1 as const
     static type = "melee weapon" as const
-    // constructor(state: MeleeWeapon["state"]) {
-    //     super(state);
-    // }
-    // get parryLevel$() {
-    //     return combineLatest([
-    //         this.bestAttackLevel$,
-    //         this
-    //     ]).pipe(
-    //         map(([level, keys]) => level / 2 + 3 + (keys.parryBonus || null))
-    //     )
-    // }
-    // get blockLevel$() {
-    //     return combineLatest([
-    //         this.bestAttackLevel$,
-    //         this
-    //     ]).pipe(
-    //         map(([level, keys]) => level / 2 + 3 + (keys.blockBonus || null))
-    //     )
-    // }
+    constructor(weapon, character) {
+        super(weapon, character);
+    }
+    get parryLevel() {
+        const { parryBonus = 0 } = this.getValue();
+        const level = this.bestAttackLevel
+        return level / 2 + 3 + parryBonus;
+    }
+    getParryLevel() {
+        return this.parryLevel
+    }
+    get blockLevel() {
+        const { blockBonus = 0 } = this.getValue();
+        const level = this.bestAttackLevel;
+        return level / 2 + 3 + blockBonus;
+    }
+    getBlockLevel() {
+        return this.blockLevel
+    }
 }
 
-export class RangedWeapon {
+export class RangedWeapon extends Weapon<RangedWeaponData> {
     static version = 1 as const
     static type = "ranged weapon" as const
-    // constructor(state: RangedWeapon["state"]) {
-    //     super(state);
-    // }
+    constructor(weapon, character) {
+        super(weapon, character);
+    }
 }

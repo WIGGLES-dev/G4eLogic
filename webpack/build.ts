@@ -20,7 +20,7 @@ export const svelteLoaderConfig = {
     use: {
         loader: 'svelte-loader',
         options: {
-            dev: false,
+            dev: prod,
             onwarn: (warning, handler) => { },
             emitCss: true,
             preprocess: [
@@ -37,7 +37,7 @@ export const svelteLoaderConfig = {
 export const cssLoaderConfig = {
     test: /\.css$/,
     use: [
-        (prod || true) ? MiniCssExtractPlugin.loader : 'style-loader',
+        prod ? MiniCssExtractPlugin.loader : 'style-loader',
         {
             loader: 'css-loader',
             options: {
