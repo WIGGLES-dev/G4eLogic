@@ -22,33 +22,28 @@
   <Boxes on:addbox={addFeature} showInitialAdder={features.length === 0}>
     {#each features as feature, i (i)}
       <Box on:addbox={addFeature} on:deletebox={() => removeFeature(i)}>
-        <fieldset>
-          <FeatureOptions bind:feature={feature.type} />
-          <label>
-            <input
-              type="number"
-              placeholder="amount"
-              bind:value={feature.amount}
-            />
-          </label>
+        <div class="flex flex-col">
+          <fieldset class="flex">
+            <FeatureOptions bind:feature={feature.type} />
+            <label>
+              <input
+                type="number"
+                placeholder="amount"
+                bind:value={feature.amount}
+              />
+            </label>
+          </fieldset>
           <label>
             <span>Per Level</span>
             <input type="checkbox" bind:checked={feature.leveled} />
           </label>
-        </fieldset>
-        {#if feature.type === FeatureBonusType.Attribute}
-          <fieldset>
-            <AttributeOptions bind:attribute={feature.attribute} />
-          </fieldset>
-        {:else if feature.type === FeatureBonusType.Skill}
-          <fieldset>
-            <select>
-              <option>to skills whose name</option>
-            </select>
-            <StringCompareOptions bind:option={feature.nameCompare} />
-            <input type="text" placeholder="name" bind:value={feature.name} />
-          </fieldset>
-          <fieldset>
+          {#if feature.type === FeatureBonusType.Attribute}
+            <!-- svelte-ignore a11y-label-has-associated-control -->
+            <label>
+              <span>To Attribute(s)</span>
+              <AttributeOptions bind:attribute={feature.attribute} />
+            </label>
+          {:else if feature.type === FeatureBonusType.Skill}
             <!-- svelte-ignore a11y-label-has-associated-control -->
             <label>
               <span>and whose specialization</span>
@@ -63,23 +58,18 @@
                 bind:value={feature.specialization}
               />
             </label>
-          </fieldset>
-        {:else if feature.type === FeatureBonusType.Armor}
-          <fieldset>
+          {:else if feature.type === FeatureBonusType.Armor}
             <!-- svelte-ignore a11y-label-has-associated-control -->
             <label>
               <span> To Location(s)</span>
               <LocationOptions bind:location={feature.location} />
             </label>
-          </fieldset>
-        {/if}
+          {/if}
+        </div>
       </Box>
     {/each}
   </Boxes>
 </div>
 
 <style lang="postcss">
-  fieldset {
-    @apply flex;
-  }
 </style>

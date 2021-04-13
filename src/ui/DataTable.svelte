@@ -1,207 +1,237 @@
 <script context="module" lang="ts">
-    import { State } from "rxdeep";
-    import { fragment, lift, colSpanMax } from "@utils/use";
-    import { push } from "svelte-spa-router";
-    import Tree, { TreeNode } from "@components/Tree/Tree.svelte";
-    import Popper from "@components/Popper.svelte";
-    import Menu from "@components/Menu/Menu.svelte";
-    import { System, validateResource } from "@internal";
 </script>
 
 <script lang="ts">
+    import Tree from "@components/Tree/Tree.svelte";
+    import { getEditorContext } from "@ui/editors/Editor.svelte";
+    import Menu from "@components/Menu/Menu.svelte";
+    import { System, validateResource } from "@internal";
+    export const defaults = {
+        filterfunc(item) {
+            return true;
+        },
+        verifyfunc(item) {
+            return System.validate(item).valid;
+        },
+        resolvefunc(item, i, children) {
+            return children?.sub(i).verified(validateResource);
+        },
+        branchfunc(state) {
+            return state.sub("children");
+        },
+    };
+    const { rootId$ } = getEditorContext();
+    export let mergeData: Record<string, any> = {};
+    export let disableDrag = false;
+    export let disableDrop = false;
+    export let maxDepth = Number.POSITIVE_INFINITY;
+    export let appendable = true;
+    export let showCollapsed = false;
+    export let nestedStructure = false;
+    export let filterfunc = defaults.filterfunc;
+    export let verifyfunc = defaults.verifyfunc;
+    export let resolvefunc = defaults.resolvefunc;
+    export let branchfunc = defaults.branchfunc;
+    $: treeSettings = {
+        mergeData,
+        disableDrag,
+        disableDrop,
+        maxDepth,
+        appendable,
+        showCollapsed,
+        filterfunc,
+        verifyfunc,
+        resolvefunc,
+        branchfunc,
+    };
     export let root;
     export let type: string;
     export let ctxoptions = [];
-    export let filterfunc: Tree["$$prop_def"]["filterfunc"] = (item) => true;
-    export let verifyfunc: Tree["$$prop_def"]["verifyfunc"] = (item) =>
-        item && item.type === type && System.validator.validate(type, item);
-    export let createMergeData: Record<string, any> = {};
+    export let component = null;
     let tree: Tree;
-    export let menu: Menu;
-    function resolvefunc(item: any, i: any, children: State<any[]>) {
-        return children?.sub(i).verified(validateResource);
-    }
-    function branchfunc(state$) {
-        return state$.sub("children", type);
-    }
-    export function ctxmenu({ virtual = true, options = [] } = {}) {
-        return function (e: MouseEvent) {
-            e.preventDefault();
-            menu.$set({
-                reference: virtual ? e : (e.target as HTMLElement),
-                options,
-                rendered: true,
-            });
-        };
-    }
+    let menu: Menu;
     function edit(node) {
         const root = node.root.value;
         const resource = node.state.value;
-        const uri = `/edit/${resource.type}/${root.id}${
-            resource.id !== root.id ? `/${resource.id}` : ""
+        const uri = `/edit/${resource.type}/${$rootId$}${
+            resource.id !== $rootId$ ? `/${resource.id}` : ""
         }`;
-        const { width, height } = window.screen;
+        const {
+            innerWidth,
+            innerHeight,
+            screenLeft,
+            screenTop,
+            screen: { availWidth },
+        } = window;
+        const width = 1200;
+        const height = 600;
+        const zoom = width / availWidth;
         const features = `
-            width=${width / 2},
-            height=${height / 2},
-            left=${width / 4},
-            top=${height / 4}
+            scrollbars=yes,
+            width=${width},
+            height=${height},
+            left=${innerWidth / 2 - width / 2 + screenLeft},
+            top=${innerHeight / 2 - height / 2 + screenTop}
         `;
         const editor = window.open(
             System.origin + "/#" + uri + "?hideMenu=true",
-            "editor",
+            resource.id,
             features
         );
         editor.focus();
         editor.onblur = (e) => editor.focus();
     }
+    function ctxmenu(node) {
+        const options = [
+            {
+                label: "Log",
+                show: () => true,
+                callback() {
+                    console.log(node);
+                },
+            },
+            {
+                label: "Make Container",
+                show: () =>
+                    node?.state?.value?.isContainer !== true && nestedStructure,
+                callback() {
+                    node.state.assign({
+                        isContainer: true,
+                    });
+                },
+            },
+            {
+                label: "Undo Make Container",
+                show: () =>
+                    node?.state?.value?.isContainer === true && nestedStructure,
+                callback() {
+                    const parentNode = node.nodes[node.parentId];
+                    if (parentNode) {
+                        const pcv = parentNode.children.value;
+                        const cv = node.children.value || [];
+                        node.state.assign({ isContainer: false });
+                        node.children.value =
+                            node.children.value?.filter(
+                                (d) => d.type !== type
+                            ) ?? [];
+                        parentNode.children.value = [
+                            ...pcv,
+                            ...cv.filter((d) => d.type === type),
+                        ];
+                    }
+                },
+            },
+            {
+                label: "Open Container",
+                show: () =>
+                    node.isContainer$.value === true &&
+                    node.showingChildren$.value === false &&
+                    nestedStructure,
+                callback() {
+                    node.showingChildren$.toggle();
+                },
+            },
+            {
+                label: "Close Container",
+                show: () =>
+                    node.isContainer$.value === true &&
+                    node.showingChildren$.value === true &&
+                    nestedStructure,
+                callback() {
+                    node.showingChildren$.toggle();
+                },
+            },
+            {
+                label: "Add Child",
+                show: () => node.isContainer$.value === true && nestedStructure,
+                callback() {
+                    node.add();
+                },
+            },
+            ...ctxoptions,
+            {
+                label: "Edit",
+                show: () => true,
+                callback() {
+                    edit(node);
+                },
+            },
+            {
+                label: `Delete`,
+                show: () => true,
+                callback: () => node.remove(),
+            },
+        ];
+        return function (e: MouseEvent) {
+            menu.$set({
+                reference: e,
+                options,
+                rendered: true,
+            });
+        };
+    }
+    function toggle() {}
 </script>
 
-<div class="p-2">
-    <table class="w-full">
-        <slot name="caption" />
-        <thead>
-            <slot name="thead" />
-        </thead>
-        <tbody>
-            <Tree
-                bind:this={tree}
-                state={root}
-                {branchfunc}
-                {resolvefunc}
-                {verifyfunc}
-                createMergeData={{
-                    ...createMergeData,
-                    rootId: root.value.id,
-                    type,
-                }}
-                let:node
-                let:value
-                let:children
-                let:id
-            >
-                {#if !node.isRoot && filterfunc(value) && value.type === type}
-                    <tr
-                        data-id={id}
-                        use:node.draggable
-                        use:node.droppable
-                        on:contextmenu={ctxmenu({
-                            options: [
-                                {
-                                    label: "Log",
-                                    show() {
-                                        return true;
-                                    },
-                                    callback() {
-                                        console.log(node);
-                                    },
-                                },
-                                {
-                                    label: "Make Container",
-                                    show() {
-                                        return !Array.isArray(
-                                            node.children.value
-                                        );
-                                    },
-                                    callback() {
-                                        node.children.value = [];
-                                    },
-                                },
-                                {
-                                    label: "Undo Make Container",
-                                    show() {
-                                        return Array.isArray(
-                                            node.children.value
-                                        );
-                                    },
-                                    callback() {
-                                        const parentNode =
-                                            node.nodes[node.parentId];
-                                        if (parentNode) {
-                                            parentNode.children.value = [
-                                                ...parentNode.children.value,
-                                                ...node.children.value,
-                                            ];
-                                            const children = Object.assign(
-                                                {},
-                                                node.state.value.children
-                                            );
-                                            delete children[type];
-                                            node.state.assign({
-                                                children,
-                                            });
-                                        }
-                                    },
-                                },
-                                {
-                                    label: "Add Child",
-                                    show() {
-                                        return Array.isArray(
-                                            node.children.value
-                                        );
-                                    },
-                                    callback() {
-                                        node.add();
-                                    },
-                                },
-                                ...ctxoptions,
-                                {
-                                    label: "Edit",
-                                    show() {
-                                        return true;
-                                    },
-                                    callback() {
-                                        edit(node);
-                                    },
-                                },
-                                {
-                                    label: `Delete`,
-                                    show() {
-                                        return true;
-                                    },
-                                    callback: node.remove,
-                                },
-                            ],
-                        })}
-                        class="children:p-0 children:shadow even:bg-gray-100"
-                    >
-                        <td>
-                            <i
-                                on:click={(e) => edit(node)}
-                                class="fas fa-ellipsis-v text-xl hover:bg-red-700 hover:text-white p-1"
-                            />
-                        </td>
-                        <slot {node} {value} {children} {id} />
-                        <td>
-                            <i
-                                on:click={(e) => node.remove()}
-                                class="fas fa-trash hover:text-red-700"
-                            />
-                        </td>
-                    </tr>
-                    {#if false}
-                        <tr>
-                            <td use:colSpanMax>
-                                <slot name="expanded" />
-                            </td>
-                        </tr>
+<table>
+    <slot name="caption" />
+    <thead>
+        <slot name="thead" />
+    </thead>
+    <tbody>
+        <Tree
+            bind:this={tree}
+            state={root}
+            {...treeSettings}
+            filterfunc={(value) => filterfunc(value) && value.type === type}
+            mergeData={{
+                ...mergeData,
+                rootId: root.value.id,
+                type,
+            }}
+            let:node
+            let:showing
+            let:id
+        >
+            {#if showing}
+                <tr
+                    class:hidden={!showing}
+                    data-id={id}
+                    use:node.draggable
+                    use:node.droppable
+                    on:contextmenu|preventDefault={ctxmenu(node)}
+                    class=" hover:bg-gray-100 even:bg-gray-100 children:border children:border-gray-500"
+                >
+                    {#if component}
+                        <svelte:component this={component} {node} />
+                    {:else}
+                        <slot {node} {...node} />
                     {/if}
-                {/if}
-            </Tree>
-        </tbody>
-        <slot name="tfoot" />
-    </table>
-    <section class="border-b rounded-b border-red-700">
+                </tr>
+            {/if}
+        </Tree>
+    </tbody>
+    <slot name="tfoot" />
+</table>
+<section class="border-b rounded-b border-red-700">
+    {#if appendable}
+        <i on:click={(e) => tree.add()} class=" fas fa-plus" />
         <i
-            on:click={(e) => tree.add()}
-            class="p-1 fas fa-plus text-red-700 text-sm hover:bg-red-700 hover:text-white"
+            on:click={(e) => (showCollapsed = !showCollapsed)}
+            class="fas fa-expand"
         />
-    </section>
-    <Menu bind:this={menu} />
-</div>
+    {/if}
+</section>
+<Menu bind:this={menu} />
 
 <style lang="postcss">
-    tr > :global(td > input) {
-        @apply block w-full;
+    table {
+        @apply text-sm;
+    }
+    .fas {
+        @apply p-1 text-red-700 text-xs;
+    }
+    .fas:hover {
+        @apply bg-red-700 text-white;
     }
 </style>

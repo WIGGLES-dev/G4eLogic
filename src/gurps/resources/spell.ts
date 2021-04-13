@@ -20,7 +20,7 @@ export interface SpellData extends Data, SkillLikeKeys {
 export class Spell extends SkillLike<SpellData>{
     static type = 'spell' as const
     static version = 1 as const
-    constructor(spell, character) {
-        super(spell, character);
+    constructor(character, spell, ...args) {
+        super(character, spell, ...args);
     }
 }

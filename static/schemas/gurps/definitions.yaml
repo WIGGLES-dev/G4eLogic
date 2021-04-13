@@ -7,25 +7,32 @@ weapon:
   properties:
     usage:
       type: string
-      damage:
-        type: string
-      damageType:
-        enum:
-          - imp
-          - cr
-          - cut
-          - fat
-          - tox
-      info:
-        type: string
-        default: ""
-      strengthRequirement:
-        type: string
-        default: 10
-      attackBonus:
-        type: integer
-      defaults:
-        $ref: "definitions.yaml#/skill/properties/defaults"
+      default: ""
+    damage:
+      type: string
+      default: ""
+    damageType:
+      type: string
+      default: ""
+    info:
+      type: string
+      default: ""
+    strengthRequirement:
+      type: string
+      default: "10"
+    attackBonus:
+      type: integer
+      defualt: 0
+    defaults:
+      $ref: definitions.yaml#/skill/properties/defaults
+damageType:
+  enum:
+    - imp
+    - cr
+    - cut
+    - fat
+    - tox
+  default: cr
 skill:
   type: object
   properties:

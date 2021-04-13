@@ -2,7 +2,7 @@
     import Boxes from "@components/semantic-boxes/Boxes.svelte";
     import Box from "@components/semantic-boxes/Box.svelte";
     import AttributeOptions from "@ui/options/AttributeOptions.svelte";
-    import { SkillDefault } from "@app/gurps/resources/skill";
+    import type { SkillDefault } from "@app/gurps/resources/skill";
     export let defaults: SkillDefault[] = [];
     export let attributes = [];
     function addDefault() {

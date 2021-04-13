@@ -1,5 +1,3 @@
-# $schema: http://json-schema.org/draft-07/schema
-# $id: http://valorsheet/systems/gurps/rangedWeapon.yaml
 type: object
 allOf:
   - $ref: ../definitions.yaml#/resource
@@ -14,13 +12,19 @@ allOf:
         default: 1
       accuracy:
         type: string
+        default: "3"
       range:
         type: string
+        default: "10/100"
       rateOfFire:
         type: string
+        default: ""
       shots:
         type: string
+        default: ""
       recoil:
         type: integer
+        default: 0
       bulk:
         type: string
+        default: ""

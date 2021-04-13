@@ -1,3 +1,0 @@
-function skillLevel(character, skill) {
-    
-}

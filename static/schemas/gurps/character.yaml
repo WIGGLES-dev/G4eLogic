@@ -1,38 +1,12 @@
-# $schema: http://json-schema.org/draft-07/schema
-# $id: http://valorsheet/systems/gurps/character.yaml
 allOf:
   - $ref: ../definitions.yaml#/resource
   - type: object
     properties:
       type:
         const: character
-        default: character
       version:
         const: 1
         default: 1
-      children:
-        type: object
-        properties:
-          trait:
-            type: array
-            items:
-              $ref: trait.yaml
-          skill:
-            type: array
-            items:
-              $ref: skill.yaml
-          technique:
-            type: array
-            items:
-              $ref: technique.yaml
-          spell:
-            type: array
-            items:
-              $ref: spell.yaml
-          equipment:
-            type: array
-            items:
-              $ref: equipment.yaml
       categories:
         type: array
         items:

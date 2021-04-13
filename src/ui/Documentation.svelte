@@ -4,44 +4,16 @@
     }
 </script>
 
-<style>
-    .sections {
-        @apply mx-2;
-    }
-    .sections li {
-        @apply p-2 bg-gray-700 text-white border border-solid border-white;
-    }
-    main {
-        @apply flex mt-3;
-    }
-    .documentation {
-        @apply flex flex-col w-1/2;
-    }
-    .documentation ul,
-    .documentation ol {
-        @apply m-3;
-    }
-    .documentation ul {
-        @apply list-inside list-disc;
-    }
-    .documentation ol {
-        @apply list-inside list-decimal;
-    }
-    h2 {
-        @apply text-xl font-bold underline p-2;
-    }
-</style>
-
 <main>
     <ul class="sections">
-        <li on:click={(e) => scrollTo('introduction')}>Introduction</li>
-        <li on:click={(e) => scrollTo('features')}>Features</li>
-        <li on:click={(e) => scrollTo('home-page')}>The Home Page</li>
-        <li on:click={(e) => scrollTo('lists')}>The Lists</li>
-        <li on:click={(e) => scrollTo('traits-tab')}>Traits Tab</li>
-        <li on:click={(e) => scrollTo('equipment-tab')}>Equipment Tab</li>
+        <li on:click={(e) => scrollTo("introduction")}>Introduction</li>
+        <li on:click={(e) => scrollTo("features")}>Features</li>
+        <li on:click={(e) => scrollTo("home-page")}>The Home Page</li>
+        <li on:click={(e) => scrollTo("lists")}>The Lists</li>
+        <li on:click={(e) => scrollTo("traits-tab")}>Traits Tab</li>
+        <li on:click={(e) => scrollTo("equipment-tab")}>Equipment Tab</li>
 
-        <li on:click={(e) => scrollTo('configuration')}>Configuration</li>
+        <li on:click={(e) => scrollTo("configuration")}>Configuration</li>
     </ul>
     <div class="documentation">
         <section id="introduction">
@@ -159,3 +131,31 @@
         </section>
     </div>
 </main>
+
+<style lang="postcss">
+    .sections {
+        @apply mx-2;
+    }
+    .sections li {
+        @apply p-2 bg-gray-700 text-white border border-solid border-white;
+    }
+    main {
+        @apply flex mt-3;
+    }
+    .documentation {
+        @apply flex flex-col w-1/2;
+    }
+    .documentation ul,
+    .documentation ol {
+        @apply m-3;
+    }
+    .documentation ul {
+        @apply list-inside list-disc;
+    }
+    .documentation ol {
+        @apply list-inside list-decimal;
+    }
+    h2 {
+        @apply text-xl font-bold underline p-2;
+    }
+</style>

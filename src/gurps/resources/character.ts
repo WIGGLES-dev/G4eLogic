@@ -3,10 +3,9 @@ import type { Config } from "@app/gurps/resources/characterConfig";
 import { Entity } from "@app/entity";
 import { parseHitLocations } from "@app/gurps/resources/characterConfig";
 import { Gurps } from "./characterFunctions";
-import { Skill } from "./skill";
-import { Trait, sumTraitArray, split, TraitData, TraitCategory } from "./trait";
-import { Equipment } from "./equipment";
-import { MeleeWeapon, RangedWeapon } from "./weapon";
+import { keyMap } from "@utils/object";
+import { Equipment, MeleeWeapon, RangedWeapon, Skill, Spell, Technique, Trait, sumTraitArray, split, TraitData, TraitCategory } from "./index";
+
 export interface CharacterData extends Data {
     version: typeof Character["version"]
     type: typeof Character["type"]
@@ -27,6 +26,7 @@ export interface ProfileData {
     base?: string
     affiliation?: string
     family?: string
+    status?: string
     name?: string
     nickName?: string
     sex?: string
@@ -65,32 +65,63 @@ export enum Appearance {
     Very_Handsome_Beautiful,
     Transcendent
 }
+type EntityTypes = Skill | Technique | Spell | Trait | Equipment | MeleeWeapon | RangedWeapon
+type Processed<T extends Entity<Data, Data>> = ReturnType<T["process"]>
+interface EntityMap {
+    [Skill.type]: Record<string, Processed<Skill>>
+    [Technique.type]: Record<string, Processed<Technique>>
+    [Spell.type]: Record<string, Processed<Spell>>
+    [Trait.type]: Record<string, Processed<Trait>>
+    [Equipment.type]: Record<string, Processed<Equipment>>
+    [MeleeWeapon.type]: Record<string, Processed<MeleeWeapon>>
+    [RangedWeapon.type]: Record<string, Processed<RangedWeapon>>
+}
 export class Character extends Entity<CharacterData> {
     static type = "character" as const
     static version = 1 as const
-    constructor(character: CharacterData) {
+    attributeCollection: AttributeCollection
+    hitLocationCollection: HitLocationCollection
+    embedded: Record<string, EntityTypes>
+    features: any[]
+    constructor(character) {
         super(character);
+        this.embedded = this.getEmbeds() as Record<string, EntityTypes>;
+        this.features = Character.getFeatures(Object.values(this.embedded));
+        this.attributeCollection = createAttributeCollection(this);
+        this.hitLocationCollection = createHitLocationCollection(this);
+    }
+    get entityMap() {
+        return {
+            [Skill.type]: Skill,
+            [Technique.type]: Technique,
+            [Spell.type]: Spell,
+            [Trait.type]: Trait,
+            [Equipment.type]: Equipment,
+            [MeleeWeapon.type]: MeleeWeapon,
+            [RangedWeapon.type]: RangedWeapon
+        }
+    }
+    get children() {
+        return this.getValue()
+            ?.children
+            ?.map(({ id }) => this.embedded[id])
+            ?? []
     }
     getWeapons(maxDepth?) {
         return [...this.getRangedWeapons(maxDepth), ...this.getMeleeWeapons(maxDepth)]
     }
     getRangedWeapons(maxDepth?) {
-        const embeds = this.getEmbeds(maxDepth);
-        return Object.values(embeds)
-            .filter(e => e.type === "ranged weapon")
-            .map(e => new RangedWeapon(e.getValue(), e.root))
+        return Object.values(this.embedded).filter((e): e is RangedWeapon => e instanceof RangedWeapon)
     }
     getMeleeWeapons(maxDepth?) {
-        const embeds = this.getEmbeds(maxDepth)
-        return Object.values(embeds)
-            .filter(e => e.type === "melee weapon")
-            .map(e => new MeleeWeapon(e.getValue(), e.root))
+        return Object.values(this.embedded).filter((e): e is MeleeWeapon => e instanceof MeleeWeapon)
     }
     getCarriedWeight() {
-        return Object.values(this.getChildren())
-            .filter(e => e.type === "equipment" && e.enabled)
-            .map(entity => new Equipment(entity.getValue(), entity.root))
-            .reduce((weight, item) => weight + item.containedWeight, 0)
+        return this.children
+            .filter((e): e is Equipment => e instanceof Equipment && e.enabled === true)
+            .reduce((weight, e) => {
+                return weight + e.getContainedWeight()
+            }, 0);
     }
     getEncumbranceLevel() {
         const bl = this.getBasicLift();
@@ -110,41 +141,29 @@ export class Character extends Entity<CharacterData> {
         }
     }
     getAttributeCollection() {
-        if (!this.root) return {}
-        return createAttributeCollection(this.root);
+        return this.attributeCollection
     }
     getAttribute(attribute: string) {
         return this.getAttributeCollection()[attribute]
     }
-    getOrderedAttributes() {
-        const {
-            config: {
-                ui: {
-                    attributeOrder
-                }
-            }
-        } = this.getValue();
-        return attributeOrder
-    }
-    getOrderedPools() {
-        const {
-            config: {
-                ui: {
-                    poolOrder
-                }
-            }
-        } = this.getValue();
-        return poolOrder
-    }
     getHitLocationCollection() {
-        return createHitLocationCollection(this.getValue())
+        return this.hitLocationCollection
     }
-    getSwingDamage() { return Gurps.getSwingDamage(this.getAttribute("striking strength").level) }
-    getThrustDamage() { return Gurps.getThrustDamage(this.getAttribute("striking strength").level) }
-    getBasicLift() { return Gurps.basicLift(this.getAttribute("lifting strength").level) }
+    getLocation(location: string) {
+        return this.getHitLocationCollection()[location]
+    }
+    getSwingDamage() {
+        return Gurps.getSwingDamage(this.getAttribute("striking strength").level)
+    }
+    getThrustDamage() {
+        return Gurps.getThrustDamage(this.getAttribute("striking strength").level)
+    }
+    getBasicLift() {
+        return Gurps.basicLift(this.getAttribute("lifting strength").level)
+    }
     getPointTotal() {
-        const sumSkills = (tot, s) => tot + s.points;
-        const embeds = Object.values(this.getEmbeds());
+        const sumSkills = (tot, s) => tot + s.points || 0;
+        const embeds = Object.values(this.embedded);
         const total = this.getValue().pointTotal;
         const attributePoints = Object.values(this.getAttributeCollection()).reduce(
             (points, attribute) => points + (attribute.pointsSpent || 0), 0
@@ -182,6 +201,33 @@ export class Character extends Entity<CharacterData> {
             total,
             unspent: total - spent
         }
+    }
+    private static getFeatures(embeds: Entity<Data, Data>[]) {
+        const activeEmbeds: Entity<Data, Data>[] = embeds.filter(e => e.enabled);
+        const features = activeEmbeds.flatMap(entity => entity.getValue()?.features).filter(v => !!v);
+        return features
+    }
+    process() {
+        const embedded = Object.values(this.embedded).reduce((map, embed) => {
+            if (!(map[embed.type])) {
+                map[embed.type] = {};
+            }
+            map[embed.type][embed.id] = embed.process();
+            return map
+        }, {} as EntityMap)
+        const pd = {
+            embedded,
+            pointTotals: this.getPointTotal(),
+            basicLift: this.getBasicLift(),
+            thrustDamage: this.getThrustDamage(),
+            swingDamage: this.getSwingDamage(),
+            attributes: this.getAttributeCollection(),
+            hitLocations: this.getHitLocationCollection(),
+            encumbranceLevel: this.getEncumbranceLevel(),
+            carriedWeight: this.getCarriedWeight()
+        };
+        const spd = super.process();
+        return { ...spd, ...pd }
     }
 }
 export interface AttributeData {
@@ -223,16 +269,16 @@ interface Attribute {
     bonus: number
 }
 type AttributeCollection = Record<string, Attribute>
-export function createAttributeCollection(characterData: CharacterData): AttributeCollection {
-    const character = new Character(characterData);
-    const features = character.getFeatures();
+export function createAttributeCollection(character: Character): AttributeCollection {
+    const characterData = character.getValue();
+    const { features = [] } = character;
     const {
         attributeLevels,
         config: {
             ui: {
                 attributeOrder,
                 poolOrder
-            },
+            } = {},
             attributes = {}
         } = {}
     } = characterData;
@@ -249,6 +295,12 @@ export function createAttributeCollection(characterData: CharacterData): Attribu
             mod = 0,
             current = 0
         } = attributeLevels[name] || {};
+        const levelsIncreased = baseLevel - defaultLevel;
+        const pointsSpent = levelsIncreased * costPerLevel;
+        const bonus = features
+            .filter(f => f.type === "attribute bonus" && f.attribute === name)
+            .reduce((t, b) => t + b.amount, 0)
+        const formula = basedOn.startsWith("return") ? new Function("attributes", basedOn) : (attributes) => attributes[basedOn].level;
         collection[name] = {
             currentValue: current,
             keys: data,
@@ -258,14 +310,11 @@ export function createAttributeCollection(characterData: CharacterData): Attribu
             baseLevel,
             current,
             mod,
+            levelsIncreased,
+            pointsSpent,
+            bonus,
             get unmodifiedLevel() {
                 return this.level - this.bonus - this.mod - this.base;
-            },
-            get levelsIncreased() {
-                return baseLevel - defaultLevel
-            },
-            get pointsSpent() {
-                return this.levelsIncreased * costPerLevel
             },
             get level() {
                 return baseLevel + this.bonus + mod + this.base;
@@ -274,19 +323,13 @@ export function createAttributeCollection(characterData: CharacterData): Attribu
                 return this.level
             },
             get base() {
-                const formula = basedOn.startsWith("return") ? new Function("attributes", basedOn) : (attributes) => attributes[basedOn].level
                 try {
                     return formula(collection)
                 } catch (err) {
                     return 0
                 }
-            },
-            get bonus() {
-                return features
-                    .filter(f => f.type === "attribute bonus" && f.attribute === name)
-                    .reduce((t, b) => t + b.amount, 0)
             }
-        };
+        } as Attribute;
     }
     return collection
 }
@@ -309,9 +352,9 @@ export interface HitLocation {
     crippleThreshold: number
 }
 type HitLocationCollection = Record<string, HitLocation>
-function createHitLocationCollection(characterData: CharacterData) {
-    const character = new Character(characterData);
-    const features = character.getFeatures();
+function createHitLocationCollection(character: Character) {
+    const characterData = character.getValue();
+    const { features = [] } = character;
     const hitPoints = character.getAttribute("hit points");
     const collection: HitLocationCollection = {};
     const {
@@ -326,28 +369,23 @@ function createHitLocationCollection(characterData: CharacterData) {
             crippleDivisor = false,
             subLocations
         } = data;
-        const dt = hitLocationDamage[name]
+        const damageTaken = hitLocationDamage[name];
+        const damageResistance = features
+            .filter(f => f && f.type === "armor bonus" && (f.location?.includes(name)))
+            .map(f => f.amount)
+            .reduce((t, b) => t + b, 0);
+        const crippleThreshold = typeof crippleDivisor === "number" ? (hitPoints.level / crippleDivisor) : 0
+        const isCrippled = crippleDivisor === 0 ? false : damageTaken > crippleThreshold;
         collection[name] = {
             name,
             keys: data,
-            get damageResistance(): number {
-                return features
-                    .filter(f => f.type === "armor bonus" && f.location === name)
-                    .map(f => f.amount)
-                    .reduce((t, b) => t + b, 0)
-            },
+            damageResistance,
             get subLocations(): HitLocation[] {
                 return subLocations?.map(location => collection[location])
             },
-            damageTaken: dt,
-            get isCrippled() {
-                const ct = this.crippleThreshold;
-                if (ct === 0) return false;
-                return this.damageTaken > ct
-            },
-            get crippleThreshold() {
-                return typeof crippleDivisor === "number" ? (hitPoints.level / crippleDivisor) : 0
-            }
+            damageTaken,
+            isCrippled,
+            crippleThreshold
         }
     }
     return collection

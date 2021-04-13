@@ -20,7 +20,8 @@ export async function fetchRecord<T extends Record<string, any>>(tableName: stri
     const downstream: Subject<Change<T>> = new Subject<Change<T>>();
     const upstream = {
         async next(change) {
-            change.value = stamp(change.value);
+            const stamped = stamp(change.value);
+            change.value = stamped;
             downstream.next(change);
             update(tableName, key, change.value);
         },
@@ -30,7 +31,7 @@ export async function fetchRecord<T extends Record<string, any>>(tableName: stri
     state = new State<T>(
         initial,
         downstream.pipe(
-            distinct(change => change?.value?.__meta__?.lastEdit)
+            distinct(c => c?.value?.__meta__?.lastEdit),
         ),
         upstream
     );
@@ -52,24 +53,22 @@ export async function fetchRecord<T extends Record<string, any>>(tableName: stri
                 }
             }
         }),
+        filter(c => c?.value?.__meta__?.lastEdit > state.value?.__meta__?.lastEdit),
         takeUntil(state.pipe(last()))
     ).subscribe(downstream);
     return state;
 }
 export function stamp(value) {
     const timestamp = Date.now();
-    const {
-        __meta__: {
-            createdOn = timestamp,
-        } = {}
-    } = value;
+    const createdOn = value?.__meta__?.createdOn ?? timestamp;
     return Object.assign(
         {},
         value,
         {
             __meta__: {
+                ...value.__meta__,
                 lastEdit: timestamp,
-                createdOn
+                createdOn,
             }
         }
     )

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { SkillDifficulty } from "@app/gurps/resources/skill";
-    import { TechniqueDifficulty } from "@app/gurps/resources/technique";
+    import type { TechniqueDifficulty } from "@app/gurps/resources/technique";
     export let technique: boolean = false;
     export let difficulty: TechniqueDifficulty | SkillDifficulty;
 </script>

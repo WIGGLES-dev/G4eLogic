@@ -3,12 +3,12 @@
 </script>
 
 <script>
-  import { setContext, onDestroy, onMount } from "svelte";
+  import { setContext, onDestroy, onMount, tick } from "svelte";
   import { writable } from "svelte/store";
   import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
-
-  export let tabIndex = 0;
+  export let initTab = 0;
+  let tabIndex = initTab;
   const tabs = [];
   const panels = [];
   const selectedTab = writable(tabIndex);
@@ -42,11 +42,13 @@
         );
       });
     },
-    selectTab(tab) {
+    async selectTab(tab) {
       const i = tabs.indexOf(tab);
-      selectedTab.set(tab);
+      selectedPanel.set(null);
+      selectedTab.set(tabs[i]);
       selectedPanel.set(panels[i]);
       tabIndex = i;
+      initTab = i;
       dispatch("tabchange", i);
     },
     selectedTab,

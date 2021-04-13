@@ -16,14 +16,14 @@ resource:
         type: string
       default: []
     children:
-      type: object
-      patternProperties:
-        .:
-          type: array
-          items:
-            type: object
-      default: {}
-    metadata:
+      type: array
+      items:
+        type: object
+      default: []
+    enabled:
+      type: boolean
+      default: true
+    __meta__:
       $ref: definitions.yaml#/metadata
 metadata:
   type: object
@@ -34,9 +34,6 @@ metadata:
       type: string
     progenitor:
       type: string
-    enabled:
-      type: boolean
-      default: true
     flags:
       type: object
     createdOn:

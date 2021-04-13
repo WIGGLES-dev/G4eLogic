@@ -9,8 +9,8 @@
 </script>
 
 <script lang="ts">
-  export let state$: State<any>;
-  const features$ = state$.sub("features");
+  export let entity: State<any>;
+  const features$ = entity.sub("features");
 </script>
 
 <Tabs>
@@ -23,21 +23,21 @@
       <fieldset>
         <label class="flex-1">
           <span>Name</span>
-          <input type="text" bind:value={$state$.name} />
+          <input type="text" bind:value={$entity.name} />
         </label>
         <label>
           <span>Enabled</span>
-          <input type="checkbox" bind:checked={$state$.enabled} />
+          <input type="checkbox" bind:checked={$entity.enabled} />
         </label>
       </fieldset>
       <fieldset>
         <label>
           <span>Cost</span>
-          <input type="number" bind:value={$state$.cost} />
+          <input type="number" bind:value={$entity.cost} />
         </label>
         <label>
           <span>Mod Type</span>
-          <select bind:value={$state$.type}>
+          <select bind:value={$entity.costType}>
             {#each Object.entries(TraitModifierType) as [key, value], i (i)}
               <option {value}>{key}</option>
             {/each}
@@ -47,22 +47,22 @@
           <span>Levels</span>
           <input
             type="number"
-            bind:value={$state$.level}
-            disabled={!$state$.hasLevels ||
-              $state$.type !== TraitModifierType.Percentage}
+            bind:value={$entity.level}
+            disabled={!$entity.hasLevels ||
+              $entity.type !== TraitModifierType.Percentage}
           />
         </label>
         <label>
           <span>Has Levels</span>
           <input
             type="checkbox"
-            bind:checked={$state$.hasLevels}
-            disabled={$state$.type !== TraitModifierType.Percentage}
+            bind:checked={$entity.hasLevels}
+            disabled={$entity.costType !== TraitModifierType.Percentage}
           />
         </label>
         <label>
           <span>Affects</span>
-          <select bind:value={$state$.affects}>
+          <select bind:value={$entity.affects}>
             {#each Object.entries(TraitModifierAffects) as [key, value], i (i)}
               <option {value}>{key}</option>
             {/each}
@@ -72,11 +72,11 @@
       <fieldset>
         <label class="flex-1">
           <span>Notes</span>
-          <input type="text" bind:value={$state$.notes} />
+          <input type="text" bind:value={$entity.notes} />
         </label>
         <label>
           <span>Reference</span>
-          <input type="text" bind:value={$state$.reference} />
+          <input type="text" bind:value={$entity.reference} />
         </label>
       </fieldset>
     </form>
@@ -87,11 +87,4 @@
 </Tabs>
 
 <style lang="postcss">
-  input,
-  select {
-    @apply w-full bg-white;
-  }
-  label {
-    @apply px-2;
-  }
 </style>

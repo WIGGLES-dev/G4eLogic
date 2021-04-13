@@ -10,6 +10,9 @@ import FileManagerPlugin from "filemanager-webpack-plugin";
 import HTMLWebpackPlugin from "html-webpack-plugin";
 import { HtmlWebpackSkipAssetsPlugin } from "html-webpack-skip-assets-plugin";
 import HtmlWebpackTagsPlugin from 'html-webpack-tags-plugin';
+import WorkerPlugin from "worker-plugin";
+import WorkboxPlugin from "workbox-webpack-plugin";
+import CompressionPlugin from "compression-webpack-plugin";
 import { typescript, postcss } from "svelte-preprocess";
 const cwd = process.cwd();
 const mode = process.env.prod === "true" ? "production" : "development";
@@ -20,7 +23,7 @@ export const svelteLoaderConfig = {
     use: {
         loader: 'svelte-loader',
         options: {
-            dev: prod,
+            dev: !prod,
             onwarn: (warning, handler) => { },
             emitCss: true,
             preprocess: [
@@ -40,9 +43,6 @@ export const cssLoaderConfig = {
         prod ? MiniCssExtractPlugin.loader : 'style-loader',
         {
             loader: 'css-loader',
-            options: {
-                //url: false
-            }
         },
         'postcss-loader'
     ],
@@ -69,7 +69,7 @@ export const yamlLoaderConfig = {
     type: 'json' as const,
     use: 'yaml-loader'
 };
-export default {
+const config: webpack.Configuration = {
     devServer: {
         contentBase: output,
         compress: true,
@@ -80,10 +80,6 @@ export default {
     entry: {
         valor: path.resolve(cwd, 'src/gurps/system.ts'),
         ["plugins/foundry/foundry-valor"]: path.resolve(cwd, 'src/plugins/foundry/init.ts'),
-        ["workers/character-worker"]: path.resolve(cwd, 'src/gurps/workerscripts/character.worker.ts'),
-        ["workers/equipment-worker"]: path.resolve(cwd, 'src/gurps/workerscripts/equipment.worker.ts'),
-        ["workers/skill-worker"]: path.resolve(cwd, 'src/gurps/workerscripts/skill.worker.ts'),
-        ["workers/trait-worker"]: path.resolve(cwd, 'src/gurps/workerscripts/trait.worker.ts')
     },
     resolve: {
         alias: {
@@ -115,10 +111,13 @@ export default {
     mode,
     watch: false,
     optimization: {
+        concatenateModules: false,
+        usedExports: true
     },
     plugins: [
         new CleanWebpackPlugin(),
         new HTMLWebpackPlugin({
+            title: "Valor",
             favicon: "static/favicon.png",
             hash: true,
             skipAssets: [
@@ -171,9 +170,18 @@ export default {
                 }
             }
         }),
+        new WorkerPlugin({
+            sharedWorker: true
+        }),
         new MiniCssExtractPlugin(),
         new webpack.ProvidePlugin({}),
-        // new BundleAnalyzerPlugin(),
+        new WorkboxPlugin.GenerateSW({
+            clientsClaim: true,
+            skipWaiting: true
+        }),
+        new BundleAnalyzerPlugin(),
+        //new CompressionPlugin()
     ],
     devtool: prod ? false : 'source-map'
 }
+export default config

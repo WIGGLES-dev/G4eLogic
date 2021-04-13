@@ -1,5 +1,5 @@
 import { Data, Entity } from "@app/entity"
-import type { CharacterData } from "./character";
+import { Character, CharacterData } from "./character";
 import { Skill, SkillDefault } from "./skill"
 
 export enum BaseDamage {
@@ -41,23 +41,33 @@ export interface RangedWeaponData extends WeaponKeys, Data {
     bulk: string
 }
 
-export class Weapon<T extends WeaponKeys & Data> extends Entity<T, CharacterData> {
-    constructor(weapon, character) {
-        super(weapon, character);
+export class Weapon<T extends WeaponKeys & Data = WeaponKeys & Data> extends Entity<CharacterData, T> {
+    character: Character
+    constructor(character, weapon, ...args) {
+        super(character, weapon, ...args);
+        this.character = character instanceof Character ? character : new Character(this.record);
     }
+    get defaults() { return this.getValue()?.defaults ?? [] }
     get bestAttackLevel(): number {
-        return Skill.prototype.getHighestDefault.call(this)
+        const bestDefault = Skill.prototype.getHighestDefault.call(this);
+        return bestDefault
     }
     getBestAttackLevel() {
         return this.bestAttackLevel
+    }
+    process() {
+        const pd = {
+            level: this.bestAttackLevel
+        }
+        return { ...super.process(), ...pd }
     }
 }
 
 export class MeleeWeapon extends Weapon<MeleeWeaponData> {
     static version = 1 as const
     static type = "melee weapon" as const
-    constructor(weapon, character) {
-        super(weapon, character);
+    constructor(character, meleeWeapon, ...args) {
+        super(character, meleeWeapon, ...args);
     }
     get parryLevel() {
         const { parryBonus = 0 } = this.getValue();
@@ -75,12 +85,19 @@ export class MeleeWeapon extends Weapon<MeleeWeaponData> {
     getBlockLevel() {
         return this.blockLevel
     }
+    process() {
+        const pd = {
+            blockLevel: this.blockLevel,
+            parryLevel: this.parryLevel
+        }
+        return { ...super.process(), ...pd }
+    }
 }
 
 export class RangedWeapon extends Weapon<RangedWeaponData> {
     static version = 1 as const
     static type = "ranged weapon" as const
-    constructor(weapon, character) {
-        super(weapon, character);
+    constructor(character, rangedWeapon, ...args) {
+        super(character, rangedWeapon, ...args);
     }
 }

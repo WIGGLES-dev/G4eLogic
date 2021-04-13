@@ -1,59 +1,89 @@
 <script lang="ts">
   import { getContext, onMount, onDestroy } from "svelte";
-  import { tooltip } from "@ui/utils/use";
+  import { blur, fade } from "svelte/transition";
+  import Popper from "@components/Popper.svelte";
   import {
     sizeModifierTooltip,
     swingDamageTooltip,
     thrustDamageTooltip,
   } from "@ui/tooltips/index";
   import { System } from "@internal";
-  import { Character as CharacterWorker } from "@app/gurps/resources/character";
   import { mergeMap, tap } from "rxjs/operators";
-  import { State } from "rxdeep";
-  import { Observable } from "rxjs";
-  import { Remote } from "comlink";
-  const state = getContext<State<any>>("sheet");
-  const character$ = getContext<Observable<Remote<CharacterWorker>>>("worker");
-  const swingDamage$ = character$.pipe(mergeMap((c) => c.getSwingDamage()));
-  const thrustDamage$ = character$.pipe(mergeMap(c => c.getThrustDamage()));
+  import type { Character } from "@internal";
+  import { getEditorContext } from "@ui/editors/Editor.svelte";
+  const { state, processed$ } = getEditorContext<Character>();
+  $: swingDamage = $processed$.swingDamage;
+  $: thrustDamage = $processed$.thrustDamage;
   const sm$ = state.sub("profile", "sizeModifier");
 </script>
 
 <section>
-  <label use:tooltip={{ tipclass: "text-sm", tooltip: sizeModifierTooltip }}>
-    <span class="w-1/2 underline text-center font-semibold inline-block"
-      >Size</span
+  <label>
+    <Popper
+      display="hovered virtual"
+      placement="bottom-start"
+      offset={[16, 16]}
     >
+      <div
+        class="bg-gray-700 text-white text-xs p-2 text-left font-normal not-italic"
+      >
+        {@html sizeModifierTooltip}
+      </div>
+    </Popper>
+    <span class="w-1/2 text-center font-semibold inline-block">SM</span>
     <input
       bind:value={$sm$}
       placeholder="0"
-      class="w-12 outline-none border-b border-solid border-red-700 rounded-r-md text-center"
+      class="w-12 text-center"
       type="number"
     />
   </label>
-  <div
-    class="flex"
-    use:tooltip={{ tipclass: "text-sm", tooltip: swingDamageTooltip }}
-  >
+  <div class="flex">
+    <Popper
+      display="hovered virtual"
+      placement="bottom-start"
+      offset={[16, 16]}
+    >
+      <div class="tooltip">
+        {@html swingDamageTooltip}
+      </div>
+    </Popper>
     <span class="flex-1 text-center font-semibold">Swing</span>
     <div class="flex-1">
-      <span
-        class="cursor-pointer"
-        on:click={(e) => System.roll(`${$swingDamage$}`)}>{$swingDamage$}</span
-      >
+      {#key swingDamage}
+        <span
+          out:fade={{ duration: 100 }}
+          in:fade={{ delay: 100 }}
+          class="cursor-pointer"
+          on:click={(e) => System.roll(`${swingDamage}`)}
+        >
+          {swingDamage}
+        </span>
+      {/key}
     </div>
   </div>
-  <div
-    class="flex"
-    use:tooltip={{ tipclass: "text-sm", tooltip: thrustDamageTooltip }}
-  >
+  <div class="flex">
+    <Popper
+      display="hovered virtual"
+      placement="bottom-start"
+      offset={[16, 16]}
+    >
+      <div class="tooltip">
+        {@html thrustDamageTooltip}
+      </div>
+    </Popper>
     <span class="flex-1 text-center font-semibold">Thrust</span>
     <div class="flex-1">
-      <span
-        class="cursor-pointer"
-        on:click={(e) => System.roll(`${$thrustDamage$}`)}
-        >{$thrustDamage$}</span
-      >
+      {#key thrustDamage}
+        <span
+          out:fade={{ duration: 100 }}
+          in:fade={{ delay: 100 }}
+          class="cursor-pointer"
+          on:click={(e) => System.roll(`${thrustDamage}`)}
+        >
+          {thrustDamage}
+        </span>
+      {/key}
     </div>
   </div>
 </section>

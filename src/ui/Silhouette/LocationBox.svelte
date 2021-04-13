@@ -1,17 +1,22 @@
 <script lang="ts">
-    import { HitLocation } from "@app/gurps/resources/character";
+    import type { HitLocation } from "@app/gurps/resources/character";
     import Meter from "@components/Form/Meter.svelte";
     import { getContext } from "svelte";
+    import Editor, { editorctx } from "@ui/editors/Editor.svelte";
     export let location: HitLocation;
-    const state = getContext<any>("sheet");
+    import { Character } from "@internal";
+    import { getEditorContext } from "@ui/editors/Editor.svelte";
+    const { processed$, state } = getEditorContext<Character>();
     const dt = state.sub("hitLocationDamage", location.name);
 </script>
 
 <div class="location" class:crippled={location.isCrippled}>
-    <div class="location-name">{location.name}</div>
-    <div class="flex justify-center py-1">
-        <span class="text-xs">DR:{location.damageResistance}</span>
+    <div class="location-name ">
+        {location.name}
     </div>
+    {#if location.damageResistance > 0}
+        <div class="text-center">DR:{location.damageResistance}</div>
+    {/if}
     <input
         type="number"
         class="damage-input"
@@ -23,10 +28,10 @@
 
 <style lang="postcss">
     .location {
-        @apply bg-gray-700 text-white text-center text-xs max-w-full truncate;
+        @apply bg-gray-700 text-white text-center text-xs;
     }
     .location-name {
-        @apply break-all;
+        @apply break-words capitalize;
     }
     .location.crippled {
         @apply bg-red-700;

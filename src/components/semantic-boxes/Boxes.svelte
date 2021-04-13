@@ -24,13 +24,13 @@
   ul {
     @apply mx-2;
   }
-  ul > :global(li) {
-    @apply relative m-1 border-b border-solid flex;
+  ul :global(li) {
+    @apply relative m-4 p-2 shadow-md flex;
   }
-  ul > :global(.fas) {
-    @apply text-sm;
+  ul :global(.fas) {
+    @apply text-xs text-red-700 p-1;
   }
-  ul > :global(.fas):hover {
-    @apply text-red-700;
+  ul :global(.fas:hover) {
+    @apply bg-red-700 text-white;
   }
 </style>

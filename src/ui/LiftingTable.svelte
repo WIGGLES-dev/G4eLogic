@@ -1,105 +1,103 @@
 <script lang="ts">
     import { getContext } from "svelte";
-    import { tooltip } from "@ui/utils/use";
-    import { Observable } from "rxjs";
-    import { Remote } from "comlink";
-    import { Character as CharacterWorker } from "@app/gurps/resources/character";
     import { mergeMap } from "rxjs/operators";
-    const state = getContext<any>("sheet");
-    const character$ = getContext<Observable<Remote<CharacterWorker>>>(
-        "worker"
-    );
-    const basicLift$ = character$.pipe(mergeMap((c) => c.getBasicLift()));
-    $: lift = $basicLift$;
+    import Popper from "@components/Popper.svelte";
+    import { Character } from "@internal";
+    import { getEditorContext } from "@ui/editors/Editor.svelte";
+    const { state, processed$ } = getEditorContext<Character>();
+    $: lift = $processed$.basicLift;
 </script>
 
-<section>
-    <table class="text-sm">
-        <colgroug>
-            <col class="" />
-            <col class="" />
-        </colgroug>
-        <thead>
-            <tr>
-                <th colspan="2" scope="col">Lifting & Moving</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr
-                use:tooltip={{
-                    tipclass: "text-sm",
-                    tooltip:
-                        "Governs the weight you can pick up and move. Ref. BS352.",
-                }}
-            >
-                <td>{lift}</td>
-                <td>Simple Lift</td>
-            </tr>
-            <tr
-                use:tooltip={{
-                    tipclass: "text-sm",
-                    tooltip:
-                        "The weight you can lift overhead with one hands in two seconds. Equals Basic Lift * 2.",
-                }}
-            >
-                <td>{lift * 2}</td>
-                <td>One-Handed-Lift</td>
-            </tr>
-            <tr
-                use:tooltip={{
-                    tipclass: "text-sm",
-                    tooltip:
-                        "The weight you can lift overhead with two hands in four seconds. Equals Basic Lift * 8.",
-                }}
-            >
-                <td>{lift * 8}</td>
-                <td>Two-Handed-Lift</td>
-            </tr>
-            <tr
-                use:tooltip={{
-                    tipclass: "text-sm",
-                    tooltip:
-                        "The weight you can shove and knock over from a standing position. Equals Basic Lift * 12.",
-                }}
-            >
-                <td>{lift * 12}</td>
-                <td>Shove & Knock Over</td>
-            </tr>
-            <tr
-                use:tooltip={{
-                    tipclass: "text-sm",
-                    tooltip:
-                        "The weight you can shove and knock over from a running start. Equals Basic Lift * 24.",
-                }}
-            >
-                <td>{lift * 24}</td>
-                <td>Running Shove & Knock Over</td>
-            </tr>
-            <tr
-                use:tooltip={{
-                    tipclass: "text-sm",
-                    tooltip: `
-                    The maximum weight you can carry on your back. Equals Basic Lift * 15.<br />
-                    If this puts you over Basic Lift * 10 (Extra-Heavy encumbrance), you lose 1 FP per second until you put the weight down.<br/>
-                    `,
-                }}
-            >
-                <td>{lift * 15}</td>
-                <td>Carry on Back</td>
-            </tr>
-            <tr
-                use:tooltip={{
-                    tipclass: "text-sm",
-                    tooltip:
-                        "The maximum weight you can move in any way over any period of time. Equals Basic Lift * 50.",
-                }}
-            >
-                <td>{lift * 50}</td>
-                <td>Shift Slightly</td>
-            </tr>
-        </tbody>
-    </table>
-</section>
+<table class="text-sm">
+    <caption class="underline">Lifting & Moving</caption>
+    <tbody>
+        <tr>
+            <Popper display="hovered virtual" offset={[16, 16]}>
+                <div class="tooltip">
+                    <p>
+                        Governs the weight you can pick up and move. Ref. BS352.
+                    </p>
+                </div>
+            </Popper>
+            <td>{lift}</td>
+            <td>Simple Lift</td>
+        </tr>
+        <tr>
+            <Popper display="hovered virtual" offset={[16, 16]}>
+                <div class="tooltip">
+                    <p>
+                        The weight you can lift overhead with one hands in two
+                        seconds. Equals Basic Lift * 2.
+                    </p>
+                </div>
+            </Popper>
+            <td>{lift * 2}</td>
+            <td>One-Handed-Lift</td>
+        </tr>
+        <tr title="">
+            <Popper display="hovered virtual" offset={[16, 16]}>
+                <div class="tooltip">
+                    <p>
+                        The weight you can lift overhead with two hands in four
+                        seconds. Equals Basic Lift * 8.
+                    </p>
+                </div>
+            </Popper>
+            <td>{lift * 8}</td>
+            <td>Two-Handed-Lift</td>
+        </tr>
+        <tr>
+            <Popper display="hovered virtual" offset={[16, 16]}>
+                <div class="tooltip">
+                    <p>
+                        The weight you can shove and knock over from a standing
+                        position. Equals Basic Lift * 12.
+                    </p>
+                </div>
+            </Popper>
+            <td>{lift * 12}</td>
+            <td>Shove & Knock Over</td>
+        </tr>
+        <tr>
+            <Popper display="hovered virtual" offset={[16, 16]}>
+                <div class="tooltip">
+                    <p>
+                        The weight you can shove and knock over from a running
+                        start. Equals Basic Lift * 24.
+                    </p>
+                </div>
+            </Popper>
+            <td>{lift * 24}</td>
+            <td>Running Shove & Knock Over</td>
+        </tr>
+        <tr>
+            <Popper display="hovered virtual" offset={[16, 16]}>
+                <div class="tooltip">
+                    <p>
+                        The maximum weight you can carry on your back. Equals
+                        Basic Lift * 15. If this puts you over Basic Lift * 10
+                        (Extra-Heavy encumbrance), you lose 1 FP per second
+                        until you put the weight down.
+                    </p>
+                </div>
+            </Popper>
+            <td>{lift * 15}</td>
+            <td>Carry on Back</td>
+        </tr>
+        <tr>
+            <Popper display="hovered virtual" offset={[16, 16]}>
+                <div class="tooltip">
+                    <p>
+                        The maximum weight you can move in any way over any
+                        period of time. Equals Basic Lift * 50.
+                    </p>
+                </div>
+            </Popper>
+            <td>{lift * 50}</td>
+            <td>Shift Slightly</td>
+        </tr>
+    </tbody>
+</table>
 
 <style lang="postcss">
     td:first-child {

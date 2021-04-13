@@ -1,6 +1,7 @@
 <script context="module" lang="ts">
     import { createEventDispatcher } from "svelte";
-    import Menu, { MenuOption } from "./Menu.svelte";
+    import Menu from "./Menu.svelte";
+    import type { MenuOption } from "./Menu.svelte";
     import Cell from "@components/Value.svelte";
     import { safeCall } from "@utils/object";
 </script>

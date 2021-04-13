@@ -1,10 +1,11 @@
-import { db, changes$, Data } from '@internal';
+import { db, changes$, Data, stamp } from '@internal';
+import type { Entity } from "./entity";
 import Main from "@app/main.svelte";
 import $RefParser, { JSONSchema } from '@apidevtools/json-schema-ref-parser';
 import Ajv from 'ajv';
 import { Change } from 'rxdeep';
 import { windowEndpoint, expose, proxy, wrap, Remote } from "comlink";
-import { Observable, Subject, Subscribable, Subscription } from "rxjs";
+import { BehaviorSubject, Observable, Subject, Subscribable, Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 const locals = {
     add(input, ...numbers) {
@@ -39,7 +40,7 @@ const locals = {
         input[method].apply(input, args)
     },
     debug(input, message) {
-        console.group(message, this, input);
+        console.group(message, this, System, input);
         return input
     }
 }
@@ -52,9 +53,20 @@ interface System {
     broadcast(event, data)
 }
 const bc = new BroadcastChannel("valor");
+export interface SystemInit {
+    workers: [worker: (Worker | SharedWorker), key: string][]
+    schemas: [url: string, key: string][]
+}
+type GEntity = new (record: Data, embed: Data) => Entity<Data, Data>
+export interface SystemWorker {
+    classes: Record<string, Remote<GEntity>>
+    helpers: Record<string, Remote<(...args) => any>>
+}
+interface System { }
 export const System = {
     db,
     changes$,
+    ready$: new BehaviorSubject(false),
     bc: wrap<System>(bc),
     origin: window.origin,
     events$: new Subject<Event>(),
@@ -64,7 +76,7 @@ export const System = {
         useDefaults: true
     }),
     $parser: new $RefParser(),
-    workers: {} as Record<string, Remote<any>>,
+    workers: {} as Record<string, SystemWorker>,
     async addSchema(schema, key?: string) {
         try {
             const dereferenced = await System.$parser.bundle(schema);
@@ -75,6 +87,8 @@ export const System = {
     },
     async add(table, obj, key) {
         if (System.validate(obj)) {
+            if (!obj.__meta__) obj.__meta__ = {};
+            obj.__meta__.createdOn = Date.now();
             return await System.db.table(table).add(obj, key);
         }
     },
@@ -82,7 +96,7 @@ export const System = {
         return await System.db.table(table).get(key);
     },
     async update(table, key, data) {
-        return await System.db.table(table).update(key, data);
+        return await System.db.table(table).update(key, stamp(data));
     },
     async put(table, data, key?) {
         if (System.validate(data)) {
@@ -95,19 +109,11 @@ export const System = {
     async getTable(table) {
         return await System.db.table(table).toArray();
     },
-    addWorker(name: string, src: string) {
-        try {
-            this.workers[name] = wrap(new SharedWorker(src).port)
-        } catch (err) {
-            try {
-                this.workers[name] = wrap(new Worker(src))
-            } catch (err) {
-
-            }
-        }
+    addWorker(worker: Worker | SharedWorker, name: string,) {
+        System.workers[name] = wrap(worker instanceof SharedWorker ? worker.port : worker) as unknown as SystemWorker;
     },
-    getWorker<T>(name: string) {
-        return this.workers[name] as Remote<T>
+    getWorker(name: string): SystemWorker {
+        return System.workers[name]
     },
     dispatch(event, data) {
         System.events$.next({
@@ -155,16 +161,43 @@ export const System = {
     },
     expose() {
         if (window.parent !== window) {
-            expose(System, bc);
-            expose(System, windowEndpoint(window.parent));
+            try {
+                expose(System, bc);
+                expose(System, windowEndpoint(window.parent));
+            } catch (err) {
+
+            }
         }
     },
-    async init() {
+    async init(params?: SystemInit) {
         new Main({
             target: document.body
         });
+        if ('serviceWorker' in navigator) {
+            window.addEventListener("load", async () => {
+                const registration = await navigator.serviceWorker.register("./service-worker.js");
+                console.log(registration);
+            });
+        }
+        System.expose();
+        for (const [url, key] of params?.schemas ?? []) {
+            await System.addSchema(url, key)
+        }
+        for (const [worker, key] of params?.workers ?? []) {
+            System.addWorker(worker, key)
+        }
+        System.ready$.next(true);
+        window["system"] = System
     },
 }
 export function validateResource(change: Change<Data>) {
-    return System.validate(change.value).valid
+    const hasSchema = System.validator.schemas[change.value?.type];
+    const { valid, errors } = System.validate(change.value);
+    if (hasSchema ? valid : true) {
+        change.value = stamp(change.value);
+
+    } else {
+        console.log(errors);
+    };
+    return hasSchema ? valid : true
 }

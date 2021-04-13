@@ -1,14 +1,18 @@
-<script>
-    import { onMount, onDestroy, createEventDispatcher } from "svelte";
-    import JSONEditor from "jsoneditor";
+<svelte:options accessors={true} />
 
+<script lang="ts">
+    import { onMount, onDestroy, createEventDispatcher } from "svelte";
+    import JSONEditor, { JSONEditorOptions } from "jsoneditor";
     const dispatch = createEventDispatcher();
-    export let editor;
+    let classList = "";
+    export { classList as class };
+    export let editor: JSONEditor;
     let editorElement;
     export let data = {};
-    export let options = {
+    $: if (editor) editor.set(data);
+    export let options: JSONEditorOptions = {
         modes: ["tree", "code"],
-        onChange(e) {
+        onChange() {
             try {
                 let dataChanges = editor.get();
                 data = null;
@@ -16,7 +20,6 @@
             } catch (err) {}
         },
     };
-
     onMount(() => {
         editor = new JSONEditor(editorElement, options);
         editor.set(data);
@@ -24,18 +27,19 @@
         if (!meta) {
             const meta = document.createElement("meta");
             meta.setAttribute("charset", "utf-8");
-            editorElement.ownerDocument.head.appendChild(meta);
+            editorElement.ownerDocument.head.append(meta);
         } else {
-            if (!meta.getAttribute("charset") === "utf-8") {
+            const charset = meta.getAttribute("charset");
+            if (charset !== "utf-8") {
                 meta.setAttribute("charset", "utf-8");
             }
         }
+        return () => editor.destroy();
     });
 </script>
 
+<slot {editor} />
+<section class={classList} data-json-editor bind:this={editorElement} />
+
 <style>
 </style>
-
-<svelte:options accessors={true} />
-
-<section class="h-full" data-json-editor bind:this={editorElement} />

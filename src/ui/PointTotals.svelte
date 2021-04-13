@@ -1,28 +1,24 @@
 <script lang="ts">
-  import { Observable } from "rxjs";
-  import { Remote, proxy, releaseProxy } from "comlink";
-  import {
-    Character as CharacterWorker,
-    Attribute,
-  } from "@app/gurps/resources/character";
   import { getContext } from "svelte";
-  import { mergeMap, startWith } from "rxjs/operators";
-  const character = getContext<any>("sheet");
-  const character$ = getContext<Observable<Remote<CharacterWorker>>>("worker");
-  const pointTotal$ = character$.pipe(mergeMap((c) => c.getPointTotal()));
+  import { mergeMap, pluck, startWith } from "rxjs/operators";
+  import { Character } from "@internal";
+  import { getEditorContext } from "@ui/editors/Editor.svelte";
+  const { state, processed$ } = getEditorContext<Character>();
+  type pd = ReturnType<Character["process"]>;
   $: ({
-    unspent,
-    spent,
-    racialPoints,
-    advantages,
-    disadvantages,
-    attributePoints,
-    perks,
-    quirks,
-    skills,
-    techniques,
-    spells,
-  } = $pointTotal$ || ({} as any));
+    unspent = 0,
+    spent = 0,
+    racialPoints = 0,
+    advantages = 0,
+    disadvantages = 0,
+    attributePoints = 0,
+    perks = 0,
+    quirks = 0,
+    skills = 0,
+    techniques = 0,
+    spells = 0,
+  } = $processed$?.pointTotals ?? ({} as pd["pointTotals"]));
+  const pointTotal = state.sub("pointTotal");
 </script>
 
 <section class="text-center">
@@ -36,7 +32,7 @@
         class="text-center bg-gray-200 p-1 outline-none"
         type="number"
         placeholder="0"
-        bind:value={$character.pointTotal}
+        bind:value={$pointTotal}
       />
     </div>
     <div class="col-span-2 pt-1" />
@@ -57,6 +53,7 @@
     <div>{skills + techniques}</div>
     <div class="font-semibold text-right">Spells</div>
     <div>{spells}</div>
+    <hr class="col-span-2" />
   </div>
 </section>
 
@@ -67,7 +64,6 @@
   hr {
     @apply border border-solid border-gray-700 m-2 ml-0 mr-0;
   }
-
   .grid {
     grid-template-columns: auto auto;
   }

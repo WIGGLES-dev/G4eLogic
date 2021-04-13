@@ -3,16 +3,16 @@
   import CategoryList from "@components/Form/CategoryList.svelte";
   import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
   import Features from "./panels/Features.svelte";
-  import Weapon from "@ui/datatables/Weapon.svelte";
+  import WeaponList from "@ui/datatables/Weapon.svelte";
 </script>
 
 <script lang="ts">
   export let entity;
-  const equipped$ = entity.sub("metadata", "enabled");
+  const equipped$ = entity.sub("enabled");
   const modifiers$ = entity.sub("modifiers");
 </script>
 
-<Tabs>
+<Tabs bind:initTab={$entity.initTab}>
   <TabList>
     <Tab>Data</Tab>
     <Tab>Features</Tab>
@@ -82,8 +82,8 @@
         </label>
       </fieldset>
       <label>
-        <span class="block">Notes</span>
-        <textarea bind:value={$entity.notes} rows="3" class="w-full" />
+        <span>Notes</span>
+        <textarea bind:value={$entity.notes} />
       </label>
       <CategoryList bind:categories={$entity.categories} />
       <fieldset>
@@ -113,10 +113,10 @@
     <!-- MODIFIERS -->
   </TabPanel>
   <TabPanel>
-    <Weapon root={entity} type="melee weapon" />
+    <WeaponList character={entity} type="melee weapon" />
   </TabPanel>
   <TabPanel>
-    <Weapon root={entity} type="ranged weapon" />
+    <WeaponList character={entity} type="ranged weapon" />
   </TabPanel>
   <TabPanel>
     <ProseMirror bind:content={$entity.userDescription} />

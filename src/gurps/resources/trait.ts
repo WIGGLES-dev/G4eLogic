@@ -1,7 +1,7 @@
 import { Data, Entity } from "@app/entity";
-import { CharacterData } from "./character";
+import { Character, CharacterData } from "./character";
 export interface TraitModifierData {
-    type: "trait"
+    type: "trait modifier"
     enabled: boolean
     name: string
     cost: number,
@@ -49,17 +49,26 @@ export interface TraitData extends Data {
     modifiers: TraitModifierData[]
 }
 
-export class Trait extends Entity<TraitData, CharacterData> {
-    static version = 1
-    static type = "trait"
-    constructor(value, root) {
-        super(value, root);
+export class Trait extends Entity<CharacterData, TraitData> {
+    static version = 1 as const
+    static type = "trait" as const
+    character: Character
+    constructor(character, trait, ...args) {
+        super(character, trait, ...args);
+        this.character = character instanceof Character ? character : new Character(character);
     }
     getAdjustedPoints() {
         return calculateTraitCost(this.getValue());
     }
     getTraitType() {
         return getTraitType(this.getValue());
+    }
+    process() {
+        const pd = {
+            adjustedPoints: this.getAdjustedPoints(),
+            traitType: this.getTraitType()
+        }
+        return { ...super.process(), ...pd }
     }
 }
 
@@ -72,22 +81,30 @@ export function calculateTraitCost(
         roundDown,
         controlRating,
         pointsPerLevel,
-        modifiers
-    }: TraitData
+        children = []
+    }: TraitData,
 ) {
     let baseEnh = 0;
     let levelEnh = 0;
     let baseLim = 0;
     let levelLim = 0;
     let multiplier = getControlRatingMultipland(controlRating);
-
-    modifiers?.forEach(modifier => {
-        if (modifier.enabled) {
-            let mod = costModifier(modifier);
-            switch (modifier.costType) {
+    const modifiers = children?.filter(e => e && e.type === "trait modifier")
+    for (const modifier of modifiers) {
+        const {
+            enabled = false,
+            costType = TraitModifierType.Points,
+            affects = TraitModifierAffects.Total,
+            cost = 0,
+            levels = 1,
+            hasLevels = false,
+        } = modifier;
+        if (enabled) {
+            let mod = hasLevels && levels > 0 ? cost * levels : cost;
+            switch (costType) {
                 case TraitModifierType.Percentage:
                 default:
-                    switch (modifier.affects) {
+                    switch (affects) {
                         case TraitModifierAffects.Total:
                         default:
                             if (mod < 0) {
@@ -115,7 +132,7 @@ export function calculateTraitCost(
                     }
                     break
                 case TraitModifierType.Points:
-                    switch (modifier.affects) {
+                    switch (affects) {
                         case TraitModifierAffects.Total:
                         case TraitModifierAffects.Base:
                         default:
@@ -131,7 +148,7 @@ export function calculateTraitCost(
                     break
             }
         }
-    });
+    }
 
     let modifiedBasePoints = basePoints;
 
@@ -167,10 +184,6 @@ function getControlRatingMultipland(cr: ControlRating) {
     }
 }
 
-export function costModifier(modifier: TraitModifier) {
-    return modifier.hasLevels && modifier.levels > 0 ? modifier.cost * modifier.levels : modifier.cost
-}
-
 export function modifyPoints(points: number, modifier: number) { return points + calculateModifierPoints(points, modifier); }
 export function calculateModifierPoints(points: number, modifier: number) { return points * (modifier / 100) }
 export function applyRounding(value: number, roundCostDown: boolean) { return roundCostDown ? Math.floor(value) : Math.ceil(value) }
@@ -204,7 +217,7 @@ export function isAdvantage(trait: TraitData) {
 }
 export function isPerk(trait: TraitData) {
     return (trait.basePoints === 1 || !trait.basePoints)
-        && (trait.hasLevels ? trait.pointsPerLevel === 1 : true)
+        && (trait.hasLevels && trait.levels > Number.NEGATIVE_INFINITY ? trait.pointsPerLevel === 1 : true)
         && calculateTraitCost(trait) !== 0
 }
 export function isDisadvantage(trait: TraitData) {
@@ -214,7 +227,7 @@ export function isDisadvantage(trait: TraitData) {
 }
 export function isQuirk(trait: TraitData) {
     return (trait.basePoints === -1 || !trait.basePoints)
-        && (trait.hasLevels ? trait.pointsPerLevel === -1 : true)
+        && (trait.hasLevels && trait.levels > Number.NEGATIVE_INFINITY ? trait.pointsPerLevel === -1 : true)
         && calculateTraitCost(trait) !== 0
 }
 export function isFeature(trait: TraitData) {
@@ -224,7 +237,7 @@ export function isFeature(trait: TraitData) {
 }
 
 export function getCategory(tags: string[]) {
-    const categories = tags.join(' ');
+    const categories = tags?.join(' ') ?? "";
     if (/meta/i.test(categories)) return TraitCategory.Meta
     if (/racial/i.test(categories)) return TraitCategory.Racial
     if (/quirk/i.test(categories)) return TraitCategory.Quirk
@@ -274,7 +287,8 @@ export function getContainerType(traits: TraitData[]) {
 export function getTraitType(trait: TraitData) {
     if (!trait) return TraitCategory.Never;
     const { categories } = trait;
-    const children = (trait?.children?.trait ?? []) as TraitData[]
+    //const children = (trait?.children?.trait ?? []) as TraitData[]
+    const children: TraitData[] = trait?.children?.filter((d): d is TraitData => d.type === "trait") ?? [];
     let type = getCategory(categories);
     if (children.length > 0) {
         return getContainerType(children)

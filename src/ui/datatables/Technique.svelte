@@ -1,89 +1,23 @@
 <script context="module" lang="ts">
-    import { reduce, map, pluck, mergeMap, tap } from "rxjs/operators";
-    import { combineLatest, EMPTY, from, pipe } from "rxjs";
-    import { withComlinkProxy } from "@utils/operators";
-    import { bind, fragment } from "@utils/use";
-    import ResourceTable from "@ui/DataTable.svelte";
-    import Value from "@components/Value.svelte";
-    import Leaf from "@components/Tree/Leaf.svelte";
-    import Toggle from "@components/Toggle.svelte";
-    import TechniqueEditor from "@ui/editors/TechniqueEditor.svelte";
-    import AttributeOptions from "@ui/options/AttributeOptions.svelte";
-   
 </script>
 
 <script lang="ts">
-    import { System } from "@internal";
-    import { Technique as TechniqueWorker } from "@app/gurps/resources/technique";
-    export let character;
-    const Technique = System.getWorker<typeof TechniqueWorker>("technique");
-    const makeTechnique = pipe(withComlinkProxy((t) => new Technique(t, $character)));
+    import { getContext } from "svelte";
+    import { State } from "rxdeep";
+    import { CharacterData } from "@internal";
+    import ResourceTable from "@ui/DataTable.svelte";
+    import SkillRow from "./rows/Skill.svelte";
+    export let character: State<CharacterData>;
 </script>
 
-<ResourceTable type="technique" root={character} let:node let:children>
+<ResourceTable type="technique" root={character} component={SkillRow} nestedStructure={true}>
     <tr slot="thead">
-        <td />
-        <th>Signature</th>
+        <th class="w-full">Technique</th>
         <th>Difficulty</th>
         <th>Points</th>
         <th>Mod</th>
-        <th>RSL</th>
+        <!-- <th>RSL</th> -->
         <th>Level</th>
-        <th class="w-full">Technique</th>
         <th>Reference</th>
     </tr>
-
-    <td>
-        <select use:bind={node.state.sub("signature")}>
-            <AttributeOptions signaturesOnly={true} optionsOnly={true} />
-        <select>
-    </td>
-    <td>
-        <select use:bind={node.state.sub("difficulty")}>
-            <option value="E">E</option>
-            <option value="A">A</option>
-            <option value="H">H</option>
-            <option value="VH">VH</option>
-            <option value="W">WC</option>
-        </select>
-    </td>
-    <td>
-        <input type="number" use:bind={node.state.sub("points")} />
-    </td>
-    <td>
-        <input type="number" use:bind={node.state.sub("mod")} />
-    </td>
-    <td>
-        <Value value={node.state.pipe(
-            makeTechnique,
-            mergeMap(t => t["getRelativeLevel"]())
-        )} let:value>
-            {value}
-        </Value>
-    </td>
-
-    <td>
-        <Value value={node.state.pipe(
-            makeTechnique,
-            mergeMap(t => t["getLevel"]())
-        )} let:value>
-            {value}
-        </Value>
-    </td>
-    <td>
-        <div class="flex" style="padding-left:{node.depth * 30}px">
-            <Toggle
-                visible={Array.isArray(children)}
-                toggled={node.showingChildren}
-                on:toggle={(e) =>
-                    (node.showingChildren = !node.showingChildren)}
-                class="text-red-700 pr-1"
-            />
-            <Leaf sub="name" class="flex-1" />
-        </div>
-    </td>
-    <Leaf sub="reference" />
-    <template slot="expanded" use:fragment>
-        <TechniqueEditor entity={node.state} />
-    </template>
 </ResourceTable>

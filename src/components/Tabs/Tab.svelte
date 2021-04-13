@@ -1,5 +1,6 @@
 <script>
-  import { getContext } from "svelte";
+  import { getContext, createEventDispatcher } from "svelte";
+  const dispatch = createEventDispatcher();
   import { TABS } from "./Tabs.svelte";
   export let disabled = false;
   export let identifier = null;

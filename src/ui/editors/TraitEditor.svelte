@@ -3,7 +3,8 @@
   import CategoryList from "@components/Form/CategoryList.svelte";
   import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
   import Features from "./panels/Features.svelte";
-  import Weapon from "@ui/datatables/Weapon.svelte";
+  import WeaponList from "@ui/datatables/Weapon.svelte";
+  import ModifierList from "@ui/datatables/Modifier.svelte";
   import { ControlRating } from "@app/gurps/resources/trait";
 </script>
 
@@ -22,7 +23,7 @@
     <Tab>Trait Data</Tab>
     <Tab disabled={true}>Prerequisites</Tab>
     <Tab>Features</Tab>
-    <Tab disabled={true}>Modifiers</Tab>
+    <Tab>Modifiers</Tab>
     <Tab>Melee Weapons</Tab>
     <Tab>Ranged Weapons</Tab>
     <Tab>User Description</Tab>
@@ -126,13 +127,13 @@
     <Features bind:features={$features$} />
   </TabPanel>
   <TabPanel>
-    <!-- MODIFIERS -->
+    <ModifierList root={entity} type="trait modifier" />
   </TabPanel>
   <TabPanel>
-    <Weapon root={entity} type="melee weapon" />
+    <WeaponList character={entity} type="melee weapon" />
   </TabPanel>
   <TabPanel>
-    <Weapon root={entity} type="ranged weapon" />
+    <WeaponList character={entity} type="ranged weapon" />
   </TabPanel>
   <TabPanel>
     <ProseMirror bind:content={$entity.userDescription} />
@@ -140,11 +141,4 @@
 </Tabs>
 
 <style lang="postcss">
-  input,
-  select {
-    @apply w-full bg-white border-b border-solid border-black;
-  }
-  label {
-    @apply m-2;
-  }
 </style>

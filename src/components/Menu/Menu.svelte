@@ -1,3 +1,5 @@
+<svelte:options accessors={true} />
+
 <script context="module" lang="ts">
     import Popper from "@components/Popper.svelte";
     import { createEventDispatcher } from "svelte";
@@ -8,8 +10,8 @@
         show?: () => boolean;
         options?: MenuOption[];
         interactive?: boolean;
-        class: string;
-        style: string;
+        class?: string;
+        style?: string;
     }
 </script>
 
@@ -17,9 +19,9 @@
     const dispatch = createEventDispatcher();
     let classList: string = "";
     export { classList as class };
-    export let reference: HTMLElement | MouseEvent;
+    export let reference: HTMLElement | MouseEvent = null;
     export let rendered = false;
-    export let options: MenuOption[];
+    export let options: MenuOption[] = [];
     let uList: HTMLUListElement;
     const modifiers = [
         {
@@ -43,8 +45,16 @@
     on:click|capture={close}
     on:contextmenu|capture={close}
 />
+
 {#if options instanceof Array && rendered}
-    <Popper bind:reference placement="right-start" strategy="fixed" {modifiers}>
+    <Popper
+        bind:reference
+        placement="right-start"
+        strategy="fixed"
+        {modifiers}
+        {rendered}
+        display="virtual"
+    >
         <slot name="menu">
             <ul
                 class="select-none shadow bg-white {classList}"

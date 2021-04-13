@@ -1,29 +1,32 @@
 <script context="module" lang="ts">
+</script>
+
+<script lang="ts">
   import { Tabs, Tab, TabPanel, TabList } from "@components/Tabs/tabs";
   import CategoryList from "@components/Form/CategoryList.svelte";
   import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
   import AttributeOptions from "@ui/options/AttributeOptions.svelte";
   import DifficultyOptions from "@ui/options/DifficultyOptions.svelte";
   import Features from "./panels/Features.svelte";
-  import Weapon from "@ui/datatables/Weapon.svelte";
+  import WeaponList from "@ui/datatables/Weapon.svelte";
   import SkillDefaults from "./panels/SkillDefaults.svelte";
-  import { bind } from "@utils/use";
-</script>
-
-<script lang="ts">
-  import { getContext } from "svelte";
-  import { from, Observable } from "rxjs";
-  import { map, mergeMap, pluck, startWith, tap } from "rxjs/operators";
-  import { load } from "js-yaml";
+  import { Character, Skill } from "@internal";
+  import { getEditorContext } from "@ui/editors/Editor.svelte";
+  const { processed$, state } = getEditorContext<Character>();
+  $: type = $processed$.type;
+  $: id = $state.id;
+  $: embeds = $processed$?.embedded?.skill;
+  $: level =
+    type === "skill"
+      ? $processed$ && ($processed$["level"] as number)
+      : embeds && embeds[id] && embeds[id].level;
   export let entity;
-  const state = getContext<Observable<any>>("sheet");
-  const character$ = getContext<Observable<any>>("worker");
   const signature$ = entity.sub("signature");
   const defaults$ = entity.sub("defaults");
   const features$ = entity.sub("features");
 </script>
 
-<Tabs>
+<Tabs bind:initTab={$entity.initTab}>
   <TabList>
     <Tab>Data</Tab>
     <Tab>Defaults</Tab>
@@ -53,7 +56,7 @@
       <fieldset>
         <!-- svelte-ignore a11y-label-has-associated-control -->
         <label>
-          <span>Siganture</span>
+          <span>Signature</span>
           <AttributeOptions
             bind:attribute={$signature$}
             signaturesOnly={true}
@@ -73,9 +76,9 @@
           />
         </label>
         <label>
-          <san>Final Level</san>
+          <span>Final Level</span>
           <output>
-            <!-- {Math.floor($level$)} -->
+            {Math.floor(level)}
           </output>
         </label>
       </fieldset>
@@ -118,11 +121,11 @@
             bind:value={$entity.reference}
           />
         </label>
-        <label>
-          <span>Notes</span>
-          <textarea bind:value={$entity.notes} placeholder="notes" rows="3" />
-        </label>
       </fieldset>
+      <label>
+        <span>Notes</span>
+        <textarea bind:value={$entity.notes} placeholder="notes" />
+      </label>
     </form>
   </TabPanel>
   <TabPanel>
@@ -133,10 +136,10 @@
     <Features bind:features={$features$} />
   </TabPanel>
   <TabPanel>
-    <Weapon root={entity} type="melee weapon" />
+    <WeaponList character={entity} type="melee weapon" />
   </TabPanel>
   <TabPanel>
-    <Weapon root={entity} type="ranged weapon" />
+    <WeaponList character={entity} type="ranged weapon" />
   </TabPanel>
   <TabPanel>
     <ProseMirror bind:content={$entity.userDescription} />
@@ -144,4 +147,7 @@
 </Tabs>
 
 <style>
+  fieldset {
+    @apply flex;
+  }
 </style>

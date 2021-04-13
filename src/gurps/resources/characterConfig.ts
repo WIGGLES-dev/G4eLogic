@@ -17,7 +17,12 @@ export interface Config {
     attributes: Record<string, AttributeData>
     locations: Record<string, HitLocationData>
 }
-export function parseHitLocations(locations: Record<string, HitLocationData>): Record<string, HitLocationData> {
+interface ParsedHitLocationData extends HitLocationData {
+    location: string
+    subLocations: string[]
+    genericLocation: string
+}
+export function parseHitLocations(locations: Record<string, HitLocationData>) {
     const hitLocations = Object.entries(locations).reduce(
         (locations, [location, data]) => {
             let toCreate = [{
@@ -43,6 +48,6 @@ export function parseHitLocations(locations: Record<string, HitLocationData>): R
                 locations[data.location] = data
             });
             return locations
-        }, {} as Record<string, HitLocationData>)
+        }, {} as Record<string, ParsedHitLocationData>)
     return hitLocations
 }

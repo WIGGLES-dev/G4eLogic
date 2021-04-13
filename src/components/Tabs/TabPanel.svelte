@@ -1,22 +1,22 @@
 <script>
   import { getContext } from "svelte";
+  import { fade, slide, blur, crossfade } from "svelte/transition";
   import { TABS } from "./Tabs.svelte";
-  export let component = null;
   const panel = {};
   const { registerPanel, selectedPanel } = getContext(TABS);
   registerPanel(panel);
+  let classList = "";
+  export { classList as class };
 </script>
 
-{#if $selectedPanel === panel}
-  <div class="tab-panel">
-    <slot>
-      <svelte:component this={component} {...$$props} />
-    </slot>
-  </div>
-{/if}
+<div class="tab-panel {classList}" class:hidden={$selectedPanel !== panel}>
+  {#if $selectedPanel === panel}
+    <slot />
+  {/if}
+</div>
 
 <style lang="postcss">
   .tab-panel {
-    @apply flex-1;
+    @apply flex-1 px-4;
   }
 </style>

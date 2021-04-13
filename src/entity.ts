@@ -1,8 +1,9 @@
 import { db } from "@app/database";
 import deepmerge from "deepmerge";
 import { proxy } from "comlink";
-import { merge } from "object-mapper";
-import { getPath, getValueAtPath } from "@utils/object";
+import { merge } from "@utils/object-mapper";
+import { getPath, getValueAtPath, path } from "@utils/object";
+import { paths } from "jsonpath";
 export interface Ident {
     rootId?: string
     id: string
@@ -12,28 +13,39 @@ export interface MetaData {
     alternativeIds: Record<string, string>
     source: string
     progenitor?: string
-    enabled: boolean
-    flags: Record<string, any>
+    lastEdit: number
+    createdOn: number
 }
-export type TypeCollection = Record<string, Data[]>
 export interface Data extends Record<string, any>, Ident {
     version: number
     categories: string[]
     name: string
-    children: TypeCollection
+    enabled: boolean
+    flags: Record<string, any>
+    children: Data[]
     features: any[]
     config?: Record<string, any>
-    metadata: MetaData
+    __meta__: MetaData
 }
-export class Entity<V extends Data, R extends Data = V> {
-    #value: V
-    root: R
-    constructor(value: V, root?: R) {
-        this.#value = value;
-        this.root = root || value as unknown as R;
+export abstract class AbstractEntity {
+    constructor() {
+
+    }
+}
+export class Entity<R extends Data, E extends Data = R> {
+    record: R
+    embed: E
+    path: (string | number)[]
+    constructor(record: R | Entity<R, Data>, embed?: E, path: path = []) {
+        this.record = record instanceof Entity ? record.record : record;
+        this.embed = embed || record as unknown as E;
+        this.path = path;
+    }
+    get entityMap() {
+        return {} as any
     }
     get enabled() {
-        return this?.getValue()?.metadata?.enabled
+        return this?.getValue()?.enabled
     }
     get id() {
         return this.getValue()?.id
@@ -41,61 +53,64 @@ export class Entity<V extends Data, R extends Data = V> {
     get type() {
         return this?.getValue()?.type
     }
-    get path() {
-        return getPath(this.root, v => v.id === this.id)
-    }
     get name() {
         return this.getValue()?.name
     }
-    get parent() {
-        const path = this.path;
-        const length = path.length;
-        const parentPath = path.slice(0, -3);
-        const parentValue = getValueAtPath(this.root, parentPath);
-        return new Entity(parentValue, this.root);
+    get parentData() {
+        return getValueAtPath(this.record, this.path.slice(0, -2))
     }
     get parentId() {
-        return this.parent.id
+        return this.parentData?.id
+    }
+    getParentData() {
+        return this.parentData
     }
     getType() {
         return this.type
     }
-    getValue() {
-        return this.#value
+    getValue(): E {
+        return this.embed
     }
-    private static hashEmbedded<R extends Data = Data>(root: R, start: Data = root, maxDepth = Number.POSITIVE_INFINITY) {
+    setValue() {
+
+    }
+    private static hashEmbedded<R extends Data>(
+        root: R | Entity<R, Data>,
+        start: Data = root instanceof Entity ? root.getValue() : root,
+        entityMap = {},
+        maxDepth = Number.POSITIVE_INFINITY
+    ) {
         let currentDepth: number = 0;
-        const embeds: Record<string, Entity<Data, R>> = {};
-        function descend(data: Data) {
-            const { children = {} } = data || {};
-            for (const [type, data] of Object.entries(children)) {
-                for (const child of data) {
-                    embeds[child.id] = new Entity<Data, R>(child, root);
-                    if (currentDepth++ < maxDepth) descend(child);
-                }
-            }
+        const embeds: Record<string, Entity<R, Data>> = {};
+        function descend(data: Data, pathSegment = []) {
+            const { children = [] } = data || {};
+            children.forEach((child, i) => {
+                const type = child.type;
+                const constructor = entityMap[type] || Entity;
+                embeds[child.id] = new constructor(root, child, [...pathSegment, "children", i]);
+                if (currentDepth++ <= maxDepth) descend(child, [...pathSegment, "children", i]);
+            })
         }
         descend(start);
         return embeds;
     }
-    getRootEmbeds() {
-        return Entity.hashEmbedded(this.root);
+    getRootEmbeds(): Record<string, Entity<R, Data>> {
+        return Entity.hashEmbedded(this, this.record, this.entityMap);
     }
-    getEmbeds(maxDepth?) {
-        return Entity.hashEmbedded(this.root, this.getValue(), maxDepth);
+    getEmbeds(maxDepth?): Record<string, Entity<R, Data>> {
+        return Entity.hashEmbedded(this, this.getValue(), this.entityMap, maxDepth);
     }
-    getEmbedded(id: string, maxDepth?) {
-        return Entity.hashEmbedded(this.root, this.getValue(), maxDepth)[id];
+    getEmbedsOfType<T extends Entity<R, Data>>(type?: string, maxDepth?: number): Record<string, T> {
+        const embeds = Entity.hashEmbedded(this, this.getValue(), this.entityMap, maxDepth)
+        if (!type) return embeds as Record<string, T>;
+        const entries = Object.entries(embeds).filter(([id, value]) => value.type === type)
+        return Object.fromEntries(entries) as Record<string, T>;
     }
-    getChildren() {
-        return Entity.hashEmbedded(this.root, this.getValue(), 1);
+    getEmbedded<T extends Entity<R, Data>>(id: string): T {
+        return this.getEmbeds()[id] as T;
     }
-    getFeatures() {
-        const root = new Entity<R>(this.root);
-        const embedded = root.getRootEmbeds();
-        const activeEmbeds: Entity<Data, R>[] = Object.values(embedded).filter(entity => !!entity.enabled)
-        const features = activeEmbeds.flatMap(entity => entity.getValue()?.features).filter(v => !!v);
-        return features
+    getChildren(type?: string) {
+        return this.getEmbedsOfType(type, 1);
     }
     async update(value) { }
     async set(value) {
@@ -103,4 +118,31 @@ export class Entity<V extends Data, R extends Data = V> {
     }
     subscribe() { }
     unsubscribe() { }
+    process() {
+        return {
+            path: this.path,
+            parentData: this.parentData,
+            data: this.getValue(),
+            id: this.id,
+            type: this.type
+        }
+    }
+    getProccessed(id: string) {
+        const path = getPath(this.record, r => r && r.id && r.id === id);
+        if (path) {
+            const data = getValueAtPath(this.record, path);
+            const constructor = this.entityMap[data.type] || Entity
+            const entity = new constructor(this, data, path)
+            return entity.process();
+        }
+    }
+    static async fetch(recordId, embedId?) {
+
+    }
+}
+
+export class EmbeddedEntity extends AbstractEntity {
+    constructor(entity, embedHash) {
+        super();
+    }
 }

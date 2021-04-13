@@ -1,5 +1,3 @@
-# $schema: http://json-schema.org/draft-07/schema
-# $id: http://valorsheet/systems/gurps/spell.yaml
 allOf:
   - $ref: definitions.yaml#/skill
   - $ref: ../definitions.yaml#/resource
@@ -7,7 +5,6 @@ allOf:
     properties:
       type:
         const: spell
-        default: spell
       version:
         const: 1
       requiresConcentration:
@@ -43,10 +40,3 @@ allOf:
       duration:
         type: string
         default: 1m
-      children:
-        type: object
-        properties:
-          spell:
-            type: array
-            items:
-              $ref: spell.yaml

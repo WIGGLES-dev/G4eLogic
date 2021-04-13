@@ -14,8 +14,8 @@ export interface TechniqueData extends Data, SkillLikeKeys {
 export class Technique extends SkillLike<TechniqueData> {
     static type = 'technique' as const
     static version = 1 as const
-    constructor(technique, character) {
-        super(technique, character);
+    constructor(character, spell, ...args) {
+        super(character, spell, ...args);
     }
     get defaults() {
         const df = this.getValue()?.default;
@@ -23,8 +23,8 @@ export class Technique extends SkillLike<TechniqueData> {
     }
     get level() {
         const value = this.getValue();
-        const bonus = this.bonus
         const baseLevel = this.getHighestDefault();
+        const bonus = this.bonus;
         return calculateTechniqueLevel(
             value,
             baseLevel,
@@ -37,7 +37,7 @@ export function calculateTechniqueLevel(
     baseLevel: number = 10,
     bonus: number = 0,
 ) {
-    let { points, limit } = technique
+    let { points, limit, mod } = technique
     let relativeLevel = 0;
     let level = baseLevel
     if (level) {
@@ -53,13 +53,13 @@ export function calculateTechniqueLevel(
             level += relativeLevel;
         }
         if (typeof limit === "number") {
-            let max = baseLevel - limit;
+            let max = baseLevel + limit;
             if (level > max) {
                 relativeLevel -= level - max;
                 level = max;
             }
         }
-        return level + technique.mod
+        return level + mod
     } else {
         return NaN
     }

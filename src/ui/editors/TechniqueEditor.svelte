@@ -5,7 +5,7 @@
     import DifficultyOptions from "@ui/options/DifficultyOptions.svelte";
     import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
     import Features from "./panels/Features.svelte";
-    import Weapon from "@ui/datatables/Weapon.svelte";
+    import WeaponList from "@ui/datatables/Weapon.svelte";
     import SkillDefaults from "./panels/SkillDefaults.svelte";
 </script>
 
@@ -122,10 +122,10 @@
         <Features bind:features={$features$} />
     </TabPanel>
     <TabPanel>
-        <Weapon root={entity} type="melee weapon" />
+        <WeaponList character={entity} type="melee weapon" />
     </TabPanel>
     <TabPanel>
-        <Weapon root={entity} type="ranged weapon" />
+        <WeaponList character={entity} type="ranged weapon" />
     </TabPanel>
     <TabPanel>
         <ProseMirror bind:content={$entity.userDescription} />

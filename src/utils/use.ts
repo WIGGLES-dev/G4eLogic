@@ -15,11 +15,17 @@ export function bind(node: HTMLElement, params: State<any>) {
         dataset: {
             event = 'change',
             debounce,
-            prop = node['type'] === 'checkbox' ? 'checked' : 'value'
+            prop = node['type'] === 'checkbox'
+                ? 'checked' : node.matches("[contenteditable]")
+                    ? 'innerHTML' : 'value'
         }
     } = node;
     if (params instanceof State) {
         const event$ = fromEvent(node, event);
+        const observer = new MutationObserver((records, observer) => {
+            if (params.value == null || node[prop] == params.value) return
+            node[prop] = params.value;
+        })
         const value$ = event$.pipe(
             debounce ? debounceTime(+debounce) : src => src,
             map(e => e.target as HTMLElement),
@@ -34,14 +40,21 @@ export function bind(node: HTMLElement, params: State<any>) {
                     return elem.value
                 } else if (elem instanceof HTMLTextAreaElement) {
                     return elem.value
+                } else if (elem.matches("[contenteditable]")) {
+                    return elem.innerHTML
                 }
             }),
         );
         let sub1 = value$.subscribe(params);
-        let sub2 = params.subscribe(value => node[prop] = value);
-        setTimeout(() => {
-            node[prop] = params.value;
-        }, 500);
+        let sub2 = params.subscribe(value => {
+            if (value == null || node[prop] == value) return
+            node[prop] = value
+        });
+        if (node instanceof HTMLSelectElement) {
+            observer.observe(node, {
+                childList: true
+            });
+        }
         return {
             update(params) {
                 sub1.unsubscribe();
@@ -50,6 +63,7 @@ export function bind(node: HTMLElement, params: State<any>) {
             destroy() {
                 sub1.unsubscribe();
                 sub2.unsubscribe();
+                observer.disconnect();
             }
         }
     }
@@ -81,7 +95,7 @@ export function lift(node: HTMLElement, params: number = 1) {
     for (let i = 0; i < params; ++i) {
         targetElem = targetElem.parentElement;
     }
-    targetElem.appendChild(node);
+    targetElem.append(node);
     return {
         destroy() {
             node.remove();
