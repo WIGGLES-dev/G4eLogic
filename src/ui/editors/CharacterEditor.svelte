@@ -4,7 +4,7 @@
 <script lang="ts">
   import { Tabs, Tab, TabPanel, TabList } from "@components/Tabs/tabs";
   import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
-  //import JsonEditor from "@components/JsonEditor.svelte";
+  import JsonEditor from "@components/JsonEditor.svelte";
   import Cropper from "@components/Cropper.svelte";
   import Combat from "@ui/Combat.svelte";
   import SkillList from "@ui/datatables/Skill.svelte";
@@ -360,19 +360,18 @@
     <SpellList character={state} />
   </TabPanel>
   <TabPanel class="flex flex-col">
-    <menu>
-      <button on:click={defaultConfiguration} type="button">
-        Default Configuration
-      </button>
-      <!-- <button on:click={(e) => config.next(editor.get())} type="button">
-        Save Configuration
-      </button> -->
-      <button on:click={uploadConfiguration}>Upload Configuration</button>
-      <button on:click={uploadCharacter}> Upload GCS File </button>
-    </menu>
-    <!-- <JsonEditor class="flex-1" data={$config} let:editor>
-     
-    </JsonEditor> -->
+    <JsonEditor class="flex-1" data={$config} let:editor>
+      <menu>
+        <button on:click={defaultConfiguration} type="button">
+          Default Configuration
+        </button>
+        <button on:click={(e) => config.next(editor.get())} type="button">
+          Save Configuration
+        </button>
+        <button on:click={uploadConfiguration}>Upload Configuration</button>
+        <button on:click={uploadCharacter}> Upload GCS File </button>
+      </menu>
+    </JsonEditor>
   </TabPanel>
 </Tabs>
 

@@ -2,7 +2,7 @@ import { db } from "@app/database";
 import deepmerge from "deepmerge";
 import { proxy } from "comlink";
 import { merge } from "@utils/object-mapper";
-import { getPath, getValueAtPath, path } from "@utils/object";
+import { getPath, getValueAtPath, Path } from "@utils/object";
 import { paths } from "jsonpath";
 export interface Ident {
     rootId?: string
@@ -36,7 +36,7 @@ export class Entity<R extends Data, E extends Data = R> {
     record: R
     embed: E
     path: (string | number)[]
-    constructor(record: R | Entity<R, Data>, embed?: E, path: path = []) {
+    constructor(record: R | Entity<R, Data>, embed?: E, path: Path = []) {
         this.record = record instanceof Entity ? record.record : record;
         this.embed = embed || record as unknown as E;
         this.path = path;

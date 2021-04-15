@@ -143,8 +143,10 @@ export const System = {
     },
     validate(data) {
         try {
-            const valid = data && data.type && System.validator.validate(data.type, data)
-            const errors = System.validator.getSchema(data.type).errors;
+            const type = data && data.type;
+            const schema = this.validator.getSchema(type);
+            const valid = typeof schema === "function" ? schema(data) === true : typeof type === "string";
+            const errors = schema?.errors ?? [];
             if (!valid) console.log(errors, data);
             return {
                 data,
@@ -152,6 +154,7 @@ export const System = {
                 errors
             }
         } catch (err) {
+            console.error(err);
             return {
                 data,
                 valid: false,
@@ -191,13 +194,11 @@ export const System = {
     },
 }
 export function validateResource(change: Change<Data>) {
-    const hasSchema = System.validator.schemas[change.value?.type];
     const { valid, errors } = System.validate(change.value);
-    if (hasSchema ? valid : true) {
+    if (valid) {
         change.value = stamp(change.value);
-
     } else {
         console.log(errors);
     };
-    return hasSchema ? valid : true
+    return valid
 }

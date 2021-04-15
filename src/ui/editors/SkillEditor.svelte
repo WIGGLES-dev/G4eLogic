@@ -12,14 +12,14 @@
   import SkillDefaults from "./panels/SkillDefaults.svelte";
   import { Character, Skill } from "@internal";
   import { getEditorContext } from "@ui/editors/Editor.svelte";
-  const { processed$, state } = getEditorContext<Character>();
+  const { id$, processed$, state } = getEditorContext<Character>();
   $: type = $processed$.type;
-  $: id = $state.id;
   $: embeds = $processed$?.embedded?.skill;
-  $: level =
+  $: processed =
     type === "skill"
-      ? $processed$ && ($processed$["level"] as number)
-      : embeds && embeds[id] && embeds[id].level;
+      ? (($processed$ as unknown) as Skill["embed"])
+      : embeds && embeds[$id$];
+  $: level = processed && Math.floor(processed.level);
   export let entity;
   const signature$ = entity.sub("signature");
   const defaults$ = entity.sub("defaults");
@@ -78,7 +78,7 @@
         <label>
           <span>Final Level</span>
           <output>
-            {Math.floor(level)}
+            {level}
           </output>
         </label>
       </fieldset>
@@ -112,7 +112,7 @@
         </label>
       </fieldset>
       <fieldset>
-        <CategoryList bind:categories={$entity.categories} />
+        <CategoryList class="flex-1" bind:categories={$entity.categories} />
         <label>
           <span>Reference</span>
           <input

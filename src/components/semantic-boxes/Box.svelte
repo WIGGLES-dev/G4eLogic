@@ -1,9 +1,11 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
+  let classList = "";
+  export { classList as class };
 </script>
 
-<li>
+<li class={classList}>
   <div class="flex-1">
     <slot />
   </div>

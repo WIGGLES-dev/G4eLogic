@@ -49,7 +49,7 @@
             type="number"
             bind:value={$entity.level}
             disabled={!$entity.hasLevels ||
-              $entity.type !== TraitModifierType.Percentage}
+              $entity.costType !== TraitModifierType.Percentage}
           />
         </label>
         <label>

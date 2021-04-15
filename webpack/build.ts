@@ -179,7 +179,7 @@ const config: webpack.Configuration = {
             clientsClaim: true,
             skipWaiting: true
         }),
-        new BundleAnalyzerPlugin(),
+        //new BundleAnalyzerPlugin(),
         //new CompressionPlugin()
     ],
     devtool: prod ? false : 'source-map'

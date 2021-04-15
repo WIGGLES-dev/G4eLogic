@@ -26,7 +26,7 @@
         <th>Level</th>
         <th>Resist</th>
         <th>Spell Class</th>
-        <th> Casting Cost </th>
+        <th>Casting Cost </th>
         <th>Maintenance Cost</th>
         <th>Casting Time</th>
         <th> Duration </th>

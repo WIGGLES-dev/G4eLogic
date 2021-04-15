@@ -28,7 +28,7 @@
     import { fromEvent, Subscription } from "rxjs";
     import { onMount, afterUpdate } from "svelte";
     import { move as moveObject } from "@utils/object";
-    import { tap } from "rxjs/operators";
+    import { distinct, tap } from "rxjs/operators";
     export const defaults = {
         tagfunc(item) {
             return Object.assign(item, { id: v4() });
@@ -290,7 +290,7 @@
         {indent}
         {draggingOver}
     />
-    {#each $subNodes || [] as child, i (i)}
+    {#each $subNodes || [] as child, i}
         <svelte:self
             parentId={id}
             ancestors={[...ancestors, id]}

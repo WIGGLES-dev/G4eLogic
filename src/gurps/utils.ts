@@ -100,15 +100,11 @@ const meleeWeapon = {
     "reach": "reach",
     "parry": {
         key: "parryBonus",
-        transform(value) {
-            return Number.parseInt(value) || 0
-        }
+        transform: value => Number.parseInt(value) || 0
     },
     "block": {
         key: "blockBonus",
-        transform(value) {
-            return Number.parseInt(value) || 0
-        }
+        transform: value => Number.parseInt(value) || 0
     },
 };
 const rangedWeapon = {
@@ -122,7 +118,10 @@ const rangedWeapon = {
     "rate_of_fire": "rafteOfFire",
     "shots": "shots",
     "bulk": "bulk",
-    "recoil": "recoil"
+    "recoil": {
+        key: "recoil",
+        transform: value => Number.parseInt(value) || 0
+    }
 };
 const feature = {
     "type": {

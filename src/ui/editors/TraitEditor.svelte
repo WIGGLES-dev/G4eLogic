@@ -9,11 +9,17 @@
 </script>
 
 <script lang="ts">
-  import { getContext } from "svelte";
-  import { map, mergeMap, pluck, startWith } from "rxjs/operators";
-  import { from, Observable } from "rxjs";
+  import { Character, Trait } from "@internal";
+  import { getEditorContext } from "@ui/editors/Editor.svelte";
+  const { id$, processed$, state } = getEditorContext<Character>();
+  $: type = $processed$.type;
+  $: embeds = $processed$?.embedded?.trait;
+  $: processed =
+    type === "trait"
+      ? (($processed$ as unknown) as Trait["embed"])
+      : embeds && embeds[$id$];
+  $: adjustedPoints = processed && processed.adjustedPoints;
   export let entity;
-  const state = getContext<Observable<any>>("sheet");
   const enabled$ = entity.sub("metadata", "enabled");
   const features$ = entity.sub("features");
 </script>
@@ -86,7 +92,7 @@
         <label>
           <span>Final Cost</span>
           <output>
-            <!-- {$adjustedValue$} -->
+            {adjustedPoints}
           </output>
         </label>
       </fieldset>

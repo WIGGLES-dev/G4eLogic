@@ -1,12 +1,23 @@
-<script>
+<script lang="ts">
     export let categories = [];
+    let classList = "";
+    export { classList as class };
+    function handleChange(e: Event) {
+        const target = e.target as HTMLInputElement;
+        const value = target.value;
+        categories = value.split(",").map((s) => s.trim());
+    }
+    $: value = categories?.join(", ") ?? "";
 </script>
 
-<label>
-    <span>Categories</span>
+<label class={classList}>
+    <span>
+        <slot>Categories</slot>
+    </span>
     <input
-        on:change={(e) => (categories = e.target.value ? e.target.value.split(',') : [])}
+        on:change={handleChange}
         type="text"
         placeholder="categories"
-        value={categories.join(',')} />
+        {value}
+    />
 </label>

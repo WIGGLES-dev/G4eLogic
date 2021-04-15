@@ -9,22 +9,28 @@
 
   import { FeatureBonusType } from "@app/gurps/resources/interfaces";
   export let features = [];
-  export let attributes = [];
+  $: if (!Array.isArray(features)) {
+    features = [];
+  }
   function addFeature() {
     features = [...features, {}];
   }
   function removeFeature(i) {
     features = features.filter((feature, i1) => i !== i1);
   }
+  $: showInitialAdder = features && features.length === 0;
 </script>
 
-<div class="features-editor">
-  <Boxes on:addbox={addFeature} showInitialAdder={features.length === 0}>
+<section class="features-editor">
+  <Boxes on:addbox={addFeature} {showInitialAdder}>
     {#each features as feature, i (i)}
       <Box on:addbox={addFeature} on:deletebox={() => removeFeature(i)}>
         <div class="flex flex-col">
-          <fieldset class="flex">
-            <FeatureOptions bind:feature={feature.type} />
+          <fieldset>
+            <!-- svelte-ignore a11y-label-has-associated-control -->
+            <label>
+              <FeatureOptions bind:feature={feature.type} />
+            </label>
             <label>
               <input
                 type="number"
@@ -32,44 +38,75 @@
                 bind:value={feature.amount}
               />
             </label>
+            <label>
+              <span>Per Level</span>
+              <input type="checkbox" bind:checked={feature.leveled} />
+            </label>
           </fieldset>
-          <label>
-            <span>Per Level</span>
-            <input type="checkbox" bind:checked={feature.leveled} />
-          </label>
+
           {#if feature.type === FeatureBonusType.Attribute}
-            <!-- svelte-ignore a11y-label-has-associated-control -->
-            <label>
-              <span>To Attribute(s)</span>
-              <AttributeOptions bind:attribute={feature.attribute} />
-            </label>
+            <fieldset>
+              <!-- svelte-ignore a11y-label-has-associated-control -->
+              <label>
+                <span>To Attribute(s)</span>
+                <AttributeOptions bind:attribute={feature.attribute} />
+              </label>
+            </fieldset>
           {:else if feature.type === FeatureBonusType.Skill}
-            <!-- svelte-ignore a11y-label-has-associated-control -->
-            <label>
-              <span>and whose specialization</span>
-              <StringCompareOptions
-                bind:option={feature.specializationCompare}
-              />
-            </label>
-            <label>
-              <input
-                type="text"
-                placeholder="specialization"
-                bind:value={feature.specialization}
-              />
-            </label>
+            <fieldset>
+              <!-- svelte-ignore a11y-label-has-associated-control -->
+              <label>
+                <span>whose name</span>
+                <StringCompareOptions bind:option={feature.nameCompare} />
+              </label>
+              <label>
+                <input
+                  type="text"
+                  placeholder="name"
+                  bind:value={feature.name}
+                />
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <!-- svelte-ignore a11y-label-has-associated-control -->
+              <label>
+                <span>and whose specialization</span>
+                <StringCompareOptions
+                  bind:option={feature.specializationCompare}
+                />
+              </label>
+              <label>
+                <input
+                  type="text"
+                  placeholder="specialization"
+                  bind:value={feature.specialization}
+                />
+              </label>
+            </fieldset>
           {:else if feature.type === FeatureBonusType.Armor}
-            <!-- svelte-ignore a11y-label-has-associated-control -->
-            <label>
-              <span> To Location(s)</span>
-              <LocationOptions bind:location={feature.location} />
-            </label>
+            <fieldset>
+              <!-- svelte-ignore a11y-label-has-associated-control -->
+              <label>
+                <span> To Location(s)</span>
+                <LocationOptions bind:location={feature.location} />
+              </label>
+            </fieldset>
           {/if}
         </div>
       </Box>
     {/each}
   </Boxes>
-</div>
+</section>
 
 <style lang="postcss">
+  .features-editor :global(li) {
+    @apply bg-gray-400;
+  }
+  label {
+    @apply bg-white m-2 p-1;
+  }
+  fieldset {
+    @apply flex;
+  }
 </style>

@@ -8,7 +8,7 @@ import { Spell } from "./resources/spell";
 import { Weapon, MeleeWeapon, RangedWeapon } from "./resources/weapon";
 import { expose } from "comlink";
 import type { Remote } from "comlink";
-import type { SystemWorker, Data, Entity } from "@internal";
+import { Entity, Data } from "@app/entity";
 export const remote = {
     classes: {
         [Character.type]: Character,
@@ -26,10 +26,14 @@ export const remote = {
 
     },
     async process(rootData, embedData = rootData) {
-        const { type } = rootData;
-        const constructor = remote.classes[type];
-        const entity: Entity<Data, Data> = new constructor(rootData, embedData);
-        return entity.process()
+        try {
+            const { type } = rootData;
+            const constructor = remote.classes[type] || Entity;
+            const entity: Entity<Data, Data> = new constructor(rootData, embedData);
+            return entity.process()
+        } catch (err) {
+            return {}
+        }
     }
 };
 export interface GURPSWorker {

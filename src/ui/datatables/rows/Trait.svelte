@@ -13,6 +13,10 @@
     $: showingChildren = $showingChildren$;
     $: embed = processed$.pipe(pluck("embedded", "trait", id));
     $: points = $embed?.adjustedPoints;
+
+    $: name = state.sub("name");
+    $: levels = state.sub("levels");
+    $: reference = state.sub("reference");
 </script>
 
 <td>
@@ -23,12 +27,12 @@
                 class="text-red-700 px-1"
             />
         {/if}
-        <input type="text" class="flex-1" bind:value={$state.name} />
+        <input type="text" class="flex-1" bind:value={$name} />
     </div>
 </td>
 <td>
     {#if $state.hasLevels}
-        <input type="number" bind:value={$state.levels} />
+        <input type="number" bind:value={$levels} />
     {/if}
 </td>
 <td>
@@ -36,4 +40,4 @@
         {points}
     {/if}
 </td>
-<td contenteditable="true" bind:textContent={$state.reference} />
+<td contenteditable="true" bind:textContent={$reference} />

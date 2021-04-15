@@ -83,7 +83,11 @@ State.prototype.merge = function <T>(this: State<T>, value, opts?) {
     this.value = deepmerge(this.value, value, opts);
 }
 State.prototype.set = function <T>(this: State<T>, value: T) {
-    this.value = value;
+    if (typeof this.value === "object") {
+        this.value = value;
+    } else if (this.value !== value) {
+        this.value = value;
+    }
 }
 State.prototype.update = function <T>(this: State<T>, cb: (value: T) => T) {
     this.value = cb(this.value)

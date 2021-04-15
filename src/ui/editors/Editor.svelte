@@ -26,7 +26,9 @@
         SystemClasses: GURPSWorker["classes"];
         record$: Observable<VerifiedState<T["record"]>>;
         rootId$: Observable<string>;
-        entity$: Observable<VerifiedState<T["record"]>>;
+        entity$: Observable<VerifiedState<T["embed"]>>;
+        value$: Observable<T["embed"]>;
+        id$: Observable<string>;
         processed$: Observable<ReturnType<T["process"]>>;
         worker: Observable<Remote<T>>;
         state: State<T["record"]>;
@@ -79,7 +81,8 @@
     export let params;
     $: ({ type, id, embed } = params);
     const record$ = from(fetchRecord<Data>("index", params.id)).pipe(
-        map((state) => state.verified(validateResource))
+        map((state) => state.verified(validateResource)),
+        share()
     );
     const root$ = record$.pipe(switchAll());
     const rootId$ = root$.pipe(pluck("id"));
@@ -96,9 +99,10 @@
     );
     const SystemWorker = System.getWorker("gurps") as GURPSWorker;
     const value$ = entity$.pipe(switchAll());
+    const id$ = value$.pipe(pluck("id"));
     const processed$ = value$.pipe(
         withLatestFrom(root$),
-        debounceTime(250),
+        debounceTime(1000),
         tap(() => console.time("processing")),
         mergeMap(([v, root]) => SystemWorker.process(root, v)),
         tap(() => console.timeEnd("processing")),
@@ -114,6 +118,7 @@
         rootId$,
         entity$,
         value$,
+        id$,
         processed$,
         get state() {
             return $entity$;

@@ -3,12 +3,14 @@
 
 <script lang="ts">
     import Tree from "@components/Tree/Tree.svelte";
+    import AltTree from "@components/Tree/_Tree.svelte";
     import { getEditorContext } from "@ui/editors/Editor.svelte";
     import Menu from "@components/Menu/Menu.svelte";
     import { System, validateResource } from "@internal";
+    import { State, state } from "rxdeep";
     export const defaults = {
         filterfunc(item) {
-            return true;
+            return item && item.type === type && System.validate(item).valid;
         },
         verifyfunc(item) {
             return System.validate(item).valid;
@@ -44,14 +46,13 @@
         resolvefunc,
         branchfunc,
     };
-    export let root;
+    export let root: State<any>;
     export let type: string;
     export let ctxoptions = [];
     export let component = null;
-    let tree: Tree;
+    let tree: AltTree;
     let menu: Menu;
     function edit(node) {
-        const root = node.root.value;
         const resource = node.state.value;
         const uri = `/edit/${resource.type}/${$rootId$}${
             resource.id !== $rootId$ ? `/${resource.id}` : ""
@@ -171,6 +172,12 @@
         };
     }
     function toggle() {}
+    function prune(node, i, nodeList) {
+        return filterfunc(node?.value) === true && node?.showing === true;
+    }
+    function verify(item) {
+        return verifyfunc(item);
+    }
 </script>
 
 <table>
@@ -179,47 +186,71 @@
         <slot name="thead" />
     </thead>
     <tbody>
-        <Tree
-            bind:this={tree}
-            state={root}
-            {...treeSettings}
-            filterfunc={(value) => filterfunc(value) && value.type === type}
-            mergeData={{
-                ...mergeData,
-                rootId: root.value.id,
-                type,
-            }}
-            let:node
-            let:showing
-            let:id
-        >
-            {#if showing}
+        {#if true}
+            <AltTree
+                bind:this={tree}
+                {...treeSettings}
+                tree={root}
+                mergeData={{
+                    ...mergeData,
+                    rootId: root.value.id,
+                    type,
+                }}
+                {verify}
+                {prune}
+                let:node
+            >
                 <tr
-                    class:hidden={!showing}
-                    data-id={id}
+                    data-id={node.id}
                     use:node.draggable
                     use:node.droppable
                     on:contextmenu|preventDefault={ctxmenu(node)}
                     class=" hover:bg-gray-100 even:bg-gray-100 children:border children:border-gray-500"
                 >
-                    {#if component}
-                        <svelte:component this={component} {node} />
-                    {:else}
-                        <slot {node} {...node} />
-                    {/if}
+                    <svelte:component this={component} {node} />
                 </tr>
-            {/if}
-        </Tree>
+            </AltTree>
+        {:else}
+            <!-- <Tree
+                bind:this={tree}
+                state={root}
+                {...treeSettings}
+                mergeData={{
+                    ...mergeData,
+                    rootId: root.value.id,
+                    type,
+                }}
+                let:node
+                let:showing
+            >
+                {#if showing}
+                    <tr
+                        class:hidden={!showing}
+                        data-id={node.id}
+                        use:node.draggable
+                        use:node.droppable
+                        on:contextmenu|preventDefault={ctxmenu(node)}
+                        class=" hover:bg-gray-100 even:bg-gray-100 children:border children:border-gray-500"
+                    >
+                        {#if component}
+                            <svelte:component this={component} {node} />
+                        {:else}
+                            <slot {node} {...node} />
+                        {/if}
+                    </tr>
+                {/if}
+            </Tree> -->
+        {/if}
     </tbody>
     <slot name="tfoot" />
 </table>
 <section class="border-b rounded-b border-red-700">
     {#if appendable}
-        <i on:click={(e) => tree.add()} class=" fas fa-plus" />
-        <i
+        <i on:click={(e) => tree.add(root)} class=" fas fa-plus" />
+        <!-- <i
             on:click={(e) => (showCollapsed = !showCollapsed)}
             class="fas fa-expand"
-        />
+        /> -->
     {/if}
 </section>
 <Menu bind:this={menu} />
@@ -227,6 +258,10 @@
 <style lang="postcss">
     table {
         @apply text-sm;
+    }
+    table :global(input),
+    table :global(select) {
+        @apply bg-transparent;
     }
     .fas {
         @apply p-1 text-red-700 text-xs;

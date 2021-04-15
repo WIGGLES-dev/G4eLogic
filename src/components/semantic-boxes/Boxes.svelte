@@ -5,10 +5,12 @@
 <script lang="ts">
   const dispatch = createEventDispatcher();
   let boxList;
+  let classList = "";
+  export { classList as class };
   export let showInitialAdder = false;
 </script>
 
-<ul bind:this={boxList}>
+<ul bind:this={boxList} class={classList}>
   {#if showInitialAdder}
     <li>
       <div class="flex-1" />

@@ -10,16 +10,30 @@
     import { getEditorContext } from "@ui/editors/Editor.svelte";
     const { processed$ } = getEditorContext<Character>();
     export let node: TreeNode;
-    $: ({ isContainer$, showingChildren$, state, id } = node);
+    $: ({ isContainer$, showingChildren$, state, id, indent } = node);
     $: type = $state.type as "skill" | "technique" | "spell";
     $: isContainer = $isContainer$;
     $: showingChildren = $showingChildren$;
     $: embed = processed$.pipe(pluck("embedded", type, id));
     $: level = Math.floor($embed && $embed.level);
     $: relativeLevel = Math.floor($embed && $embed.relativeLevel);
+
+    $: name = state.sub("name");
+    $: specialization = state.sub("specialization");
+    $: signature = state.sub("signature");
+    $: difficulty = state.sub("difficulty");
+    $: points = state.sub("points");
+    $: mod = state.sub("mod");
+    $: resist = state.sub("resist");
+    $: spellClass = state.sub("spellClass");
+    $: castingCost = state.sub("castingCost");
+    $: maintenanceCost = state.sub("mainenanceCost");
+    $: castingTime = state.sub("castingTime");
+    $: duration = state.sub("duration");
+    $: reference = state.sub("reference");
 </script>
 
-<td style="padding-left:{node.indent * 30 + 15}px">
+<td style="padding-left:{indent * 30 + 15}px">
     <div class="flex">
         {#if isContainer}
             <Toggle
@@ -27,25 +41,25 @@
                 class="text-red-700 px-1"
             />
         {/if}
-        <input type="text" class="flex-1" bind:value={$state.name} />
+        <input type="text" class="flex-1" bind:value={$name} />
     </div>
 </td>
 {#if type === "skill"}
-    <td contenteditable="true" bind:textContent={$state.specialization} />
+    <td contenteditable="true" bind:textContent={$specialization} />
 {/if}
 {#if type === "skill"}
     <td>
         {#if !isContainer}
             <AttributeOptions
                 signaturesOnly={true}
-                bind:attribute={$state.signature}
+                bind:attribute={$signature}
             />
         {/if}
     </td>
 {/if}
 <td>
     {#if !isContainer}
-        <select bind:value={$state.difficulty}>
+        <select bind:value={$difficulty}>
             {#if type !== "technique"}
                 <option value="E">E</option>
             {/if}
@@ -60,12 +74,12 @@
 </td>
 <td>
     {#if !isContainer}
-        <input type="number" placeholder="0" bind:value={$state.points} />
+        <input type="number" placeholder="0" bind:value={$points} />
     {/if}
 </td>
 <td>
     {#if !isContainer}
-        <input type="number" placeholder="0" bind:value={$state.mod} />
+        <input type="number" placeholder="0" bind:value={$mod} />
     {/if}
 </td>
 {#if type !== "technique"}
@@ -86,26 +100,26 @@
 </td>
 {#if type === "spell"}
     <td>
-        <input type="text" bind:value={$state.resist} />
+        <input type="text" bind:value={$resist} />
     </td>
     <td>
-        <input type="text" bind:value={$state.spellClass} />
+        <input type="text" bind:value={$spellClass} />
     </td>
     <td>
-        <input type="text" bind:value={$state.spellClass} />
+        <input type="text" bind:value={$castingCost} />
     </td>
 
     <td>
-        <input type="text" bind:value={$state.maintenanceCost} />
+        <input type="text" bind:value={$maintenanceCost} />
     </td>
     <td>
-        <input type="text" bind:value={$state.castingTime} />
+        <input type="text" bind:value={$castingTime} />
     </td>
     <td>
-        <input type="text" bind:value={$state.duration} />
+        <input type="text" bind:value={$duration} />
     </td>
 {/if}
-<td contenteditable="true" bind:textContent={$state.reference} />
+<td contenteditable="true" bind:textContent={$reference} />
 
 <style lang="postcss">
 </style>

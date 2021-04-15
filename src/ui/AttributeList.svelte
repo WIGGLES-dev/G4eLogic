@@ -178,7 +178,7 @@
     @apply text-center;
   }
   .main-input {
-    @apply w-16 rounded;
+    @apply w-16 bg-transparent;
   }
   .mod-input {
     @apply w-10 border-b border-black border-solid m-auto;

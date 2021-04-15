@@ -6,12 +6,29 @@
     import { Character } from "@internal";
     import { getEditorContext } from "@ui/editors/Editor.svelte";
     import { pluck } from "rxjs/operators";
+    import { range } from "rxjs";
     const { processed$ } = getEditorContext<Character>();
     export let node: TreeNode;
     $: ({ isContainer$, showingChildren$, state, id } = node);
+
     $: type = $state.type as "melee weapon" | "ranged weapon";
     $: isContainer = $isContainer$;
     $: showingChildren = $showingChildren$;
+
+    $: name = state.sub("name");
+    $: usage = state.sub("usage");
+    $: damage = state.sub("damage");
+    $: damageType = state.sub("damageType");
+    $: reach = state.sub("reach");
+    $: accuracy = state.sub("accuracy");
+    $: weaponRange = state.sub("range");
+    $: rateOfFire = state.sub("rateOfFire");
+    $: shots = state.sub("shots");
+    $: bulk = state.sub("bulk");
+    $: recoil = state.sub("recoil");
+    $: strengthRequirement = state.sub("strengthRequirement");
+    $: reference = state.sub("reference");
+
     $: embed = processed$.pipe(pluck("embedded", type, id));
     $: parentName = $embed?.parentData?.name;
     $: parentType = $embed?.parentData?.type;
@@ -31,16 +48,13 @@
         {/if}
     </td>
 {:else if parentType}
-    <td contenteditable="true" bind:textContent={$state.name} />
+    <td contenteditable="true" bind:textContent={$name} />
 {/if}
-<td contenteditable="true" bind:innerHTML={$state.usage} />
-<td contenteditable="true" bind:textContent={$state.damage} />
-<td
-    class="w-2 rollable-cell"
-    on:click={(e) => System.roll(`${$state.damage}`)}
-/>
+<td contenteditable="true" bind:innerHTML={$usage} />
+<td contenteditable="true" bind:textContent={$damage} />
+<td class="w-2 rollable-cell" on:click={(e) => System.roll(`${$damage}`)} />
 <td>
-    <select bind:value={$state.damageType}>
+    <select bind:value={$damageType}>
         <option value="" default />
         <option value="cr">Cr</option>
         <option value="cut">Cut</option>
@@ -57,7 +71,7 @@
 </td>
 <td class="rollable-cell">
     {#if level > 0}
-        <output on:click={(e) => System.roll(`3d6${level}ms3d6`)}>
+        <output on:click={(e) => System.roll(`3d6ms${level}`)}>
             {level}
         </output>
     {/if}
@@ -65,29 +79,29 @@
 {#if $state.type === "melee weapon"}
     <td class="rollable-cell">
         {#if parryLevel > 0}
-            <output on:click={(e) => System.roll(`3d6${parryLevel}ms3d6`)}>
+            <output on:click={(e) => System.roll(`3d6ms${parryLevel}`)}>
                 {parryLevel}
             </output>
         {/if}
     </td>
     <td class="rollable-cell">
         {#if blockLevel > 0}
-            <output on:click={(e) => System.roll(`3d6${blockLevel}ms3d6`)}>
+            <output on:click={(e) => System.roll(`3d6ms${blockLevel}`)}>
                 {blockLevel}
             </output>
         {/if}
     </td>
-    <td contenteditable="true" bind:textContent={$state.reach} />
+    <td contenteditable="true" bind:textContent={$reach} />
 {:else if $state.type === "ranged weapon"}
-    <td contenteditable="true" bind:textContent={$state.accuracy} />
-    <td contenteditable="true" bind:textContent={$state.range} />
-    <td contenteditable="true" bind:textContent={$state.rateOfFire}> = </td>
-    <td contenteditable="true" bind:textContent={$state.shots} />
-    <td contenteditable="true" bind:textContent={$state.bulk} />
-    <td contenteditable="true" bind:textContent={$state.recoil} />
+    <td contenteditable="true" bind:textContent={$accuracy} />
+    <td contenteditable="true" bind:textContent={$weaponRange} />
+    <td contenteditable="true" bind:textContent={$rateOfFire} />
+    <td contenteditable="true" bind:textContent={$shots} />
+    <td contenteditable="true" bind:textContent={$bulk} />
+    <td contenteditable="true" bind:textContent={$recoil} />
 {/if}
-<td contenteditable="true" bind:textContent={$state.strengthRequirement} />
-<td contenteditable="true" bind:textContent={$state.reference} />
+<td contenteditable="true" bind:textContent={$strengthRequirement} />
+<td contenteditable="true" bind:textContent={$reference} />
 
 <style lang="postcss">
 </style>

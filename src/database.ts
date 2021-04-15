@@ -17,13 +17,14 @@ export async function fetchRecord<T extends Record<string, any>>(tableName: stri
     let state: State<T>;
     const table = db.table<T>(tableName);
     const initial = await table.get(key);
-    const downstream: Subject<Change<T>> = new Subject<Change<T>>();
+    const downstream: Subject<Change<T>> = new Subject();
+    const writes: Subject<T> = new Subject();
     const upstream = {
         async next(change) {
             const stamped = stamp(change.value);
             change.value = stamped;
             downstream.next(change);
-            update(tableName, key, change.value);
+            writes.next(change.value);
         },
         error(err) { },
         complete() { }
@@ -32,9 +33,14 @@ export async function fetchRecord<T extends Record<string, any>>(tableName: stri
         initial,
         downstream.pipe(
             distinct(c => c?.value?.__meta__?.lastEdit),
+            debounceTime(70),
         ),
         upstream
     );
+    writes.pipe(
+        debounceTime(250),
+        takeUntil(state.pipe(last())),
+    ).subscribe((value) => update(tableName, key, value))
     changes$.pipe(
         mergeMap(changes => changes.filter(change => change.table === tableName && change.key === key)),
         map(c => {

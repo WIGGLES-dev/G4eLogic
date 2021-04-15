@@ -54,7 +54,8 @@
       @apply mx-2;
   }
   
-  form label>input[type="checkbox"] {
+  form label>input[type="checkbox"],
+  form label>span {
       @apply self-center;
   }
   
@@ -82,7 +83,7 @@
   input,
   textarea,
   select {
-      @apply outline-none bg-transparent;
+      @apply outline-none;
   }
   
   textarea {

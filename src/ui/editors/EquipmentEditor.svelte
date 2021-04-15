@@ -7,6 +7,17 @@
 </script>
 
 <script lang="ts">
+  import { Character, Equipment } from "@internal";
+  import { getEditorContext } from "@ui/editors/Editor.svelte";
+  const { id$, processed$, state } = getEditorContext<Character>();
+  $: type = $processed$.type;
+  $: embeds = $processed$?.embedded?.equipment;
+  $: processed =
+    type === "equipment"
+      ? (($processed$ as unknown) as Equipment["embed"])
+      : embeds && embeds[$id$];
+  $: containedWeight = processed && +processed?.containedWeight?.toFixed(3);
+  $: containedValue = processed && +processed?.containedValue?.toFixed(3);
   export let entity;
   const equipped$ = entity.sub("enabled");
   const modifiers$ = entity.sub("modifiers");
@@ -61,7 +72,7 @@
         <label>
           <span>Extended Value</span>
           <output>
-            <!-- ${+$eValue$.toFixed(3)} -->
+            {containedValue}
           </output>
         </label>
       </fieldset>
@@ -73,7 +84,7 @@
         <label>
           <span>Extended Weight</span>
           <output>
-            <!-- {+$eWeight$.toFixed(3)} lb -->
+            {containedWeight}
           </output>
         </label>
         <label>

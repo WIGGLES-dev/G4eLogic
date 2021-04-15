@@ -11,9 +11,9 @@ export function keyMap<T extends AnyObject, U>(object: T, map: <P extends keyof 
     return Object.fromEntries(mapped);
 }
 type SearchObj = AnyObject | ((value: AnyObject) => boolean)
-export type pathSegment = (string | number)
-export type path = pathSegment[]
-export function getPath(obj: AnyObject, value: SearchObj): path {
+export type PathSegment = (string | number)
+export type Path = PathSegment[]
+export function getPath(obj: AnyObject, value: SearchObj): Path {
     if (obj.constructor !== Object) {
         throw new TypeError('getPath() can only operate on object with Object as constructor');
     }
@@ -41,13 +41,16 @@ export function getPath(obj: AnyObject, value: SearchObj): path {
     search(obj);
     return path;
 }
-export function getValue(object: AnyObject, key: pathSegment) {
+export function getValue(object: AnyObject, key: PathSegment) {
     return object[key]
 }
-export function getValueAtPath(object: AnyObject, path: path) {
+export function setValue(object: AnyObject, key: PathSegment, value: any) {
+    object[key] = value;
+}
+export function getValueAtPath(object: AnyObject, path: Path) {
     return path.reduce(getValue, object);
 }
-export function getValuesFromPath(object: AnyObject, path: path) {
+export function getValuesFromPath(object: AnyObject, path: Path) {
     const values = [object];
     path.forEach((key, i) => {
         const v = getValueAtPath(object, path.slice(0, i + 1))
@@ -55,7 +58,7 @@ export function getValuesFromPath(object: AnyObject, path: path) {
     });
     return values
 }
-export function deleteValueAtPath(object: AnyObject, path: path) {
+export function deleteValueAtPath(object: AnyObject, path: Path) {
     const [key] = path.slice(-1);
     const value = getValueAtPath(object, path.slice(0, -1));
     try {
@@ -64,13 +67,22 @@ export function deleteValueAtPath(object: AnyObject, path: path) {
 
     }
 }
-export function updateValueAtPath(object: AnyObject, path, update: AnyObject | ((value: AnyObject) => AnyObject)) {
+export function updateValueAtPath(object: AnyObject, path, update: any | ((value: any) => any)) {
     const key = path.pop();
-    const value = getValueAtPath(object, path);
+    let value = object;
+    for (const key of path) {
+        if (value && value[key]) {
+            value = value[key];
+        } else if (value) {
+            value[key] = {}
+        } else {
+
+        }
+    }
     value[key] = typeof update === "function" ? update(value[key]) : update;
 }
-export function move(object: AnyObject, from: SearchObj, to: SearchObj, { lift = undefined, nest = [] } = {}) {
-    object = JSON.parse(JSON.stringify(object))
+export function move(src: AnyObject, from: SearchObj, to: SearchObj, { lift = undefined, nest = [] } = {}) {
+    const object = JSON.parse(JSON.stringify(src))
     const fromPath = getPath(object, from);
     const toPath = getPath(object, to).slice(0, lift > 0 ? lift * -1 : lift).concat(nest);
     const fromValues = getValuesFromPath(object, fromPath);
@@ -80,22 +92,22 @@ export function move(object: AnyObject, from: SearchObj, to: SearchObj, { lift =
     const [fromKey] = fromPath.slice(-1);
     const [toKey] = toPath.slice(-1);
     if (toValue instanceof Array) {
-        toValue.unshift(fromValue);
         if (fromParent instanceof Array) {
             fromParent.splice(+fromKey, 1)
         } else {
-            delete fromParent[fromKey]
+            delete fromParent[fromKey];
         }
+        toValue.unshift(fromValue);
     } else if (toParent instanceof Array) {
         if (fromParent === toParent) {
             arrayMove(toParent, +fromKey, +toKey);
         } else {
-            toParent.splice(+toKey, 0, fromValue);
             if (fromParent instanceof Array) {
-                fromParent.splice(+fromKey, 1)
+                fromParent.splice(+fromKey, 1);
             } else {
                 delete fromParent[fromKey]
             }
+            toParent.splice(+toKey, 0, fromValue);
         }
     } else {
         toParent[toKey] = fromValue;
