@@ -8,10 +8,16 @@
     export let type: string;
 </script>
 
-<DataTable {root} {type} component={ModifierRow}>
+<DataTable
+    {root}
+    {type}
+    component={ModifierRow}
+    maxDepth={1}
+    showCollapsed={true}
+>
     <tr slot="thead">
         <th>Enabled</th>
-        <th class="w-full">Modifier</th>
+        <th>Modifier</th>
         {#if type === "equipment modifier"}
             <th>Cost Adjustment</th>
             <th>Weight Adjustment</th>

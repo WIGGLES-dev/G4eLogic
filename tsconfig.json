@@ -24,30 +24,31 @@
         "types": [
             "webpack-dev-server",
             "svelte",
+            "@league-of-foundry-developers/foundry-vtt-types"
         ],
         "outDir": "./public",
         "baseUrl": "./",
         "paths": {
             "@assets/*": [
-                "./static/assets/*"
+                "static/assets/*"
             ],
             "@internal": [
-                "./src/internal.ts"
+                "src/internal.ts"
             ],
             "@app/*": [
-                "./src/*"
+                "src/*"
             ],
             "@ui/*": [
-                "./src/ui/*"
+                "src/ui/*"
             ],
             "@components/*": [
-                "./src/components/*"
+                "src/components/*"
             ],
             "@utils/*": [
-                "./src/utils/*"
+                "src/utils/*"
             ],
             "@plugins/*": [
-                "./src/plugins/*"
+                "src/plugins/*"
             ]
         }
     },
@@ -55,7 +56,6 @@
         "./types/**/*",
         "./src/**/*",
         "./test/**/*",
-        "./webpack/**/*"
     ],
     "exclude": [
         "node_modules",

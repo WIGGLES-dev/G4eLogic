@@ -8,23 +8,25 @@
     "templateVersion": 2,
     "author": "Ian Bell",
     "scripts": [
-        "https://valor-59b11.web.app/plugins/foundry/foundry-valor.js"
+        "foundry-valor.js"
     ],
     "styles": [
-        "https://valor-59b11.web.app/plugins/foundry/foundry-valor.css"
+        "foundry-valor.css"
     ],
     "packs": [],
-    "languages": [{
-        "lang": "en",
-        "name": "English",
-        "path": "lang/en.json"
-    }],
+    "languages": [
+        {
+            "lang": "en",
+            "name": "English",
+            "path": "lang/en.json"
+        }
+    ],
     "socket": true,
     "initiative": "@initiative",
     "gridDistance": 1,
     "gridUnits": "yards",
     "primaryTokenAttribute": "attributeLevels.hit points",
-    "secondaryTokenAttribute": "attributes.fatigue points",
+    "secondaryTokenAttribute": "attributeLevels.fatigue points",
     "manifest": "https://valor-59b11.web.app/plugins/foundry/static/system.json",
     "download": "https://valor-59b11.web.app/plugins/foundry/static/GURPS.zip",
     "url": "https://github.com/WIGGLES-dev/GURPSFoundrySystem"

@@ -20,7 +20,7 @@
             } catch (err) {}
         },
     };
-    onMount(() => {
+    onMount(async () => {
         editor = new JSONEditor(editorElement, options);
         editor.set(data);
         const meta = document.querySelector("meta");

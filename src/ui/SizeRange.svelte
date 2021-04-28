@@ -28,34 +28,40 @@
     ];
 </script>
 
-<section>
-    <table>
-        <thead>
+<table>
+    <thead>
+        <tr>
+            <th>
+                Speed
+                <br />
+                Range
+            </th>
+            <th>Size</th>
+            <th>
+                Linear
+                <br />
+                Measure
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {#each measures as expression, i (i)}
             <tr>
-                <th>Speed/Range</th>
-                <th>Size</th>
-                <th>Linear Measure</th>
+                <td class="text-center">
+                    {SSRT.speedRangeFromExpression({ expression })}
+                </td>
+                <td>{i - 9}</td>
+                <td>{expression}</td>
             </tr>
-        </thead>
-        <tbody>
-            {#each measures as expression, i (i)}
-                <tr>
-                    <td class="text-center">
-                        {SSRT.speedRangeFromExpression({ expression })}
-                    </td>
-                    <td>{i - 9}</td>
-                    <td>{expression}</td>
-                </tr>
-            {/each}
-        </tbody>
-    </table>
-</section>
+        {/each}
+    </tbody>
+</table>
 
-<style>
-    tbody tr:nth-child(even) {
-        @apply bg-gray-100;
+<style lang="postcss">
+    tbody tr {
+        @apply odd:bg-green-100 even:bg-gray-100;
     }
     table {
-        @apply m-0;
+        @apply m-0 text-sm;
     }
 </style>

@@ -9,10 +9,10 @@
     $: if (!Array.isArray(location)) {
         location = typeof location === "string" ? [location] : [];
     }
-    import Editor, { editorctx } from "@ui/editors/Editor.svelte";
+    import Editor, { editorctx } from "@app/ui/Editor.svelte";
     import Select from "svelte-select";
     import { Character } from "@internal";
-    import { getEditorContext } from "@ui/editors/Editor.svelte";
+    import { getEditorContext } from "@app/ui/Editor.svelte";
     const { processed$ } = getEditorContext<Character>();
     const hitLocations$ = processed$.pipe(
         mergeMap(async (p) => {

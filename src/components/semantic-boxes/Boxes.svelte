@@ -12,9 +12,9 @@
 
 <ul bind:this={boxList} class={classList}>
   {#if showInitialAdder}
-    <li>
-      <div class="flex-1" />
-      <div>
+    <li class="box">
+      <div class="box-content" />
+      <div class="box-controls">
         <i class="fas fa-plus" on:click={() => dispatch("addbox")} />
       </div>
     </li>
@@ -26,11 +26,17 @@
   ul {
     @apply mx-2;
   }
-  ul :global(li) {
-    @apply relative m-4 p-2 shadow-md flex;
+  ul > :global(.box) {
+    @apply relative m-4 shadow-md flex;
+  }
+  ul :global(.box-content) {
+    @apply p-2 flex-1;
+  }
+  ul :global(.box-controls) {
+    @apply flex flex-col bg-white;
   }
   ul :global(.fas) {
-    @apply text-xs text-red-700 p-1;
+    @apply text-xs text-red-700 p-2 flex-1;
   }
   ul :global(.fas:hover) {
     @apply bg-red-700 text-white;

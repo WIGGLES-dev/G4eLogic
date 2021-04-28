@@ -6,8 +6,8 @@
     import { map, mergeMap, pluck, startWith, tap } from "rxjs/operators";
     import SVG from "./SVG.svelte";
     import { capitalize } from "@app/utils/strings";
-    import Editor, { editorctx } from "@ui/editors/Editor.svelte";
-    import { getEditorContext } from "@ui/editors/Editor.svelte";
+    import Editor, { editorctx } from "@app/ui/Editor.svelte";
+    import { getEditorContext } from "@app/ui/Editor.svelte";
     const { state, processed$ } = getEditorContext<Character>();
     const hitLocations$ = processed$.pipe(pluck("hitLocations"));
     export let height = "100%";
@@ -116,8 +116,9 @@
                 reference={references[location.name]}
                 display="hovered virtual"
                 offset={[16, 16]}
+                let:popper
             >
-                <div class="tooltip">
+                <div class="tooltip" use:popper>
                     <strong>
                         {capitalize(location.name)}
                         {#if location.keys.hitPenalty}
@@ -155,7 +156,7 @@
         {/if}
     {/each}
 
-    <section class="relative w-min">
+    <section class="w-min">
         <div class="flex">
             <div class="location-bar">
                 {#each getLocations().left as location, i (location.name)}

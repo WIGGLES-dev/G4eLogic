@@ -14,6 +14,21 @@ import WorkerPlugin from "worker-plugin";
 import WorkboxPlugin from "workbox-webpack-plugin";
 import CompressionPlugin from "compression-webpack-plugin";
 import { typescript, postcss } from "svelte-preprocess";
+import { networkInterfaces } from "os";
+const nets = networkInterfaces();
+const results = {};
+for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+        // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+        if (net.family === 'IPv4' && !net.internal) {
+            if (!results[name]) {
+                results[name] = [];
+            }
+            results[name].push(net.address);
+        }
+    }
+}
+const localIp = results["Wi-Fi"] && results["Wi-Fi"][0];
 const cwd = process.cwd();
 const mode = process.env.prod === "true" ? "production" : "development";
 const prod = mode === "production";
@@ -71,11 +86,12 @@ export const yamlLoaderConfig = {
 };
 const config: webpack.Configuration = {
     devServer: {
+        host: localIp,
         contentBase: output,
         compress: true,
         port: 3000,
         writeToDisk: true,
-        hot: false
+        hot: false,
     },
     entry: {
         valor: path.resolve(cwd, 'src/gurps/system.ts'),
@@ -96,8 +112,9 @@ const config: webpack.Configuration = {
     output: {
         path: output,
         filename: '[name].js',
+        globalObject: "self"
     },
-    target: "webworker",
+    target: "web",
     module: {
         rules: [
             cssLoaderConfig,
@@ -112,7 +129,15 @@ const config: webpack.Configuration = {
     watch: false,
     optimization: {
         concatenateModules: false,
-        usedExports: true
+        splitChunks: {
+            // cacheGroups: {
+            //     vendors: {
+            //         test: /[\\/]node_modules[\\/]/,
+            //         name: 'vendors',
+            //         chunks: 'all',
+            //     },
+            // },
+        }
     },
     plugins: [
         new CleanWebpackPlugin(),
@@ -137,7 +162,7 @@ const config: webpack.Configuration = {
         new HtmlWebpackSkipAssetsPlugin(),
         new FileManagerPlugin({
             events: {
-                onEnd: {
+                onStart: {
                     delete: [
                         {
                             source: "C:/Users/Ian/AppData/Local/FoundryVTT/Data/systems/GURPS",
@@ -153,17 +178,21 @@ const config: webpack.Configuration = {
                         },
                         {
                             source: "src/plugins/foundry/static",
-                            destination: path.resolve(output, "plugins/foundry/static")
+                            destination: path.resolve(output, "plugins/foundry")
                         },
+                    ]
+                },
+                onEnd: {
+                    copy: [
                         {
-                            source: "src/plugins/foundry/static",
+                            source: "public/plugins/foundry",
                             destination: "C:/Users/Ian/AppData/Local/FoundryVTT/Data/systems/GURPS"
                         }
                     ],
                     archive: [
                         {
-                            source: "src/plugins/foundry/static",
-                            destination: "public/plugins/foundry/static/GURPS.zip",
+                            source: "src/plugins/foundry",
+                            destination: "public/plugins/foundry/GURPS.zip",
                             format: "zip",
                         }
                     ]

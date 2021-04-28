@@ -10,7 +10,7 @@
 
 <script lang="ts">
   import { Character, Trait } from "@internal";
-  import { getEditorContext } from "@ui/editors/Editor.svelte";
+  import { getEditorContext } from "@app/ui/Editor.svelte";
   const { id$, processed$, state } = getEditorContext<Character>();
   $: type = $processed$.type;
   $: embeds = $processed$?.embedded?.trait;

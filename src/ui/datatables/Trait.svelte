@@ -5,7 +5,7 @@
     import DataTable from "@ui/DataTable.svelte";
     import TraitRow from "./rows/Trait.svelte";
     import { State } from "rxdeep";
-    import { CharacterData } from "@internal";
+    import type { CharacterData } from "@internal";
     export let character: State<CharacterData>;
 </script>
 
@@ -16,7 +16,7 @@
     nestedStructure={true}
 >
     <tr slot="thead">
-        <th class="w-full">
+        <th>
             <slot />
         </th>
         <th>Level</th>

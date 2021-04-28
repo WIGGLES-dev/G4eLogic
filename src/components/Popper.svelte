@@ -1,6 +1,9 @@
 <script lang="ts">
     import { onMount, onDestroy, afterUpdate } from "svelte";
-    import { createPopper } from "@popperjs/core";
+    import {
+        createPopper,
+        VirtualElement as PopperVirtualElement,
+    } from "@popperjs/core";
     import type {
         Instance,
         Placement,
@@ -8,79 +11,96 @@
     } from "@popperjs/core";
     import { VirtualElement, highestZIndex } from "@utils/dom";
     let classList: string = "";
-    export let reference: HTMLElement | MouseEvent = null;
+    export let reference: Element | { clientX: number; clientY: number } = null;
     export let modifiers = [];
     export let placement: Placement = "auto";
     export let strategy: PositioningStrategy = "absolute";
-    export let display: "fixed" | "virtual" | "hovered" | "hovered virtual" =
-        "fixed";
-    export let rendered = display.includes("fixed") ? true : false;
+    type DisplayOptions = "fixed" | "virtual" | "hovered" | "hovered virtual";
+    export let display: DisplayOptions = "fixed";
     export let offset: [number, number] = null;
-    let popper: Instance;
-    let element: HTMLDivElement;
-    onMount(() => {
-        if (!reference) reference = element.parentElement;
-        document.body.append(element);
-        let refElement: HTMLElement | VirtualElement;
-        if (display.includes("virtual")) {
+    let popper: HTMLElement;
+    let instance: Instance;
+    function useReference(node: Element) {
+        reference = node;
+        return {
+            destroy() {
+                reference = null;
+            },
+        };
+    }
+    function usePopper(node: HTMLElement) {
+        popper = node;
+        if (display !== "fixed") {
+            node.style.display = "none";
+        }
+        document.body.append(node);
+        return {
+            destroy() {
+                popper = null;
+                node?.remove();
+            },
+        };
+    }
+    $: if (popper) {
+        if (instance) {
+            instance.destroy();
+        }
+        if (!reference) reference = popper.parentElement;
+        let refElement: Element | PopperVirtualElement;
+        if (display === "virtual") {
             refElement = new VirtualElement(reference);
-        } else if (reference instanceof HTMLElement) {
+        } else if (reference instanceof Element) {
             refElement = reference;
-        } else {
+        } else if (reference) {
             refElement = new VirtualElement(reference);
         }
-        if (offset) {
-            modifiers.push({
-                name: "offset",
-                options: {
-                    offset,
+        if (reference instanceof Element) {
+            const events = {
+                onmouseenter(e: MouseEvent) {
+                    if (display.includes("hovered"))
+                        popper.style.display = null;
                 },
+                onmouseleave(e: MouseEvent) {
+                    if (display.includes("hovered")) {
+                        popper.style.display = "none";
+                    }
+                },
+                async onmousemove(e: MouseEvent) {
+                    if (display.includes("virtual")) {
+                        update(e.clientX, e.clientY);
+                    }
+                },
+            };
+            Object.assign(reference, events);
+        }
+        const offsetModifier = offset
+            ? [
+                  {
+                      name: "offset",
+                      options: {
+                          offset,
+                      },
+                  },
+              ]
+            : [];
+        if (refElement) {
+            instance = createPopper(refElement, popper, {
+                modifiers: [...modifiers, ...offsetModifier],
+                placement,
+                strategy,
             });
         }
-        popper = createPopper(refElement, element, {
-            modifiers,
-            placement,
-            strategy,
-        });
-        const events = {
-            onmouseenter(e: MouseEvent) {
-                if (display.includes("hovered")) rendered = true;
-            },
-            onmouseleave(e: MouseEvent) {
-                if (display.includes("hovered")) {
-                    rendered = false;
-                }
-            },
-            async onmousemove(e: MouseEvent) {
-                if (display.includes("virtual")) {
-                    update(e.clientX, e.clientY);
-                }
-            },
-        };
-        Object.assign(reference, events);
-        return () => {
-            popper.destroy();
-            //element.remove();
-        };
-    });
-    //afterUpdate(update);
+    }
     export async function update(x?: number, y?: number) {
-        const reference = popper.state.elements.reference;
+        const reference = instance?.state?.elements?.reference;
         if (reference instanceof VirtualElement && x && y) {
             reference.update(x, y);
         }
-        await popper.update();
+        await instance.update();
     }
 </script>
 
-<div bind:this={element} class="popper">
-    {#if rendered}
-        <slot />
-    {/if}
-</div>
+<slot popper={usePopper} reference={useReference} />
 
 <style>
-    .popper {
-        z-index: 1000;
-    }
 </style>

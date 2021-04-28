@@ -1,3 +1,4 @@
+import "./styles.css";
 import { foundryMethods } from "./methods";
 import { expose, wrap, proxy, windowEndpoint, Remote } from "comlink";
 import type { System } from "@internal";
@@ -5,14 +6,13 @@ import { VActor, VActorSheet, VItem, VItemSheet } from './classes';
 import { hookHandlers, FoundryHooks, handleValorEvent } from './hooks';
 import { sync } from "./sync";
 import { makeIframe } from '@app/utils/dom';
-import "./styles.css";
+
 async function connect<T extends Record<string, any>>(src) {
     const iframe = makeIframe({
         src,
         style: {
             display: "none",
         },
-        appendTo: document.body
     });
     document.body.appendChild(iframe);
     await new Promise(resolve => iframe.onload = resolve);
@@ -28,15 +28,16 @@ async function augment() {
         dragHandler.call(this, event);
         const { id, type } = JSON.parse(event.dataTransfer.getData("text/plain"));
         const entity = await fromUuid(`${type}.${id}`);
-        const data = Object.assign({}, entity?.data?.data, { id: randomID(), type })
-        event.dataTransfer.setData("application/json", JSON.stringify(data))
+        //@ts-ignore
+        const data = Object.assign({}, entity?.data["data"], { id: randomID(), type });
+        event.dataTransfer.setData("application/json", JSON.stringify(data));
     }
 }
 async function onFoundryInit() {
     await augment();
     game.GURPS = {
-        origin: "https://valor-59b11.web.app"
-        //origin: "http://localhost:3000"
+        //origin: "https://valor-59b11.web.app"
+        origin: "192.168.1.12:3000"
     };
     CONFIG.Combat.initiative = {
         decimals: 2,
@@ -57,11 +58,13 @@ async function handleRoll(e) {
         event,
         data
     } = e;
+    //@ts-ignore
     const roll = Roll.create(...data);
     const message = await roll.toMessage();
 }
 async function syncWithValor() {
-    const { connection, iframe } = await connect<typeof System>(game?.GURPS?.origin);
+    const { origin } = game["GURPS"]["origin"] || {};
+    const { connection, iframe } = await connect<typeof System>(origin);
     for (const hook of Object.values(FoundryHooks)) {
         Hooks.on(hook, hookHandlers[hook].bind(connection));
     }
@@ -79,5 +82,5 @@ try {
         }
     }
 } catch (err) {
-
+    console.error(err);
 }

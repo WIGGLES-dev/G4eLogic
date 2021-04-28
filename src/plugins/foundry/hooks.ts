@@ -47,6 +47,7 @@ export async function handleValorEvent(changes: IDatabaseChange[]) {
     for (const change of changes.slice(-1)) {
         const { key } = change;
         const isActor = game.actors.get(key)?.id === key;
+        //@ts-ignore
         const entity = game[isActor ? "actors" : "items"].get(key);
         switch (change.type) {
             case DatabaseChangeType.Create: {

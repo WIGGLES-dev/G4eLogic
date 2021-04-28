@@ -1,10 +1,10 @@
 <script lang="ts">
     import { System } from "@app/system";
     import Toggle from "@components/Toggle.svelte";
-    import type { TreeNode } from "@components/Tree/Tree.svelte";
+    import type { TreeNode } from "@components/Tree.svelte";
     import { pluck } from "rxjs/operators";
     import { Character } from "@internal";
-    import { getEditorContext } from "@ui/editors/Editor.svelte";
+    import { getEditorContext } from "@app/ui/Editor.svelte";
     const { processed$ } = getEditorContext<Character>();
     export let node: TreeNode;
     $: ({ isContainer$, showingChildren$, state, id, indent } = node);
@@ -33,7 +33,10 @@
     {/if}
 </td>
 <td>
-    <div class="flex" style="padding-left:{indent * 30 + 15}px">
+    <div
+        class="flex"
+        style="padding-left:{indent * 8 + (isContainer ? 0 : 16)}px"
+    >
         {#if isContainer}
             <Toggle
                 bind:toggled={$showingChildren$}
@@ -45,7 +48,7 @@
 </td>
 <td
     class="text-center"
-    on:click={(e) => maxUses.verified(({ value }) => value <= $maxUses).add(1)}
+    on:click={(e) => uses.verified(({ value }) => value <= $maxUses).add(1)}
     on:contextmenu|preventDefault|stopPropagation={(e) =>
         uses.verified(({ value }) => value >= 0).subtract(1)}
 >
@@ -75,6 +78,6 @@
 
 <style lang="postcss">
     input[type="number"] {
-        @apply w-12;
+        min-width: 4rem;
     }
 </style>

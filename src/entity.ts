@@ -2,7 +2,8 @@ import { db } from "@app/database";
 import deepmerge from "deepmerge";
 import { proxy } from "comlink";
 import { merge } from "@utils/object-mapper";
-import { getPath, getValueAtPath, Path } from "@utils/object";
+import { getPath, getValueAtPath, Path } from "@utils/path";
+import { Tree } from "@utils/tree";
 import { paths } from "jsonpath";
 export interface Ident {
     rootId?: string
@@ -84,12 +85,16 @@ export class Entity<R extends Data, E extends Data = R> {
         const embeds: Record<string, Entity<R, Data>> = {};
         function descend(data: Data, pathSegment = []) {
             const { children = [] } = data || {};
-            children.forEach((child, i) => {
-                const type = child.type;
-                const constructor = entityMap[type] || Entity;
-                embeds[child.id] = new constructor(root, child, [...pathSegment, "children", i]);
-                if (currentDepth++ <= maxDepth) descend(child, [...pathSegment, "children", i]);
-            })
+            let i = 0;
+            for (const child of children) {
+                if (child && "type" in child && "id" in child) {
+                    const { type, id } = child
+                    const constructor = entityMap[type] || Entity;
+                    const _path = [...pathSegment, "children", i++];
+                    embeds[child.id] = new constructor(root, child, _path);
+                    if (currentDepth++ <= maxDepth) descend(child, _path);
+                }
+            }
         }
         descend(start);
         return embeds;
@@ -128,7 +133,7 @@ export class Entity<R extends Data, E extends Data = R> {
         }
     }
     getProccessed(id: string) {
-        const path = getPath(this.record, r => r && r.id && r.id === id);
+        const path = getPath(this.record, r => r && "id" in r && r.id === id);
         if (path) {
             const data = getValueAtPath(this.record, path);
             const constructor = this.entityMap[data.type] || Entity

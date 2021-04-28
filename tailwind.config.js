@@ -1,9 +1,13 @@
 module.exports = {
     purge: [
         './assets/**/*.html',
-        './src/**/*.{svelte,html}'
+        './src/**/*.{svelte,html,ts}'
     ],
-    theme: {},
+    theme: {
+        extend: {
+
+        }
+    },
     plugins: [
         require('tailwindcss-children')
     ]

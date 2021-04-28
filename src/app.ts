@@ -1,6 +1,6 @@
 import { wrap } from "svelte-spa-router/wrap";
 import Home from "@ui/Home.svelte";
-import Editor from "@ui/editors/Editor.svelte";
+import Editor from "@app/ui/Editor.svelte";
 const routes = {
     "/": Home,
     "/edit/:type/:id/:embed?": wrap({

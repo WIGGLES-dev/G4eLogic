@@ -11,7 +11,7 @@
   import WeaponList from "@ui/datatables/Weapon.svelte";
   import SkillDefaults from "./panels/SkillDefaults.svelte";
   import { Character, Skill } from "@internal";
-  import { getEditorContext } from "@ui/editors/Editor.svelte";
+  import { getEditorContext } from "@app/ui/Editor.svelte";
   const { id$, processed$, state } = getEditorContext<Character>();
   $: type = $processed$.type;
   $: embeds = $processed$?.embedded?.skill;
@@ -146,8 +146,5 @@
   </TabPanel>
 </Tabs>
 
-<style>
-  fieldset {
-    @apply flex;
-  }
+<style lang="postcss">
 </style>

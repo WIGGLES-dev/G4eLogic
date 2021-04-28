@@ -6,7 +6,7 @@
   import { interpolate } from "@app/utils/strings";
   import { System } from "@internal";
   import type { Character } from "@internal";
-  import { getEditorContext } from "@ui/editors/Editor.svelte";
+  import { getEditorContext } from "@app/ui/Editor.svelte";
   const { state, processed$ } = getEditorContext<Character>();
   const order$ = state.pipe(pluck("config", "ui", "attributeOrder"));
   $: attributes =
@@ -36,23 +36,25 @@
   <caption>
     <!--  -->
   </caption>
-  <thead>
-    <tr class="bg-gray-700 text-white">
-      <th colspan="2">
-        ATTRIBUTE
-        <Popper
-          display="hovered virtual"
-          placement="bottom-start"
-          modifiers={[
-            {
-              name: "offset",
-              options: {
-                offset: [16, 16],
-              },
-            },
-          ]}
-        >
-          <div class="bg-gray-700 text-white text-sm p-2 text-left">
+  <Popper
+    let:reference
+    let:popper
+    display="hovered virtual"
+    placement="bottom-start"
+    modifiers={[
+      {
+        name: "offset",
+        options: {
+          offset: [16, 16],
+        },
+      },
+    ]}
+  >
+    <thead use:reference>
+      <tr>
+        <th colspan="2">
+          Attribute
+          <div use:popper class="tooltip">
             <ul class="list-disc list-inside">
               <li>Clicking the attribute name will roll the attribute.</li>
               <li>
@@ -66,12 +68,11 @@
               <li>You can configure these attributes in the settings tab.</li>
             </ul>
           </div>
-        </Popper>
-      </th>
-      <th>MOD</th>
-      <th>PTS</th>
-    </tr>
-  </thead>
+        </th>
+        <th>Mod</th>
+      </tr>
+    </thead>
+  </Popper>
   <tbody>
     {#each attributes as attr (attr.name)}
       <tr>
@@ -84,15 +85,20 @@
             class="flex justify-end pr-2"
             on:click={(e) => System.roll(`3d6ms${attr.level}`)}
           >
-            <span class="truncate uppercase cursor-pointer">
-              {attr.keys.abbreviation}
-            </span>
             <Popper
+              let:popper
+              let:reference
               display="hovered virtual"
               placement="bottom-start"
               offset={[16, 16]}
             >
-              <div class="tooltip">
+              <span use:reference class="truncate uppercase cursor-pointer">
+                {attr.keys.abbreviation}
+                {#if attr.keys.costPerLevel}
+                  [{attr.pointsSpent}]
+                {/if}
+              </span>
+              <div class="tooltip" use:popper>
                 {@html interpolate(attr.keys.tooltip, attr)}
               </div>
             </Popper>
@@ -146,25 +152,19 @@
               })}
           />
         </td>
-        <td class="text-sm text-center self-center">
-          {#if attr.keys.costPerLevel}
-            {attr.pointsSpent}
-          {/if}
-        </td>
-      </tr>
-    {/each}
+      </tr>{/each}
   </tbody>
 </table>
 
 <style lang="postcss">
   td {
-    @apply px-0;
+    @apply pt-1;
   }
   .primary {
-    @apply text-xl font-bold text-red-700 border-b border-solid border-red-700;
+    @apply font-bold text-red-700;
   }
   .secondary {
-    @apply text-lg font-semibold;
+    @apply font-semibold;
   }
   .tertiary {
   }
@@ -181,6 +181,6 @@
     @apply w-16 bg-transparent;
   }
   .mod-input {
-    @apply w-10 border-b border-black border-solid m-auto;
+    @apply w-10;
   }
 </style>

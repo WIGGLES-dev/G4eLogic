@@ -27,8 +27,8 @@
 >
     <tr slot="thead">
         <th>Weapons</th>
-        <th class="w-full">Usage</th>
-        <th colspan="2">Damage</th>
+        <th>Usage</th>
+        <th>Damage</th>
         <th>Type</th>
         <th>Lvl</th>
         {#if type === "melee weapon"}

@@ -1,5 +1,5 @@
 <script context="module">
-  export const TABS = {};
+  export const TABS = Symbol("tabs");
 </script>
 
 <script>
@@ -33,7 +33,6 @@
     registerPanel(panel) {
       panels.push(panel);
       selectedPanel.update((current) => current || panel);
-
       onDestroy(() => {
         const i = panels.indexOf(panel);
         panels.splice(i, 1);
@@ -44,7 +43,6 @@
     },
     async selectTab(tab) {
       const i = tabs.indexOf(tab);
-      selectedPanel.set(null);
       selectedTab.set(tabs[i]);
       selectedPanel.set(panels[i]);
       tabIndex = i;
@@ -58,12 +56,9 @@
   export function selectTab() {}
 </script>
 
-<div class="tabs">
+<div>
   <slot />
 </div>
 
 <style lang="postcss">
-  .tabs {
-    @apply flex flex-col h-full w-full;
-  }
 </style>

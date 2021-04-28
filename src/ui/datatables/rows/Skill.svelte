@@ -1,13 +1,13 @@
 <!-- <svelte:options immutable={true} /> -->
 <script lang="ts">
     import { getContext } from "svelte";
-    import type { TreeNode } from "@components/Tree/Tree.svelte";
+    import type { TreeNode } from "@components/Tree.svelte";
     import Toggle from "@components/Toggle.svelte";
     import AttributeOptions from "@ui/options/AttributeOptions.svelte";
     import { System } from "@app/system";
     import { Character } from "@internal";
     import { pluck } from "rxjs/operators";
-    import { getEditorContext } from "@ui/editors/Editor.svelte";
+    import { getEditorContext } from "@app/ui/Editor.svelte";
     const { processed$ } = getEditorContext<Character>();
     export let node: TreeNode;
     $: ({ isContainer$, showingChildren$, state, id, indent } = node);
@@ -33,7 +33,7 @@
     $: reference = state.sub("reference");
 </script>
 
-<td style="padding-left:{indent * 30 + 15}px">
+<td style="padding-left:{indent * 8 + (isContainer ? 0 : 16)}px">
     <div class="flex">
         {#if isContainer}
             <Toggle
@@ -41,13 +41,13 @@
                 class="text-red-700 px-1"
             />
         {/if}
-        <input type="text" class="flex-1" bind:value={$name} />
+        <div contenteditable="true" class="flex-1" bind:textContent={$name} />
     </div>
 </td>
 {#if type === "skill"}
     <td contenteditable="true" bind:textContent={$specialization} />
 {/if}
-{#if type === "skill"}
+{#if type !== "technique"}
     <td>
         {#if !isContainer}
             <AttributeOptions
@@ -93,7 +93,7 @@
 {/if}
 <td class:rollable-cell={!isContainer}>
     {#if !isContainer && level > 0}
-        <output on:click={(e) => System.roll(`3d6ms${level}`)}>
+        <output on:click|capture={(e) => System.roll(`3d6ms${level}`)}>
             {level}
         </output>
     {/if}

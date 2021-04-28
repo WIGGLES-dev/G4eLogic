@@ -8,27 +8,52 @@
     import EquipmentRow from "./rows/Equipment.svelte";
     import type { Character, CharacterData } from "@internal";
     export let character: State<CharacterData>;
+    $: filter = {
+        type: "equipment",
+    };
 </script>
 
-<DataTable type="equipment" root={character} component={EquipmentRow} nestedStructure={true}>
+{#if true}
+    <data-table
+        type="equipment"
+        idpath={["id"]}
+        data={$character}
+        branchpath={["children"]}
+        {filter}
+        on:cellchange={({ detail: { id, path, value } }) => {
+            character.sub(...path).set(value);
+        }}
+    >
+        <tr slot="thead">
+            <th>E</th>
+            <th class="px-2">#</th>
+            <th>Equipment</th>
+            <th>Uses</th>
+            <th>Value</th>
+            <th>Weight</th>
+            <th>EValue</th>
+            <th>EWeight</th>
+            <th>Reference</th>
+        </tr>
+    </data-table>
+{/if}
+
+<DataTable
+    main={2}
+    type="equipment"
+    root={character}
+    component={EquipmentRow}
+    nestedStructure={true}
+>
     <tr slot="thead">
         <th>E</th>
-        <th>
-            <span class="px-2">#</span>
-        </th>
-        <th class="w-full">
-            Equipment
-            <!-- <select disabled bind:value={$filter$}>
-                <option value="carried">Carried</option>
-                <option value="other">Other</option>
-            </select> -->
-        </th>
+        <th class="px-2">#</th>
+        <th>Equipment</th>
         <th>Uses</th>
         <th>Value</th>
         <th>Weight</th>
         <th>EValue</th>
         <th>EWeight</th>
-        <!-- <th>Location</th> -->
         <th>Reference</th>
     </tr>
 </DataTable>

@@ -1,10 +1,10 @@
 <script lang="ts">
     import { getContext } from "svelte";
-    import type { TreeNode } from "@components/Tree/Tree.svelte";
+    import type { TreeNode } from "@components/Tree.svelte";
     import { fragment, bind } from "@utils/use";
     import { System } from "@app/system";
     import { Character } from "@internal";
-    import { getEditorContext } from "@ui/editors/Editor.svelte";
+    import { getEditorContext } from "@app/ui/Editor.svelte";
     import { pluck } from "rxjs/operators";
     import { range } from "rxjs";
     const { processed$ } = getEditorContext<Character>();
@@ -51,8 +51,11 @@
     <td contenteditable="true" bind:textContent={$name} />
 {/if}
 <td contenteditable="true" bind:innerHTML={$usage} />
-<td contenteditable="true" bind:textContent={$damage} />
-<td class="w-2 rollable-cell" on:click={(e) => System.roll(`${$damage}`)} />
+<td
+    contenteditable="true"
+    bind:textContent={$damage}
+    on:contextmenu|stopPropagation|preventDefault={(e) => System.roll($damage)}
+/>
 <td>
     <select bind:value={$damageType}>
         <option value="" default />

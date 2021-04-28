@@ -270,18 +270,20 @@ attributes:
         tooltip: |
             HP (${costPerLevel} points per level), based on ST. ref. BS16<br/>
             Cost is reduced by -10% per SM above 0 (max -80%).<br/>
-            <strong><br/>Reeling:</strong> If current HP is below ${+`${currentValue}` / 3}, you are reeling. Ref. BS419.<br/>
+            <strong><br/>Reeling:</strong> If current HP is below ${Math.floor(currentValue / 3)}, you are reeling. Ref. BS419.<br/>
             <BLOCKQUOTE>Halve your Basic Move and Basic Speed. This sheet automatically calculates this.</BLOCKQUOTE><br/>
-            <strong>Verge of Collapse:</strong> If current HP is at or below 0, you may fall unconscious.<br/><BLOCKQUOTE>If you take any action other than Do Nothing, roll vs. UNC. If you fail, you fall unconscious.<br/>Take an additional -1 for every multiple of -HP you are on:<br/>
-            (-1 at ${+`${displayLevel}` * -1} HP, -2 at ${+`${displayLevel}` * -2} HP, -3 at ${+`${displayLevel}` * -3} HP, -4 at ${+`${displayLevel}` * -4} HP)<br/>
-            If you have positive HP, you awake in 15 minutes. If your HP is between 0 and ${+`${displayLevel}` * -1}, you may make an HT check every hour.<br/>
-            If you have below ${+`${displayLevel}` * -1} HP, you can roll HT once after 12 hours to awaken. If you fail, see Ref. BS424; you may die.</BLOCKQUOTE><br/>
-            <strong>Verge of Death:<br/></strong> If current HP falls to or below ${+`${displayLevel}` * -1}, you must roll to not die.<br/>
+            <strong>Verge of Collapse:</strong> If current HP is at or below 0, you may fall unconscious.
+            <br/><BLOCKQUOTE>If you take any action other than Do Nothing, roll vs. UNC. If you fail, you fall unconscious.
+            <br/>Take an additional -1 for every multiple of -HP you are on:<br/>
+            (-1 at ${displayLevel * -1} HP, -2 at ${displayLevel * -2} HP, -3 at ${displayLevel * -3} HP, -4 at ${displayLevel * -4} HP)<br/>
+            If you have positive HP, you awake in 15 minutes. If your HP is between 0 and ${displayLevel * -1}, you may make an HT check every hour.<br/>
+            If you have below ${displayLevel * -1} HP, you can roll HT once after 12 hours to awaken. If you fail, see Ref. BS424; you may die.</BLOCKQUOTE><br/>
+            <strong>Verge of Death:<br/></strong> If current HP falls to or below ${displayLevel * -1}, you must roll to not die.<br/>
             <BLOCKQUOTE>Roll vs. DTH once. If you fail by 1 or 2, you are mortally wounded, but do not die. Ref. BS423.<br/>On a failure, you immediately die.<br/>
             Roll again for every multiple of -HP you fall below:<br/>
-            (-1 at ${+`${displayLevel}` * -1} HP, -2 at ${+`${displayLevel}` * -2} HP, -3 at ${+`${displayLevel}` * -3} HP, -4 at ${+`${displayLevel}` * -4} HP)</BLOCKQUOTE><br/>
-            <strong>Death:</strong> If current HP falls to or below ${+`${displayLevel}` * -5}, you die.<br/>
-            <BLOCKQUOTE>If it falls below ${+`${displayLevel}` * -10}, your body is destroyed. No ressurection is possible.</BLOCKQUOTE><br/>
+            (-1 at ${displayLevel * -1} HP, -2 at ${displayLevel * -2} HP, -3 at ${displayLevel * -3} HP, -4 at ${displayLevel * -4} HP)</BLOCKQUOTE><br/>
+            <strong>Death:</strong> If current HP falls to or below ${displayLevel * -5}, you die.<br/>
+            <BLOCKQUOTE>If it falls below ${displayLevel * -10}, your body is destroyed. No ressurection is possible.</BLOCKQUOTE><br/>
             See Ref. BS424 for information about regaining HP.
         tags:
             - derived
@@ -290,14 +292,14 @@ attributes:
         abbreviation: FP
         tooltip: |
             FP (${costPerLevel} points per level), based on HT. ref. BS16<br/><strong>Tired:<br/>
-            </strong> If current FP is below ${+`${currentValue}` / 3}, you are reeling. Ref. BS426.<br/>
+            </strong> If current FP is below ${Math.floor(currentValue / 3)}, you are reeling. Ref. BS426.<br/>
             <BLOCKQUOTE>Halve your Basic Move, Dodge, and ST (rounding up), but not HP or ST-based damage. This sheet automatically calculates this.</BLOCKQUOTE><br/>
             <strong>Verge of Collapse:</strong> If current FP is at or below 0, you may fall unconscious.<br/>
             <BLOCKQUOTE>If you take additional FP damage, you additionally take one corresponding point of HP damage.<br/>
             If you do anything but rest, talk, or perform a Do Nothing, roll a Will roll. If you fail, you fall unconscious. <br/>
             If you critically fail, roll vs. HT. If you fail that roll, you have a heart attack. Ref. BS429.<br/>
             If you take any action other than Do Nothing, roll vs. UNC. If you fail, you fall unconscious.</BLOCKQUOTE><br/>
-            <strong>Unconscious</strong> If current FP falls to or below ${`+${displayLevel}` * -1}, you fall unconscious.<br/>
+            <strong>Unconscious</strong> If current FP falls to or below ${displayLevel * -1}, you fall unconscious.<br/>
             <BLOCKQUOTE>FP cannot fall below this level, but you still take HP damage if you lose further FP damage.<br/>
             You regain consciousness once you hit 0 FP.</BLOCKQUOTE><br/>FP lost through exertion is typically regained at 1 point per 10 minutes of rest. Ref. BS427.<br/>
             If you have Fit, you regain lost FP at twice the normal rate (1 point per 5 minutes) Ref. BS55.<br/>
@@ -311,7 +313,7 @@ attributes:
         abbreviation: QP
         tooltip: |
             QP (${costPerLevel} points per level), based on QT. ref. Pyramid #3/120, pg. 22. <br/>
-            If current QP is below ${+`${currentValue}` / 3}, halve your QT when calculating the benefits of supernatural resistance.<br/>
+            If current QP is below ${Math.floor(currentValue / 3)}, halve your QT when calculating the benefits of supernatural resistance.<br/>
             If current QP is below 0, quarter your QT when calculating the benefits of supernatural resistance. You may also fall unconscious;
             see ref. Pyramid #3/120, pg. 26.<br/>
             QP is typically regained at 1 point per 10 minutes, regardless of rest.<br/>

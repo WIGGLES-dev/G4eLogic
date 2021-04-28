@@ -6,7 +6,6 @@
   import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
   import JsonEditor from "@components/JsonEditor.svelte";
   import Cropper from "@components/Cropper.svelte";
-  import Combat from "@ui/Combat.svelte";
   import SkillList from "@ui/datatables/Skill.svelte";
   import TechniqueList from "@ui/datatables/Technique.svelte";
   import SpellList from "@ui/datatables/Spell.svelte";
@@ -16,7 +15,7 @@
   import Pools from "@ui/Pools.svelte";
   import EncumbranceTable from "@ui/EncumbranceTable.svelte";
   import LiftingTable from "@ui/LiftingTable.svelte";
-  import PointTotals from "@ui/PointTotals.svelte";
+  import Statistics from "@ui/Statistics.svelte";
   import Silhouette from "@ui/Silhouette/Silhouette.svelte";
   import SizeRange from "@ui/SizeRange.svelte";
   import TraitList from "@ui/datatables/Trait.svelte";
@@ -24,13 +23,10 @@
   import { load } from "js-yaml";
   import { System, Appearance } from "@internal";
   import { Character } from "@internal";
-  import {
-    character as characterMap,
-    getMasterLibraryData,
-  } from "@app/gurps/utils";
+  import { character as characterMap } from "@app/gurps/utils";
   import { upload } from "@utils/dom";
   import { merge } from "@utils/object-mapper";
-  import { getEditorContext } from "@ui/editors/Editor.svelte";
+  import { getEditorContext } from "@app/ui/Editor.svelte";
   import { onMount } from "svelte";
 
   const { state, processed$ } = getEditorContext<Character>();
@@ -43,27 +39,27 @@
   const name = state.sub("name");
   const image = state.sub("image");
   const initTab = state.sub("initTab");
-  async function uploadCharacter() {
+  async function uploadGCSFile() {
     const files = await upload();
     const file = files[0];
     if (!file) return;
     const text = await file.text();
-    const obj = JSON.parse(text);
-    if (!obj) return;
-    const character: any = merge(obj, characterMap);
-    state.assign({
-      ...character,
-      id: state.value.id,
-    });
+    try {
+      const obj = JSON.parse(text);
+      const character: any = merge(obj, characterMap);
+      state.assign({
+        ...character,
+        id: state.value.id,
+      });
+    } catch (err) {}
   }
   async function defaultConfiguration() {
     const response = await fetch("schemas/gurps/defaultCharacterConfig.yaml");
     const text = await response.text();
     try {
-    } catch (err) {
       const obj = load(text);
       config.value = obj;
-    }
+    } catch (err) {}
   }
   async function uploadConfiguration() {
     const fl = await upload();
@@ -89,34 +85,30 @@
     <Tab>Settings</Tab>
   </TabList>
   <TabPanel>
-    <div class="flex children:mx-2">
-      <div>
-        <Pools class="w-full" />
-        <AttributeList />
-      </div>
-      <div>
+    <div class="md:flex md:flex-wrap">
+      <AttributeList />
+      <Pools />
+      <div class="">
         <EncumbranceTable />
-        <div class="my-2" />
         <LiftingTable />
       </div>
       <Silhouette minWidth="200px" viewBox="200 0 400 800" />
-      <div>
-        <PointTotals />
-        <Combat />
-      </div>
+      <Statistics />
     </div>
   </TabPanel>
   <TabPanel>
-    <menu>
-      <button on:click={(e) => System.roll(`3d6ms`)} class="button"
-        >Dodge ({encumberedDodge})</button
-      >
-      <button on:click={(e) => System.roll(`3d6ms`)} class="button"
-        >Dodge+ ({encumberedDodge + 3})</button
-      >
-    </menu>
-    <div class="flex children:mx-2">
-      <div class="max-w-[750px]">
+    <div class="flex">
+      <menu class="flex flex-col children:m-2">
+        <button
+          on:click={(e) => System.roll(`3d6ms${encumberedDodge}`)}
+          class="button">Dodge ({encumberedDodge})</button
+        >
+        <button
+          on:click={(e) => System.roll(`3d6ms${encumberedDodge + 3}`)}
+          class="button">Dodge+ ({encumberedDodge + 3})</button
+        >
+      </menu>
+      <div>
         <WeaponList
           character={state}
           type="ranged weapon"
@@ -136,8 +128,10 @@
     </div>
   </TabPanel>
   <TabPanel>
-    <TechniqueList character={state} />
-    <SkillList character={state} />
+    <div class="flex flex-wrap">
+      <TechniqueList character={state} />
+      <SkillList character={state} />
+    </div>
   </TabPanel>
   <TabPanel>
     <EquipmentList character={state} />
@@ -145,56 +139,57 @@
   <TabPanel>
     <TraitList character={state}>Traits</TraitList>
   </TabPanel>
-  <TabPanel>
-    <section class="px-4 grid gap-2">
-      <div class="flex flex-col">
-        <div class="section-header">GENERAL</div>
-        <label for="">
-          Name
+  <TabPanel class="mx-4">
+    <section class="bio-grid children:m-2 md:grid md:auto-rows-min">
+      <fieldset class="flex flex-col">
+        <legend class="section-header">GENERAL</legend>
+        <label>
+          <span>Name</span>
           <input type="text" bind:value={$name} />
         </label>
-        <label for="">
-          Nickname
+        <label>
+          <span>Nickname</span>
           <input type="text" bind:value={$profile.nickName} />
         </label>
-        <div class="flex">
-          <label for="">
-            Sex
+        <fieldset class="flex flex-wrap children:flex-1">
+          <label>
+            <span>Sex</span>
             <input type="text" bind:value={$profile.sex} />
           </label>
-          <label for="">
-            Gender
+          <label>
+            <span>Gender</span>
             <input type="text" bind:value={$profile.gender} />
           </label>
-        </div>
-        <div class="flex">
-          <label for="" class="flex-1">
-            Race<input type="text" bind:value={$profile.race} />
+        </fieldset>
+        <fieldset class="flex flex-wrap children:flex-1">
+          <label>
+            <span>Race</span>
+            <input type="text" bind:value={$profile.race} />
           </label>
-          <label for="" class="flex-1">
-            Size
+          <label>
+            <span>Size</span>
             <input
               type="number"
               placeholder="0"
               bind:value={$profile.sizeModifier}
             />
           </label>
-        </div>
-        <div class="flex">
-          <label for="">
-            Handedness
+        </fieldset>
+        <fieldset class="flex flex-wrap">
+          <label>
+            <span>Handedness</span>
             <input type="text" bind:value={$profile.handedness} />
           </label>
-          <label for="" class="flex-1">
-            Reach
+          <label class="flex-1">
+            <span>Reach</span>
             <input type="text" />
           </label>
-        </div>
-        <label class="w-full text-center" for="">
-          Reaction
+        </fieldset>
+        <label class="w-full text-center">
+          <span>Reaction</span>
           <textarea rows="4" bind:value={$profile.reaction} />
         </label>
-      </div>
+      </fieldset>
       <div class="row-span-2">
         <Cropper
           fallback="assets/silhouette.png"
@@ -369,7 +364,7 @@
           Save Configuration
         </button>
         <button on:click={uploadConfiguration}>Upload Configuration</button>
-        <button on:click={uploadCharacter}> Upload GCS File </button>
+        <button on:click={uploadGCSFile}> Upload GCS File </button>
       </menu>
     </JsonEditor>
   </TabPanel>
@@ -377,8 +372,9 @@
 
 <style lang="postcss">
   .section-header {
-    @apply bg-gray-700 text-center text-white;
+    @apply bg-gray-700 text-center text-white w-full p-2;
   }
+
   label {
     @apply underline;
   }
@@ -396,8 +392,7 @@
     @apply outline-none border border-black border-solid rounded mt-2 w-full;
   }
 
-  .grid {
+  .bio-grid {
     grid-template-columns: 35% 1fr 35%;
-    grid-template-rows: min-content min-content;
   }
 </style>

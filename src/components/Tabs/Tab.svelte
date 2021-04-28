@@ -20,7 +20,7 @@
 </script>
 
 <div
-  class="text-center flex-1 select-none"
+  class="tab"
   data-tab="n/a"
   class:selected
   class:disabled
@@ -31,13 +31,16 @@
 </div>
 
 <style lang="postcss">
+  .tab {
+    @apply text-center flex-1 select-none font-semibold p-3 underline bg-white;
+  }
   .disabled {
     @apply text-red-700 line-through;
   }
   .selected {
-    @apply bg-gray-700 text-white;
+    @apply bg-red-700 text-white;
   }
   .hovered:hover {
-    @apply bg-gray-300;
+    @apply bg-gray-500 text-white;
   }
 </style>

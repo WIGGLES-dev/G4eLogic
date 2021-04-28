@@ -8,46 +8,29 @@
   @tailwind components;
   @tailwind utilities;
   @layer utilities {
-      @responsive {
-          .screen-center {
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-          }
-      }
   }
-  
+
+  html {
+  }
+
+  body {
+    overscroll-behavior: none;
+  }
+
   blockquote {
       @apply mx-3 my-2;
-  }
-  
-  .ProseMirror-focused {
-      @apply outline-none;
-  }
-  
-  .ProseMirror {
-      @apply w-full p-2 max-h-full overflow-auto;
-      height: 800px;
-  }
-  
-  .ProseMirror>ol>li {
-      @apply list-decimal;
-  }
-  
-  .ProseMirror>ul>li {
-      @apply list-disc;
-  }
-  
-  body {
-      @apply h-screen flex flex-col bg-white;
   }
   
   menu {
       @apply m-0 p-0;
   }
+
+  form fieldset, form label {
+    @apply flex flex-wrap max-w-full;
+  }
   
   form label {
-      @apply m-4 p-2 flex bg-white border border-solid rounded border-gray-700;
+      @apply m-4 p-2 bg-white border border-solid rounded border-gray-700 ;
   }
   
   form label>span {
@@ -68,7 +51,7 @@
   }
   
   button {
-      @apply p-1 bg-gray-700 text-white font-semibold;
+      @apply p-2 m-2 bg-gray-500 text-white font-semibold;
   }
   
   button:hover {
@@ -85,31 +68,46 @@
   select {
       @apply outline-none;
   }
+
+  select {
+    @apply whitespace-pre-wrap overflow-ellipsis;
+    max-width: 15rem;
+  }
+
+  [contenteditable=true]:empty:before{
+    content: attr(placeholder);
+    pointer-events: none;
+  }
   
   textarea {
       @apply block;
   }
   
-  th {
-      @apply font-normal px-2;
-  }
-  
-  td {
-      @apply whitespace-nowrap text-center px-2;
-  }
-  
-  td>input {
-      @apply inline-block w-full text-sm;
+  td>input, td>output, td>select {
+      @apply inline-block w-full text-sm text-center;
   }
   
   .tooltip {
-      @apply bg-gray-700 text-white text-xs p-2 text-left font-normal not-italic;
+      @apply bg-gray-700 text-white p-4 text-left font-normal not-italic;
   }
   
   .rollable-cell {
-      @apply bg-green-400 text-center text-white cursor-pointer shadow;
+      @apply bg-red-400 hover:bg-green-400 text-center text-white cursor-pointer shadow;
+  }
+
+  .ProseMirror-focused {
+      @apply outline-none;
   }
   
-  .rollable-cell:hover {
-      @apply bg-red-400;
+  .ProseMirror {
+      @apply w-full p-2 max-h-full overflow-auto;
+      height: 800px;
+  }
+  
+  .ProseMirror>ol>li {
+      @apply list-decimal;
+  }
+  
+  .ProseMirror>ul>li {
+      @apply list-disc;
   }

@@ -2,10 +2,10 @@
     import type { HitLocation } from "@app/gurps/resources/character";
     import Meter from "@components/Form/Meter.svelte";
     import { getContext } from "svelte";
-    import Editor, { editorctx } from "@ui/editors/Editor.svelte";
+    import Editor, { editorctx } from "@app/ui/Editor.svelte";
     export let location: HitLocation;
     import { Character } from "@internal";
-    import { getEditorContext } from "@ui/editors/Editor.svelte";
+    import { getEditorContext } from "@app/ui/Editor.svelte";
     const { processed$, state } = getEditorContext<Character>();
     const dt = state.sub("hitLocationDamage", location.name);
 </script>
@@ -28,7 +28,7 @@
 
 <style lang="postcss">
     .location {
-        @apply bg-gray-700 text-white text-center text-xs;
+        @apply text-center text-xs;
     }
     .location-name {
         @apply break-words capitalize;

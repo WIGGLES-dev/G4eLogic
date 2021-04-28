@@ -17,7 +17,7 @@
     nestedStructure={true}
 >
     <tr slot="thead">
-        <th class="w-full">Skill</th>
+        <th>Skill</th>
         <th>Specialization</th>
         <th>Signature</th>
         <th>Difficulty</th>

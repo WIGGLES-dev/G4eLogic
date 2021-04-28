@@ -1,11 +1,11 @@
 import { System, SystemInit } from "@internal";
 import "@ui/styles.css";
+const SystemWorker = "SharedWorker" in window ?
+    new SharedWorker("./worker.ts", { type: "module", name: "gurps" }) :
+    new Worker("./worker.ts", { type: "module", name: "gurps" });
 const system: SystemInit = {
     workers: [
-        [
-            new SharedWorker("./worker.ts", { type: "module", name: "gurps" }),
-            "gurps"
-        ]
+        [SystemWorker, "gurps"]
     ],
     schemas: [
         ["schemas/gurps/character.yaml", "character"],

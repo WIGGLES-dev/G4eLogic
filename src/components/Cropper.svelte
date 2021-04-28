@@ -94,7 +94,10 @@
     />
 </section>
 
-<style>
+<style lang="postcss">
+    .fas {
+        @apply p-3;
+    }
     :global(.cropper-view-box + .circular) {
         box-shadow: 0 0 0 1px #39f;
         border-radius: 50%;

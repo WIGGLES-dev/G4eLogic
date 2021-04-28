@@ -1,4 +1,3 @@
-import { wrap, expose, windowEndpoint, transferHandlers, Remote } from "comlink";
 export function upload() {
     return new Promise<FileList>((resolve, reject) => {
         Object.assign(document.createElement("input"), {
@@ -32,30 +31,33 @@ export function highestZIndex(): number {
 export function inIframe() {
     return window && window.parent !== window
 }
-export function makeIframe({
-    origin = window.origin,
-    slug = "",
-    src = origin + slug,
-    style = {
-        width: "100%",
-        height: "100%",
-        border: "none"
-    } as any,
-    appendTo = null
-}) {
+interface MakeIFrameParams {
+    origin?: string
+    slug?: string
+    src?: string
+    style?: Record<string, string>
+}
+export function makeIframe(params = {} as MakeIFrameParams) {
+    const {
+        origin = window.origin,
+        slug = "",
+        src = origin + slug,
+        style = {
+            width: "100%",
+            height: "100%",
+            border: "none"
+        },
+    } = params;
     const iframe = document.createElement("iframe");
     Object.assign(iframe.style, style);
     iframe.src = src;
-    if (appendTo instanceof HTMLElement) {
-        appendTo.append(iframe);
-    }
     return iframe;
 }
 export class VirtualElement {
     element: ClientRect | DOMRect
 
-    constructor(element?: Partial<ClientRect | DOMRect> | HTMLElement | MouseEvent) {
-        if (element instanceof MouseEvent) {
+    constructor(element?: Element | { clientX: number, clientY: number }) {
+        if ("clientX" in element && "clientY" in element) {
             const { clientX, clientY } = element;
             this.element = this.generateGetBoundingClientRect(clientX, clientY);
         }
@@ -82,3 +84,73 @@ export class VirtualElement {
         return this
     }
 }
+
+export function maxCellCount(table: HTMLTableElement): number {
+    const rows = table.querySelectorAll("tr");
+    const cells = Array.from(rows).reduce((span, row) => Math.max(span, row.cells.length), 0);
+    return cells
+}
+
+export enum Direction {
+    Vertical,
+    Horizontal,
+    Up,
+    Down,
+    left,
+    Right
+}
+export function analyzeTouch(start: TouchEvent, end: TouchEvent, touchpoints: Touch[][]) {
+    const isMulti = touchpoints.length > 1;
+    function analyzeTouches(touches: Touch[], i: number) {
+        const first = touches[0];
+        const last = touches[touches.length - 1];
+        const deltaX = last.clientX - first.clientX;
+        const deltaY = last.clientY - first.clientY;
+        const distanceX = Math.abs(deltaX);
+        const distanceY = Math.abs(deltaY);
+        const duration = end.timeStamp - start.timeStamp;
+        const velocityX = distanceX / duration;
+        const velocityY = distanceY / duration;
+        const directionVertical = distanceY > distanceX;
+        const directionHorizontal = !directionVertical;
+        const directionUp = deltaY > 0 && directionVertical;
+        const directionDown = deltaY < 0 && directionVertical
+        const directionLeft = deltaX < 0 && directionHorizontal;
+        const directionRight = deltaX > 0 && directionHorizontal;
+        const direction = directionUp || directionDown || directionLeft || directionRight;
+        return {
+            first,
+            last,
+            deltaX,
+            deltaY,
+            distanceX,
+            distanceY,
+            duration,
+            velocityX,
+            velocityY,
+            direction,
+        }
+    }
+    touchpoints.map(analyzeTouches);
+}
+
+
+function elementOffScreen(entries: IntersectionObserverEntry[], observer: IntersectionObserver) {
+
+}
+function elementsFixedOffset(entries: IntersectionObserverEntry[], observer: IntersectionObserver) {
+
+}
+export const offScreenObserver = new IntersectionObserver(elementOffScreen);
+export const fixedOffsetObserver = new IntersectionObserver(elementsFixedOffset);
+
+function dataSetChange(mutations: MutationRecord[], observer: MutationObserver) {
+    mutations.filter(mutation => mutation.attributeName.includes("data-"))
+}
+
+function styleChange(mutation: MutationRecord[], observer: MutationObserver) {
+
+}
+
+export const dataSetChangeObserver = new MutationObserver(dataSetChange);
+export const styleChangeObserver = new MutationObserver(styleChange);

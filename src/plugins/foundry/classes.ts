@@ -5,9 +5,10 @@ const vSheetDefaultOptions = {
     width: 1330,
     height: 700,
     submitOnChange: false
-}
+} as BaseEntitySheet.Options;
 export class VActorSheet extends ActorSheet {
     constructor(...args) {
+        //@ts-ignore
         super(...args);
     }
     static get defaultOptions() {
@@ -17,8 +18,9 @@ export class VActorSheet extends ActorSheet {
         super.activateListeners(jquery);
         const element = jquery[0];
         const { actor } = this;
+        const { origin } = game["GURPS"]["origin"] || {};
         const iframe = makeIframe({
-            origin: game.GURPS.origin,
+            origin,
             slug: `/#/edit/${actor.data.type}/${actor.id}?hideMenu=true`,
         });
         const sheet = element.closest(".foundry-valor");
@@ -38,6 +40,7 @@ export class VActor extends Actor {
         super(...args);
     }
     prepareData(...args) {
+        //@ts-ignore
         super.prepareData(...args);
         const speed = this.data.data?.attributeLevels?.speed;
         const dexterity = this.data.data?.attributeLevels?.dexterity
@@ -52,6 +55,7 @@ export class VActor extends Actor {
 }
 export class VItemSheet extends ItemSheet {
     constructor(...args) {
+        //@ts-ignore
         super(...args)
     }
     static get defaultOptions() {
@@ -61,8 +65,9 @@ export class VItemSheet extends ItemSheet {
         super.activateListeners(jquery);
         const element = jquery[0];
         const { item } = this;
+        const { origin } = game["GURPS"]["origin"] || {};
         const iframe = makeIframe({
-            origin: game.GURPS.origin,
+            origin,
             slug: `/#/edit/${item.data.type}/${item.id}?hideMenu=true`,
         });
         const handle = element.closest(".foundry-valor").querySelector(".window-resizable-handle");

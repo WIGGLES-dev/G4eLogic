@@ -46,8 +46,10 @@ export function interpolate(input: string, context: any) {
     if (!context) return input
     if (!input.startsWith("`")) input = '`' + input;
     if (!input.endsWith("`")) input = input + '`'
+    const params = Object.keys(context);
+    const args = Object.values(context);
     try {
-        return new Function(...Object.keys(context), `return ${input}`)(...Object.values(context))
+        return new Function(...params, `return ${input}`)(...args)
     } catch (err) {
         return err
     }

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { TreeNode } from "@components/Tree/Tree.svelte";
+    import type { TreeNode } from "@components/Tree.svelte";
     export let node: TreeNode;
     $: ({ isContainer$, showingChildren$, state, id } = node);
     $: type = $state.type;

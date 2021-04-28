@@ -1,4 +1,3 @@
-import { getPath } from '@utils/object';
 import { Character } from "./resources/character"
 import { Trait } from "./resources/trait";
 import { Equipment } from "./resources/equipment";
@@ -32,6 +31,7 @@ export const remote = {
             const entity: Entity<Data, Data> = new constructor(rootData, embedData);
             return entity.process()
         } catch (err) {
+            console.error(err);
             return {}
         }
     }
@@ -54,4 +54,11 @@ export interface GURPSWorker {
     }
     process(rootData: Data, embedData: Data): Promise<Record<string, any>>
 }
-self["onconnect"] = e => expose(remote, e.ports[0])
+self["onconnect"] = e => expose(remote, e.ports[0]);
+try {
+    if (self instanceof DedicatedWorkerGlobalScope) {
+        expose(remote);
+    }
+} catch (err) {
+
+}

@@ -1,13 +1,13 @@
 <script lang="ts">
     import { getContext } from "svelte";
-    import type { TreeNode } from "@components/Tree/Tree.svelte";
+    import type { TreeNode } from "@components/Tree.svelte";
     import Toggle from "@components/Toggle.svelte";
     import { Character } from "@internal";
     import { pluck } from "rxjs/operators";
-    import { getEditorContext } from "@ui/editors/Editor.svelte";
+    import { getEditorContext } from "@app/ui/Editor.svelte";
     const { processed$ } = getEditorContext<Character>();
     export let node: TreeNode;
-    $: ({ isContainer$, showingChildren$, state, id } = node);
+    $: ({ isContainer$, showingChildren$, state, id, indent } = node);
     $: type = $state.type as "skill" | "technique" | "spell";
     $: isContainer = $isContainer$;
     $: showingChildren = $showingChildren$;
@@ -20,7 +20,10 @@
 </script>
 
 <td>
-    <div class="flex" style="padding-left:{node.indent * 30 + 15}px">
+    <div
+        class="flex"
+        style="padding-left:{indent * 8 + (isContainer ? 0 : 16)}px"
+    >
         {#if isContainer}
             <Toggle
                 bind:toggled={$showingChildren$}

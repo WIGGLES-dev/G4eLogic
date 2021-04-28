@@ -1,6 +1,6 @@
 import type { OrArray } from "@utils/object";
 export const foundryMethods = {
-    async createItem(data: OrArray<createData>, options?: Options): Promise<OrArray<BaseData>> {
+    async createItem(data: OrArray<any>, options?: Options): Promise<OrArray<any>> {
         try {
             const item = await Item.create(data, options);
             return item.data
@@ -8,23 +8,24 @@ export const foundryMethods = {
 
         }
     },
-    async updateItem(data: OrArray<updateData>, options?: Options): Promise<OrArray<BaseData>> {
+    async updateItem(data: OrArray<any>, options?: Options): Promise<OrArray<any>> {
         try {
             const item = await Item.update(data, options);
+            //@ts-ignore
             return item.data
         } catch (err) {
 
         }
     },
-    async deleteItem(data: OrArray<string>, options?: Options): Promise<OrArray<BaseData>> {
+    async deleteItem(data: OrArray<string>, options?: Options): Promise<OrArray<any>> {
         try {
-            const item = await Item.delete(data, options);
+            const item = await Item.delete(data as string, options);
             return item.data
         } catch (err) {
 
         }
     },
-    async createActor(data: OrArray<createData>, options?: Options): Promise<OrArray<BaseData>> {
+    async createActor(data: OrArray<any>, options?: Options): Promise<OrArray<any>> {
         try {
             const actor = await Actor.delete(data, options);
             return actor.data
@@ -32,9 +33,10 @@ export const foundryMethods = {
 
         }
     },
-    async updateActor(data: OrArray<updateData>, options?: Options): Promise<OrArray<BaseData>> {
+    async updateActor(data: OrArray<any>, options?: Options): Promise<OrArray<any>> {
         try {
             const actor = await Actor.update(data, options);
+            //@ts-ignore
             return actor.data
         } catch (err) {
 
@@ -42,19 +44,20 @@ export const foundryMethods = {
     },
     async deleteActor(data: OrArray<string>, options?: Options) {
         try {
+            //@ts-ignore
             const actor = await Actor.delete(data, options);
             return actor.data
         } catch (err) {
 
         }
     },
-    async createOwnedItem(actorId: string, item: OrArray<createData>, options?: Options): Promise<OrArray<BaseData>> {
+    async createOwnedItem(actorId: string, item: OrArray<any>, options?: Options): Promise<OrArray<any>> {
         try {
             const ownedItem = await game.actors.get(actorId)?.createOwnedItem(item, options);
             return ownedItem.data
         } catch (err) { }
     },
-    async updateOwnedItem(actorId: string, item: OrArray<updateData>, options?: Options): Promise<OrArray<BaseData>> {
+    async updateOwnedItem(actorId: string, item: OrArray<any>, options?: Options): Promise<OrArray<any>> {
         try {
             const ownedItem = await game.actors.get(actorId)?.updateOwnedItem(item, options);
             return ownedItem.data
@@ -62,8 +65,9 @@ export const foundryMethods = {
 
         }
     },
-    async deleteOwnedItem(actorId: string, itemId: OrArray<string>, options?: Options): Promise<OrArray<BaseData>> {
+    async deleteOwnedItem(actorId: string, itemId: OrArray<string>, options?: Options): Promise<OrArray<any>> {
         try {
+            //@ts-ignore
             const ownedItem = await game.actors.get(actorId)?.deleteOwnedItem(itemId, options);
             return ownedItem.data
         } catch (err) { }
@@ -71,10 +75,10 @@ export const foundryMethods = {
     getGameData() {
         return duplicate(game)
     },
-    getActorData(actorId: string): BaseData {
+    getActorData(actorId: string): any {
         return game.actors.get(actorId)
     },
-    getItemData(itemId: string): BaseData {
+    getItemData(itemId: string): any {
         return game.items.get(itemId)?.data
     },
     getOwnedItemData(actorId: string, itemId: string) {
@@ -85,6 +89,7 @@ export const foundryMethods = {
         Roll.create(formula, data).toMessage();
     },
     openPDF(code: string, options: any) {
+        //@ts-ignore
         const api = ui.PDFoundry;
         if (!api) return
         try {

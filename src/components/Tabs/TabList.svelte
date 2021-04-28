@@ -1,6 +1,17 @@
-<nav class="flex flex-wrap px-4 py-2 children:px-2 children:underline">
+<script lang="ts">
+  let classList = "";
+  export { classList as class };
+</script>
+
+<nav class={classList}>
   <slot />
 </nav>
 
-<style>
+<style lang="postcss">
+  nav {
+    @apply flex flex-wrap w-full;
+  }
+  nav > * {
+    @apply p-2 underline;
+  }
 </style>

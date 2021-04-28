@@ -8,41 +8,52 @@
 </script>
 
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onMount, tick } from "svelte";
+    import { slide, fly } from "svelte/transition";
+    import { toTop } from "@utils/use";
+    import { longSwipeLeft$, longSwipeRight$ } from "@internal";
     const dispatch = createEventDispatcher();
-    export let items: SidebarItem[] = [];
-    function itemStyle(item: SidebarItem): string {
-        return `
-            background: ${item.image};
-        `;
-    }
-    export let width: string;
-    let classList: string;
+    let classList = "";
+    export let style = "";
     export { classList as class };
-    $: style = `width: ${width};`;
-    let collapsed = false;
-    function collapse() {
+    export let collapsed = true;
+    export let offset: number;
+    export async function collapse() {
+        await tick();
         collapsed = true;
     }
-    function expand() {
+    export async function expand() {
+        await tick();
         collapsed = false;
+    }
+    export async function toggle() {
+        await tick();
+        collapsed = !collapsed;
+    }
+    $: if ($longSwipeRight$) {
+        expand();
+    }
+    $: if ($longSwipeLeft$) {
+        collapse();
     }
 </script>
 
-{#if collapsed}
-    <!--  -->
-{:else}
-    <aside class="sidebar {classList}" {style}>
-        <slot name="top" {collapse} {expand} />
-        <div class="py-2 flex-1">
-            <slot {collapse} {expand} />
-        </div>
-        <slot name="bottom" {collapse} {expand} />
+{#if !collapsed}
+    <aside
+        bind:clientWidth={offset}
+        use:toTop
+        transition:fly
+        class="sidebar {classList}"
+        {style}
+    >
+        <slot {collapse} {expand} />
     </aside>
 {/if}
 
 <style lang="postcss">
     .sidebar {
-        @apply h-full flex flex-col;
+        @apply fixed top-0 h-screen bg-gray-500;
+        z-index: 300;
+        touch-action: none;
     }
 </style>

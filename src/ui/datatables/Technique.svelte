@@ -4,7 +4,7 @@
 <script lang="ts">
     import { getContext } from "svelte";
     import { State } from "rxdeep";
-    import { CharacterData } from "@internal";
+    import type { CharacterData } from "@internal";
     import ResourceTable from "@ui/DataTable.svelte";
     import SkillRow from "./rows/Skill.svelte";
     export let character: State<CharacterData>;
@@ -12,7 +12,7 @@
 
 <ResourceTable type="technique" root={character} component={SkillRow} nestedStructure={true}>
     <tr slot="thead">
-        <th class="w-full">Technique</th>
+        <th>Technique</th>
         <th>Difficulty</th>
         <th>Points</th>
         <th>Mod</th>

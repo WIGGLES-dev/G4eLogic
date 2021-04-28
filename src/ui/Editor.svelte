@@ -1,26 +1,4 @@
 <script context="module" lang="ts">
-    import EquipmentEditor from "./EquipmentEditor.svelte";
-    import EquipmentModifierEditor from "./EquipmentModifierEditor.svelte";
-    import MeleeWeaponEditor from "./MeleeWeaponEditor.svelte";
-    import RangedWeaponEditor from "./RangedWeaponEditor.svelte";
-    import SkillEditor from "./SkillEditor.svelte";
-    import SpellEditor from "./SpellEditor.svelte";
-    import TechniqueEditor from "./TechniqueEditor.svelte";
-    import TraitEditor from "./TraitEditor.svelte";
-    import TraitModifierEditor from "./TraitModifierEditor.svelte";
-    import CharacterEditor from "./CharacterEditor.svelte";
-    export const editors = {
-        equipment: EquipmentEditor,
-        "melee weapon": MeleeWeaponEditor,
-        "ranged weapon": RangedWeaponEditor,
-        skill: SkillEditor,
-        spell: SpellEditor,
-        technique: TechniqueEditor,
-        trait: TraitEditor,
-        character: CharacterEditor,
-        "trait modifier": TraitModifierEditor,
-        "equipment modifier": EquipmentModifierEditor,
-    };
     interface EditorContext<T extends Entity<Data, Data>> {
         SystemWorker$: GURPSWorker;
         SystemClasses: GURPSWorker["classes"];
@@ -33,6 +11,7 @@
         worker: Observable<Remote<T>>;
         state: State<T["record"]>;
         getWorker<T>(): Observable<Remote<T>>;
+        getEditor(type: string): Promise<any>;
     }
     export const editorctx = Symbol("editor");
     export function getEditorContext<
@@ -44,7 +23,7 @@
 
 <script lang="ts">
     import { setContext, getContext, onDestroy, onMount } from "svelte";
-    import { fetchRecord, validateResource, System } from "@internal";
+    import { fetchRecord, System } from "@internal";
     import {
         BehaviorSubject,
         fromEvent,
@@ -78,10 +57,11 @@
     import type { Remote } from "comlink";
     import type { Data, GURPSWorker, Entity } from "@internal";
     import { root } from "postcss";
+    import { capitalize } from "@app/utils/strings";
     export let params;
     $: ({ type, id, embed } = params);
     const record$ = from(fetchRecord<Data>("index", params.id)).pipe(
-        map((state) => state.verified(validateResource)),
+        map((state) => state.verified(System.stateVerifier())),
         share()
     );
     const root$ = record$.pipe(switchAll());
@@ -93,7 +73,9 @@
             embed
                 ? state
                       .deepSub<Data>((obj) => obj && obj.id === embed)
-                      .pipe(map((state) => state.verified(validateResource)))
+                      .pipe(
+                          map((state) => state.verified(System.stateVerifier()))
+                      )
                 : from([state])
         )
     );
@@ -104,14 +86,20 @@
         withLatestFrom(root$),
         debounceTime(1000),
         tap(() => console.time("processing")),
-        mergeMap(([v, root]) => SystemWorker.process(root, v)),
+        mergeMap(([v, root]) => {
+            return SystemWorker.process(root, v);
+        }),
         tap(() => console.timeEnd("processing")),
-        publishBehavior({} as Record<string, any>),
+        publishBehavior(null),
         refCount()
     );
     const exists$ = value$.pipe(
         map((value) => value && value.id && value.id === (embed ? embed : id))
     );
+    async function getEditor(type: string) {
+        const fn = type.split(" ").map(capitalize).join("");
+        return (await import(`./editors/${fn}Editor.svelte`))?.default;
+    }
     export const context = {
         SystemWorker,
         record$,
@@ -123,12 +111,17 @@
         get state() {
             return $entity$;
         },
+        getEditor,
     };
     setContext(editorctx, context);
 </script>
 
 {#if $exists$ && $processed$}
-    <svelte:component this={editors[type]} entity={$entity$} />
+    {#await getEditor(type)}
+        <!--  -->
+    {:then component}
+        <svelte:component this={component} entity={$entity$} />
+    {/await}
 {:else if $exists$ === false}
     <div class="bg-blue-600 h-screen w-screen">
         <h1 class="text-9xl text-center text-white">Record Not Found</h1>

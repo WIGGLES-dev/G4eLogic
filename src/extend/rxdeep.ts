@@ -1,13 +1,34 @@
-import { State, Change, keyed, KeyedState, KeyFunc, verified, VerifiedState, BranchFunc, Key } from 'rxdeep';
-import { from, Observable, Observer } from 'rxjs';
-import { getPath } from "@utils/object";
+import {
+    State,
+    Change,
+    keyed,
+    KeyedState,
+    KeyFunc,
+    verified,
+    VerifiedState,
+    BranchFunc,
+    Key,
+    ChangeTraceLeaf,
+    ChangeTrace,
+    ModList,
+    persistent,
+    PersistentState,
+    Storage,
+    Upstream,
+    Downstream,
+    isLeaf
+} from 'rxdeep';
+import { from, fromEvent, merge, Observable, Observer, Subject } from 'rxjs';
+import { getPath, updateValueAtPath, Path } from "@utils/path";
 import deepmerge from "deepmerge";
-import { expand, map, reduce, switchMap } from 'rxjs/operators';
+import { expand, filter, map, multicast, pluck, reduce, startWith, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { Tree, TreeHash } from '@app/utils/tree';
 declare module 'rxdeep/dist/es6/state' {
     type Key = string | number | symbol
     type BranchFunc<T> = (state: State<T>) => State<any>[]
     type Downstream<T> = Observable<Change<T>>
     type Upstream<T> = Observer<Change<T>>
+    type ModList<T> = Record<string, ChangeTraceLeaf<T>>
     interface State<T> {
         sub<K1 extends keyof T>(k1: K1): State<T[K1]>
         sub<K1 extends keyof T, K2 extends keyof T[K1]>(k1: K1, k2: K2): State<T[K1][K2]>
@@ -19,6 +40,7 @@ declare module 'rxdeep/dist/es6/state' {
         deepSub<T>(findfunc: ((value) => boolean) | object): Observable<State<T>>
         verified<K extends keyof T>(verifier?: (change: Change<T[K]>) => boolean): VerifiedState<T>
         keyed(keyFunc?: T extends any[] ? KeyFunc<T[number]> : never): T extends any[] ? KeyedState<T[number]> : never
+        persistent(storage: Storage<T>): PersistentState<T>
         add(number: T extends number ? number : never): void
         subtract(number: T extends number ? number : never): void
         multiply(number: T extends number ? number : never): void
@@ -29,6 +51,8 @@ declare module 'rxdeep/dist/es6/state' {
         set(value: T): void
         update(cb: (value) => T): void
         delete(): void
+        broadcast(name: string): State<T>
+        mods: Observable<ModList<T>>
     }
 }
 const sub = State.prototype.sub;
@@ -49,17 +73,20 @@ State.prototype.sub = function <T>(this: State<T>, ...keys: Key[]) {
     }
     return _sub
 }
-State.prototype.deepSub = function <T>(this: State<T>, value) {
+State.prototype.deepSub = function <T extends object>(this: State<T>, value) {
     return this.pipe(
         map(data => getPath(data, value)),
         map(path => this.sub(...path))
     )
 }
 State.prototype.verified = function <T>(this: State<T>, verifier: (change: Change<T>) => boolean = change => !!change.value) {
-    return verified(this, verifier)
+    return verified(this, verifier);
 }
 State.prototype.keyed = function <T>(this: State<T[]>, keyFunc: KeyFunc<T> = value => value && value["id"]) {
-    return keyed(this, keyFunc)
+    return keyed(this, keyFunc);
+}
+State.prototype.persistent = function <T>(this: State<T>, storage: Storage<T>) {
+    return persistent(this, storage)
 }
 State.prototype.add = function (this: State<number>, number: number) {
     this.value = this.value + number;
@@ -94,4 +121,58 @@ State.prototype.update = function <T>(this: State<T>, cb: (value: T) => T) {
 }
 State.prototype.delete = function <T>(this: State<T>) {
     this["state"]?.delete();
+}
+export class RemoteState<T> extends State<T> {
+    constructor(worker: Worker | SharedWorker) {
+        super(null);
+    }
+}
+export function traceToMods<T>(change: Change<T>) {
+    const { trace } = change
+    if (!trace) return {}
+    const mods: Record<string, ChangeTraceLeaf<T>> = {};
+    function getLeafKeys(trace: ChangeTrace<T>, path = []) {
+        if ("subs" in trace) {
+            Object.entries(trace.subs).forEach(([key, value]) => getLeafKeys(value, [...path, key]));
+        } else {
+            mods[path.join(".")] = trace;
+        }
+    }
+    getLeafKeys(trace);
+    return mods
+}
+export function traceFromMods<T>(mods: ModList<T>) {
+    const trace = {};
+    function setTraceValue(mod: [string, ChangeTraceLeaf<T>]) {
+        if (!mod) return;
+        const [path, leaf] = mod;
+        const subs = path.split(".").flatMap((segment, i) => {
+            if (i % 2 === 0) {
+                return ["subs", segment]
+            }
+            return [segment]
+        });
+        updateValueAtPath(trace, subs, leaf);
+    }
+    Object.entries(mods).forEach(setTraceValue);
+    return trace
+}
+export function modListToValue<T extends object>(mods: ModList<unknown>): T {
+    const value = {} as T;
+    Object.entries(mods).forEach(([pathstring, leaf]) => {
+        const path = pathstring.split(".");
+        updateValueAtPath(value, path, leaf.to);
+    });
+    return value
+}
+Object.defineProperties(State.prototype, {
+    mods: {
+        get<T>(this: State<T>) {
+            return this.downstream.pipe(map(traceToMods))
+        }
+    }
+});
+
+function refcount(): import("rxjs").OperatorFunction<unknown, unknown> {
+    throw new Error('Function not implemented.');
 }

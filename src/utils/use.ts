@@ -1,7 +1,8 @@
 import { ignore, State } from 'rxdeep';
-import { fromEvent, Observable } from 'rxjs';
+import { fromEvent, MonoTypeOperatorFunction, Observable, Observer, Operator, OperatorFunction, PartialObserver, pipe, Subscription, UnaryFunction } from 'rxjs';
 import { debounceTime, map, tap } from 'rxjs/operators';
 import { preventDefault } from '@utils/operators';
+import { maxCellCount } from "@utils/dom";
 export type UseFunction<E extends Element, P = any> = (node: E, params: P) => UseFunctionReturn
 export interface UseFunctionReturn<P = any> {
     update: (params: P) => void
@@ -9,6 +10,18 @@ export interface UseFunctionReturn<P = any> {
 }
 export function use<E extends Element, P = any>(node: E, fn: UseFunction<E, P>, ctx: Observable<P>) {
 
+}
+export function toTop(node: Element) {
+    document.body.append(node);
+    return {
+        destroy() {
+            try {
+                node?.remove();
+            } catch (err) {
+
+            }
+        }
+    }
 }
 export function bind(node: HTMLElement, params: State<any>) {
     const {
@@ -104,8 +117,7 @@ export function lift(node: HTMLElement, params: number = 1) {
 }
 export function colSpanMax(node: HTMLTableCellElement | HTMLTableHeaderCellElement) {
     const table = node.closest("table");
-    const rows = table.querySelectorAll("tr");
-    const cells = Array.from(rows).reduce((span, row) => Math.max(span, row.cells.length), 0);
+    const cells = maxCellCount(table);
     node.colSpan = cells;
 }
 export function droptarget(node: HTMLElement) {
@@ -120,28 +132,27 @@ export function droptarget(node: HTMLElement) {
         }
     }
 }
-
-export function stream(node: HTMLElement, params) {
-    const mutationConfig = {};
-    function onNodeChange(mutationList, observer) { }
-    const mutationObserver = new MutationObserver(onNodeChange)
-    mutationObserver.observe(node, mutationConfig);
-    function makeEvent() {
-        const {
-            event
-        } = node.dataset
-        return fromEvent(node, event)
+interface StreamParams {
+    event: string
+    observer: Observer<any> | ((e: any) => void),
+    operator: UnaryFunction<any, any>
+}
+export function stream(node: HTMLElement, params: StreamParams) {
+    const subs: Subscription[] = [];
+    const {
+        event,
+        observer,
+        operator = pipe()
+    } = params;
+    const event$ = fromEvent(node, event).pipe(operator);
+    if (typeof observer === "function") {
+        subs.push(event$.subscribe(observer));
+    } else if (typeof observer === "object") {
+        subs.push(event$.subscribe(observer));
     }
-    let event$ = makeEvent()
-    let sub = params.subscribe(event$)
     return {
         destroy() {
-            sub.unsubscribe()
-        },
-        update(params) {
-            sub.unsubscribe();
-            event$ = makeEvent();
-            sub = params.subscribe(event$);
+            subs.forEach((sub) => sub.unsubscribe());
         }
     }
 }

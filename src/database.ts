@@ -4,7 +4,6 @@ import { IDatabaseChange, DatabaseChangeType } from 'dexie-observable/api';
 import { State, Change, KeyFunc, change } from "rxdeep";
 import { Subject, Observer, Observable } from 'rxjs';
 import { debounce, debounceTime, distinct, distinctUntilChanged, filter, last, map, mergeMap, skip, switchMap, takeUntil, tap, throttleTime } from "rxjs/operators";
-import { updateValueAtPath } from "@utils/object";
 import { diff } from "deep-object-diff";
 export const db = new Dexie('Valor');
 const stores = {

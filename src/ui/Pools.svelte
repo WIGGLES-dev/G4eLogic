@@ -17,7 +17,7 @@
     import { from, Observable, using } from "rxjs";
     import { interpolate } from "@app/utils/strings";
     import { Character } from "@internal";
-    import { getEditorContext } from "@ui/editors/Editor.svelte";
+    import { getEditorContext } from "@app/ui/Editor.svelte";
     const { state, processed$ } = getEditorContext<Character>();
     const order$ = state.pipe(pluck("config", "ui", "poolOrder"));
     $: pools =
@@ -26,6 +26,23 @@
             ?.filter((v) => !!v) ?? [];
     let classList = "";
     export { classList as class };
+    let rowHeights: Record<string, number> = {};
+    $: computeGradientStyle = (attr) => {
+        const { keys: { color = "red" } = {}, current = 10, level = 10 } =
+            attr || {};
+        const width = Math.min(
+            Math.floor((attr.current / attr.level) * 100),
+            100
+        );
+        return `
+            background: 
+                linear-gradient(
+                    to right,
+                    ${color} ${width}%,
+                    white ${100 - width}%
+                )
+        `;
+    };
 </script>
 
 <table class={classList}>
@@ -33,27 +50,33 @@
         <!--  -->
     </caption>
     <thead>
-        <tr class="bg-gray-700 text-white">
-            <th>POOL</th>
-            <th>CUR</th>
-            <th>MAX</th>
-            <th>MOD</th>
+        <tr>
+            <th>Pool</th>
+            <th>Cur/Total</th>
+            <th>Mod</th>
         </tr>
     </thead>
     <tbody>
         {#each pools as attr, i (attr.name)}
             <tr>
                 <td>
-                    {attr.keys.abbreviation}
-                    {#if attr.keys.costPerLevel}
-                        [{attr.pointsSpent}]
-                    {/if}
                     <Popper
+                        let:popper
+                        let:reference
                         display="hovered virtual"
                         offset={[16, 16]}
                         placement="bottom-end"
                     >
-                        <div class="tooltip">
+                        <span
+                            use:reference
+                            class="truncate uppercase font-semibold"
+                        >
+                            {attr.keys.abbreviation}
+                            {#if attr.keys.costPerLevel}
+                                [{attr.pointsSpent}]
+                            {/if}
+                        </span>
+                        <div class="tooltip" use:popper>
                             {@html interpolate(attr.keys.tooltip, attr)}
                         </div>
                     </Popper>
@@ -73,8 +96,6 @@
                                 },
                             })}
                     />
-                </td>
-                <td>
                     <input
                         class="max-input"
                         type="number"
@@ -94,6 +115,13 @@
                                 },
                             })}
                     />
+                    <hr />
+                    <Meter
+                        class="table-row w-full"
+                        max={attr.level}
+                        value={attr.current}
+                        color={attr.keys.color}
+                    />
                 </td>
                 <td>
                     <input
@@ -112,23 +140,16 @@
                     />
                 </td>
             </tr>
-            <tr>
-                <td colspan="4">
-                    <Meter
-                        class="col-span-4 w-full"
-                        max={attr.level}
-                        value={attr.current}
-                        color={attr.keys.color}
-                    />
-                </td>
-            </tr>
         {/each}
     </tbody>
 </table>
 
 <style lang="postcss">
+    tr {
+        @apply transition-all delay-1000;
+    }
     input {
-        @apply text-center w-10;
+        @apply text-center w-10 text-xs;
     }
     .current-input {
     }

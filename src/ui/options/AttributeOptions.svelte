@@ -5,7 +5,7 @@
     export let attribute: string = null;
     export let signaturesOnly = false;
     import { Character } from "@internal";
-    import { getEditorContext } from "@ui/editors/Editor.svelte";
+    import { getEditorContext } from "@app/ui/Editor.svelte";
     const { processed$ } = getEditorContext<Character>();
     const attributes$ = processed$.pipe(
         mergeMap(async (p) => {

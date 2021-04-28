@@ -57,8 +57,17 @@ export class Trait extends Entity<CharacterData, TraitData> {
         super(character, trait, ...args);
         this.character = character instanceof Character ? character : new Character(character);
     }
-    getAdjustedPoints() {
-        return calculateTraitCost(this.getValue());
+    get children() {
+        return this.getValue()
+            ?.children
+            ?.map(({ id }) => this.character.embedded[id])
+            ?.filter((e): e is Trait => e instanceof Trait)
+            ?? []
+    }
+    getAdjustedPoints(): number {
+        return this.children.reduce((total, trait) => {
+            return total + trait.getAdjustedPoints()
+        }, calculateTraitCost(this.getValue()))
     }
     getTraitType() {
         return getTraitType(this.getValue());

@@ -75,6 +75,6 @@
         @apply bg-white m-2 p-1;
     }
     fieldset {
-        @apply flex;
+        @apply flex flex-wrap;
     }
 </style>
