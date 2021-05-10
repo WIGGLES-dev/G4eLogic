@@ -22,25 +22,25 @@
 </script>
 
 <section class="features-editor">
-  <Boxes on:addbox={addFeature} {showInitialAdder}>
+  <Boxes on:addbox="{addFeature}" showInitialAdder="{showInitialAdder}">
     {#each features as feature, i (i)}
-      <Box on:addbox={addFeature} on:deletebox={() => removeFeature(i)}>
+      <Box on:addbox="{addFeature}" on:deletebox="{() => removeFeature(i)}">
         <div class="flex flex-col">
           <fieldset>
             <!-- svelte-ignore a11y-label-has-associated-control -->
             <label>
-              <FeatureOptions bind:feature={feature.type} />
+              <FeatureOptions bind:feature="{feature.type}" />
             </label>
             <label>
               <input
                 type="number"
                 placeholder="amount"
-                bind:value={feature.amount}
+                bind:value="{feature.amount}"
               />
             </label>
             <label>
               <span>Per Level</span>
-              <input type="checkbox" bind:checked={feature.leveled} />
+              <input type="checkbox" bind:checked="{feature.leveled}" />
             </label>
           </fieldset>
 
@@ -49,7 +49,7 @@
               <!-- svelte-ignore a11y-label-has-associated-control -->
               <label>
                 <span>To Attribute(s)</span>
-                <AttributeOptions bind:attribute={feature.attribute} />
+                <AttributeOptions bind:attribute="{feature.attribute}" />
               </label>
             </fieldset>
           {:else if feature.type === FeatureBonusType.Skill}
@@ -57,13 +57,13 @@
               <!-- svelte-ignore a11y-label-has-associated-control -->
               <label>
                 <span>whose name</span>
-                <StringCompareOptions bind:option={feature.nameCompare} />
+                <StringCompareOptions bind:option="{feature.nameCompare}" />
               </label>
               <label>
                 <input
                   type="text"
                   placeholder="name"
-                  bind:value={feature.name}
+                  bind:value="{feature.name}"
                 />
               </label>
             </fieldset>
@@ -73,14 +73,14 @@
               <label>
                 <span>and whose specialization</span>
                 <StringCompareOptions
-                  bind:option={feature.specializationCompare}
+                  bind:option="{feature.specializationCompare}"
                 />
               </label>
               <label>
                 <input
                   type="text"
                   placeholder="specialization"
-                  bind:value={feature.specialization}
+                  bind:value="{feature.specialization}"
                 />
               </label>
             </fieldset>
@@ -89,7 +89,7 @@
               <!-- svelte-ignore a11y-label-has-associated-control -->
               <label>
                 <span> To Location(s)</span>
-                <LocationOptions bind:location={feature.location} />
+                <LocationOptions bind:location="{feature.location}" />
               </label>
             </fieldset>
           {/if}

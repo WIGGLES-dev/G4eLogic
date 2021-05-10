@@ -67,7 +67,7 @@
 </script>
 
 <section class:circular class="flex flex-col">
-    <div class="bg-gray-700 text-white px-4 mb-2">
+    <div class="bg-gray-500 text-white px-4 mb-2">
         {#if cropper}
             <span
                 title="cancel"

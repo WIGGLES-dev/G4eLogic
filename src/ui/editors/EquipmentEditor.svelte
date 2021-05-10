@@ -3,7 +3,7 @@
   import CategoryList from "@components/Form/CategoryList.svelte";
   import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
   import Features from "./panels/Features.svelte";
-  import WeaponList from "@ui/datatables/Weapon.svelte";
+  import DataTable from "@ui/DataTable.svelte";
 </script>
 
 <script lang="ts">
@@ -23,11 +23,11 @@
   const modifiers$ = entity.sub("modifiers");
 </script>
 
-<Tabs bind:initTab={$entity.initTab}>
+<Tabs bind:initTab="{$entity.initTab}">
   <TabList>
     <Tab>Data</Tab>
     <Tab>Features</Tab>
-    <Tab disabled={true}>Modifiers</Tab>
+    <Tab disabled="{true}">Modifiers</Tab>
     <Tab>Melee Weapons</Tab>
     <Tab>Ranged Weapons</Tab>
     <Tab>User Description</Tab>
@@ -36,18 +36,18 @@
     <form>
       <label>
         <span>Name</span>
-        <input type="text" bind:value={$entity.name} placeholder="name" />
+        <input type="text" bind:value="{$entity.name}" placeholder="name" />
       </label>
       <fieldset>
         <label>
           <span>Quantity</span>
-          <input type="number" bind:value={$entity.quantity} />
+          <input type="number" bind:value="{$entity.quantity}" />
         </label>
         <label>
           <span>Tech Level</span>
           <input
             type="text"
-            bind:value={$entity.techLevel}
+            bind:value="{$entity.techLevel}"
             placeholder="tech level"
           />
         </label>
@@ -55,19 +55,19 @@
           <span>Legality Class</span>
           <input
             type="text"
-            bind:value={$entity.legaliticClass}
+            bind:value="{$entity.legaliticClass}"
             placeholder="legality class"
           />
         </label>
         <label>
           <span>Equipped</span>
-          <input type="checkbox" bind:checked={$equipped$} />
+          <input type="checkbox" bind:checked="{$equipped$}" />
         </label>
       </fieldset>
       <fieldset>
         <label>
           <span>Value</span>
-          <input type="number" bind:value={$entity.value} />
+          <input type="number" bind:value="{$entity.value}" />
         </label>
         <label>
           <span>Extended Value</span>
@@ -79,7 +79,7 @@
       <fieldset>
         <label>
           <span>Weight</span>
-          <input type="number" bind:value={$entity.weight} />
+          <input type="number" bind:value="{$entity.weight}" />
         </label>
         <label>
           <span>Extended Weight</span>
@@ -89,28 +89,28 @@
         </label>
         <label>
           <span>Ignore for Skills</span>
-          <input type="checkbox" bind:checked={$entity.ignoreForskills} />
+          <input type="checkbox" bind:checked="{$entity.ignoreForskills}" />
         </label>
       </fieldset>
       <label>
         <span>Notes</span>
-        <textarea bind:value={$entity.notes} />
+        <textarea bind:value="{$entity.notes}"></textarea>
       </label>
-      <CategoryList bind:categories={$entity.categories} />
+      <CategoryList bind:categories="{$entity.categories}" />
       <fieldset>
         <label>
           <span>Uses</span>
-          <input type="number" bind:value={$entity.uses} placeholder="0" />
+          <input type="number" bind:value="{$entity.uses}" placeholder="0" />
         </label>
         <label>
           <span>Max Uses</span>
-          <input type="number" bind:value={$entity.maxUses} placeholder="0" />
+          <input type="number" bind:value="{$entity.maxUses}" placeholder="0" />
         </label>
         <label>
           <span>Reference</span>
           <input
             type="text"
-            bind:value={$entity.reference}
+            bind:value="{$entity.reference}"
             placeholder="reference"
           />
         </label>
@@ -118,19 +118,19 @@
     </form>
   </TabPanel>
   <TabPanel>
-    <Features bind:features={$entity.features} />
+    <Features bind:features="{$entity.features}" />
   </TabPanel>
   <TabPanel>
     <!-- MODIFIERS -->
   </TabPanel>
   <TabPanel>
-    <WeaponList character={entity} type="melee weapon" />
+    <DataTable type="melee weapon" rootId="{$entity.id}" maxDepth="{1}" />
   </TabPanel>
   <TabPanel>
-    <WeaponList character={entity} type="ranged weapon" />
+    <DataTable type="ranged weapon" rootId="{$entity.id}" maxDepth="{1}" />
   </TabPanel>
   <TabPanel>
-    <ProseMirror bind:content={$entity.userDescription} />
+    <ProseMirror bind:content="{$entity.userDescription}" />
   </TabPanel>
 </Tabs>
 

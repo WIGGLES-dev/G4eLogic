@@ -1,113 +1,117 @@
-  @import "~prosemirror-view/style/prosemirror.css";
-  @import "~prosemirror-example-setup/style/style.css";
-  @import "~prosemirror-gapcursor/style/gapcursor.css";
-  @import "~prosemirror-menu/style/menu.css";
-  @import "~jsoneditor/dist/jsoneditor.css";
-  @import "~cropperjs/dist/cropper.css";
-  @tailwind base;
-  @tailwind components;
-  @tailwind utilities;
-  @layer utilities {
-  }
+@import "~prosemirror-view/style/prosemirror.css";
+@import "~prosemirror-example-setup/style/style.css";
+@import "~prosemirror-gapcursor/style/gapcursor.css";
+@import "~prosemirror-menu/style/menu.css";
+@import "~jsoneditor/dist/jsoneditor.css";
+@import "~cropperjs/dist/cropper.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer utilities {
+}
 
-  html {
-  }
+html {
+  @apply h-full;
+}
 
-  body {
-    overscroll-behavior: none;
-  }
+body {
+  overscroll-behavior: none;
+}
 
-  blockquote {
-      @apply mx-3 my-2;
-  }
-  
-  menu {
-      @apply m-0 p-0;
-  }
+blockquote {
+  @apply mx-3 my-2;
+}
 
-  form fieldset, form label {
-    @apply flex flex-wrap max-w-full;
-  }
-  
-  form label {
-      @apply m-4 p-2 bg-white border border-solid rounded border-gray-700 ;
-  }
-  
-  form label>span {
-      @apply mx-2;
-  }
-  
-  form label>input[type="checkbox"],
-  form label>span {
-      @apply self-center;
-  }
-  
-  form label>input {
-      @apply flex-1;
-  }
-  
-  form label>textarea {
-      @apply w-full block;
-  }
-  
-  button {
-      @apply p-2 m-2 bg-gray-500 text-white font-semibold;
-  }
-  
-  button:hover {
-      @apply bg-green-500;
-  }
-  
-  button:focus {
-      @apply outline-none;
-  }
-  
-  [contenteditable="true"]:focus,
-  input,
-  textarea,
-  select {
-      @apply outline-none;
-  }
+menu {
+  @apply m-0 p-0;
+}
 
-  select {
-    @apply whitespace-pre-wrap overflow-ellipsis;
-    max-width: 15rem;
-  }
+form fieldset,
+form label {
+  @apply flex flex-wrap max-w-full;
+}
 
-  [contenteditable=true]:empty:before{
-    content: attr(placeholder);
-    pointer-events: none;
-  }
-  
-  textarea {
-      @apply block;
-  }
-  
-  td>input, td>output, td>select {
-      @apply inline-block w-full text-sm text-center;
-  }
-  
-  .tooltip {
-      @apply bg-gray-700 text-white p-4 text-left font-normal not-italic;
-  }
-  
-  .rollable-cell {
-      @apply bg-red-400 hover:bg-green-400 text-center text-white cursor-pointer shadow;
-  }
+form label {
+  @apply m-4 p-2 bg-white border border-solid rounded border-gray-700;
+}
 
-  .ProseMirror-focused {
-      @apply outline-none;
-  }
-  
-  .ProseMirror {
-      @apply w-full p-2 max-h-full overflow-auto;
-      height: 800px;
-  }
-  
-  .ProseMirror>ol>li {
-      @apply list-decimal;
-  }
-  
-  .ProseMirror>ul>li {
-      @apply list-disc;
-  }
+form label > span {
+  @apply mx-2;
+}
+
+form label > input[type="checkbox"],
+form label > span {
+  @apply self-center;
+}
+
+form label > input {
+  @apply flex-1;
+}
+
+form label > textarea {
+  @apply w-full block;
+}
+
+button {
+  @apply p-2 m-2 bg-gray-500 text-white font-semibold;
+}
+
+button:hover {
+  @apply bg-green-500;
+}
+
+button:focus {
+  @apply outline-none;
+}
+
+[contenteditable="true"]:focus,
+input,
+textarea,
+select {
+  @apply outline-none;
+}
+
+select {
+  @apply whitespace-pre-wrap overflow-ellipsis;
+  max-width: 15rem;
+}
+
+[contenteditable="true"]:empty:before {
+  content: attr(placeholder);
+  pointer-events: none;
+}
+
+textarea {
+  @apply block;
+}
+
+td > input,
+td > output,
+td > select {
+  @apply inline-block w-full text-sm text-center;
+}
+
+.tooltip {
+  @apply bg-gray-700 text-white p-4 text-left font-normal not-italic;
+}
+
+.rollable-cell {
+  @apply bg-red-400 hover:bg-green-400 text-center text-white cursor-pointer shadow;
+}
+
+.ProseMirror-focused {
+  @apply outline-none;
+}
+
+.ProseMirror {
+  @apply w-full p-2 max-h-full overflow-auto;
+  height: 800px;
+}
+
+.ProseMirror > ol > li {
+  @apply list-decimal;
+}
+
+.ProseMirror > ul > li {
+  @apply list-disc;
+}

@@ -13,43 +13,43 @@
 <form>
   <label>
     <span>Name</span>
-    <input type="text" bind:value={$entity.name} />
+    <input type="text" bind:value="{$entity.name}" />
   </label>
   <label>
     <span>Tech Level</span>
-    <input type="text" bind:value={$entity.techLevel} />
+    <input type="text" bind:value="{$entity.techLevel}" />
   </label>
   <label>
     <span>Enabled</span>
-    <input type="checkbox" bind:value={$entity.enabled} />
+    <input type="checkbox" bind:value="{$entity.enabled}" />
   </label>
   <label>
     <span>Cost Modifier</span>
-    <input type="number" bind:value={$entity.cost} />
+    <input type="number" bind:value="{$entity.cost}" />
   </label>
   <label>
     <span>Cost Modifier Type</span>
-    <select bind:value={$entity.costType}>
+    <select bind:value="{$entity.costType}">
       {#each Object.entries(EquipmentModifierCostValueType) as [key, value], i (i)}
-        <option {value}>{key}</option>
+        <option value="{value}">{key}</option>
       {/each}
     </select>
   </label>
   <label>
     <span>Weight Modifier Type</span>
-    <select bind:value={$entity.affects}>
+    <select bind:value="{$entity.affects}">
       {#each Object.entries(EquipmentModifierWeightValueType) as [key, value], i (i)}
-        <option {value}>{key}</option>
+        <option value="{value}">{key}</option>
       {/each}
     </select>
   </label>
   <label>
     <span>Notes</span>
-    <textarea bind:value={$entity.notes} />
+    <textarea bind:value="{$entity.notes}"></textarea>
   </label>
   <label>
     <span>Reference</span>
-    <input type="text" bind:value={$entity.reference} />
+    <input type="text" bind:value="{$entity.reference}" />
   </label>
 </form>
 

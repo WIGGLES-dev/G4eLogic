@@ -1,6 +1,5 @@
 <script lang="ts">
   import { getContext } from "svelte";
-  import { System } from "@internal";
   import { mergeMap, pluck, startWith } from "rxjs/operators";
   import { blur, fade } from "svelte/transition";
   import Popper from "@components/Popper.svelte";
@@ -38,7 +37,7 @@
     class="text-center bg-gray-200 p-1 outline-none block w-full"
     type="number"
     placeholder="0"
-    bind:value={$pointTotal}
+    bind:value="{$pointTotal}"
   />
   <div class="pt-pair">
     <div>Spent</div>
@@ -76,7 +75,7 @@
     <Popper
       display="hovered virtual"
       placement="bottom-start"
-      offset={[16, 16]}
+      offset="{[16, 16]}"
       let:reference
       let:popper
     >
@@ -87,7 +86,7 @@
     </Popper>
 
     <input
-      bind:value={$sm$}
+      bind:value="{$sm$}"
       placeholder="0"
       class="text-center block w-full"
       type="number"
@@ -96,12 +95,12 @@
 
   <div
     class="pt-pair cursor-pointer"
-    on:click={(e) => System.roll(`${swingDamage}`)}
+    on:click="{(e) => System.roll(`${swingDamage}`)}"
   >
     <Popper
       display="hovered virtual"
       placement="bottom-start"
-      offset={[16, 16]}
+      offset="{[16, 16]}"
       let:reference
       let:popper
     >
@@ -117,12 +116,12 @@
   </div>
   <div
     class="pt-pair cursor-pointer"
-    on:click={(e) => System.roll(`${thrustDamage}`)}
+    on:click="{(e) => System.roll(`${thrustDamage}`)}"
   >
     <Popper
       display="hovered virtual"
       placement="bottom-start"
-      offset={[16, 16]}
+      offset="{[16, 16]}"
       let:reference
       let:popper
     >

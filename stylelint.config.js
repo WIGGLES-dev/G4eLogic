@@ -1,12 +1,12 @@
 module.exports = {
-  extends: ['stylelint-config-recommended'],
+  extends: ["stylelint-config-recommended"],
   "prettier.stylelintIntegration": true,
   rules: {
     "selector-pseudo-class-no-unknown": [
       true,
       {
-        "ignorePseudoClasses": ["global"]
-      }
+        ignorePseudoClasses: ["global"],
+      },
     ],
     "at-rule-no-unknown": [
       true,
@@ -17,7 +17,7 @@ module.exports = {
           "variants",
           "responsive",
           "screen",
-          "layer"
+          "layer",
         ],
       },
     ],
@@ -25,6 +25,6 @@ module.exports = {
     "declaration-block-trailing-semicolon": null,
     "no-descending-specificity": null,
     "no-empty-source": null,
-    "selector-pseudo-class-no-unknown": null
+    "selector-pseudo-class-no-unknown": null,
   },
 };

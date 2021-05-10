@@ -1,13 +1,10 @@
 <script lang="ts">
-  import { getContext } from "svelte";
   import Popper from "@components/Popper.svelte";
-  import { mergeMap, pluck, tap } from "rxjs/operators";
-  import { Observable } from "rxjs";
+  import { pluck } from "rxjs/operators";
   import { interpolate } from "@app/utils/strings";
-  import { System } from "@internal";
   import type { Character } from "@internal";
   import { getEditorContext } from "@app/ui/Editor.svelte";
-  const { state, processed$ } = getEditorContext<Character>();
+  const { state, processed$, System } = getEditorContext<Character>();
   const order$ = state.pipe(pluck("config", "ui", "attributeOrder"));
   $: attributes =
     $order$
@@ -32,7 +29,7 @@
   }
 </script>
 
-<table class={classList}>
+<table class="{classList}">
   <caption>
     <!--  -->
   </caption>
@@ -41,14 +38,14 @@
     let:popper
     display="hovered virtual"
     placement="bottom-start"
-    modifiers={[
+    modifiers="{[
       {
-        name: "offset",
+        name: 'offset',
         options: {
           offset: [16, 16],
         },
       },
-    ]}
+    ]}"
   >
     <thead use:reference>
       <tr>
@@ -78,19 +75,19 @@
       <tr>
         <td>
           <div
-            class:primary={isPrimary(attr)}
-            class:secondary={isSecondary(attr)}
-            class:tertiary={isTertiary(attr)}
-            class:sub-stat={isSubstat(attr)}
+            class:primary="{isPrimary(attr)}"
+            class:secondary="{isSecondary(attr)}"
+            class:tertiary="{isTertiary(attr)}"
+            class:sub-stat="{isSubstat(attr)}"
             class="flex justify-end pr-2"
-            on:click={(e) => System.roll(`3d6ms${attr.level}`)}
+            on:click="{(e) => System.roll(`3d6ms${attr.level}`)}"
           >
             <Popper
               let:popper
               let:reference
               display="hovered virtual"
               placement="bottom-start"
-              offset={[16, 16]}
+              offset="{[16, 16]}"
             >
               <span use:reference class="truncate uppercase cursor-pointer">
                 {attr.keys.abbreviation}
@@ -107,49 +104,49 @@
         <td>
           <div
             class="attribute-text"
-            class:primary={isPrimary(attr)}
-            class:secondary={isSecondary(attr)}
-            class:tertiary={isTertiary(attr)}
-            class:sub-stat={isSubstat(attr)}
-            class:bg-white={isPrimary(attr)}
-            class:text-black={isPrimary(attr)}
-            class:bg-gray-700={!isPrimary(attr)}
-            class:text-white={!isPrimary(attr)}
+            class:primary="{isPrimary(attr)}"
+            class:secondary="{isSecondary(attr)}"
+            class:tertiary="{isTertiary(attr)}"
+            class:sub-stat="{isSubstat(attr)}"
+            class:bg-white="{isPrimary(attr)}"
+            class:text-black="{isPrimary(attr)}"
+            class:bg-gray-700="{!isPrimary(attr)}"
+            class:text-white="{!isPrimary(attr)}"
           >
             <input
               class="main-input"
-              step={attr.keys.increment || 1}
+              step="{attr.keys.increment || 1}"
               type="number"
               min="0"
               placeholder="0"
-              value={attr.level}
-              on:change={(e) =>
+              value="{attr.level}"
+              on:change="{(e) =>
                 state.merge({
                   attributeLevels: {
                     [attr.name]: {
                       level:
-                        +e.target["value"] - attr.bonus - attr.mod - attr.base,
+                        +e.target['value'] - attr.bonus - attr.mod - attr.base,
                     },
                   },
-                })}
+                })}"
             />
           </div>
         </td>
         <td>
           <input
             class="mod-input"
-            step={attr.keys.increment || 1}
+            step="{attr.keys.increment || 1}"
             type="number"
             placeholder="0"
-            value={attr.mod}
-            on:change={(e) =>
+            value="{attr.mod}"
+            on:change="{(e) =>
               state.merge({
                 attributeLevels: {
                   [attr.name]: {
-                    mod: +e.target["value"],
+                    mod: +e.target['value'],
                   },
                 },
-              })}
+              })}"
           />
         </td>
       </tr>{/each}

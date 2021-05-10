@@ -4,6 +4,7 @@
         "allowJs": true,
         "noImplicitThis": true,
         "moduleResolution": "node",
+        "isolatedModules": false,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "noImplicitAny": false,
@@ -14,7 +15,7 @@
         "emitDecoratorMetadata": true,
         "resolveJsonModule": true,
         "declaration": true,
-        "useDefineForClassFields": true,
+        "useDefineForClassFields": false,
         "jsx": "preserve",
         "lib": [
             "WebWorker",

@@ -1,5 +1,5 @@
 @import "./templates_roll.css";
 .foundry-valor .window-content {
-    @apply p-0;
-    background: none;
+  padding: 0px;
+  background: none;
 }

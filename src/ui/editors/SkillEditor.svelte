@@ -8,7 +8,7 @@
   import AttributeOptions from "@ui/options/AttributeOptions.svelte";
   import DifficultyOptions from "@ui/options/DifficultyOptions.svelte";
   import Features from "./panels/Features.svelte";
-  import WeaponList from "@ui/datatables/Weapon.svelte";
+  import DataTable from "@ui/DataTable.svelte";
   import SkillDefaults from "./panels/SkillDefaults.svelte";
   import { Character, Skill } from "@internal";
   import { getEditorContext } from "@app/ui/Editor.svelte";
@@ -26,11 +26,11 @@
   const features$ = entity.sub("features");
 </script>
 
-<Tabs bind:initTab={$entity.initTab}>
+<Tabs bind:initTab="{$entity.initTab}">
   <TabList>
     <Tab>Data</Tab>
     <Tab>Defaults</Tab>
-    <Tab disabled={true}>Prerequisites</Tab>
+    <Tab disabled="{true}">Prerequisites</Tab>
     <Tab>Features</Tab>
     <Tab>Melee Weapons</Tab>
     <Tab>Ranged Weapons</Tab>
@@ -45,12 +45,12 @@
             class="flex-1"
             type="text"
             placeholder="name"
-            bind:value={$entity.name}
+            bind:value="{$entity.name}"
           />
         </label>
         <label>
           <span>Specialization</span>
-          <input type="text" bind:value={$entity.specialization} />
+          <input type="text" bind:value="{$entity.specialization}" />
         </label>
       </fieldset>
       <fieldset>
@@ -58,21 +58,21 @@
         <label>
           <span>Signature</span>
           <AttributeOptions
-            bind:attribute={$signature$}
-            signaturesOnly={true}
+            bind:attribute="{$signature$}"
+            signaturesOnly="{true}"
           />
         </label>
         <!-- svelte-ignore a11y-label-has-associated-control -->
         <label>
           <span>Difficulty</span>
-          <DifficultyOptions bind:difficulty={$entity.difficulty} />
+          <DifficultyOptions bind:difficulty="{$entity.difficulty}" />
         </label>
         <label>
           <span>Points</span>
           <input
             type="number"
             placeholder="points"
-            bind:value={$entity.points}
+            bind:value="{$entity.points}"
           />
         </label>
         <label>
@@ -85,12 +85,12 @@
       <fieldset>
         <label>
           <span>Encumbrance</span>
-          <select bind:value={$entity.encumbrancePenaltyMultiple}>
-            <option value={undefined} />
-            <option value={0}>No penalty due to encumbrance</option>
-            <option value={1}>Penalty equal to the encumbrance level</option>
+          <select bind:value="{$entity.encumbrancePenaltyMultiple}">
+            <option value="{undefined}"></option>
+            <option value="{0}">No penalty due to encumbrance</option>
+            <option value="{1}">Penalty equal to the encumbrance level</option>
             {#each new Array(7) as encumbranceMultiple, i (i)}
-              <option value={i}>
+              <option value="{i}">
                 Penalty equal to
                 {i}
                 times the current encumbrance level
@@ -103,46 +103,46 @@
           <input
             type="text"
             placeholder="tech level"
-            bind:value={$entity.techLevel}
+            bind:value="{$entity.techLevel}"
           />
         </label>
         <label>
           <span>Disabled</span>
-          <input type="checkbox" bind:checked={$entity.disabled} />
+          <input type="checkbox" bind:checked="{$entity.disabled}" />
         </label>
       </fieldset>
       <fieldset>
-        <CategoryList class="flex-1" bind:categories={$entity.categories} />
+        <CategoryList class="flex-1" bind:categories="{$entity.categories}" />
         <label>
           <span>Reference</span>
           <input
             type="text"
             placeholder="reference"
-            bind:value={$entity.reference}
+            bind:value="{$entity.reference}"
           />
         </label>
       </fieldset>
       <label>
         <span>Notes</span>
-        <textarea bind:value={$entity.notes} placeholder="notes" />
+        <textarea bind:value="{$entity.notes}" placeholder="notes"></textarea>
       </label>
     </form>
   </TabPanel>
   <TabPanel>
-    <SkillDefaults bind:defaults={$defaults$} />
+    <SkillDefaults bind:defaults="{$defaults$}" />
   </TabPanel>
   <TabPanel />
   <TabPanel>
-    <Features bind:features={$features$} />
+    <Features bind:features="{$features$}" />
   </TabPanel>
   <TabPanel>
-    <WeaponList character={entity} type="melee weapon" />
+    <DataTable type="melee weapon" rootId="{$entity.id}" />
   </TabPanel>
   <TabPanel>
-    <WeaponList character={entity} type="ranged weapon" />
+    <DataTable type="ranged weapon" rootId="{$entity.id}" />
   </TabPanel>
   <TabPanel>
-    <ProseMirror bind:content={$entity.userDescription} />
+    <ProseMirror bind:content="{$entity.userDescription}" />
   </TabPanel>
 </Tabs>
 

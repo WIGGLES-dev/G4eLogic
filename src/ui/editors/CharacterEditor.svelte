@@ -6,11 +6,7 @@
   import ProseMirror from "@ui/prosemirror/ProseMirror.svelte";
   import JsonEditor from "@components/JsonEditor.svelte";
   import Cropper from "@components/Cropper.svelte";
-  import SkillList from "@ui/datatables/Skill.svelte";
-  import TechniqueList from "@ui/datatables/Technique.svelte";
-  import SpellList from "@ui/datatables/Spell.svelte";
-  import EquipmentList from "@ui/datatables/Equipment.svelte";
-  import WeaponList from "@ui/datatables/Weapon.svelte";
+  import DataTable from "@ui/DataTable.svelte";
   import AttributeList from "@ui/AttributeList.svelte";
   import Pools from "@ui/Pools.svelte";
   import EncumbranceTable from "@ui/EncumbranceTable.svelte";
@@ -18,10 +14,9 @@
   import Statistics from "@ui/Statistics.svelte";
   import Silhouette from "@ui/Silhouette/Silhouette.svelte";
   import SizeRange from "@ui/SizeRange.svelte";
-  import TraitList from "@ui/datatables/Trait.svelte";
   import { pluck, tap } from "rxjs/operators";
   import { load } from "js-yaml";
-  import { System, Appearance } from "@internal";
+  import { Appearance } from "@internal";
   import { Character } from "@internal";
   import { character as characterMap } from "@app/gurps/utils";
   import { upload } from "@utils/dom";
@@ -29,7 +24,7 @@
   import { getEditorContext } from "@app/ui/Editor.svelte";
   import { onMount } from "svelte";
 
-  const { state, processed$ } = getEditorContext<Character>();
+  const { state, processed$, System } = getEditorContext<Character>();
   const dodge$ = processed$.pipe(pluck("attributes", "dodge", "level"));
   const encumbranceLevel$ = processed$.pipe(pluck("encumbranceLevel"));
   $: encumberedDodge = $dodge$ + $encumbranceLevel$;
@@ -72,7 +67,7 @@
   }
 </script>
 
-<Tabs bind:initTab={$initTab}>
+<Tabs bind:initTab="{$initTab}">
   <TabList>
     <Tab>General</Tab>
     <Tab>Combat</Tab>
@@ -100,28 +95,26 @@
     <div class="flex">
       <menu class="flex flex-col children:m-2">
         <button
-          on:click={(e) => System.roll(`3d6ms${encumberedDodge}`)}
+          on:click="{(e) => System.roll(`3d6ms${encumberedDodge}`)}"
           class="button">Dodge ({encumberedDodge})</button
         >
         <button
-          on:click={(e) => System.roll(`3d6ms${encumberedDodge + 3}`)}
+          on:click="{(e) => System.roll(`3d6ms${encumberedDodge + 3}`)}"
           class="button">Dodge+ ({encumberedDodge + 3})</button
         >
       </menu>
       <div>
-        <WeaponList
-          character={state}
+        <DataTable
           type="ranged weapon"
-          disableDrag={true}
-          disableDrop={true}
-          maxDepth={Number.POSITIVE_INFINITY}
+          disableDrag="{true}"
+          disableDrop="{true}"
+          maxDepth="{Number.POSITIVE_INFINITY}"
         />
-        <WeaponList
-          character={state}
+        <DataTable
           type="melee weapon"
-          disableDrag={true}
-          disableDrop={true}
-          maxDepth={Number.POSITIVE_INFINITY}
+          disableDrag="{true}"
+          disableDrop="{true}"
+          maxDepth="{Number.POSITIVE_INFINITY}"
         />
       </div>
       <SizeRange />
@@ -129,56 +122,56 @@
   </TabPanel>
   <TabPanel>
     <div class="flex flex-wrap">
-      <TechniqueList character={state} />
-      <SkillList character={state} />
+      <DataTable type="technique" />
+      <DataTable type="skill" />
     </div>
   </TabPanel>
   <TabPanel>
-    <EquipmentList character={state} />
+    <DataTable type="equipment" />
   </TabPanel>
   <TabPanel>
-    <TraitList character={state}>Traits</TraitList>
+    <DataTable type="trait" />
   </TabPanel>
-  <TabPanel class="mx-4">
+  <TabPanel>
     <section class="bio-grid children:m-2 md:grid md:auto-rows-min">
       <fieldset class="flex flex-col">
         <legend class="section-header">GENERAL</legend>
         <label>
           <span>Name</span>
-          <input type="text" bind:value={$name} />
+          <input type="text" bind:value="{$name}" />
         </label>
         <label>
           <span>Nickname</span>
-          <input type="text" bind:value={$profile.nickName} />
+          <input type="text" bind:value="{$profile.nickName}" />
         </label>
         <fieldset class="flex flex-wrap children:flex-1">
           <label>
             <span>Sex</span>
-            <input type="text" bind:value={$profile.sex} />
+            <input type="text" bind:value="{$profile.sex}" />
           </label>
           <label>
             <span>Gender</span>
-            <input type="text" bind:value={$profile.gender} />
+            <input type="text" bind:value="{$profile.gender}" />
           </label>
         </fieldset>
         <fieldset class="flex flex-wrap children:flex-1">
           <label>
             <span>Race</span>
-            <input type="text" bind:value={$profile.race} />
+            <input type="text" bind:value="{$profile.race}" />
           </label>
           <label>
             <span>Size</span>
             <input
               type="number"
               placeholder="0"
-              bind:value={$profile.sizeModifier}
+              bind:value="{$profile.sizeModifier}"
             />
           </label>
         </fieldset>
         <fieldset class="flex flex-wrap">
           <label>
             <span>Handedness</span>
-            <input type="text" bind:value={$profile.handedness} />
+            <input type="text" bind:value="{$profile.handedness}" />
           </label>
           <label class="flex-1">
             <span>Reach</span>
@@ -187,14 +180,14 @@
         </fieldset>
         <label class="w-full text-center">
           <span>Reaction</span>
-          <textarea rows="4" bind:value={$profile.reaction} />
+          <textarea rows="4" bind:value="{$profile.reaction}"></textarea>
         </label>
       </fieldset>
       <div class="row-span-2">
         <Cropper
           fallback="assets/silhouette.png"
-          bind:src={$image}
-          bind:cropped={$profile.cropped}
+          bind:src="{$image}"
+          bind:cropped="{$profile.cropped}"
         />
       </div>
       <div class="flex flex-col">
@@ -202,67 +195,67 @@
         <div class="flex">
           <label for="">
             Age
-            <input type="text" bind:value={$profile.age} />
+            <input type="text" bind:value="{$profile.age}" />
           </label>
           <label for="">
             Appearance
-            <select name="" id="" bind:value={$profile.appearance}>
-              <option value={Appearance.Horrific}>Horrific</option>
-              <option value={Appearance.Monstrous}>Monstrous</option>
-              <option value={Appearance.Hideous}>Hideous</option>
-              <option value={Appearance.Unattractive}> Unattractive </option>
-              <option value={Appearance.Average} selected> Average </option>
-              <option value={Appearance.Attractive}> Attractive </option>
-              <option value={Appearance.Handsome_Beautiful}>
+            <select name="" id="" bind:value="{$profile.appearance}">
+              <option value="{Appearance.Horrific}">Horrific</option>
+              <option value="{Appearance.Monstrous}">Monstrous</option>
+              <option value="{Appearance.Hideous}">Hideous</option>
+              <option value="{Appearance.Unattractive}"> Unattractive </option>
+              <option value="{Appearance.Average}" selected> Average </option>
+              <option value="{Appearance.Attractive}"> Attractive </option>
+              <option value="{Appearance.Handsome_Beautiful}">
                 Handsome/Beautiful
               </option>
-              <option value={Appearance.Very_Handsome_Beautiful}>
+              <option value="{Appearance.Very_Handsome_Beautiful}">
                 Very Handsome/Beauitiful
               </option>
-              <option value={Appearance.Transcendent}> Transcendent </option>
+              <option value="{Appearance.Transcendent}"> Transcendent </option>
             </select>
           </label>
         </div>
         <div class="flex">
           <label for="" class="flex-1">
             Weight
-            <input type="text" bind:value={$profile.weight} />
+            <input type="text" bind:value="{$profile.weight}" />
           </label>
           <label for="" class="flex-1">
             Height
-            <input type="text" bind:value={$profile.height} />
+            <input type="text" bind:value="{$profile.height}" />
           </label>
         </div>
         <div class="flex">
           <label for="">
             Build
-            <input type="text" bind:value={$profile.build} />
+            <input type="text" bind:value="{$profile.build}" />
           </label>
           <label for="">
             Skin
-            <input type="text" bind:value={$profile.skin} />
+            <input type="text" bind:value="{$profile.skin}" />
           </label>
         </div>
 
         <div class="flex">
           <label for="">
             Hair
-            <input type="text" bind:value={$profile.hair} />
+            <input type="text" bind:value="{$profile.hair}" />
           </label>
           <label for="">
             Facial Hair
-            <input type="text" bind:value={$profile.facialHair} />
+            <input type="text" bind:value="{$profile.facialHair}" />
           </label>
         </div>
 
         <div class="flex">
           <label for="">
             Eyes
-            <input type="text" bind:value={$profile.eyes} />
+            <input type="text" bind:value="{$profile.eyes}" />
           </label>
           <label for="">
             Voice
-            <input type="text" bind:value={$profile.voice} />
+            <input type="text" bind:value="{$profile.voice}" />
           </label>
         </div>
 
@@ -272,8 +265,7 @@
             name=""
             id=""
             rows="4"
-            bind:value={$profile.appearanceFeatures}
-          />
+            bind:value="{$profile.appearanceFeatures}"></textarea>
         </label>
       </div>
       <div class="flex flex-col">
@@ -281,90 +273,91 @@
         <div class="flex">
           <label for="">
             Birthday
-            <input type="text" bind:value={$profile.birthday} />
+            <input type="text" bind:value="{$profile.birthday}" />
           </label>
           <label for="">
             Birthplace
-            <input type="text" bind:value={$profile.birthPlace} />
+            <input type="text" bind:value="{$profile.birthPlace}" />
           </label>
         </div>
         <div class="flex">
           <label for="">
             Status
-            <input type="text" bind:value={$profile.status} />
+            <input type="text" bind:value="{$profile.status}" />
           </label>
           <label for="">
             Wealth
-            <input type="text" bind:value={$profile.wealth} />
+            <input type="text" bind:value="{$profile.wealth}" />
           </label>
         </div>
         <div class="flex">
           <label for="">
             Income
-            <input type="text" bind:value={$profile.income} />
+            <input type="text" bind:value="{$profile.income}" />
           </label>
           <label for="">
             Expenses
-            <input type="text" bind:value={$profile.expenses} />
+            <input type="text" bind:value="{$profile.expenses}" />
           </label>
         </div>
         <div class="flex">
           <label for="">
             Affiliation
-            <input type="text" bind:value={$profile.affiliation} />
+            <input type="text" bind:value="{$profile.affiliation}" />
           </label>
           <label for="">
             Base
-            <input type="text" bind:value={$profile.base} />
+            <input type="text" bind:value="{$profile.base}" />
           </label>
         </div>
         <label class="text-center" for="">
           Family
-          <textarea name="" id="" rows="4" bind:value={$profile.family} />
+          <textarea name="" id="" rows="4" bind:value="{$profile.family}"
+          ></textarea>
         </label>
       </div>
       <div class="flex flex-col">
         <div class="section-header">MISC</div>
         <label for="">
           Religion
-          <input type="text" bind:value={$profile.religion} />
+          <input type="text" bind:value="{$profile.religion}" />
         </label>
         <label for="">
           Education
-          <input type="text" bind:value={$profile.education} />
+          <input type="text" bind:value="{$profile.education}" />
         </label>
         <label for="">
           Citizenship
-          <input type="text" bind:value={$profile.citizenship} />
+          <input type="text" bind:value="{$profile.citizenship}" />
         </label>
         <label for="">
           Orientation
-          <input type="text" bind:value={$profile.orientation} />
+          <input type="text" bind:value="{$profile.orientation}" />
         </label>
         <label class="text-center" for="">
           Other
-          <textarea rows="4" bind:value={$profile.other} />
+          <textarea rows="4" bind:value="{$profile.other}"></textarea>
         </label>
       </div>
     </section>
   </TabPanel>
   <TabPanel>
-    <ProseMirror bind:content={$notes} />
+    <ProseMirror bind:content="{$notes}" />
   </TabPanel>
   <TabPanel>
-    <SpellList character={state} />
+    <DataTable type="spell" />
   </TabPanel>
-  <TabPanel class="flex flex-col">
-    <JsonEditor class="flex-1" data={$config} let:editor>
+  <TabPanel>
+    <JsonEditor class="flex-1" data="{$config}" let:editor>
       <menu>
-        <button on:click={defaultConfiguration} type="button">
+        <button on:click="{defaultConfiguration}" type="button">
           Default Configuration
         </button>
-        <button on:click={(e) => config.next(editor.get())} type="button">
+        <button on:click="{(e) => config.next(editor.get())}" type="button">
           Save Configuration
         </button>
-        <button on:click={uploadConfiguration}>Upload Configuration</button>
-        <button on:click={uploadGCSFile}> Upload GCS File </button>
+        <button on:click="{uploadConfiguration}">Upload Configuration</button>
+        <button on:click="{uploadGCSFile}"> Upload GCS File </button>
       </menu>
     </JsonEditor>
   </TabPanel>
@@ -372,7 +365,7 @@
 
 <style lang="postcss">
   .section-header {
-    @apply bg-gray-700 text-center text-white w-full p-2;
+    @apply bg-gray-500 text-center text-white w-full p-2;
   }
 
   label {

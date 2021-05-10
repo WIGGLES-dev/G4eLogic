@@ -13,8 +13,13 @@
   $: carriedWeight = $processed$?.carriedWeight;
 </script>
 
-<table class:bg-red-300={encumbrance === -5}>
-  <Popper display="hovered virtual" offset={[16, 16]} let:popper let:reference>
+<table class:bg-red-300="{encumbrance === -5}">
+  <Popper
+    display="hovered virtual"
+    offset="{[16, 16]}"
+    let:popper
+    let:reference
+  >
     <caption use:reference>
       <span class="text-center underline">
         Carrying {carriedWeight}lbs.
@@ -39,13 +44,13 @@
   <tbody>
     <Popper
       display="hovered virtual"
-      offset={[16, 16]}
+      offset="{[16, 16]}"
       let:popper
       let:reference
     >
       <tr
-        class:active={encumbrance === 0}
-        class:none={encumbrance === 0}
+        class:active="{encumbrance === 0}"
+        class:none="{encumbrance === 0}"
         use:reference
       >
         <td>None [0]</td>
@@ -62,13 +67,13 @@
     </Popper>
     <Popper
       display="hovered virtual"
-      offset={[16, 16]}
+      offset="{[16, 16]}"
       let:popper
       let:reference
     >
       <tr
-        class:active={encumbrance === -1}
-        class:light={encumbrance === -1}
+        class:active="{encumbrance === -1}"
+        class:light="{encumbrance === -1}"
         use:reference
       >
         <td>Light [-1]</td>
@@ -89,13 +94,13 @@
     </Popper>
     <Popper
       display="hovered virtual"
-      offset={[16, 16]}
+      offset="{[16, 16]}"
       let:popper
       let:reference
     >
       <tr
-        class:active={encumbrance === -2}
-        class:medium={encumbrance === -2}
+        class:active="{encumbrance === -2}"
+        class:medium="{encumbrance === -2}"
         use:reference
       >
         <td>Medium [-2]</td>
@@ -116,13 +121,13 @@
     </Popper>
     <Popper
       display="hovered virtual"
-      offset={[16, 16]}
+      offset="{[16, 16]}"
       let:reference
       let:popper
     >
       <tr
-        class:active={encumbrance === -3}
-        class:heavy={encumbrance === -3}
+        class:active="{encumbrance === -3}"
+        class:heavy="{encumbrance === -3}"
         use:reference
       >
         <td>Heavy [-3]</td>
@@ -143,13 +148,13 @@
     </Popper>
     <Popper
       display="hovered virtual"
-      offset={[16, 16]}
+      offset="{[16, 16]}"
       let:popper
       let:reference
     >
       <tr
-        class:active={encumbrance === -4}
-        class:x-heavy={encumbrance === -4}
+        class:active="{encumbrance === -4}"
+        class:x-heavy="{encumbrance === -4}"
         use:reference
       >
         <td>X-Heavy [-4]</td>
