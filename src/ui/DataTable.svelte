@@ -1,9 +1,13 @@
 <script lang="ts">
   import "@app/lit/data-table";
   import { DataTable } from "@app/lit/data-table";
+  import "@app/lit/custom-dialog";
+  import { CustomDialog } from "@app/lit/custom-dialog";
   import { load } from "js-yaml";
   import { parseHitLocations } from "@app/gurps/resources/characterConfig";
+  import { Action } from "@app/system";
   let table: DataTable;
+  let dialog: CustomDialog;
   export let type;
   export let disableDrag = false;
   export let disableDrop = false;
@@ -162,10 +166,12 @@
     "trait modifier": traitModifier,
     "equipment modifier": equipmentModifier,
   };
-  let editState;
   $: filter = {
     type,
   };
+  function getContextmenuOptions(e) {
+    return [];
+  }
   function handleCellchange(e) {
     const {
       detail: { path, value },
@@ -176,12 +182,6 @@
     const {
       detail: { id, prop, value },
     } = e;
-  }
-  function handleEdit(e) {
-    const {
-      detail: { path, value },
-    } = e;
-    editState = state.sub(...path);
   }
   function handleDelete(e) {
     const {
@@ -217,22 +217,39 @@
       );
     }
   }
+  function handleEdit(e) {
+    const {
+      detail: { id, path },
+    } = e;
+    editingState = state.sub(...path);
+    dialog.showModal();
+  }
+  let editingState;
+
 </script>
 
+<custom-dialog bind:this={dialog}>
+  {#await getEditor(type) then editor}
+    {#if editingState && $editingState}
+      <svelte:component this={editor} entity={editingState} />
+    {/if}
+  {/await}
+  <button on:click={() => dialog.close()} class="w-full">Close</button>
+</custom-dialog>
 <data-table
-  bind:this="{table}"
-  rootId="{rootId}"
-  template="{setups[type]}"
-  data="{$state}"
-  processed="{$processed$.embedded[type]}"
-  maxDepth="{maxDepth}"
-  filter="{filter}"
-  on:cellchange="{handleCellchange}"
-  on:click="{handleClick}"
-  on:edit="{handleEdit}"
-  on:add="{handleAdd}"
-  on:delete="{handleDelete}"
-  on:move="{handleMove}"
+  bind:this={table}
+  {rootId}
+  template={setups[type]}
+  data={$state}
+  processed={$processed$.embedded[type]}
+  {maxDepth}
+  {filter}
+  on:cellchange={handleCellchange}
+  on:click={handleClick}
+  on:add={handleAdd}
+  on:delete={handleDelete}
+  on:move={handleMove}
+  on:edit={handleEdit}
 >
   <tr>
     {#if type === "skill"}
@@ -319,13 +336,6 @@
       <!--  -->
     {/if}
   </tr>
-  <div slot="edit">
-    {#if type && editState}
-      {#await getEditor(type) then editor}
-        <svelte:component this="{editor}" entity="{editState}" />
-      {/await}
-    {/if}
-  </div>
 </data-table>
 
 <style>

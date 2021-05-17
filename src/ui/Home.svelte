@@ -1,6 +1,8 @@
 <script lang="ts">
   import { v4 } from "uuid";
+  import { getContext } from "svelte";
   import { fetchTable } from "@internal";
+  import { Action } from "@app/system";
   import { download, upload } from "@utils/dom";
   import { from } from "rxjs";
   import { switchAll } from "rxjs/operators";
@@ -11,16 +13,10 @@
   import { fade } from "svelte/transition";
   import { character as characterMap } from "@app/gurps/utils";
   import { merge } from "@utils/object-mapper";
+  import { systemctx } from "@app/main.svelte";
+  const System = getContext<any>(systemctx);
   const table$ = from(fetchTable<any>("index"));
   const sheets$ = table$.pipe(switchAll());
-  function createCharacter() {
-    const id = v4();
-    const data = {
-      id,
-      type: "character",
-    };
-    System.add("index", data, id);
-  }
   async function downloadValorFile(id) {
     const obj = await System.get("index", id);
     const str = JSON.stringify(obj);
@@ -57,16 +53,18 @@
 </script>
 
 <menu>
-  <button on:click="{createCharacter}"> Create New Character </button>
-  <button on:click="{uploadValorFile}"> Load Valor File </button>
-  <button on:click="{uploadGCSFile}"> Load GCS File </button>
+  <button data-action={Action.CREATE} data-type="character">
+    Create New Character
+  </button>
+  <button on:click={uploadValorFile}> Load Valor File </button>
+  <button on:click={uploadGCSFile}> Load GCS File </button>
 </menu>
 
 {#if $sheets$ && $sheets$ instanceof Array}
   <div class="flex flex-wrap m-4">
     {#each $sheets$ as sheet, i (sheet.id)}
       {#if sheet.type === "character"}
-        <Card on:click="{(e) => push(`/edit/${sheet.type}/${sheet.id}/`)}">
+        <Card on:click={(e) => push(`/edit/${sheet.type}/${sheet.id}/`)}>
           <div slot="header" class="text-center">
             <h3>
               {sheet.name || "???"} [{sheet.pointTotal || 0}]
@@ -74,18 +72,18 @@
             <Popper
               display="hovered virtual"
               placement="bottom-end"
-              modifiers="{[
+              modifiers={[
                 {
-                  name: 'offset',
+                  name: "offset",
                   options: {
                     offset: [16, 16],
                   },
                 },
-              ]}"
+              ]}
               let:reference
               let:popper
             >
-              <i class="fas fa-search" use:reference></i>
+              <i class="fas fa-search" use:reference />
               <div class="bg-gray-700 text-white text-sm p-2" use:popper>
                 <div>
                   created on: {new Date(sheet.__meta__.createdOn)}
@@ -98,33 +96,36 @@
           </div>
           <img
             class="p-2 object-contain flex-1 max-h-52 min-w-[9rem]"
-            src="{sheet.image || 'assets/silhouette.png'}"
+            src={sheet.image || "assets/silhouette.png"}
             alt="portrait"
             slot="content"
           />
           <div
             slot="footer"
             class="
-                            flex
-                            children:py-1
-                            bg-gray-500
-                            rounded
-                            children:text-white
-                            children:text-center
-                            children:flex-1
-                            children:cursor-pointer
-                            children:hover:bg-gray-200
-                            justify-center
-                    "
+              flex
+              children:py-1
+              bg-gray-500
+              rounded
+              children:text-white
+              children:text-center
+              children:flex-1
+              children:cursor-pointer
+              children:hover:bg-gray-200
+              justify-center
+            "
           >
             <i
               class="fas fa-download hover:text-gray-700"
-              on:click|capture|stopPropagation="{(e) =>
-                downloadValorFile(sheet.id)}"></i>
+              on:click|stopPropagation={(e) => downloadValorFile(sheet.id)}
+            />
             <i
               class="fas fa-trash hover:text-red-700"
-              on:click|capture|stopPropagation="{(e) =>
-                System.db.table('index').delete(sheet.id)}"></i>
+              data-action={Action.DELETE}
+              data-id={sheet.id}
+              data-event="click"
+              data-event-modifiers="stopPropagation"
+            />
           </div>
         </Card>
       {/if}

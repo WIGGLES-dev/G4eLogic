@@ -15,29 +15,6 @@ export function isNumber(string: string) {
     const isNaN = Number.isNaN(asFloat);
     return !isNaN;
 }
-export function safeCall<
-    P extends any[] = any[],
-    T = undefined,
-    R = any,
-    >(
-        fn: (this: T, ...args: P) => R,
-        args: P = [] as P,
-        err: ((this: T, error, ...args: P) => any) = console.log,
-        thisarg?: T
-    ): R {
-    try {
-        return fn.apply(thisarg, args)
-    } catch (error) {
-        return err.apply(thisarg, [error, ...args])
-    }
-}
-export function hook<T, M extends (...args) => any = (...args) => any>(target: T, method: string, hook: (fn: M, args: Parameters<M>) => ReturnType<M>) {
-
-}
-export function enumeratePrototype(obj) {
-    const prototype = Object.getPrototypeOf(obj);
-    const descriptors = Object.getOwnPropertyDescriptors(prototype);
-}
 export function arrayMove<T>(arr: T[], from: number, to: number) {
     const elm = arr.splice(from, 1)[0];
     arr.splice(to, 0, elm)

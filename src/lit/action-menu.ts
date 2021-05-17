@@ -41,13 +41,11 @@ export class ActionMenu extends TWindElement {
     }
   }
 
-  showMenu() {}
-
   render() {
     const options = this.actions.map(this._renderOption, this);
     const classes = {
       [tw`flex-1`]: this.flex,
-      [tw`children:(p-2 flex-1 shadow hover:(bg-gray-300))`]: true,
+      [tw`children:(p-2 flex-1 bg-white shadow hover:(bg-gray-300))`]: true,
     };
     return html`
       <ul class=${classMap(classes)}>

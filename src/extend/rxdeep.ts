@@ -92,6 +92,7 @@ declare module "rxdeep/dist/es6/state" {
     ): State<T[K1][K2][K3][K4][K5][K6]>;
     sub(...keys: Key[]): State<any>;
     deepSub<T>(findfunc: ((value) => boolean) | object): Observable<State<T>>;
+    findPath<T>(findfunc: ((value) => boolean) | object): Path
     verified<K extends keyof T>(
       verifier?: (change: Change<T[K]>) => boolean
     ): VerifiedState<T>;
@@ -136,10 +137,13 @@ State.prototype.sub = function <T>(this: State<T>, ...keys: Key[]) {
 };
 State.prototype.deepSub = function <T extends object>(this: State<T>, value) {
   return this.pipe(
-    map((data) => getPath(data, value)),
+    map(() => this.findPath(value)),
     map((path) => this.sub(...path))
   );
 };
+State.prototype.findPath = function <T extends object>(this: State<T>, value) {
+  return getPath(this.value, value);
+}
 State.prototype.verified = function <T>(
   this: State<T>,
   verifier: (change: Change<T>) => boolean = (change) => !!change.value

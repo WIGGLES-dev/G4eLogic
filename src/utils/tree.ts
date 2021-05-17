@@ -1,4 +1,3 @@
-import { paths } from "jsonpath";
 import { arrayMove } from "./object";
 import {
   getPath,
@@ -25,7 +24,7 @@ export interface TreeHash<T extends TreeObject> {
   filteredIds: string[];
 }
 export class Tree<T extends TreeObject> {
-  constructor() {}
+  constructor() { }
   static move(
     src: object,
     from: SearchObj,
@@ -67,7 +66,7 @@ export class Tree<T extends TreeObject> {
     }
     return object;
   }
-  static eject(hash: TreeHash<any>, id: string) {}
+  static eject(hash: TreeHash<any>, id: string) { }
   static contruct<T>(hash: TreeHash<T>): TreeObject {
     return {};
   }

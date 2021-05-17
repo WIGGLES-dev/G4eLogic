@@ -160,11 +160,11 @@ export function analyzeTouch(
 function elementOffScreen(
   entries: IntersectionObserverEntry[],
   observer: IntersectionObserver
-) {}
+) { }
 function elementsFixedOffset(
   entries: IntersectionObserverEntry[],
   observer: IntersectionObserver
-) {}
+) { }
 export const offScreenObserver = new IntersectionObserver(elementOffScreen);
 export const fixedOffsetObserver = new IntersectionObserver(
   elementsFixedOffset
@@ -177,7 +177,7 @@ function datasetChange(
   mutations.filter((mutation) => mutation.attributeName.includes("data-"));
 }
 
-function styleChange(mutation: MutationRecord[], observer: MutationObserver) {}
+function styleChange(mutation: MutationRecord[], observer: MutationObserver) { }
 
 export const datasetChangeObserver = new MutationObserver(datasetChange);
 export const styleChangeObserver = new MutationObserver(styleChange);

@@ -13,6 +13,9 @@ import {
   Subscription,
 } from "rxjs";
 import { filter } from "rxjs/operators";
+import { closestElement } from "./utils/dom";
+import { v4 } from "uuid";
+import { html, render } from "lit";
 interface Event {
   event: string;
   data;
@@ -43,7 +46,7 @@ export abstract class AbstractSystem {
   });
   $parser = new $RefParser();
   workers: Record<string, SystemWorker> = {};
-  constructor() {}
+  constructor() { }
   async addSchema(schema, key?: string) {
     try {
       const dereferenced = await this.$parser.bundle(schema);
@@ -142,16 +145,7 @@ export abstract class AbstractSystem {
       try {
         expose(this, bc);
         expose(this, windowEndpoint(window.parent));
-      } catch (err) {}
-    }
-  }
-  private _handleInput(e: InputEvent) {
-    const path = e.composedPath();
-    const [target] = path;
-    if (target instanceof HTMLInputElement) {
-    } else if (target instanceof HTMLTextAreaElement) {
-    } else if (target instanceof HTMLSelectElement) {
-    } else {
+      } catch (err) { }
     }
   }
   notify(message: string) {
@@ -162,7 +156,6 @@ export abstract class AbstractSystem {
     }
     this.ui?.toast?.notify(message);
   }
-
   async init(params?: SystemInit) {
     this.ui = new Main({
       target: document.body,
@@ -176,17 +169,19 @@ export abstract class AbstractSystem {
         const registration = await navigator.serviceWorker.register(
           "./service-worker.js"
         );
-        console.log(registration);
       });
     }
     this._expose();
+    const actionEvents = ["click", "input"];
+    for (const event of actionEvents) {
+      window.addEventListener(event, handleAction.bind(this), { capture: true })
+    }
     for (const [url, key] of params?.schemas ?? []) {
       await this.addSchema(url, key);
     }
     for (const [worker, key] of params?.workers ?? []) {
       this.addWorker(worker, key);
     }
-    window.addEventListener("input", this._handleInput);
     this.ready$.next(true);
     window["system"] = this;
   }
@@ -200,5 +195,104 @@ export abstract class AbstractSystem {
       }
       return valid;
     };
+  }
+}
+
+export enum Action {
+  CREATE = "CREATE",
+  DELETE = "DELETE",
+  UPDATE = "UPDATE",
+  EMBED = "EMBED",
+  EDIT = "EDIT",
+  CONTEXT = "CONTEXT",
+  ROLL = "ROLL"
+}
+
+function coerceValue(e: Event) {
+  if (e instanceof InputEvent) {
+    const path = e.composedPath();
+    const [target] = path;
+  }
+}
+
+function hasDataset<T>(target: T): target is T & { dataset: object } {
+  return "dataset" in target && typeof target["dataset"] === "object"
+}
+
+function allData(elems: EventTarget[]) {
+  return elems.reduce((data, elem) => {
+    if (hasDataset(elem)) {
+      return { ...data, ...elem.dataset }
+    } else {
+      return data
+    }
+  }, {} as any);
+}
+
+async function handleAction(this: AbstractSystem, e: Event) {
+  if (e instanceof MouseEvent || e instanceof InputEvent) {
+    const path = e.composedPath();
+    const [target] = path;
+    if (target instanceof HTMLElement) {
+      const {
+        action,
+        id,
+        type,
+        relpath,
+        path:
+        propPath,
+        eventModifiers,
+        event,
+        rootId,
+        contextActions,
+        parameters
+      } = allData(path);
+      eventModifiers?.split(" ")?.forEach(modifier => e[modifier]?.());
+      if (event && e.type !== event) return;
+      let value = coerceValue(e);
+      switch (action) {
+        case Action.CREATE: {
+          const { data, valid } = this.validate({ type, id: v4() });
+          if (valid) {
+            this.add("index", data, id)
+          }
+          break;
+        }
+        case Action.EMBED: {
+          let state = await this.fetchRecord("index", id);
+          if (rootId) {
+            const pathToRoot = state.findPath((v) => v?.id === rootId);
+            state = state.sub(...pathToRoot);
+          }
+          state = state.sub("children");
+          const { data, valid } = this.validate({ type, id: v4() });
+          if (valid) {
+            state.push(data);
+          }
+          break;
+        }
+        case Action.DELETE: {
+          this.delete("index", id);
+          break;
+        }
+        case Action.UPDATE: {
+          const state = await this.fetchRecord("index", id);
+          state.sub(...propPath.split(".")).set(value);
+          break;
+        }
+        case Action.EDIT: {
+
+          break;
+        }
+        case Action.CONTEXT: {
+
+        }
+        case Action.ROLL: {
+
+          break;
+        }
+        default:
+      }
+    }
   }
 }

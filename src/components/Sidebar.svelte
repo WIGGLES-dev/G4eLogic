@@ -10,14 +10,12 @@
 <script lang="ts">
     import { createEventDispatcher, onMount, tick } from "svelte";
     import { slide, fly } from "svelte/transition";
-    import { toTop } from "@utils/use";
     import { longSwipeLeft$, longSwipeRight$ } from "@internal";
     const dispatch = createEventDispatcher();
     let classList = "";
     export let style = "";
     export { classList as class };
     export let collapsed = true;
-    export let offset: number;
     export async function collapse() {
         await tick();
         collapsed = true;
@@ -40,8 +38,6 @@
 
 {#if !collapsed}
     <aside
-        bind:clientWidth={offset}
-        use:toTop
         transition:fly
         class="sidebar {classList}"
         {style}

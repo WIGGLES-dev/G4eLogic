@@ -1,6 +1,6 @@
-import { directive } from "lit/async-directive";
-import { TableController } from "./controllers";
-import { html, css, TemplateResult } from "lit";
+import { TableController, TreeController, TemplateController } from "./controllers";
+import { popper } from "./directives";
+import { html, css, TemplateResult, render } from "lit";
 import { TWindElement, tw } from "./twind-base";
 import { apply } from "twind";
 import { css as twcss } from "twind/css";
@@ -17,11 +17,9 @@ import { getValueAtPath, Path, updateValueAtPath } from "@utils/path";
 import { closestElement } from "@utils/dom";
 import { Tree, TreeHash } from "@utils/tree";
 import "./action-menu";
-import "./toggle-switch";
-import "./form-control";
 import "./custom-dialog";
 import { CustomDialog } from "./custom-dialog";
-import { TemplateController } from "./controllers";
+import { ActionMenu } from "./action-menu";
 
 enum CellTypes {
   number = "number",
@@ -65,8 +63,8 @@ const pathConverter = {
   },
 };
 const setupConverter = {
-  fromAttribute() {},
-  toAttribute() {},
+  fromAttribute() { },
+  toAttribute() { },
 };
 type DisplayOptions = "table" | "grid" | "list";
 @customElement("data-table")
@@ -79,7 +77,9 @@ export class DataTable extends TWindElement {
   rootId: string;
   @property({ attribute: false })
   data: Record<string, any>;
-  hash: TreeHash<any>;
+  get hash() {
+    return this._treeController.hash
+  }
   @property({ attribute: false })
   processed: Record<string, any>;
   @property({ converter: pathConverter })
@@ -107,30 +107,19 @@ export class DataTable extends TWindElement {
   @property({ attribute: false })
   template: any;
   @state()
-  private _contextId: string;
-  @state()
-  private _editId: string;
-  @state()
   private _selectedId: string;
   @state()
   private _selectedIds: string[] = [];
   @state()
-  private _inlineEditId: string;
-  private _dialog = createRef<CustomDialog>();
   private _tableController = new TableController(this);
   private _templateController = new TemplateController(this);
+  private _treeController: TreeController = new TreeController(this);
   constructor() {
     super();
-    this.addEventListener("dragstart", this._handleDragstart);
-    this.addEventListener("dragover", this._handleDragover);
-    this.addEventListener("dragenter", this._handleDragenter);
-    this.addEventListener("drop", this._handleDrop);
-    this.addEventListener("dragend", this._handleDragend);
     this.addEventListener("click", this._handleClick);
-    //this.addEventListener("contextmenu", this._handleContextmenu);
-    //this.addEventListener("dblclick", this._handleDoubleclick);
-    this.addEventListener("input", this._handleInput);
     this.addEventListener("focusin", this._handleFocusin);
+    this.addEventListener("focusout", this._handleFocusout);
+    this.addEventListener("contextmenu", this._handleContextmenu);
   }
   static get styles() {
     return [
@@ -138,6 +127,7 @@ export class DataTable extends TWindElement {
       css`
         td {
           border: 0.5px solid black;
+          height: 1.5rem;
         }
         td:not([data-toggle]) {
           text-align: center;
@@ -157,11 +147,9 @@ export class DataTable extends TWindElement {
   connectedCallback() {
     super.connectedCallback();
     window.addEventListener("keydown", this._handleKeyboardEvent);
-    window.addEventListener("resize", this._handleResize);
   }
   disconnectedCallback() {
     window.removeEventListener("keydown", this._handleKeyboardEvent);
-    window.removeEventListener("keydown", this._handleResize);
     super.disconnectedCallback();
   }
   willUpdate(changes) {
@@ -172,25 +160,12 @@ export class DataTable extends TWindElement {
       changes.has("filter") ||
       changes.has("rootId")
     ) {
-      this._makeHash();
+      this._treeController.setData();
     }
     if (changes.has("hide")) {
       this._tableController.hideColumns(...(this.hide || []));
     }
   }
-  private _makeHash() {
-    if (this.data && this.branchpath && this.idpath && this.filter) {
-      this.hash = Tree.hash(
-        this.data,
-        this.branchpath,
-        this.idpath,
-        this.filter,
-        this.maxDepth,
-        this.rootId
-      );
-    }
-  }
-  updated(changes) {}
   private _dispatchCustomEvent(
     name: string,
     detail: any = {},
@@ -198,16 +173,17 @@ export class DataTable extends TWindElement {
     composed = true
   ) {
     const event = new CustomEvent(name, {
-      detail: {
-        ...this._getContext(),
-        ...detail,
-      },
+      detail,
       bubbles,
       composed,
     });
     this.dispatchEvent(event);
   }
-
+  private _getContext(e?: Event) {
+    const path = e?.composedPath() ?? [];
+    const { id = this.hash.srcId } = path.find(elem => elem?.["dataset"]?.id)?.["dataset"] ?? {};
+    return this._treeController.getContext(id);
+  }
   private _handleKeyboardEvent = async (e: KeyboardEvent) => {
     const { key } = e;
     const { filteredIds, pathMap, ancestorMap } = this.hash;
@@ -274,133 +250,11 @@ export class DataTable extends TWindElement {
       }
     }
   };
-  private _handleResize = (e) => {
-    if (innerWidth < 1000) {
-    } else {
-    }
-  };
   private _handleFocusin(e: FocusEvent) {
-    console.log(e);
   }
-  private _handleInput(e: InputEvent) {
-    const path = e.composedPath();
-    const [target] = path;
-    if (target instanceof HTMLElement) {
-      const pathElem = closestElement(`[data-path]`, target);
-      const idElem = closestElement(`[data-id]`, target);
-      const { path, type } = pathElem?.["dataset"] ?? {};
-      const { id } = idElem?.["dataset"] ?? {};
-      let value = target["value"];
-      if (target instanceof HTMLInputElement) {
-        const type = target.getAttribute("type");
-        if (type === "number") {
-          value = +target.value;
-        } else if (type === "checkbox") {
-          value = target.checked;
-        } else {
-          value = target.value;
-        }
-      } else {
-        const contenteditable = target.isContentEditable;
-        if (contenteditable) {
-          const { type } = target.dataset;
-          if (type === "number") {
-            value = +target.innerText;
-          } else {
-            value = target.innerText;
-          }
-        } else {
-        }
-      }
-      if (path && id) {
-        this._dispatchCustomEvent("cellchange", {
-          id,
-          path: path.split("."),
-          value,
-        });
-      }
-    }
-  }
-  private _handleDragstart(e: DragEvent) {
-    const path = e.composedPath();
-    const [target] = path;
+  private _handleFocusout(e: FocusEvent) {
 
-    if (target instanceof HTMLElement) {
-      const idElem = closestElement(`[data-id]`, target);
-      if (idElem) {
-        const { id } = idElem.dataset;
-        const data = this._getContext(id);
-        e.dataTransfer.setData("text/plain", JSON.stringify({ id }));
-        e.dataTransfer.setData("application/json", JSON.stringify(data));
-      }
-    }
   }
-  private _handleDragover(e: DragEvent) {
-    if (this._isInsertOperation(e)) {
-      e.dataTransfer.dropEffect === "link";
-    } else {
-      e.dataTransfer.dropEffect === "move";
-    }
-    e.preventDefault();
-  }
-  private _handleDragenter(e: DragEvent) {
-    e.preventDefault();
-  }
-  private _isInsertOperation(e: DragEvent) {
-    const path = e.composedPath();
-    const [target] = path;
-    if (target instanceof Element) {
-      const tr = target.closest(`tr`);
-      if (tr) {
-        const { id } = tr.dataset;
-        const { hashMap } = this.hash;
-        const isContainer = hashMap[id]?.isContainer === true;
-        const bbox = tr.getBoundingClientRect();
-        const { clientX, clientY } = e;
-        const elem = document.elementFromPoint(clientX, clientY);
-        const onToggle = elem.matches("[data-toggle]");
-        const inUpperHalf =
-          clientY > bbox.top &&
-          clientY < bbox.bottom &&
-          clientY - bbox.top < bbox.height / 2;
-        const inRightHalf =
-          clientX > bbox.left &&
-          clientX < bbox.right &&
-          clientX - bbox.left < bbox.width / 2;
-        if ((onToggle || inUpperHalf) && isContainer === true) {
-          return true;
-        } else {
-          return false;
-        }
-      }
-    }
-  }
-  private _handleDrop(e: DragEvent) {
-    const path = e.composedPath();
-    const [target] = path;
-    if (target instanceof HTMLElement) {
-      const { pathMap, hashMap, ids } = this.hash;
-      const { dataTransfer } = e;
-      const txt = dataTransfer.getData("text/plain");
-      const { id: fromId, type } = JSON.parse(txt || "{}");
-      const appJson = dataTransfer.getData("application/json");
-      const data = JSON.parse(appJson || "{}");
-      const idElem = closestElement(`[data-id]`, target);
-      const { id: toId } = idElem?.["dataset"];
-      const to = this._getContext(toId);
-      const { ancestors } = to;
-      if (!ancestors.includes(fromId) && fromId !== toId) {
-        const insert = this._isInsertOperation(e);
-        this._dispatchCustomEvent("move", {
-          from: data,
-          to,
-          foreign: !ids.includes(fromId),
-          insert,
-        });
-      }
-    }
-  }
-  private _handleDragend(e: DragEvent) {}
   private _handleClick(e: MouseEvent) {
     const path = e.composedPath();
     const [target] = path;
@@ -418,131 +272,86 @@ export class DataTable extends TWindElement {
       }
     }
   }
-  private _handleDoubleclick(e: MouseEvent) {
-    const path = e.composedPath();
-    const [target] = path;
-    if (target instanceof HTMLElement) {
-      const tr = target.closest("tr");
-      if (tr) {
-        const { id } = tr.dataset;
-        this._inlineEditId = id;
-      }
-    }
-  }
   private _handleContextmenu(e: MouseEvent) {
-    const path = e.composedPath();
-    const [target] = path;
-    if (target instanceof HTMLElement) {
-      this._editId = null;
-      const idElem = closestElement(`[data-id]`, target);
-      const { id } = idElem?.["dataset"] ?? {};
-      this._contextId = id;
-      e.preventDefault();
-      this._dialog.value?.showModal();
-    }
-  }
-  private _getContext(id = this._contextId) {
-    const { pathMap, indexMap, hashMap, ancestorMap } = this.hash;
-    const ancestors = ancestorMap[id];
-    const [parent] = ancestors?.slice(-1) ?? [];
-    const path = pathMap[id];
-    const i = indexMap[id];
-    const value = hashMap[id];
-    return {
-      id,
-      ancestors,
-      parent,
-      path,
-      i,
-      value,
-      hash: this.hash,
+    const actions = [
+      this._actionEdit(e),
+      this._actionToggleOpen(e),
+      this._actionAddChild(e),
+      this._actionMakeContainer(e),
+      this._actionDelete(e),
+    ];
+    const container = document.createElement("div");
+    document.body.append(container);
+    const template = html`<action-menu .actions=${actions} ${popper(e)}> </action-menu>`
+    const closeMenuHandler = (e) => {
+      container.remove();
+      window.removeEventListener(e.type, closeMenuHandler);
     };
+    window.addEventListener("click", closeMenuHandler, true);
+    window.addEventListener("contextmenu", closeMenuHandler, true);
+    e.preventDefault();
+    render(template, container);
   }
-  private _actionLog() {
+  private _actionToggleOpen(e?: Event) {
+    const { id, path, value } = this._getContext(e);
+    const { isContainer, showingChildren } = value;
     return {
-      show() {
-        return true;
-      },
-      callback: () => {
-        console.log(this._getContext());
-        this._dialog.value?.close();
-      },
-      label: "Log",
-    };
-  }
-  private _actionCloseMenu() {
-    return {
-      show: () => this._dialog.value?.open,
-      callback: () => this._dialog.value?.close(),
-      label: "Close",
-    };
-  }
-  private _actionToggleOpen() {
-    const activeId = () => this._getContext()?.id;
-    const activeIsContainer = () =>
-      this.hash.hashMap[activeId()]?.isContainer === true;
-    const activeShowingChildren = () =>
-      this.hash.hashMap[this._getContext()?.id]?.showingChildren;
-    const activePath = () => this.hash.pathMap[activeId()] || [];
-    return {
-      show: activeIsContainer,
+      show: () => isContainer === true,
       callback: () => {
         this._dispatchCustomEvent("cellchange", {
           id: this._selectedId,
-          path: [...activePath(), "showingChildren"],
-          value: !activeShowingChildren(),
+          path: [...path, "showingChildren"],
+          value: !showingChildren,
         });
-        this._dialog.value?.close();
       },
-      label: `${activeShowingChildren() === true ? "Close" : "Open"} Container`,
+      label: `${showingChildren === true ? "Close" : "Open"} Container`,
     };
   }
-  private _actionDelete() {
+  private _actionDelete(e?: Event) {
+    const ctx = this._getContext(e);
     return {
       show: () => true,
       callback: () => {
-        const { id, path } = this._getContext();
-        this._dispatchCustomEvent("delete", {
-          id,
-          path,
-        });
-        this._dialog.value?.close();
+        this._dispatchCustomEvent("delete", ctx);
       },
       label: "Delete",
     };
   }
-  private _actionAddChild() {
-    const activeId = () => this._getContext()?.id;
-    const activeIsContainer = () =>
-      this.hash.hashMap[activeId()]?.isContainer === true;
-    const activeShowingChildren = () =>
-      this.hash.hashMap[this._getContext()?.id]?.showingChildren;
-    const activePath = () => this.hash.pathMap[activeId()] || [];
+  private _actionEdit(e?: Event) {
+    const ctx = this._getContext(e);
     return {
-      show: activeIsContainer,
+      show: () => true,
+      callback: () => this._dispatchCustomEvent("edit", ctx),
+      label: "Edit"
+    }
+  }
+  private _actionAddChild(e?: Event) {
+    const { id, path, value } = this._getContext(e);
+    const { isContainer, showingChildren } = value;
+    return {
+      show: () => isContainer === true,
       callback: () => {
         this._dispatchCustomEvent("add", {
-          path: activePath(),
+          path,
         });
-        this._dialog.value?.close();
       },
       label: "Add Child",
     };
   }
-  private _actionEdit() {
+  private _actionMakeContainer(e?: Event) {
+    const { id, path, value } = this._getContext(e);
+    const { isContainer, showingChildren } = value;
     return {
-      show: () => true,
-      callback: async () => {
-        this._dispatchCustomEvent("edit", {
-          ...this._getContext(),
-        });
-        this._editId = this._getContext()?.id;
+      show: () => isContainer !== true,
+      callback: () => {
+        this._dispatchCustomEvent("cellchange", {
+          id,
+          path: [...path, "isContainer"],
+          value: true
+        })
       },
-      label: "Edit",
+      label: "Make Container"
     };
-  }
-  private _actionMakeContainer() {
-    return {};
   }
   private _actionEjectContainer() {
     return {};
@@ -652,6 +461,7 @@ export class DataTable extends TWindElement {
       type === "output" ? this.processed?.[id] : rowValue,
       cellPath
     );
+    cellValue = project(cellValue);
     const isContainer = getValueAtPath(rowValue, ["isContainer"]);
     const showingChildren = getValueAtPath(rowValue, ["showingChildren"]);
     const indent = indentMap[id];
@@ -671,14 +481,25 @@ export class DataTable extends TWindElement {
       toggleOffset = 0;
     }
     const toggleSwitch = html`
-      <toggle-switch @toggle=${handleToggle} ?toggled=${showingChildren}>
-      </toggle-switch>
+      <i class=${tw`text(red-700 center) font-bold`} @click=${handleToggle}>${showingChildren ? "↓" : "→"}</i>
     `;
-    if (typeof cellValue === "boolean") {
-      //cellValue = cellValue ? "✔" : "✖";
+    if (type === "checkbox") {
+      cellValue = html`<input type="checkbox" .checked=${cellValue} />`
+    } else if (type instanceof Array) {
+      const options = type.map(([value, label = value]) => html`<option .selected=${cellValue === value} value=${value}>${label}</option>`)
+      cellValue = html`
+        <select>${options}</select>
+      `
     }
+    const actions = [
+      "ACTION_LOG",
+      "ACTION_TOGGLE_OPEN",
+      "ACTION_ADD_CHILD",
+      "ACTION_DELETE",
+    ]
     return html`
       <td
+        data-actions=${actions.join(" ")}
         class=${tw`pl-[${toggleOffset}px]`}
         ?data-toggle=${toggle}
         data-type=${type}
@@ -691,56 +512,19 @@ export class DataTable extends TWindElement {
     `;
   }
   render() {
-    const actionSet1 = [
-      this._actionLog(),
-      this._actionEdit(),
-      this._actionToggleOpen(),
-      this._actionAddChild(),
-      this._actionDelete(),
-      this._actionCloseMenu(),
-    ];
-    const closeDialog = () => {
-      this._dialog.value?.close();
-    };
-    let dialogContent: TemplateResult;
-    if (this._editId) {
-      dialogContent = html`
-        <slot name="edit"></slot>
-        <button
-          class=${tw`w-full bg-gray-500 text-white`}
-          @click=${closeDialog}
+    return html`
+      <div>
+        ${this._renderTable()}
+        <menu class=${tw`flex p-0 m-0`}>
+        <i
+          @click=${this._actionAddChild().callback}
+          class=${tw`text-xl font-bold text-center p-1 text-red-500 hover:bg-green-500 hover:text-white`}
         >
-          Close
-        </button>
-      `;
-    } else {
-      dialogContent = html`
-        <action-menu .actions=${actionSet1}> </action-menu>
-      `;
-    }
-    const dialog = html`
-      <custom-dialog ${ref(this._dialog)} class=${tw`p-0`}>
-        ${dialogContent}
-      </custom-dialog>
-    `;
-    const actionSet2 = [
-      {
-        show: () => true,
-        callback: () => {
-          this._dispatchCustomEvent("add", {
-            path: this.hash.pathMap[this.rootId] || [],
-          });
-        },
-        label: "＋",
-        classes: tw`text(lg red-700)`,
-      },
-    ];
-    const tableMenu = html`
-      <action-menu .actions=${actionSet2} flex> </action-menu>
-    `;
-    return html`<div class=${tw`w-min`}>
-      ${dialog} ${this._renderTable()} ${tableMenu}
-    </div> `;
+          +
+        </i>
+      </menu>
+      </div>
+    `
   }
 }
 
